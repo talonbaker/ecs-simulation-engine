@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../APIFramework/APIFramework.csproj" />
+  <Project Path="ECSVisualizer.csproj" />
+</Solution>
