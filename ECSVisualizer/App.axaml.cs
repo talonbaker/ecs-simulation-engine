@@ -61,6 +61,8 @@ public partial class App : Application
 
         // 2. Register the System
         engine?.AddSystem(new MetabolismSystem());
+        engine?.AddSystem(new FeedingSystem());
+        engine?.AddSystem(new EsophagusSystem());
 
         // Foundation
         services.AddSingleton<EntityManager>();
