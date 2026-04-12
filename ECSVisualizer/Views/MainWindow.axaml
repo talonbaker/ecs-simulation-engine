@@ -3,18 +3,48 @@
         xmlns:vm="using:ECSVisualizer.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
         x:Class="ECSVisualizer.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
+        x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="ECSVisualizer">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
+        <vm:MainViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <StackPanel Margin="20" Spacing="10">
+        <TextBlock Text="World Simulation Clock" FontSize="20" FontWeight="Bold"/>
+        
+        <ProgressBar Value="{Binding HungerDisplay}" 
+             Minimum="0" Maximum="100" 
+             Height="20" Foreground="Orange"/>
+        <TextBlock Text="{Binding HungerDisplay}" HorizontalAlignment="Center"/>
+
+        <Border Padding="15" Background="#2b2b2b" CornerRadius="8">
+            <TextBlock Text="{Binding CurrentTimeDisplay}" 
+                       FontSize="40" 
+                       HorizontalAlignment="Left"
+                       Foreground="#00ff00"/>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="Time Scale:" VerticalAlignment="Center"/>
+            <Slider Value="{Binding TimeScale}" 
+                    Minimum="0" Maximum="10" 
+                    Width="200"
+                    TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+            <TextBlock Text="{Binding TimeScale, StringFormat={}{0:F1}x}" 
+                       VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <Separator Margin="0,10"/>
+        
+        <TextBlock Text="Active Entities" FontWeight="SemiBold"/>
+        <ListBox Height="150" Background="#1e1e1e">
+            </ListBox>
+    </StackPanel>
 
 </Window>

@@ -1,63 +1,75 @@
+using APIFramework.Components;
+using APIFramework.Core;
+using APIFramework.Systems;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using ECSVisualizer.ViewModels;
 using ECSVisualizer.Views;
-using System.Linq;
+using Microsoft.Extensions.DependencyInjection; // Ensure this is installed via NuGet
+using System;
 
-using Microsoft.Extensions.DependencyInjection;
-using APIFramework.Core;
 
-namespace ECSVisualizer
+namespace ECSVisualizer;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    // This defines 'Services' so the rest of the class can see it
+    public IServiceProvider? Services { get; private set; }
+
+    public override void OnFrameworkInitializationCompleted()
     {
-        public override void Initialize()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+        // 1. You MUST declare and instantiate it first
+        var serviceCollection = new ServiceCollection();
 
-        public override void OnFrameworkInitializationCompleted()
+        // 2. Register all your dependencies
+        ConfigureServices(serviceCollection);
+
+        // 3. Build the provider and store it in the class property
+        Services = serviceCollection.BuildServiceProvider();
+
+        // 4. NOW initialize the simulation world
+        var engine = Services.GetRequiredService<SimulationEngine>();
+        var manager = Services.GetRequiredService<EntityManager>();
+
+        // Register the worker and the entity
+        engine.AddSystem(new MetabolismSystem());
+
+        var human = manager.CreateEntity();
+        human.Add(new MetabolismComponent { Hunger = 0f, HungerRate = 5.0f });
+
+        // 5. Setup the UI
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            desktop.MainWindow = new Views.MainWindow
             {
-                // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
-                // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
-                DisableAvaloniaDataAnnotationValidation();
-                desktop.MainWindow = new MainWindow
-                {
-                    DataContext = new MainWindowViewModel(),
-                };
-            }
-
-            base.OnFrameworkInitializationCompleted();
+                DataContext = Services.GetRequiredService<MainViewModel>()
+            };
         }
 
-        public void ConfigureServices(IServiceCollection services)
-        {
-            // Foundational Components
-            services.AddSingleton<EntityManager>();
-            services.AddSingleton<SimulationClock>();
+        base.OnFrameworkInitializationCompleted();
+    }
 
-            // The Engine that runs the simulation and updates all systems
-            services.AddSingleton<SimulationEngine>();
+    private void ConfigureServices(IServiceCollection services)
+    {
+        var manager = Services?.GetRequiredService<EntityManager>();
+        var engine = Services?.GetRequiredService<SimulationEngine>();
 
-            // The ViewModels
-            services.AddTransient<MainWindowViewModel>();
-        }
+        // Create the Human entity
+        var human = manager?.CreateEntity();
+        human?.Add(new MetabolismComponent { Hunger = 0f, HungerRate = 5.0f }); // Increases 0.5 per sec
 
-        private void DisableAvaloniaDataAnnotationValidation()
-        {
-            // Get an array of plugins to remove
-            var dataValidationPluginsToRemove =
-                BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
+        // 2. Register the System
+        engine?.AddSystem(new MetabolismSystem());
 
-            // remove each entry found
-            foreach (var plugin in dataValidationPluginsToRemove)
-            {
-                BindingPlugins.DataValidators.Remove(plugin);
-            }
-        }
+        // Foundation
+        services.AddSingleton<EntityManager>();
+        services.AddSingleton<SimulationClock>();
+
+        // Engine
+        services.AddSingleton<SimulationEngine>();
+
+        // ViewModels
+        services.AddTransient<MainViewModel>();
     }
 }
