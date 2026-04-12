@@ -1,11 +1,13 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using ECSVisualizer.ViewModels;
 using ECSVisualizer.Views;
 using System.Linq;
+
+using Microsoft.Extensions.DependencyInjection;
+using APIFramework.Core;
 
 namespace ECSVisualizer
 {
@@ -30,6 +32,19 @@ namespace ECSVisualizer
             }
 
             base.OnFrameworkInitializationCompleted();
+        }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+            // Foundational Components
+            services.AddSingleton<EntityManager>();
+            services.AddSingleton<SimulationClock>();
+
+            // The Engine that runs the simulation and updates all systems
+            services.AddSingleton<SimulationEngine>();
+
+            // The ViewModels
+            services.AddTransient<MainWindowViewModel>();
         }
 
         private void DisableAvaloniaDataAnnotationValidation()
