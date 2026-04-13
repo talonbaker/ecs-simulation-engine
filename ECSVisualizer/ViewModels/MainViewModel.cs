@@ -30,8 +30,12 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel(SimulationEngine engine, SimulationClock clock)
     {
+        // This is the "brain" that creates the tags!
+
         _engine = engine;
         _clock = clock;
+
+        _engine.AddSystem(new BiologicalConditionSystem());
 
         // Setup a 60 FPS timer
         _timer = new DispatcherTimer
@@ -70,35 +74,40 @@ public partial class MainViewModel : ObservableObject
             HungerDisplay = $"Hunger: {human.Get<MetabolismComponent>().Hunger:F1}%";
         }
     }
-
     private void UpdateEntityListUI()
     {
         ActiveEntityList.Clear();
 
         foreach (var entity in _engine.EntityManager.GetAllEntities())
         {
-            // Start with the ID
-            var detail = new StringBuilder($"[{entity.ShortId}]");
+            var detail = new StringBuilder();
+            var allComponents = entity.GetAllComponents().ToList();
 
-            // Check for a Tag first to give the entity a name
-            if (entity.Has<IdentityComponent>())
+            // 1. IDENTITY
+            var identity = allComponents.OfType<IdentityComponent>().FirstOrDefault();
+            detail.Append($"[{entity.ShortId}] {(identity.Name ?? "Entity")}");
+
+            // 2. TAGS (Manual Check)
+            // This explicitly checks for the tags we defined in Tags.cs
+            if (entity.Has<HungerTag>()) detail.Append(" [HUNGRY]");
+            if (entity.Has<ThirstTag>()) detail.Append(" [THIRSTY]");
+            if (entity.Has<StarvingTag>()) detail.Append(" [STARVING]");
+            if (entity.Has<DehydratedTag>()) detail.Append(" [DEHYDRATED]");
+            if (entity.Has<IrritableTag>()) detail.Append(" [IRRITABLE]");
+
+            detail.Append(" | ");
+
+            // 3. DATA COMPONENTS
+            foreach (var component in allComponents)
             {
-                var tag = entity.Get<IdentityComponent>();
-                detail.Append($" {tag.Name} |");
-            }
+                var type = component.GetType();
 
-            // Loop through everything else
-            foreach (var component in entity.GetAllComponents())
-            {
-                // Skip the Tag since we already handled it
-                if (component is IdentityComponent) continue;
+                // Skip the Identity and the Marker Tags so they don't double-up
+                if (type == typeof(IdentityComponent) || type.Name.EndsWith("Tag"))
+                    continue;
 
-                string name = component.GetType().Name.Replace("Component", "");
-                detail.Append($" {name}: {component} |");
-
-                if (entity.Has<ThirstyTag>()) detail.Append(" [THIRSTY]");
-                if (entity.Has<HungryTag>()) detail.Append(" [HUNGRY]");
-                if (entity.Has<StarvingTag>()) detail.Append(" !!STARVING!!");
+                string name = type.Name.Replace("Component", "");
+                detail.Append($"{name}: {component} | ");
             }
 
             ActiveEntityList.Add(detail.ToString().TrimEnd('|', ' '));

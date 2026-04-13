@@ -39,7 +39,7 @@ public partial class App : Application
         EntityTemplates.SpawnHuman(manager);
 
         // Create cat entity
-        EntityTemplates.SpawnCat(manager);
+        //EntityTemplates.SpawnCat(manager);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -63,6 +63,7 @@ public partial class App : Application
 
         // 2. Register the System
         engine?.AddSystem(new MetabolismSystem());
+        engine?.AddSystem(new BiologicalConditionSystem());
         engine?.AddSystem(new FeedingSystem());
         engine?.AddSystem(new EsophagusSystem());
 

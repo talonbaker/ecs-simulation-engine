@@ -43,10 +43,12 @@
          BorderBrush="#333333"
          BorderThickness="1">
     <ListBox.ItemTemplate>
-        <DataTemplate>
+    <DataTemplate>
+        <Border Padding="2">
             <TextBlock Text="{Binding}" Foreground="#CCCCCC" FontFamily="Consolas"/>
-        </DataTemplate>
-    </ListBox.ItemTemplate>
+        </Border>
+    </DataTemplate>
+</ListBox.ItemTemplate>
 </ListBox>
     </StackPanel>
 

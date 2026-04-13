@@ -15,7 +15,9 @@ public struct MetabolismComponent
     // 100% / 300 minutes (5 hours) = ~0.33 per minute
     public float HungerRate;
     public float ThirstRate;
-
-    public override string ToString() =>
-        $"H: {Hunger:F1}% (+{HungerRate}) | T: {Thirst:F1}% (+{ThirstRate}) | Temp: {BodyTemp:F1}°C";
+    public override string ToString()
+    {
+        // Replaced H/T with full words for clarity
+        return $"Hunger: {Hunger:F1}% (+{HungerRate}) | Thirst: {Thirst:F1}% (+{ThirstRate}) | Temp: {BodyTemp:F1}°C";
+    }
 }
