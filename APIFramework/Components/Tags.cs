@@ -20,3 +20,8 @@ public struct HumanTag { }
 public struct CatTag { }
 public struct BolusTag { }
 #endregion
+
+#region Desire Tags
+public struct FoodDesireTag { }
+public struct WaterDesireTag { }
+#endregion
