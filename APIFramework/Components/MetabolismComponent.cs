@@ -2,6 +2,8 @@
 
 public struct MetabolismComponent
 {
-    public float Hunger;      // 0.0 to 100.0
-    public float HungerRate;  // How much hunger increases per second
+    public float Hunger;
+    public float HungerRate;
+
+    public override string ToString() => $"{Hunger:F1}% (+{HungerRate}/s)";
 }

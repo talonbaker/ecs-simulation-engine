@@ -3,13 +3,17 @@ using APIFramework.Core;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace ECSVisualizer.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
+    public ObservableCollection<string> ActiveEntityList { get; } = new();
+
     private readonly SimulationEngine _engine;
     private readonly SimulationClock _clock;
     private readonly DispatcherTimer _timer;
@@ -43,25 +47,34 @@ public partial class MainViewModel : ObservableObject
 
     private void OnTick(object? sender, EventArgs e)
     {
-        // 1. Get the current exact time from the CPU
-        double currentElapsedSeconds = _stopwatch.Elapsed.TotalSeconds;
+        // 1. Timing (The Heartbeat)
+        double currentSeconds = _stopwatch.Elapsed.TotalSeconds;
+        float realDeltaTime = (float)(currentSeconds - _lastElapsedSeconds);
+        _lastElapsedSeconds = currentSeconds;
 
-        // 2. Calculate the actual Delta (the difference since last tick)
-        float realDeltaTime = (float)(currentElapsedSeconds - _lastElapsedSeconds);
-        _lastElapsedSeconds = currentElapsedSeconds;
-
-        // 3. Update the engine with the REAL delta
         _engine.Update(realDeltaTime);
-
-        // 4. Update the UI
         CurrentTimeDisplay = TimeSpan.FromSeconds(_clock.TotalTime).ToString(@"hh\:mm\:ss\.ff");
 
-        // Find our human and update the UI string
+        ActiveEntityList.Clear();
+
+        foreach (var entity in _engine.Manager.GetAllEntities())
+        {
+            // Use the ShortId here for professional-looking logs
+            var detail = new StringBuilder($"[{entity.ShortId}]");
+
+            foreach (var component in entity.GetAllComponents())
+            {
+                string name = component.GetType().Name.Replace("Component", "");
+                detail.Append($" | {name}: {component}");
+            }
+
+            ActiveEntityList.Add(detail.ToString());
+        }
+
         var human = _engine.Manager.Query<MetabolismComponent>().FirstOrDefault();
         if (human != null)
         {
-            var meta = human.Get<MetabolismComponent>();
-            HungerDisplay = $"Hunger: {meta.Hunger:F1}%";
+            HungerDisplay = $"Hunger: {human.Get<MetabolismComponent>().Hunger:F1}%";
         }
     }
 
