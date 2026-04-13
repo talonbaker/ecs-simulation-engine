@@ -9,13 +9,12 @@ public class MetabolismSystem : ISystem
     {
         foreach (var entity in em.Query<MetabolismComponent>())
         {
-            // 1. This creates a COPY of the data
             var meta = entity.Get<MetabolismComponent>();
 
-            // 2. You modify the COPY
+            // No more hard-coded 0.2f!
             meta.Hunger += meta.HungerRate * deltaTime;
+            meta.Thirst += meta.ThirstRate * deltaTime;
 
-            // 3. YOU MUST OVERWRITE the original data with the updated copy
             entity.Add(meta);
         }
     }

@@ -2,29 +2,30 @@
 
 public class SimulationEngine
 {
-    private readonly List<ISystem> _systems = new();
+    public List<ISystem> Systems { get; private set; } = new();
 
-    // Change this to a public property with a private setter
-    public EntityManager Manager { get; private set; }
+    public EntityManager EntityManager { get; private set; }
+    public SimulationClock Clock { get; private set; }
 
-    private readonly SimulationClock _clock;
-
+    // We inject the manager and clock so they can be shared/monitored
     public SimulationEngine(EntityManager entityManager, SimulationClock clock)
     {
-        Manager = entityManager; // Assign it here
-        _clock = clock;
+        EntityManager = entityManager;
+        Clock = clock;
     }
 
-    public void AddSystem(ISystem system) => _systems.Add(system);
+    public void AddSystem(ISystem system) => Systems.Add(system);
 
     public void Update(float realDeltaTime)
     {
-        _clock.DeltaTime = realDeltaTime * _clock.TimeScale;
-        _clock.TotalTime += _clock.DeltaTime;
+        // Update the clock with the scaled time
+        Clock.DeltaTime = realDeltaTime * Clock.TimeScale;
+        Clock.TotalTime += Clock.DeltaTime;
 
-        foreach (var system in _systems)
+        // Run every system in the order they were added
+        foreach (var system in Systems)
         {
-            system.Update(Manager, _clock.DeltaTime);
+            system.Update(EntityManager, Clock.DeltaTime);
         }
     }
 }

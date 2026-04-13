@@ -13,14 +13,11 @@ namespace ECSVisualizer.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     public ObservableCollection<string> ActiveEntityList { get; } = new();
+    private int _frameCount = 0;
 
     private readonly SimulationEngine _engine;
     private readonly SimulationClock _clock;
     private readonly DispatcherTimer _timer;
-
-    // Add a field to your class
-    private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
-    private double _lastElapsedSeconds = 0;
 
     [ObservableProperty]
     private string _currentTimeDisplay = "00:00:00";
@@ -47,34 +44,64 @@ public partial class MainViewModel : ObservableObject
 
     private void OnTick(object? sender, EventArgs e)
     {
-        // 1. Timing (The Heartbeat)
-        double currentSeconds = _stopwatch.Elapsed.TotalSeconds;
-        float realDeltaTime = (float)(currentSeconds - _lastElapsedSeconds);
-        _lastElapsedSeconds = currentSeconds;
+        // 1. Define the Fixed Delta (1/60th of a second)
+        // We no longer measure the stopwatch. We assume exactly 0.0166 seconds.
+        const float fixedDeltaTime = 0.0166667f;
 
-        _engine.Update(realDeltaTime);
-        CurrentTimeDisplay = TimeSpan.FromSeconds(_clock.TotalTime).ToString(@"hh\:mm\:ss\.ff");
+        // 2. Run the Engine
+        // The engine still applies the TimeScale internally: (0.0166 * Scale)
+        _engine.Update(fixedDeltaTime);
 
-        ActiveEntityList.Clear();
+        // 3. Update the UI Clock
+        CurrentTimeDisplay = TimeSpan.FromSeconds(_engine.Clock.TotalTime).ToString(@"hh\:mm\:ss");
 
-        foreach (var entity in _engine.Manager.GetAllEntities())
+        // 4. Deferred UI List Refresh
+        _frameCount++;
+        if (_frameCount % 5 == 0)
         {
-            // Use the ShortId here for professional-looking logs
-            var detail = new StringBuilder($"[{entity.ShortId}]");
-
-            foreach (var component in entity.GetAllComponents())
-            {
-                string name = component.GetType().Name.Replace("Component", "");
-                detail.Append($" | {name}: {component}");
-            }
-
-            ActiveEntityList.Add(detail.ToString());
+            UpdateEntityListUI();
+            _frameCount = 0;
         }
 
-        var human = _engine.Manager.Query<MetabolismComponent>().FirstOrDefault();
+        // 5. Update KPI Display
+        var human = _engine.EntityManager.Query<MetabolismComponent>().FirstOrDefault();
         if (human != null)
         {
             HungerDisplay = $"Hunger: {human.Get<MetabolismComponent>().Hunger:F1}%";
+        }
+    }
+
+    private void UpdateEntityListUI()
+    {
+        ActiveEntityList.Clear();
+
+        foreach (var entity in _engine.EntityManager.GetAllEntities())
+        {
+            // Start with the ID
+            var detail = new StringBuilder($"[{entity.ShortId}]");
+
+            // Check for a Tag first to give the entity a name
+            if (entity.Has<IdentityComponent>())
+            {
+                var tag = entity.Get<IdentityComponent>();
+                detail.Append($" {tag.Name} |");
+            }
+
+            // Loop through everything else
+            foreach (var component in entity.GetAllComponents())
+            {
+                // Skip the Tag since we already handled it
+                if (component is IdentityComponent) continue;
+
+                string name = component.GetType().Name.Replace("Component", "");
+                detail.Append($" {name}: {component} |");
+
+                if (entity.Has<ThirstyTag>()) detail.Append(" [THIRSTY]");
+                if (entity.Has<HungryTag>()) detail.Append(" [HUNGRY]");
+                if (entity.Has<StarvingTag>()) detail.Append(" !!STARVING!!");
+            }
+
+            ActiveEntityList.Add(detail.ToString().TrimEnd('|', ' '));
         }
     }
 

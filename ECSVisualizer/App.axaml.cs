@@ -28,17 +28,19 @@ public partial class App : Application
         // 3. Build the provider and store it in the class property
         Services = serviceCollection.BuildServiceProvider();
 
-        // 4. NOW initialize the simulation world
         var engine = Services.GetRequiredService<SimulationEngine>();
         var manager = Services.GetRequiredService<EntityManager>();
 
-        // Register the worker and the entity
         engine.AddSystem(new MetabolismSystem());
+        engine.AddSystem(new FeedingSystem());
+        engine.AddSystem(new EsophagusSystem());
 
-        var human = manager.CreateEntity();
-        human.Add(new MetabolismComponent { Hunger = 0f, HungerRate = 5.0f });
+        // Create human entity
+        EntityTemplates.SpawnHuman(manager);
 
-        // 5. Setup the UI
+        // Create cat entity
+        EntityTemplates.SpawnCat(manager);
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new Views.MainWindow
