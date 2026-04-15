@@ -2,7 +2,7 @@
 
 A biological life simulation built on a hand-rolled Entity Component System framework in C# / .NET 8. Built to learn ECS architecture, framework design, and emergent systems from the ground up.
 
-![demo](https://github.com/user-attachments/assets/a08c1be7-e1af-4418-b443-c483103319f5)
+![demo](PlacePending/demo.gif)
 
 ---
 
