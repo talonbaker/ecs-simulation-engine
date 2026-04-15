@@ -17,4 +17,11 @@ public class EntityManager
     // This is what your systems will use to find "Mouths" or "Stomachs"
     public IEnumerable<Entity> Query<T>() where T : struct
         => _entities.Where(e => e.Has<T>());
+
+    // Inside EntityManager.cs
+    public IEnumerable<Entity> GetAllEntities()
+    {
+        // If you are using a List<Entity> named _entities, just return it directly.
+        return _entities;
+    }
 }
