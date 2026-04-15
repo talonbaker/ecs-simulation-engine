@@ -1,4 +1,4 @@
-﻿using APIFramework.Components;
+using APIFramework.Components;
 using APIFramework.Core;
 
 namespace APIFramework.Systems;
@@ -15,31 +15,11 @@ public class InteractionSystem : ISystem
 
             if (isEsophagusBusy) continue;
 
-            // STRATEGY 1: Get food from Fridge
-            if (human.Has<FoodDesireTag>() && !human.Has<FoodObjectComponent>())
-            {
-                var fridgeEntity = em.Query<RefrigeratorComponent>().FirstOrDefault();
-                if (fridgeEntity != null)
-                {
-                    var fridge = fridgeEntity.Get<RefrigeratorComponent>();
-                    if (fridge.BananaCount > 0)
-                    {
-                        fridge.BananaCount--;
-                        fridgeEntity.Add(fridge); // Update fridge
+            // TODO: Food delivery goes here — fridge, counter, bowl, etc.
+            // When a food source entity exists in the world, this system will query for it,
+            // pull food from it, and add a FoodObjectComponent to the human.
 
-                        // Human "picks up" the banana (it becomes a component on them)
-                        human.Add(new FoodObjectComponent
-                        {
-                            Name = "Banana",
-                            NutritionPerBite = 20f,
-                            BitesRemaining = 3,
-                            Toughness = 0.2f
-                        });
-                    }
-                }
-            }
-
-            // STRATEGY 2: Take a bite of held food
+            // Take a bite of whatever is already held
             if (human.Has<FoodObjectComponent>())
             {
                 TakeBite(em, human);
@@ -51,25 +31,26 @@ public class InteractionSystem : ISystem
     {
         var food = human.Get<FoodObjectComponent>();
 
-        // 1. Create the Bolus (The transformation!)
+        // Create the bolus from the bite
         var bolus = em.CreateEntity();
         bolus.Add(new IdentityComponent("Banana Bolus", "Bolus"));
         bolus.Add(new BolusComponent
         {
             NutritionValue = food.NutritionPerBite,
-            FoodType = food.Name,
-            Volume = 10f
+            FoodType       = food.Name,
+            Volume         = 50f,  // ml — reasonable bite volume
+            Toughness      = food.Toughness
         });
 
-        // 2. Put it in the Esophagus
+        // Send it down the esophagus toward this human's stomach
         bolus.Add(new EsophagusTransitComponent
         {
-            Progress = 0f,
-            Speed = 0.3f,
+            Progress     = 0f,
+            Speed        = 0.3f,
             TargetEntityId = human.Id
         });
 
-        // 3. Update the held food
+        // Consume one bite from the held food
         food.BitesRemaining--;
         if (food.BitesRemaining <= 0) human.Remove<FoodObjectComponent>();
         else human.Add(food);

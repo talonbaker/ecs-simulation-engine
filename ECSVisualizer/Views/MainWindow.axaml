@@ -3,81 +3,203 @@
         xmlns:vm="using:ECSVisualizer.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="600"
+        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="700"
         x:Class="ECSVisualizer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Icon="/Assets/avalonia-logo.ico"
         Title="ECS Biological Simulation"
-        Background="#121212">
+        Background="#0D0D0D"
+        Width="460" MinWidth="380">
 
     <Design.DataContext>
         <vm:MainViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto, *">
-        <StackPanel Grid.Row="0" Margin="20" Spacing="15">
-            <TextBlock Text="WORLD SIMULATION CLOCK" 
-                       FontSize="12" 
-                       FontWeight="Bold" 
-                       LetterSpacing="2"
-                       Foreground="#888888"/>
-            
-            <Grid ColumnDefinitions="*, Auto">
-                <Border Grid.Column="0" Padding="20,10" Background="#1E1E1E" CornerRadius="4" BorderBrush="#333333" BorderThickness="1">
-                    <TextBlock Text="{Binding CurrentTimeDisplay}" 
-                               FontSize="48" 
-                               FontFamily="Consolas"
-                               FontWeight="Light"
-                               Foreground="#00FF41"/> </Border>
-                
-                <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="TIME SCALE" FontSize="10" Foreground="#666666" HorizontalAlignment="Center"/>
-                    <TextBlock Text="{Binding TimeScale, StringFormat={}{0:F1}x}" 
-                               FontSize="18" 
-                               FontWeight="Bold" 
-                               Foreground="#BB86FC" 
-                               HorizontalAlignment="Center"/>
-                    <Slider Value="{Binding TimeScale}" 
-                            Minimum="0" Maximum="10" 
-                            Width="120"
-                            TickFrequency="0.1" 
-                            IsSnapToTickEnabled="True"/>
-                </StackPanel>
-            </Grid>
-        </StackPanel>
+    <ScrollViewer>
+        <StackPanel Margin="16" Spacing="16">
 
-        <Grid Grid.Row="1" Margin="20,0,20,20" RowDefinitions="Auto, *">
-            <Border Grid.Row="0" Padding="0,5" BorderBrush="#333333" BorderThickness="0,0,0,1" Margin="0,0,0,10">
-                <TextBlock Text="LIVE ENTITY FEED" FontSize="12" FontWeight="Bold" LetterSpacing="1" Foreground="#888888"/>
+            <!-- ── HEADER: Clock + Time Scale ─────────────────────────────── -->
+            <Border Background="#141414" CornerRadius="6" Padding="16,14"
+                    BorderBrush="#2A2A2A" BorderThickness="1">
+                <Grid ColumnDefinitions="*, Auto">
+
+                    <StackPanel Grid.Column="0" Spacing="2">
+                        <TextBlock Text="SIMULATION CLOCK"
+                                   FontSize="9" FontWeight="Bold" LetterSpacing="2"
+                                   Foreground="#444444"/>
+                        <TextBlock Text="{Binding CurrentTimeDisplay}"
+                                   FontSize="36" FontFamily="Consolas" FontWeight="Light"
+                                   Foreground="#00FF41"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center"
+                                Spacing="2" Margin="16,0,0,0">
+                        <TextBlock Text="TIME SCALE" FontSize="9" LetterSpacing="1"
+                                   Foreground="#444444" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding TimeScale, StringFormat={}{0:F1}x}"
+                                   FontSize="18" FontWeight="Bold" Foreground="#BB86FC"
+                                   HorizontalAlignment="Center"/>
+                        <Slider Value="{Binding TimeScale}"
+                                Minimum="0" Maximum="10" Width="110"
+                                TickFrequency="0.5" IsSnapToTickEnabled="True"/>
+                    </StackPanel>
+
+                </Grid>
             </Border>
 
-            <ListBox Grid.Row="1" 
-                     ItemsSource="{Binding ActiveEntityList}" 
-                     Background="Transparent"
-                     BorderThickness="0">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border Margin="0,2" 
-                                Padding="12,8" 
-                                Background="#1A1A1A" 
-                                CornerRadius="2" 
-                                BorderBrush="#252525" 
-                                BorderThickness="1">
-                            <TextBlock Text="{Binding}" 
-                                       Foreground="#DCDCDC" 
-                                       FontFamily="Consolas" 
-                                       FontSize="13"
-                                       TextWrapping="Wrap">
-                                <TextBlock.Transitions>
-                                    <Transitions>
-                                        <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
-                                    </Transitions>
-                                </TextBlock.Transitions>
-                            </TextBlock>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Grid>
-    </Grid>
+            <!-- ── LIVING ENTITIES ─────────────────────────────────────────── -->
+            <StackPanel Spacing="6">
+                <TextBlock Text="LIVING ENTITIES"
+                           FontSize="9" FontWeight="Bold" LetterSpacing="2"
+                           Foreground="#444444"/>
+
+                <ItemsControl ItemsSource="{Binding LivingEntities}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:EntityViewModel">
+                            <Border Margin="0,0,0,4" Padding="14,12"
+                                    Background="#141414" CornerRadius="6"
+                                    BorderBrush="#252525" BorderThickness="1">
+                                <StackPanel Spacing="10">
+
+                                    <!-- Name + ID -->
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                                   FontSize="15" FontWeight="SemiBold"
+                                                   Foreground="#E0E0E0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding EntityId}"
+                                                   FontSize="10" FontFamily="Consolas"
+                                                   Foreground="#383838" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <!-- Active Tags -->
+                                    <Border IsVisible="{Binding HasActiveTags}"
+                                            Background="#1E1A00" CornerRadius="3" Padding="8,4">
+                                        <TextBlock Text="{Binding ActiveTags}"
+                                                   FontSize="10" FontWeight="Bold"
+                                                   Foreground="#FFD60A" FontFamily="Consolas"/>
+                                    </Border>
+
+                                    <!-- Metabolism -->
+                                    <StackPanel IsVisible="{Binding HasMetabolism}" Spacing="8">
+                                        <Border Background="#0D0D0D" CornerRadius="4" Padding="10,10">
+                                            <StackPanel Spacing="10">
+
+                                                <!-- SATIATION resource bar -->
+                                                <StackPanel Spacing="4">
+                                                    <Grid ColumnDefinitions="70, *, Auto">
+                                                        <TextBlock Grid.Column="0" Text="SATIATION"
+                                                                   FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                                   Foreground="#666666" VerticalAlignment="Center"/>
+                                                        <ProgressBar Grid.Column="1" Margin="6,0"
+                                                                     Value="{Binding Satiation}" Maximum="100"
+                                                                     Foreground="#30D158" Background="#1A1A1A"
+                                                                     Height="7" CornerRadius="4"/>
+                                                        <TextBlock Grid.Column="2"
+                                                                   Text="{Binding SatiationLabel}"
+                                                                   FontSize="11" FontFamily="Consolas"
+                                                                   Foreground="#30D158" VerticalAlignment="Center"
+                                                                   Width="42" TextAlignment="Right"/>
+                                                    </Grid>
+                                                    <!-- Derived hunger sensation -->
+                                                    <TextBlock Text="{Binding HungerLabel}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#FF6B35" Margin="76,0,0,0"/>
+                                                </StackPanel>
+
+                                                <!-- HYDRATION resource bar -->
+                                                <StackPanel Spacing="4">
+                                                    <Grid ColumnDefinitions="70, *, Auto">
+                                                        <TextBlock Grid.Column="0" Text="HYDRATION"
+                                                                   FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                                   Foreground="#666666" VerticalAlignment="Center"/>
+                                                        <ProgressBar Grid.Column="1" Margin="6,0"
+                                                                     Value="{Binding Hydration}" Maximum="100"
+                                                                     Foreground="#0A84FF" Background="#1A1A1A"
+                                                                     Height="7" CornerRadius="4"/>
+                                                        <TextBlock Grid.Column="2"
+                                                                   Text="{Binding HydrationLabel}"
+                                                                   FontSize="11" FontFamily="Consolas"
+                                                                   Foreground="#0A84FF" VerticalAlignment="Center"
+                                                                   Width="42" TextAlignment="Right"/>
+                                                    </Grid>
+                                                    <!-- Derived thirst sensation -->
+                                                    <TextBlock Text="{Binding ThirstLabel}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#5AC8FA" Margin="76,0,0,0"/>
+                                                </StackPanel>
+
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Stomach -->
+                                        <Border IsVisible="{Binding HasStomach}"
+                                                Background="#0D0D0D" CornerRadius="4" Padding="10,10">
+                                            <StackPanel Spacing="4">
+                                                <Grid ColumnDefinitions="70, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="STOMACH"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#666666" VerticalAlignment="Center"/>
+                                                    <ProgressBar Grid.Column="1" Margin="6,0"
+                                                                 Value="{Binding StomachFill}" Maximum="100"
+                                                                 Foreground="#FF9F0A" Background="#1A1A1A"
+                                                                 Height="7" CornerRadius="4"/>
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding StomachLabel}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#FF9F0A" VerticalAlignment="Center"
+                                                               Width="42" TextAlignment="Right"/>
+                                                </Grid>
+                                                <TextBlock Text="{Binding DigestionLabel}"
+                                                           FontSize="10" FontFamily="Consolas"
+                                                           Foreground="#333333" Margin="76,0,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+
+                                    </StackPanel>
+
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- ── PIPELINE: Esophagus Transit ────────────────────────────── -->
+            <StackPanel Spacing="6">
+                <TextBlock Text="ESOPHAGUS PIPELINE"
+                           FontSize="9" FontWeight="Bold" LetterSpacing="2"
+                           Foreground="#444444"/>
+
+                <TextBlock Text="— nothing in transit —"
+                           IsVisible="{Binding !PipelineEntities.Count}"
+                           FontSize="11" FontFamily="Consolas"
+                           Foreground="#2A2A2A" Margin="4,0"/>
+
+                <ItemsControl ItemsSource="{Binding PipelineEntities}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:EntityViewModel">
+                            <Border Margin="0,0,0,4" Padding="12,10"
+                                    Background="#12101A" CornerRadius="6"
+                                    BorderBrush="#2A2040" BorderThickness="1">
+                                <StackPanel Spacing="6">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBlock Grid.Column="0" Text="{Binding TransitLabel}"
+                                                   FontSize="11" FontFamily="Consolas"
+                                                   Foreground="#BF5AF2"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding EntityId}"
+                                                   FontSize="10" FontFamily="Consolas"
+                                                   Foreground="#333333"/>
+                                    </Grid>
+                                    <ProgressBar Value="{Binding TransitProgress}" Maximum="100"
+                                                 Foreground="#BF5AF2" Background="#1E1A2A"
+                                                 Height="5" CornerRadius="3"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+
 </Window>

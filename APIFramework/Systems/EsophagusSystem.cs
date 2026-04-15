@@ -1,4 +1,4 @@
-﻿using APIFramework.Components;
+using APIFramework.Components;
 using APIFramework.Core;
 
 namespace APIFramework.Systems;
@@ -16,36 +16,36 @@ public class EsophagusSystem : ISystem
 
             if (transit.Progress >= 1.0f)
             {
-                // 1. Find the Human/Cat that swallowed this
+                // Find the consumer this bolus/liquid was headed for
                 var consumer = em.GetAllEntities().FirstOrDefault(e => e.Id == transit.TargetEntityId);
 
-                if (consumer != null && consumer.Has<MetabolismComponent>())
+                if (consumer != null && consumer.Has<StomachComponent>())
                 {
-                    var meta = consumer.Get<MetabolismComponent>();
+                    var stomach = consumer.Get<StomachComponent>();
 
                     if (entity.Has<LiquidComponent>())
                     {
                         var liquid = entity.Get<LiquidComponent>();
-                        meta.Thirst -= liquid.HydrationValue; // Satisfies Thirst
+                        // Physical volume enters the stomach; hydration waits to be absorbed by digestion
+                        stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + liquid.VolumeMl, StomachComponent.MaxVolumeMl);
+                        stomach.HydrationQueued += liquid.HydrationValue;
                     }
                     else if (entity.Has<BolusComponent>())
                     {
                         var bolus = entity.Get<BolusComponent>();
-                        meta.Hunger -= bolus.NutritionValue; // Satisfies Hunger
+                        // Physical volume enters the stomach; nutrition waits to be absorbed by digestion
+                        stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + bolus.Volume, StomachComponent.MaxVolumeMl);
+                        stomach.NutritionQueued += bolus.NutritionValue;
                     }
 
-                    // Clamp values so they don't go negative
-                    if (meta.Thirst < 0) meta.Thirst = 0;
-                    if (meta.Hunger < 0) meta.Hunger = 0;
-
-                    consumer.Add(meta);
+                    consumer.Add(stomach);
                 }
 
                 em.DestroyEntity(entity);
             }
             else
             {
-                entity.Add(transit); // Use .Set instead of .Add for updates
+                entity.Add(transit);
             }
         }
     }

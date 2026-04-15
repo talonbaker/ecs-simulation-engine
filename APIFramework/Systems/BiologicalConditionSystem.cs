@@ -1,60 +1,70 @@
-﻿using APIFramework.Components;
+using APIFramework.Components;
 using APIFramework.Core;
 
-
-// Only spawn water if:
-// 1. Human is Thirsty
-// 2. Human is NOT already swallowing (Esophagus is clear)
-// 3. Human DOES NOT already have a "Water Desire" being processed
+namespace APIFramework.Systems;
 
 public class BiologicalConditionSystem : ISystem
 {
     public void Update(EntityManager em, float deltaTime)
     {
-        // 1. GLOBAL PAUSE CHECK
-        // This prevents the "Infinite Scroll" bug when time is 0
         if (deltaTime <= 0) return;
 
         foreach (var entity in em.Query<MetabolismComponent>().ToList())
         {
             var meta = entity.Get<MetabolismComponent>();
 
-            // 2. CONSOLIDATED CONCURRENCY CHECK
-            // We look for ANY entity in the world where the Target is THIS human
-            bool throatIsBusy = em.Query<EsophagusTransitComponent>()
+            // ── Biological tag management ────────────────────────────────────
+            // Hunger and Thirst are computed: Hunger = 100 - Satiation, Thirst = 100 - Hydration
+            // Thresholds are on the 0-100 sensation scale
+            ToggleTag<ThirstTag>   (entity, meta.Thirst >= 30f);  // Hydration < 70 — starting to feel thirsty
+            ToggleTag<DehydratedTag>(entity, meta.Thirst >= 70f); // Hydration < 30 — severely dehydrated
+            ToggleTag<HungerTag>   (entity, meta.Hunger >= 30f);  // Satiation < 70 — starting to feel hungry
+            ToggleTag<StarvingTag> (entity, meta.Hunger >= 80f);  // Satiation < 20 — starving
+            ToggleTag<IrritableTag>(entity, meta.Hunger > 60f || meta.Thirst > 60f);
+
+            // ── Water intake ─────────────────────────────────────────────────
+            if (!entity.Has<ThirstTag>()) continue;
+
+            bool throatBusy = em.Query<EsophagusTransitComponent>()
                 .Any(t => t.Get<EsophagusTransitComponent>().TargetEntityId == entity.Id);
+            if (throatBusy) continue;
 
-            // 3. BIOLOGICAL TAG MANAGEMENT
-            // These just flip the UI badges
-            ToggleTag<ThirstTag>(entity, meta.Thirst >= 70f);
-            ToggleTag<DehydratedTag>(entity, meta.Thirst >= 105f);
-            ToggleTag<HungerTag>(entity, meta.Hunger >= 75f);
-            ToggleTag<StarvingTag>(entity, meta.Hunger >= 105f);
-            ToggleTag<IrritableTag>(entity, meta.Hunger > 90f || meta.Thirst > 90f);
-
-            // 4. SEQUENTIAL ACTION LOGIC
-            // We only create water if they are thirsty AND the throat is clear
-            if (entity.Has<ThirstTag>() && !throatIsBusy)
+            // Prevent machine-gun gulping — don't queue more water than the stomach
+            // can absorb in the near term. Exception: override when severely dehydrated.
+            // TODO: Replace with priority queue urgency scoring when Brain is implemented.
+            if (entity.Has<StomachComponent>())
             {
-                var water = em.CreateEntity();
-                water.Add(new IdentityComponent("Water", "Liquid"));
-
-                // Lowered to 15f for more realistic, repeated gulps
-                water.Add(new LiquidComponent { HydrationValue = 15f, LiquidType = "Water" });
-
-                water.Add(new EsophagusTransitComponent
-                {
-                    Progress = 0f,
-                    Speed = 0.8f, // Water is fast!
-                    TargetEntityId = entity.Id
-                });
+                var stomach = entity.Get<StomachComponent>();
+                bool severelyDehydrated = entity.Has<DehydratedTag>();
+                if (!severelyDehydrated && stomach.HydrationQueued >= 30f) continue;
+                if ( severelyDehydrated && stomach.HydrationQueued >= 60f) continue;
             }
+
+            // Yield the throat to FeedingSystem when hunger is meaningfully more urgent.
+            // A 15-point margin avoids reacting to near-equal values.
+            // TODO: Replace with priority queue when Brain is implemented.
+            if (meta.Hunger >= meta.Thirst + 15f && entity.Has<HungerTag>()) continue;
+
+            var water = em.CreateEntity();
+            water.Add(new IdentityComponent("Water", "Liquid"));
+            water.Add(new LiquidComponent
+            {
+                VolumeMl       = 15f,
+                HydrationValue = 30f,
+                LiquidType     = "Water"
+            });
+            water.Add(new EsophagusTransitComponent
+            {
+                Progress       = 0f,
+                Speed          = 0.8f,
+                TargetEntityId = entity.Id
+            });
         }
     }
 
     private void ToggleTag<T>(Entity entity, bool condition) where T : struct
     {
-        if (condition && !entity.Has<T>()) entity.Add(new T());
+        if (condition && !entity.Has<T>())      entity.Add(new T());
         else if (!condition && entity.Has<T>()) entity.Remove<T>();
     }
 }

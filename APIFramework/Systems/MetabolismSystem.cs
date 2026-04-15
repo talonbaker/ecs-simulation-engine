@@ -1,4 +1,4 @@
-﻿using APIFramework.Core;
+using APIFramework.Core;
 using APIFramework.Components;
 
 namespace APIFramework.Systems;
@@ -11,9 +11,11 @@ public class MetabolismSystem : ISystem
         {
             var meta = entity.Get<MetabolismComponent>();
 
-            // No more hard-coded 0.2f!
-            meta.Hunger += meta.HungerRate * deltaTime;
-            meta.Thirst += meta.ThirstRate * deltaTime;
+            // Drain the physiological resources over time.
+            // Hunger and Thirst are computed from these — they rise automatically
+            // as Satiation and Hydration fall.
+            meta.Satiation = MathF.Max(0f, meta.Satiation - meta.SatiationDrainRate * deltaTime);
+            meta.Hydration = MathF.Max(0f, meta.Hydration - meta.HydrationDrainRate * deltaTime);
 
             entity.Add(meta);
         }

@@ -1,122 +1,125 @@
-﻿using APIFramework.Components;
+using APIFramework.Components;
 using APIFramework.Core;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
 namespace ECSVisualizer.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    public ObservableCollection<string> ActiveEntityList { get; } = new();
+    // ── Simulation ───────────────────────────────────────────────────────────
+    private readonly SimulationBootstrapper _sim;
+    private readonly DispatcherTimer        _timer;
     private int _frameCount = 0;
 
-    private readonly SimulationEngine _engine;
-    private readonly SimulationClock _clock;
-    private readonly DispatcherTimer _timer;
+    // ── Clock ────────────────────────────────────────────────────────────────
+    [ObservableProperty] private string _currentTimeDisplay = "00:00:00";
 
-    [ObservableProperty]
-    private string _currentTimeDisplay = "00:00:00";
+    [ObservableProperty] private float _timeScale = 1.0f;
+    partial void OnTimeScaleChanged(float value) => _sim.Clock.TimeScale = value;
 
-    [ObservableProperty]
-    private float _timeScale = 1.0f;
+    // ── Entity Collections ───────────────────────────────────────────────────
+    // Living entities: anything with a metabolism (humans, cats)
+    public ObservableCollection<EntityViewModel> LivingEntities { get; } = new();
 
-    [ObservableProperty]
-    private string _hungerDisplay = "Hunger: 0%";
+    // Pipeline entities: bolus/liquid currently in the esophagus
+    public ObservableCollection<EntityViewModel> PipelineEntities { get; } = new();
 
-    public MainViewModel(SimulationEngine engine, SimulationClock clock)
+    // Cache so we reuse ViewModels instead of recreating them every frame
+    private readonly Dictionary<Guid, EntityViewModel> _viewModelCache = new();
+
+    // ── Design-time constructor (no args — Avalonia designer requires this) ──
+    public MainViewModel() : this(new SimulationBootstrapper()) { }
+
+    // ── Runtime constructor (injected by DI) ─────────────────────────────────
+    public MainViewModel(SimulationBootstrapper sim)
     {
-        // This is the "brain" that creates the tags!
+        _sim = sim;
 
-        _engine = engine;
-        _clock = clock;
-
-        _engine.AddSystem(new BiologicalConditionSystem());
-
-        // Setup a 60 FPS timer
-        _timer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(16)
-        };
+        _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) }; // ~60 fps
         _timer.Tick += OnTick;
         _timer.Start();
     }
 
     private void OnTick(object? sender, EventArgs e)
     {
-        // 1. Define the Fixed Delta (1/60th of a second)
-        // We no longer measure the stopwatch. We assume exactly 0.0166 seconds.
-        const float fixedDeltaTime = 0.0166667f;
+        // 1. Advance the simulation — this is the only place Update is called
+        const float fixedDelta = 1f / 60f;
+        _sim.Engine.Update(fixedDelta);
 
-        // 2. Run the Engine
-        // The engine still applies the TimeScale internally: (0.0166 * Scale)
-        _engine.Update(fixedDeltaTime);
+        // 2. Clock display
+        CurrentTimeDisplay = TimeSpan.FromSeconds(_sim.Clock.TotalTime).ToString(@"hh\:mm\:ss");
 
-        // 3. Update the UI Clock
-        CurrentTimeDisplay = TimeSpan.FromSeconds(_engine.Clock.TotalTime).ToString(@"hh\:mm\:ss");
-
-        // 4. Deferred UI List Refresh
+        // 3. Refresh entity displays every 3 frames (smooth enough, not wasteful)
         _frameCount++;
-        if (_frameCount % 5 == 0)
-        {
-            UpdateEntityListUI();
-            _frameCount = 0;
-        }
+        if (_frameCount % 3 != 0) return;
+        _frameCount = 0;
 
-        // 5. Update KPI Display
-        var human = _engine.EntityManager.Query<MetabolismComponent>().FirstOrDefault();
-        if (human != null)
-        {
-            HungerDisplay = $"Hunger: {human.Get<MetabolismComponent>().Hunger:F1}%";
-        }
+        RefreshLivingEntities();
+        RefreshPipelineEntities();
     }
-    private void UpdateEntityListUI()
+
+    private void RefreshLivingEntities()
     {
-        ActiveEntityList.Clear();
+        var living = _sim.EntityManager.Query<MetabolismComponent>().ToList();
 
-        foreach (var entity in _engine.EntityManager.GetAllEntities())
+        // Remove entries that no longer exist
+        var livingIds = living.Select(e => e.Id).ToHashSet();
+        var toRemove = LivingEntities.Where(vm => !livingIds.Contains(Guid.Parse(vm.EntityId.PadRight(32, '0')))).ToList();
+        // Simpler: just rebuild if counts differ, otherwise update in place
+        if (LivingEntities.Count != living.Count)
         {
-            var detail = new StringBuilder();
-            var allComponents = entity.GetAllComponents().ToList();
-
-            // 1. IDENTITY
-            var identity = allComponents.OfType<IdentityComponent>().FirstOrDefault();
-            detail.Append($"[{entity.ShortId}] {(identity.Name ?? "Entity")}");
-
-            // 2. TAGS (Manual Check)
-            // This explicitly checks for the tags we defined in Tags.cs
-            if (entity.Has<HungerTag>()) detail.Append(" [HUNGRY]");
-            if (entity.Has<ThirstTag>()) detail.Append(" [THIRSTY]");
-            if (entity.Has<StarvingTag>()) detail.Append(" [STARVING]");
-            if (entity.Has<DehydratedTag>()) detail.Append(" [DEHYDRATED]");
-            if (entity.Has<IrritableTag>()) detail.Append(" [IRRITABLE]");
-
-            detail.Append(" | ");
-
-            // 3. DATA COMPONENTS
-            foreach (var component in allComponents)
+            LivingEntities.Clear();
+            foreach (var entity in living)
             {
-                var type = component.GetType();
-
-                // Skip the Identity and the Marker Tags so they don't double-up
-                if (type == typeof(IdentityComponent) || type.Name.EndsWith("Tag"))
-                    continue;
-
-                string name = type.Name.Replace("Component", "");
-                detail.Append($"{name}: {component} | ");
+                var vm = GetOrCreateViewModel(entity.Id);
+                vm.Update(entity);
+                LivingEntities.Add(vm);
             }
+            return;
+        }
 
-            ActiveEntityList.Add(detail.ToString().TrimEnd('|', ' '));
+        // Update in place
+        for (int i = 0; i < living.Count; i++)
+        {
+            var vm = GetOrCreateViewModel(living[i].Id);
+            vm.Update(living[i]);
+            if (i < LivingEntities.Count && LivingEntities[i] != vm)
+                LivingEntities[i] = vm;
+            else if (i >= LivingEntities.Count)
+                LivingEntities.Add(vm);
         }
     }
 
-    // This handles the slider/input in the UI
-    partial void OnTimeScaleChanged(float value)
+    private void RefreshPipelineEntities()
     {
-        _clock.TimeScale = value;
+        var inTransit = _sim.EntityManager.Query<EsophagusTransitComponent>().ToList();
+
+        PipelineEntities.Clear();
+        foreach (var entity in inTransit)
+        {
+            var vm = GetOrCreateViewModel(entity.Id);
+            vm.Update(entity);
+            PipelineEntities.Add(vm);
+        }
+
+        // Evict stale cache entries for entities that no longer exist
+        var allIds = _sim.EntityManager.GetAllEntities().Select(e => e.Id).ToHashSet();
+        var stale  = _viewModelCache.Keys.Where(id => !allIds.Contains(id)).ToList();
+        foreach (var id in stale) _viewModelCache.Remove(id);
+    }
+
+    private EntityViewModel GetOrCreateViewModel(Guid id)
+    {
+        if (!_viewModelCache.TryGetValue(id, out var vm))
+        {
+            vm = new EntityViewModel();
+            _viewModelCache[id] = vm;
+        }
+        return vm;
     }
 }

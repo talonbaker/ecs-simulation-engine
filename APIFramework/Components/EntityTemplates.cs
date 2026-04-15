@@ -1,4 +1,4 @@
-﻿namespace APIFramework.Core;
+namespace APIFramework.Core;
 
 using APIFramework.Components;
 
@@ -10,12 +10,18 @@ public static class EntityTemplates
         entity.Add(new IdentityComponent { Name = "Human" });
         entity.Add(new MetabolismComponent
         {
-            // Rates represented in percentages per second
-            Hunger = 0f,
-            HungerRate = 1.2f,
-            Thirst = 0f,
-            ThirstRate = 2.5f,
-            BodyTemp = 37.0f
+            Satiation         = 100f,  // Starts fully satiated
+            Hydration         = 100f,  // Starts fully hydrated
+            BodyTemp          = 37.0f,
+            SatiationDrainRate = 0.3f, // Satiation depletes: 100→0 in ~5.5 min at 1x speed
+            HydrationDrainRate = 0.5f  // Hydration depletes: 100→0 in ~3.3 min at 1x speed
+        });
+        entity.Add(new StomachComponent
+        {
+            CurrentVolumeMl = 0f,
+            DigestionRate   = 2.0f,
+            NutritionQueued = 0f,
+            HydrationQueued = 0f
         });
 
         return entity;
@@ -27,11 +33,18 @@ public static class EntityTemplates
         entity.Add(new IdentityComponent { Name = "Cat" });
         entity.Add(new MetabolismComponent
         {
-            Hunger = 0f,
-            HungerRate = 0.5f,
-            Thirst = 0f,
-            ThirstRate = 0.8f,
-            BodyTemp = 38.5f
+            Satiation         = 100f,
+            Hydration         = 100f,
+            BodyTemp          = 38.5f,
+            SatiationDrainRate = 0.15f,
+            HydrationDrainRate = 0.25f
+        });
+        entity.Add(new StomachComponent
+        {
+            CurrentVolumeMl = 0f,
+            DigestionRate   = 1.0f,
+            NutritionQueued = 0f,
+            HydrationQueued = 0f
         });
 
         return entity;
