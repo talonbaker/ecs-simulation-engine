@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "human": {
+      "metabolism": {
+        "satiationStart":     100.0,
+        "hydrationStart":     100.0,
+        "bodyTemp":            37.0,
+        "satiationDrainRate":   0.3,
+        "hydrationDrainRate":   0.5
+      },
+      "stomach": {
+        "digestionRate": 2.0
+      }
+    },
+    "cat": {
+      "metabolism": {
+        "satiationStart":     100.0,
+        "hydrationStart":     100.0,
+        "bodyTemp":            38.5,
+        "satiationDrainRate":  0.15,
+        "hydrationDrainRate":  0.25
+      },
+      "stomach": {
+        "digestionRate": 1.0
+      }
+    }
+  },
+
+  "systems": {
+
+    "biologicalCondition": {
+      "thirstTagThreshold":     30.0,
+      "dehydratedTagThreshold": 70.0,
+      "hungerTagThreshold":     30.0,
+      "starvingTagThreshold":   80.0,
+      "irritableThreshold":     60.0
+    },
+
+    "brain": {
+      "eatMaxScore":   1.0,
+      "drinkMaxScore": 1.0,
+      "sleepMaxScore": 0.9
+    },
+
+    "feeding": {
+      "hungerThreshold":   40.0,
+      "nutritionQueueCap": 70.0,
+      "banana": {
+        "volumeMl":       50.0,
+        "nutritionValue": 35.0,
+        "toughness":       0.2,
+        "esophagusSpeed":  0.3
+      }
+    },
+
+    "drinking": {
+      "hydrationQueueCap":           30.0,
+      "hydrationQueueCapDehydrated": 60.0,
+      "water": {
+        "volumeMl":       15.0,
+        "hydrationValue": 30.0,
+        "esophagusSpeed":  0.8
+      }
+    },
+
+    "interaction": {
+      "biteVolumeMl":   50.0,
+      "esophagusSpeed":  0.3
+    }
+
+  }
+}

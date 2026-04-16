@@ -1,49 +1,65 @@
 using APIFramework.Components;
+using APIFramework.Config;
 using APIFramework.Core;
 
 namespace APIFramework.Systems;
 
-// Hardcoded food source — spawns a banana bolus directly when hunger crosses the threshold.
-// Stands in for a real food source (fridge, counter, etc.) until those exist in the world.
+/// <summary>
+/// Spawns a banana bolus into the esophagus when eating is the dominant drive.
+/// Stands in for a real food source (fridge, counter, bowl) until world food
+/// entities exist — at that point this system will query for available food
+/// rather than conjuring it from nothing.
+///
+/// Pipeline position: 4 of 8 — after BrainSystem has picked the dominant drive,
+/// before InteractionSystem.
+/// </summary>
 public class FeedingSystem : ISystem
 {
+    private readonly FeedingSystemConfig _cfg;
+
+    public FeedingSystem(FeedingSystemConfig cfg) => _cfg = cfg;
+
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<MetabolismComponent>().ToList())
         {
+            // Only act if the brain has selected Eat as the dominant drive
+            if (!entity.Has<DriveComponent>()) continue;
+            if (entity.Get<DriveComponent>().Dominant != DriveType.Eat) continue;
+
             var meta = entity.Get<MetabolismComponent>();
 
-            // Hunger is computed as (100 - Satiation); eat when 40% hungry (Satiation < 60)
-            if (meta.Hunger < 40f) continue;
+            // Don't eat if hunger is below the meaningful threshold
+            if (meta.Hunger < _cfg.HungerThreshold) continue;
 
-            // Severe dehydration takes priority — yield the throat to water
-            // TODO: Replace with priority queue when Brain is implemented.
-            if (entity.Has<DehydratedTag>()) continue;
-
+            // Throat must be clear — one thing at a time
             bool throatBusy = em.Query<EsophagusTransitComponent>()
                 .Any(t => t.Get<EsophagusTransitComponent>().TargetEntityId == entity.Id);
             if (throatBusy) continue;
 
+            // Don't queue more food than the stomach can digest soon
             if (entity.Has<StomachComponent>())
             {
                 var stomach = entity.Get<StomachComponent>();
                 if (stomach.IsFull) continue;
-                if (stomach.NutritionQueued >= 70f) continue;
+                if (stomach.NutritionQueued >= _cfg.NutritionQueueCap) continue;
             }
 
-            var bolus = em.CreateEntity();
+            // Spawn a banana bolus into the esophagus
+            var banana = _cfg.Banana;
+            var bolus  = em.CreateEntity();
             bolus.Add(new IdentityComponent("Banana Bolus", "Bolus"));
             bolus.Add(new BolusComponent
             {
-                Volume         = 50f,
-                NutritionValue = 35f,
+                Volume         = banana.VolumeMl,
+                NutritionValue = banana.NutritionValue,
                 FoodType       = "Banana",
-                Toughness      = 0.2f
+                Toughness      = banana.Toughness
             });
             bolus.Add(new EsophagusTransitComponent
             {
                 Progress       = 0f,
-                Speed          = 0.3f,
+                Speed          = banana.EsophagusSpeed,
                 TargetEntityId = entity.Id
             });
         }
