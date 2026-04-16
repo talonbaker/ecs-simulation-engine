@@ -1,0 +1,34 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33516.290
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIFramework", "APIFramework\APIFramework.csproj", "{A29D237D-C990-40AA-9988-EEC7868355DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECSVisualizer", "ECSVisualizer\ECSVisualizer.csproj", "{CFA62BB6-8480-471B-961C-20777E5A05D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECSCli", "ECSCli\ECSCli.csproj", "{711F290C-E800-4885-837B-EA0E91965EDD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A29D237D-C990-40AA-9988-EEC7868355DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A29D237D-C990-40AA-9988-EEC7868355DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A29D237D-C990-40AA-9988-EEC7868355DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A29D237D-C990-40AA-9988-EEC7868355DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFA62BB6-8480-471B-961C-20777E5A05D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFA62BB6-8480-471B-961C-20777E5A05D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFA62BB6-8480-471B-961C-20777E5A05D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFA62BB6-8480-471B-961C-20777E5A05D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{711F290C-E800-4885-837B-EA0E91965EDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{711F290C-E800-4885-837B-EA0E91965EDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{711F290C-E800-4885-837B-EA0E91965EDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{711F290C-E800-4885-837B-EA0E91965EDD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
