@@ -5,7 +5,7 @@ using System.Diagnostics;
 // ── Parse CLI args ────────────────────────────────────────────────────────────
 var options = CliOptions.Parse(args);
 
-Console.WriteLine("ECS Simulation Engine  —  Headless CLI");
+Console.WriteLine($"{SimVersion.Full}  —  Headless CLI");
 Console.WriteLine($"  Timescale  : {options.TimeScale}x");
 Console.WriteLine($"  Snapshot   : every {options.SnapshotInterval:F1} sim-seconds");
 

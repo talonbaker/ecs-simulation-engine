@@ -36,6 +36,11 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private string _stomachLabel    = "";
     [ObservableProperty] private string _digestionLabel  = "";
 
+    // ── Brain / Priority Queue ────────────────────────────────────────────────
+    [ObservableProperty] private bool   _hasDrives       = false;
+    [ObservableProperty] private string _dominantDesire  = "NONE";
+    [ObservableProperty] private string _driveScores     = "";
+
     // ── Esophagus Transit ─────────────────────────────────────────────────────
     [ObservableProperty] private bool   _isInTransit     = false;
     [ObservableProperty] private float  _transitProgress = 0f;
@@ -89,6 +94,15 @@ public partial class EntityViewModel : ObservableObject
             StomachFill   = stomach.Fill * 100f;
             StomachLabel  = $"{stomach.Fill:P0}  ({stomach.CurrentVolumeMl:F0} / {StomachComponent.MaxVolumeMl:F0} ml)";
             DigestionLabel = $"Queued — Nutr: {stomach.NutritionQueued:F1}  Hydr: {stomach.HydrationQueued:F1}";
+        }
+
+        // Brain — dominant desire and urgency scores
+        HasDrives = entity.Has<DriveComponent>();
+        if (HasDrives)
+        {
+            var d = entity.Get<DriveComponent>();
+            DominantDesire = d.Dominant.ToString().ToUpperInvariant();
+            DriveScores    = $"eat {d.EatUrgency:F2}  ·  drink {d.DrinkUrgency:F2}  ·  sleep {d.SleepUrgency:F2}";
         }
 
         // Esophagus transit

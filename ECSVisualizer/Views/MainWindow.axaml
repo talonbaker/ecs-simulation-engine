@@ -3,7 +3,7 @@
         xmlns:vm="using:ECSVisualizer.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="700"
+        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="800"
         x:Class="ECSVisualizer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="ECS Biological Simulation"
@@ -17,15 +17,15 @@
     <ScrollViewer>
         <StackPanel Margin="16" Spacing="16">
 
-            <!-- ── HEADER: Clock + Time Scale ─────────────────────────────── -->
+            <!-- ── HEADER: Version + Clock + Time Scale ───────────────────── -->
             <Border Background="#141414" CornerRadius="6" Padding="16,14"
                     BorderBrush="#2A2A2A" BorderThickness="1">
                 <Grid ColumnDefinitions="*, Auto">
 
                     <StackPanel Grid.Column="0" Spacing="2">
-                        <TextBlock Text="SIMULATION CLOCK"
-                                   FontSize="9" FontWeight="Bold" LetterSpacing="2"
-                                   Foreground="#444444"/>
+                        <TextBlock Text="{Binding VersionDisplay}"
+                                   FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                   Foreground="#333333"/>
                         <TextBlock Text="{Binding CurrentTimeDisplay}"
                                    FontSize="36" FontFamily="Consolas" FontWeight="Light"
                                    Foreground="#00FF41"/>
@@ -70,12 +70,18 @@
                                                    Foreground="#383838" VerticalAlignment="Center"/>
                                     </Grid>
 
-                                    <!-- Active Tags -->
-                                    <Border IsVisible="{Binding HasActiveTags}"
-                                            Background="#1E1A00" CornerRadius="3" Padding="8,4">
+                                    <!-- Tag display: yellow when active, dim when clear -->
+                                    <Border CornerRadius="3" Padding="8,4"
+                                            Background="#1E1A00" IsVisible="{Binding HasActiveTags}">
                                         <TextBlock Text="{Binding ActiveTags}"
                                                    FontSize="10" FontWeight="Bold"
                                                    Foreground="#FFD60A" FontFamily="Consolas"/>
+                                    </Border>
+                                    <Border CornerRadius="3" Padding="8,4"
+                                            Background="#141414" IsVisible="{Binding !HasActiveTags}">
+                                        <TextBlock Text="— no active conditions —"
+                                                   FontSize="10" Foreground="#2A2A2A"
+                                                   FontFamily="Consolas"/>
                                     </Border>
 
                                     <!-- Metabolism -->
@@ -99,7 +105,6 @@
                                                                    Foreground="#30D158" VerticalAlignment="Center"
                                                                    Width="42" TextAlignment="Right"/>
                                                     </Grid>
-                                                    <!-- Derived hunger sensation -->
                                                     <TextBlock Text="{Binding HungerLabel}"
                                                                FontSize="10" FontFamily="Consolas"
                                                                Foreground="#FF6B35" Margin="76,0,0,0"/>
@@ -121,12 +126,31 @@
                                                                    Foreground="#0A84FF" VerticalAlignment="Center"
                                                                    Width="42" TextAlignment="Right"/>
                                                     </Grid>
-                                                    <!-- Derived thirst sensation -->
                                                     <TextBlock Text="{Binding ThirstLabel}"
                                                                FontSize="10" FontFamily="Consolas"
                                                                Foreground="#5AC8FA" Margin="76,0,0,0"/>
                                                 </StackPanel>
 
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Brain / Priority Queue -->
+                                        <Border IsVisible="{Binding HasDrives}"
+                                                Background="#0A0D12" CornerRadius="4" Padding="10,10"
+                                                BorderBrush="#1A2030" BorderThickness="1">
+                                            <StackPanel Spacing="4">
+                                                <Grid ColumnDefinitions="70, *">
+                                                    <TextBlock Grid.Column="0" Text="BRAIN"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#666666" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding DominantDesire}"
+                                                               FontSize="13" FontWeight="Bold"
+                                                               Foreground="#64D2FF" FontFamily="Consolas"/>
+                                                </Grid>
+                                                <TextBlock Text="{Binding DriveScores}"
+                                                           FontSize="10" FontFamily="Consolas"
+                                                           Foreground="#2A3A4A" Margin="76,0,0,0"/>
                                             </StackPanel>
                                         </Border>
 

@@ -12,7 +12,7 @@ namespace ECSCli;
 public static class CliRenderer
 {
     private const int BarWidth  = 14;
-    private const int LineWidth = 60;
+    private const int LineWidth = 62;
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -31,6 +31,8 @@ public static class CliRenderer
         string line = new('─', LineWidth);
         Console.WriteLine();
         Console.WriteLine(line);
+        Console.WriteLine(
+            $"  {SimVersion.Full}");
         Console.WriteLine(
             $"  TICK {tick,-8:N0}  SIM {simTime:hh\\:mm\\:ss}  " +
             $"WALL {wallSeconds:F2}s  SPEED {simSpeed:F0}x");
@@ -52,10 +54,15 @@ public static class CliRenderer
         // ── Esophagus pipeline ───────────────────────────────────────────────
         var pipeline = sim.EntityManager.Query<EsophagusTransitComponent>().ToList();
 
-        if (pipeline.Count > 0)
+        Console.WriteLine();
+        Console.WriteLine("  ESOPHAGUS PIPELINE");
+
+        if (pipeline.Count == 0)
         {
-            Console.WriteLine();
-            Console.WriteLine("  ESOPHAGUS PIPELINE");
+            Console.WriteLine("    — nothing in transit —");
+        }
+        else
+        {
             foreach (var e in pipeline)
             {
                 var transit = e.Get<EsophagusTransitComponent>();
@@ -70,11 +77,6 @@ public static class CliRenderer
                 Console.WriteLine($"    {content,-14} {bar}  {transit.Progress * 100,5:F1}%");
             }
         }
-        else
-        {
-            Console.WriteLine();
-            Console.WriteLine("  ESOPHAGUS PIPELINE  — nothing in transit —");
-        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -88,10 +90,12 @@ public static class CliRenderer
         Console.WriteLine();
         Console.WriteLine($"  ◈ {name}  [{entity.ShortId}]");
 
-        // Tags — only print if any are active
-        var tags = BuildTagList(entity);
-        if (tags.Count > 0)
-            Console.WriteLine($"    Tags      {string.Join("  ·  ", tags)}");
+        // Tags — always show so you can confirm the system ran (— none — means healthy)
+        var tagList = BuildTagList(entity);
+        string tags = tagList.Count > 0
+            ? string.Join("  ·  ", tagList)
+            : "— none —";
+        Console.WriteLine($"    Tags      {tags}");
 
         // Metabolism resources + derived sensations
         var meta = entity.Get<MetabolismComponent>();
@@ -103,6 +107,16 @@ public static class CliRenderer
         Console.WriteLine(
             $"    Hydration  {ProgressBar(meta.Hydration, 100f)}  {meta.Hydration,5:F1}%  " +
             $"  thirst {meta.Thirst,5:F1}%");
+
+        // Brain — dominant desire + urgency scores
+        if (entity.Has<DriveComponent>())
+        {
+            var d = entity.Get<DriveComponent>();
+            string dominant = d.Dominant.ToString().ToUpperInvariant();
+            Console.WriteLine(
+                $"    Brain      dominant {dominant,-6}" +
+                $"  eat {d.EatUrgency:F2}  drink {d.DrinkUrgency:F2}  sleep {d.SleepUrgency:F2}");
+        }
 
         // Stomach (optional component)
         if (entity.Has<StomachComponent>())

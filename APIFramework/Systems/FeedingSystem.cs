@@ -25,7 +25,7 @@ public class FeedingSystem : ISystem
         {
             // Only act if the brain has selected Eat as the dominant drive
             if (!entity.Has<DriveComponent>()) continue;
-            if (entity.Get<DriveComponent>().Dominant != DriveType.Eat) continue;
+            if (entity.Get<DriveComponent>().Dominant != DesireType.Eat) continue;
 
             var meta = entity.Get<MetabolismComponent>();
 

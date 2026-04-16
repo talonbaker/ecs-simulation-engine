@@ -27,7 +27,7 @@ public class DrinkingSystem : ISystem
         {
             // Only act if the brain has selected Drink as the dominant drive
             if (!entity.Has<DriveComponent>()) continue;
-            if (entity.Get<DriveComponent>().Dominant != DriveType.Drink) continue;
+            if (entity.Get<DriveComponent>().Dominant != DesireType.Drink) continue;
 
             // Throat must be clear — one thing at a time
             bool throatBusy = em.Query<EsophagusTransitComponent>()

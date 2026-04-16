@@ -6,7 +6,7 @@ namespace APIFramework.Systems;
 
 /// <summary>
 /// The priority queue. Runs after BiologicalConditionSystem has set condition tags,
-/// scores every active drive, and writes the dominant DriveType onto each entity.
+/// scores every active drive, and writes the dominant DesireType onto each entity.
 ///
 /// Action systems (FeedingSystem, DrinkingSystem, SleepSystem…) MUST check
 /// DriveComponent.Dominant before acting. If it is not their drive, they stand down.

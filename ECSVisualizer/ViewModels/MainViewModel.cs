@@ -16,6 +16,9 @@ public partial class MainViewModel : ObservableObject
     private readonly DispatcherTimer        _timer;
     private int _frameCount = 0;
 
+    // ── Version ──────────────────────────────────────────────────────────────
+    public string VersionDisplay => SimVersion.Full;
+
     // ── Clock ────────────────────────────────────────────────────────────────
     [ObservableProperty] private string _currentTimeDisplay = "00:00:00";
 

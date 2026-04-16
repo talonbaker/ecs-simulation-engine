@@ -1,11 +1,12 @@
 namespace APIFramework.Components;
 
 /// <summary>
-/// The type of desire currently winning the priority queue.
+/// The biological desire currently winning the priority queue.
 /// BrainSystem writes this every tick. Action systems read it to decide
 /// whether it is their turn to act.
+/// Named DesireType (not DriveType) to avoid collision with System.IO.DriveType.
 /// </summary>
-public enum DriveType
+public enum DesireType
 {
     None,
     Eat,
@@ -41,16 +42,16 @@ public struct DriveComponent
     /// Ties favour the drive listed first (Eat > Drink > Sleep) — a known
     /// limitation to be replaced by a weighted tiebreaker in future.
     /// </summary>
-    public readonly DriveType Dominant
+    public readonly DesireType Dominant
     {
         get
         {
             float max = MathF.Max(EatUrgency, MathF.Max(DrinkUrgency, SleepUrgency));
-            if (max < 0.001f)            return DriveType.None;
-            if (EatUrgency   >= max - float.Epsilon) return DriveType.Eat;
-            if (DrinkUrgency >= max - float.Epsilon) return DriveType.Drink;
-            if (SleepUrgency >= max - float.Epsilon) return DriveType.Sleep;
-            return DriveType.None;
+            if (max < 0.001f)            return DesireType.None;
+            if (EatUrgency   >= max - float.Epsilon) return DesireType.Eat;
+            if (DrinkUrgency >= max - float.Epsilon) return DesireType.Drink;
+            if (SleepUrgency >= max - float.Epsilon) return DesireType.Sleep;
+            return DesireType.None;
         }
     }
 
