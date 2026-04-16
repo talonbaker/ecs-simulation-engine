@@ -1,31 +1,64 @@
 {
+  // ── World clock ────────────────────────────────────────────────────────────
+  // 1 real second = 120 game seconds = 2 game minutes.
+  // The in-game time slider multiplies on top of this.
+  "world": {
+    "defaultTimeScale": 120.0
+  },
+
+  // ── Entities ───────────────────────────────────────────────────────────────
   "entities": {
     "human": {
       "metabolism": {
-        "satiationStart":     100.0,
-        "hydrationStart":     100.0,
-        "bodyTemp":            37.0,
-        "satiationDrainRate":   0.3,
-        "hydrationDrainRate":   0.5
+        "satiationStart":      100.0,
+        "hydrationStart":      100.0,
+        "bodyTemp":             37.0,
+        // At TimeScale=120: hunger sets in after ~4 game hours
+        "satiationDrainRate":   0.007,
+        // At TimeScale=120: thirst sets in after ~2.5 game hours
+        "hydrationDrainRate":   0.011
       },
       "stomach": {
-        "digestionRate": 2.0
+        // ~100 ml digested per game-hour
+        "digestionRate": 0.017
+      },
+      "energy": {
+        "energyStart":         85.0,   // well rested — just woke at 6 AM
+        "sleepinessStart":     15.0,   // low after a full night's sleep
+        // Awake rates: energy depletes ~57 pts over 16 game hours
+        "energyDrainRate":     0.001,
+        // Awake rates: sleepiness builds ~69 pts over 16 game hours
+        "sleepinessGainRate":  0.0012,
+        // Sleep rates: energy restores ~58 pts over 8 game hours asleep
+        "energyRestoreRate":   0.002,
+        // Sleep rates: sleepiness drains ~75 pts over 8 game hours asleep
+        "sleepinessDrainRate": 0.0026
       }
     },
+
     "cat": {
       "metabolism": {
         "satiationStart":     100.0,
         "hydrationStart":     100.0,
         "bodyTemp":            38.5,
-        "satiationDrainRate":  0.15,
-        "hydrationDrainRate":  0.25
+        "satiationDrainRate":  0.004,
+        "hydrationDrainRate":  0.006
       },
       "stomach": {
-        "digestionRate": 1.0
+        "digestionRate": 0.010
+      },
+      "energy": {
+        "energyStart":         75.0,
+        "sleepinessStart":     30.0,
+        "energyDrainRate":     0.0006,
+        "sleepinessGainRate":  0.0008,
+        "energyRestoreRate":   0.003,
+        "sleepinessDrainRate": 0.004
       }
     }
   },
 
+  // ── Systems ────────────────────────────────────────────────────────────────
   "systems": {
 
     "biologicalCondition": {
@@ -36,9 +69,17 @@
       "irritableThreshold":     60.0
     },
 
+    "energy": {
+      // Energy (0-100) below which TiredTag is applied
+      "tiredThreshold":     60.0,
+      // Energy below which ExhaustedTag is applied (supersedes Tired)
+      "exhaustedThreshold": 25.0
+    },
+
     "brain": {
       "eatMaxScore":   1.0,
       "drinkMaxScore": 1.0,
+      // SleepMaxScore < 1.0 so life-threatening hunger/thirst can always override sleep
       "sleepMaxScore": 0.9
     },
 
@@ -61,6 +102,11 @@
         "hydrationValue": 30.0,
         "esophagusSpeed":  0.8
       }
+    },
+
+    "sleep": {
+      // Sleepiness must drop below this before the entity will wake up naturally
+      "wakeThreshold": 20.0
     },
 
     "interaction": {

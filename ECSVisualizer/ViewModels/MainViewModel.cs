@@ -20,28 +20,28 @@ public partial class MainViewModel : ObservableObject
     public string VersionDisplay => SimVersion.Full;
 
     // ── Clock ────────────────────────────────────────────────────────────────
-    [ObservableProperty] private string _currentTimeDisplay = "00:00:00";
+    [ObservableProperty] private string _currentTimeDisplay = "6:00 AM";
+    [ObservableProperty] private string _dayDisplay         = "Day 1";
+    [ObservableProperty] private string _dayNightIcon       = "☀";
 
     [ObservableProperty] private float _timeScale = 1.0f;
     partial void OnTimeScaleChanged(float value) => _sim.Clock.TimeScale = value;
 
     // ── Entity Collections ───────────────────────────────────────────────────
-    // Living entities: anything with a metabolism (humans, cats)
-    public ObservableCollection<EntityViewModel> LivingEntities { get; } = new();
-
-    // Pipeline entities: bolus/liquid currently in the esophagus
+    public ObservableCollection<EntityViewModel> LivingEntities  { get; } = new();
     public ObservableCollection<EntityViewModel> PipelineEntities { get; } = new();
 
-    // Cache so we reuse ViewModels instead of recreating them every frame
     private readonly Dictionary<Guid, EntityViewModel> _viewModelCache = new();
 
-    // ── Design-time constructor (no args — Avalonia designer requires this) ──
+    // ── Design-time constructor ───────────────────────────────────────────────
     public MainViewModel() : this(new SimulationBootstrapper()) { }
 
-    // ── Runtime constructor (injected by DI) ─────────────────────────────────
+    // ── Runtime constructor ───────────────────────────────────────────────────
     public MainViewModel(SimulationBootstrapper sim)
     {
         _sim = sim;
+        // Sync the UI slider to whatever TimeScale the config loaded
+        _timeScale = sim.Clock.TimeScale;
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) }; // ~60 fps
         _timer.Tick += OnTick;
@@ -50,14 +50,15 @@ public partial class MainViewModel : ObservableObject
 
     private void OnTick(object? sender, EventArgs e)
     {
-        // 1. Advance the simulation — this is the only place Update is called
         const float fixedDelta = 1f / 60f;
         _sim.Engine.Update(fixedDelta);
 
-        // 2. Clock display
-        CurrentTimeDisplay = TimeSpan.FromSeconds(_sim.Clock.TotalTime).ToString(@"hh\:mm\:ss");
+        // ── Clock display ─────────────────────────────────────────────────────
+        CurrentTimeDisplay = _sim.Clock.GameTimeDisplay;
+        DayDisplay         = $"Day {_sim.Clock.DayNumber}";
+        DayNightIcon       = _sim.Clock.IsDaytime ? "☀" : "🌙";
 
-        // 3. Refresh entity displays every 3 frames (smooth enough, not wasteful)
+        // ── Refresh entity displays every 3 frames ────────────────────────────
         _frameCount++;
         if (_frameCount % 3 != 0) return;
         _frameCount = 0;
@@ -70,10 +71,6 @@ public partial class MainViewModel : ObservableObject
     {
         var living = _sim.EntityManager.Query<MetabolismComponent>().ToList();
 
-        // Remove entries that no longer exist
-        var livingIds = living.Select(e => e.Id).ToHashSet();
-        var toRemove = LivingEntities.Where(vm => !livingIds.Contains(Guid.Parse(vm.EntityId.PadRight(32, '0')))).ToList();
-        // Simpler: just rebuild if counts differ, otherwise update in place
         if (LivingEntities.Count != living.Count)
         {
             LivingEntities.Clear();
@@ -86,7 +83,6 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        // Update in place
         for (int i = 0; i < living.Count; i++)
         {
             var vm = GetOrCreateViewModel(living[i].Id);
@@ -110,7 +106,6 @@ public partial class MainViewModel : ObservableObject
             PipelineEntities.Add(vm);
         }
 
-        // Evict stale cache entries for entities that no longer exist
         var allIds = _sim.EntityManager.GetAllEntities().Select(e => e.Id).ToHashSet();
         var stale  = _viewModelCache.Keys.Where(id => !allIds.Contains(id)).ToList();
         foreach (var id in stale) _viewModelCache.Remove(id);

@@ -19,14 +19,14 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private string _activeTags    = "";
     [ObservableProperty] private bool   _hasActiveTags = false;
 
-    // ── Metabolism — Resources (the actual physiological state) ───────────────
+    // ── Metabolism — Resources ────────────────────────────────────────────────
     [ObservableProperty] private bool   _hasMetabolism    = false;
-    [ObservableProperty] private float  _satiation        = 100f; // 0–100, starts full
-    [ObservableProperty] private float  _hydration        = 100f; // 0–100, starts full
+    [ObservableProperty] private float  _satiation        = 100f;
+    [ObservableProperty] private float  _hydration        = 100f;
     [ObservableProperty] private string _satiationLabel   = "100%";
     [ObservableProperty] private string _hydrationLabel   = "100%";
 
-    // ── Metabolism — Sensations (derived from resources, shown as labels) ──────
+    // ── Metabolism — Sensations ───────────────────────────────────────────────
     [ObservableProperty] private string _hungerLabel  = "Not hungry";
     [ObservableProperty] private string _thirstLabel  = "Not thirsty";
 
@@ -35,6 +35,15 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private float  _stomachFill     = 0f;
     [ObservableProperty] private string _stomachLabel    = "";
     [ObservableProperty] private string _digestionLabel  = "";
+
+    // ── Energy / Sleep ────────────────────────────────────────────────────────
+    [ObservableProperty] private bool   _hasEnergy        = false;
+    [ObservableProperty] private float  _energy           = 100f;
+    [ObservableProperty] private float  _sleepiness       = 0f;
+    [ObservableProperty] private string _energyLabel      = "100%";
+    [ObservableProperty] private string _sleepinessLabel  = "0%";
+    [ObservableProperty] private string _sleepStateLabel  = "Awake";
+    [ObservableProperty] private bool   _isSleeping       = false;
 
     // ── Brain / Priority Queue ────────────────────────────────────────────────
     [ObservableProperty] private bool   _hasDrives       = false;
@@ -61,6 +70,9 @@ public partial class EntityViewModel : ObservableObject
         if (entity.Has<ThirstTag>())     tags.Add("THIRSTY");
         if (entity.Has<StarvingTag>())   tags.Add("STARVING");
         if (entity.Has<DehydratedTag>()) tags.Add("DEHYDRATED");
+        if (entity.Has<TiredTag>())      tags.Add("TIRED");
+        if (entity.Has<ExhaustedTag>())  tags.Add("EXHAUSTED");
+        if (entity.Has<SleepingTag>())   tags.Add("SLEEPING");
         if (entity.Has<IrritableTag>())  tags.Add("IRRITABLE");
         ActiveTags    = tags.Count > 0 ? string.Join("  ·  ", tags) : "";
         HasActiveTags = tags.Count > 0;
@@ -76,7 +88,6 @@ public partial class EntityViewModel : ObservableObject
             SatiationLabel = $"{meta.Satiation:F1}%";
             HydrationLabel = $"{meta.Hydration:F1}%";
 
-            // Hunger and Thirst are computed properties on the struct (100 - resource)
             HungerLabel = meta.Hunger < 5f
                 ? "Satisfied"
                 : $"Hunger  {meta.Hunger:F1}%";
@@ -90,10 +101,28 @@ public partial class EntityViewModel : ObservableObject
         HasStomach = entity.Has<StomachComponent>();
         if (HasStomach)
         {
-            var stomach   = entity.Get<StomachComponent>();
-            StomachFill   = stomach.Fill * 100f;
-            StomachLabel  = $"{stomach.Fill:P0}  ({stomach.CurrentVolumeMl:F0} / {StomachComponent.MaxVolumeMl:F0} ml)";
+            var stomach    = entity.Get<StomachComponent>();
+            StomachFill    = stomach.Fill * 100f;
+            StomachLabel   = $"{stomach.Fill:P0}  ({stomach.CurrentVolumeMl:F0} / {StomachComponent.MaxVolumeMl:F0} ml)";
             DigestionLabel = $"Queued — Nutr: {stomach.NutritionQueued:F1}  Hydr: {stomach.HydrationQueued:F1}";
+        }
+
+        // Energy / Sleep
+        HasEnergy = entity.Has<EnergyComponent>();
+        if (HasEnergy)
+        {
+            var en = entity.Get<EnergyComponent>();
+
+            Energy          = en.Energy;
+            Sleepiness      = en.Sleepiness;
+            EnergyLabel     = $"{en.Energy:F1}%";
+            SleepinessLabel = $"{en.Sleepiness:F1}%";
+            IsSleeping      = en.IsSleeping;
+
+            SleepStateLabel = en.IsSleeping ? "Sleeping"
+                : en.Energy > 70f            ? "Alert"
+                : en.Energy > 40f            ? "Tired"
+                                             : "Exhausted";
         }
 
         // Brain — dominant desire and urgency scores

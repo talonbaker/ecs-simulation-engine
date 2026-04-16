@@ -16,6 +16,7 @@ public static class EntityTemplates
         cfg ??= EntityConfig.DefaultHuman;
         var m = cfg.Metabolism;
         var s = cfg.Stomach;
+        var e = cfg.Energy;
 
         var entity = manager.CreateEntity();
         entity.Add(new IdentityComponent { Name = "Human" });
@@ -34,6 +35,16 @@ public static class EntityTemplates
             NutritionQueued = 0f,
             HydrationQueued = 0f
         });
+        entity.Add(new EnergyComponent
+        {
+            Energy              = e.EnergyStart,
+            Sleepiness          = e.SleepinessStart,
+            IsSleeping          = false,
+            EnergyDrainRate     = e.EnergyDrainRate,
+            SleepinessGainRate  = e.SleepinessGainRate,
+            EnergyRestoreRate   = e.EnergyRestoreRate,
+            SleepinessDrainRate = e.SleepinessDrainRate
+        });
 
         return entity;
     }
@@ -43,6 +54,7 @@ public static class EntityTemplates
         cfg ??= EntityConfig.DefaultCat;
         var m = cfg.Metabolism;
         var s = cfg.Stomach;
+        var e = cfg.Energy;
 
         var entity = manager.CreateEntity();
         entity.Add(new IdentityComponent { Name = "Cat" });
@@ -60,6 +72,16 @@ public static class EntityTemplates
             DigestionRate   = s.DigestionRate,
             NutritionQueued = 0f,
             HydrationQueued = 0f
+        });
+        entity.Add(new EnergyComponent
+        {
+            Energy              = e.EnergyStart,
+            Sleepiness          = e.SleepinessStart,
+            IsSleeping          = false,
+            EnergyDrainRate     = e.EnergyDrainRate,
+            SleepinessGainRate  = e.SleepinessGainRate,
+            EnergyRestoreRate   = e.EnergyRestoreRate,
+            SleepinessDrainRate = e.SleepinessDrainRate
         });
 
         return entity;

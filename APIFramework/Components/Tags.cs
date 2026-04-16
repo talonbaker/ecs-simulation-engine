@@ -10,9 +10,10 @@ public struct DehydratedTag { }
 #endregion
 
 #region Vital State Tags
-public struct ExhaustedTag { } // For your sleep logic
-public struct IrritableTag { } // For that "low energy/angry" state
-public struct SleepingTag { }
+public struct TiredTag { }     // Energy < tiredThreshold — sleep urge building
+public struct ExhaustedTag { } // Energy < exhaustedThreshold — severely sleep-deprived
+public struct IrritableTag { } // Hunger OR Thirst above irritableThreshold
+public struct SleepingTag { }  // Entity is actively sleeping
 #endregion
 
 #region Entity Identity Tags

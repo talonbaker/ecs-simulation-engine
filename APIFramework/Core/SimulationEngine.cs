@@ -18,14 +18,13 @@ public class SimulationEngine
 
     public void Update(float realDeltaTime)
     {
-        // Update the clock with the scaled time
-        Clock.DeltaTime = realDeltaTime * Clock.TimeScale;
-        Clock.TotalTime += Clock.DeltaTime;
+        // Advance the clock and get the game-seconds elapsed this tick.
+        // Systems always receive game-seconds so their math stays independent of TimeScale.
+        float scaledDelta = Clock.Tick(realDeltaTime);
 
-        // Run every system in the order they were added
         foreach (var system in Systems)
         {
-            system.Update(EntityManager, Clock.DeltaTime);
+            system.Update(EntityManager, scaledDelta);
         }
     }
 }
