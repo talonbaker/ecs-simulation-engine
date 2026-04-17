@@ -99,22 +99,22 @@ public class EntityConfig
     {
         Metabolism = new MetabolismEntityConfig
         {
-            SatiationStart     = 100f,
-            HydrationStart     = 100f,
-            BodyTemp           = 37.0f,
-            // Re-tuned for TimeScale=120: hunger in ~4 game hours, thirst in ~2.5 game hours
-            SatiationDrainRate = 0.007f,
-            HydrationDrainRate = 0.011f
+            SatiationStart            = 90f,   // just had breakfast — not stuffed
+            HydrationStart            = 90f,   // well hydrated — not brimming
+            BodyTemp                  = 37.0f,
+            SatiationDrainRate        = 0.002f, // hunger in ~5.6 game hours → ~3 meals/day
+            HydrationDrainRate        = 0.004f, // thirst in ~2.1 game hours awake → ~7 drinks/day
+            SleepMetabolismMultiplier = 0.10f   // 10% drain rate while sleeping
         },
         Stomach = new StomachEntityConfig { DigestionRate = 0.017f }, // ~100 ml/game-hour
         Energy  = new EnergyEntityConfig
         {
-            EnergyStart          = 85f,  // well rested — just woke up
-            SleepinessStart      = 15f,  // low after a full night's sleep
-            EnergyDrainRate      = 0.001f,  // depletes ~57 pts over 16 game hours awake
-            SleepinessGainRate   = 0.0012f, // gains ~69 pts over 16 game hours awake
-            EnergyRestoreRate    = 0.002f,  // restores ~58 pts over 8 game hours asleep
-            SleepinessDrainRate  = 0.0026f  // drains ~75 pts over 8 game hours asleep
+            EnergyStart          = 90f,     // well rested — just woke up
+            SleepinessStart      = 5f,      // nearly zero after a full night's sleep
+            EnergyDrainRate      = 0.001f,  // depletes ~58 pts over 16 game hours awake
+            SleepinessGainRate   = 0.0012f, // builds ~69 pts over 16 game hours awake
+            EnergyRestoreRate    = 0.003f,  // restores to 100% within 8 game hours asleep
+            SleepinessDrainRate  = 0.002f   // 74% → 15% in ~8.3 hours (full night's sleep)
         }
     };
 
@@ -122,11 +122,12 @@ public class EntityConfig
     {
         Metabolism = new MetabolismEntityConfig
         {
-            SatiationStart     = 100f,
-            HydrationStart     = 100f,
-            BodyTemp           = 38.5f,
-            SatiationDrainRate = 0.004f,  // cats eat every ~7 game hours
-            HydrationDrainRate = 0.006f
+            SatiationStart            = 100f,
+            HydrationStart            = 100f,
+            BodyTemp                  = 38.5f,
+            SatiationDrainRate        = 0.004f,  // cats eat every ~7 game hours
+            HydrationDrainRate        = 0.006f,
+            SleepMetabolismMultiplier = 0.05f    // cats barely lose resources while sleeping
         },
         Stomach = new StomachEntityConfig { DigestionRate = 0.010f },
         Energy  = new EnergyEntityConfig
@@ -157,6 +158,12 @@ public class MetabolismEntityConfig
 
     /// <summary>Hydration lost per second at TimeScale 1.0.</summary>
     public float HydrationDrainRate { get; set; } = 0.5f;
+
+    /// <summary>
+    /// Fraction of drain rates applied while the entity is sleeping (SleepingTag present).
+    /// 0.10 = 10% of awake rates — an 8-hour sleep costs ~10% hydration/satiation.
+    /// </summary>
+    public float SleepMetabolismMultiplier { get; set; } = 0.10f;
 }
 
 public class StomachEntityConfig

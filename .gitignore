@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Simulation run outputs — generated locally, never committed
+sim-runs/
+
 # User-specific files
 *.rsuser
 *.suo

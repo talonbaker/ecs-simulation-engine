@@ -11,7 +11,49 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `MoodSystem` — tracks happiness, stress, comfort as affected by sustained need states
 - `AutonomySystem` — Billy's mood-gated disobedience mechanic
 - World food/water sources as spawnable entities (fridge, sink, bowl)
-- Lua scripting layer for moddable system definitions
+- Lua scripting layer for moddable system/mechanic definitions (post-stabilization)
+
+---
+
+## [0.5.0] — 2026-04-16
+
+### Added
+- **Hot-reload** — `SimConfigWatcher` watches `SimConfig.json` for saves and calls
+  `SimulationBootstrapper.ApplyConfig()` automatically. Works in both the CLI and the
+  Avalonia GUI. No restart needed to tune drain rates, thresholds, or brain weights.
+  Changed values are printed to the console so you always know what just changed.
+
+- **InvariantSystem** (pipeline position 1) — runs first every tick and checks all
+  known component values against their documented valid ranges:
+  - `MetabolismComponent`: Satiation, Hydration ∈ [0, 100]
+  - `EnergyComponent`: Energy, Sleepiness ∈ [0, 100]
+  - `StomachComponent`: CurrentVolumeMl ∈ [0, MaxVolumeMl], Queued values ≥ 0
+  - `DriveComponent`: all urgency scores ∈ [0, 1]
+  - `EsophagusTransitComponent`: Progress ∈ [0, 1]
+  Violations are clamped (simulation continues) and recorded in `Invariants.Violations`
+  for end-of-run reporting. Live violations print inline during a CLI run.
+
+- **SimMetrics** — samples all living entities every 20 ticks; tracks resource min/
+  mean/max, lifecycle event timestamps (first hunger, first sleep, etc.), feed/drink/
+  sleep cycle counts.
+
+- **End-of-run balancing report** (`CliRenderer.PrintReport`) — printed automatically
+  after every CLI run unless `--no-report`. Shows:
+  - Invariant summary (violation count, worst offenders, entity names)
+  - Per-entity lifecycle timeline
+  - Resource ranges (min → mean → max) for every resource
+  - Automatic balancing hints (machine-gun feeding, resource stuck at 0, no sleep, etc.)
+
+- **`SimulationBootstrapper.ApplyConfig(SimConfig)`** — merges new config values onto
+  existing config objects in-place using reflection over value-type properties. Systems
+  hold references to those objects so they see new values on the very next tick, with
+  zero restart overhead.
+
+### Changed
+- **CLI default snapshot interval** changed from 10 game-seconds to 600 (every 10
+  game-minutes) to match the new 120× time scale.
+- **CliOptions** gained `--report` / `--no-report`, `--no-violations` flags.
+- **System pipeline** expanded from 10 to 11: InvariantSystem inserted at position 1.
 
 ---
 

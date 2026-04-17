@@ -22,11 +22,12 @@ public static class EntityTemplates
         entity.Add(new IdentityComponent { Name = "Human" });
         entity.Add(new MetabolismComponent
         {
-            Satiation          = m.SatiationStart,
-            Hydration          = m.HydrationStart,
-            BodyTemp           = m.BodyTemp,
-            SatiationDrainRate = m.SatiationDrainRate,
-            HydrationDrainRate = m.HydrationDrainRate
+            Satiation                 = m.SatiationStart,
+            Hydration                 = m.HydrationStart,
+            BodyTemp                  = m.BodyTemp,
+            SatiationDrainRate        = m.SatiationDrainRate,
+            HydrationDrainRate        = m.HydrationDrainRate,
+            SleepMetabolismMultiplier = m.SleepMetabolismMultiplier
         });
         entity.Add(new StomachComponent
         {
@@ -60,11 +61,12 @@ public static class EntityTemplates
         entity.Add(new IdentityComponent { Name = "Cat" });
         entity.Add(new MetabolismComponent
         {
-            Satiation          = m.SatiationStart,
-            Hydration          = m.HydrationStart,
-            BodyTemp           = m.BodyTemp,
-            SatiationDrainRate = m.SatiationDrainRate,
-            HydrationDrainRate = m.HydrationDrainRate
+            Satiation                 = m.SatiationStart,
+            Hydration                 = m.HydrationStart,
+            BodyTemp                  = m.BodyTemp,
+            SatiationDrainRate        = m.SatiationDrainRate,
+            HydrationDrainRate        = m.HydrationDrainRate,
+            SleepMetabolismMultiplier = m.SleepMetabolismMultiplier
         });
         entity.Add(new StomachComponent
         {

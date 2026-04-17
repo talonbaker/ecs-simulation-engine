@@ -8,27 +8,35 @@ public class CliOptions
     /// <summary>Sim-time multiplier per tick. Higher = more sim-time per loop iteration.</summary>
     public float TimeScale { get; init; } = 1.0f;
 
-    /// <summary>Stop after this many simulation-seconds have elapsed. Null = run until Ctrl+C.</summary>
+    /// <summary>Stop after this many game-seconds have elapsed. Null = run until Ctrl+C.</summary>
     public double? Duration { get; init; } = null;
 
     /// <summary>Stop after exactly this many ticks. Null = no tick limit.</summary>
     public long? MaxTicks { get; init; } = null;
 
-    /// <summary>Print a state snapshot every N simulation-seconds.</summary>
-    public double SnapshotInterval { get; init; } = 10.0;
+    /// <summary>Print a state snapshot every N game-seconds.</summary>
+    public double SnapshotInterval { get; init; } = 600.0; // every 10 game-minutes
 
     /// <summary>When true, suppress mid-run snapshots; only print the final summary.</summary>
     public bool Quiet { get; init; } = false;
+
+    /// <summary>When true, print a full metrics report at the end of the run.</summary>
+    public bool Report { get; init; } = true;
+
+    /// <summary>When true, print invariant violations immediately as they happen.</summary>
+    public bool LiveViolations { get; init; } = true;
 
     // ─────────────────────────────────────────────────────────────────────────
 
     public static CliOptions Parse(string[] args)
     {
-        float   timeScale = 1.0f;
-        double? duration  = null;
-        long?   maxTicks  = null;
-        double  snapshot  = 10.0;
-        bool    quiet     = false;
+        float   timeScale      = 1.0f;
+        double? duration       = null;
+        long?   maxTicks       = null;
+        double  snapshot       = 600.0;
+        bool    quiet          = false;
+        bool    report         = true;
+        bool    liveViolations = true;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -56,7 +64,16 @@ public class CliOptions
                     break;
 
                 case "--quiet" or "-q":
-                    quiet = true;
+                    quiet          = true;
+                    liveViolations = false;
+                    break;
+
+                case "--no-report":
+                    report = false;
+                    break;
+
+                case "--no-violations":
+                    liveViolations = false;
                     break;
 
                 case "--help" or "-h":
@@ -77,38 +94,51 @@ public class CliOptions
             MaxTicks         = maxTicks,
             SnapshotInterval = snapshot,
             Quiet            = quiet,
+            Report           = report,
+            LiveViolations   = liveViolations,
         };
     }
 
     private static void PrintHelp()
     {
         Console.WriteLine("""
-            ECS Simulation Engine — Headless CLI Runner
+            ECS Simulation Engine — Headless CLI Runner  v0.5.0
 
             Usage:  ECSCli [options]
 
             Options:
-              --timescale, -t <n>    Sim-time multiplier per tick.  Default: 1.0
-                                     Higher values fast-forward the simulation
-                                     (e.g. --timescale 60 runs 1 sim-minute per second of CPU).
+              --timescale, -t <n>    Override the default TimeScale from SimConfig.json.
+                                     At default 120x: 1 real second = 2 game minutes.
+                                     --timescale 1200 runs 20 game-minutes per real second.
 
-              --duration,  -d <n>    Stop after N simulation-seconds have elapsed.
-                                     Omit to run until Ctrl+C.
+              --duration,  -d <n>    Stop after N GAME-seconds have elapsed.
+                                     E.g. --duration 86400 = run one full game-day.
 
               --ticks          <n>   Stop after exactly N ticks (alternative to --duration).
 
-              --snapshot,  -s <n>    Print a state snapshot every N simulation-seconds.
-                                     Default: 10.  Use 0 to suppress all mid-run output.
+              --snapshot,  -s <n>    Print a snapshot every N game-seconds.
+                                     Default: 600 (every 10 game-minutes).
+                                     Use -s 0 to suppress all mid-run snapshots.
 
-              --quiet,     -q        Same as --snapshot 0; only the final summary prints.
+              --quiet,     -q        Suppress mid-run snapshots AND live violation output.
+                                     Only the final report and summary print.
+
+              --no-report            Skip the end-of-run metrics report.
+              --no-violations        Don't print violations as they happen (still in report).
 
               --help,      -h        Show this help and exit.
 
+            Balancing workflow:
+              1. Start a long run:  ECSCli --duration 172800       (2 game-days)
+              2. Watch the output.  Edit SimConfig.json and save.
+              3. The running sim hot-reloads instantly — no restart needed.
+              4. Read the end-of-run report to see if the rhythm improved.
+
             Examples:
-              ECSCli                                Run forever, snapshot every 10 sim-s
-              ECSCli --duration 300 -s 30           Run 5 sim-minutes, snapshot every 30s
-              ECSCli --timescale 60 --duration 300  Sprint 5 sim-min at 60x (wall: ~5s)
-              ECSCli --ticks 10000 --quiet          10 000 ticks, final summary only
+              ECSCli                              Run forever, snapshot every 10 game-min
+              ECSCli -d 86400 -s 3600             One game-day, snapshot every game-hour
+              ECSCli -d 172800 --quiet            Two game-days, report only at end
+              ECSCli --ticks 100000 --no-report   Benchmark: 100k ticks, no overhead
             """);
     }
 }

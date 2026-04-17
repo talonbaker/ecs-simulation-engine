@@ -10,8 +10,14 @@ public struct MetabolismComponent
     public float Energy;             // Affects movement and logic speed (future use)
 
     // ── Drain Rates (per second at TimeScale 1.0) ────────────────────────────
-    public float SatiationDrainRate; // How fast Satiation depletes (Billy gets hungry)
-    public float HydrationDrainRate; // How fast Hydration depletes (Billy gets thirsty)
+    public float SatiationDrainRate;          // How fast Satiation depletes (Billy gets hungry)
+    public float HydrationDrainRate;          // How fast Hydration depletes (Billy gets thirsty)
+
+    // ── Sleep modifier ────────────────────────────────────────────────────────
+    // Metabolism slows significantly during sleep — breathing/sweat are minimal at rest.
+    // MetabolismSystem multiplies both drain rates by this value when SleepingTag is present.
+    // 0.10 = 10% of awake rate, so an 8-hour sleep only costs ~10% hydration/satiation.
+    public float SleepMetabolismMultiplier;   // 0.0 (no drain) to 1.0 (full awake drain)
 
     // ── Derived Sensations (computed — never set directly) ───────────────────
     // These are what Billy perceives, not the actual physiological state.

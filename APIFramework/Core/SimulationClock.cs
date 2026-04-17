@@ -80,26 +80,31 @@ public class SimulationClock
     /// <summary>
     /// Multiplier applied to SleepUrgency in BrainSystem based on time of day.
     ///
-    ///   Morning   (6–8h)   → 0.40  (body clock suppresses sleepiness after waking)
-    ///   Forenoon  (8–12h)  → 0.60
-    ///   Noon dip  (12–14h) → 0.75  (post-lunch lull)
-    ///   Afternoon (14–18h) → 0.60
-    ///   Evening   (18–20h) → 0.90  (wind-down begins)
-    ///   Night     (20–22h) → 1.20  (sleep window opens)
-    ///   Late/early (22–6h) → 1.40  (peak sleep pressure)
+    /// Models the circadian alertness signal (Process C) which actively suppresses
+    /// sleepiness during the day and promotes it at night.  Low values during the
+    /// day mean even high sleepiness can't overcome eat/drink drives — no napping.
+    /// High values at night mean even modest sleepiness wins decisively.
+    ///
+    ///   Morning   (6–8h)   → 0.10  (strong wake signal; body suppresses sleep drive)
+    ///   Forenoon  (8–12h)  → 0.10  (peak alertness window)
+    ///   Noon dip  (12–14h) → 0.15  (very slight post-lunch lull, not nap-level)
+    ///   Afternoon (14–18h) → 0.10  (afternoon productive window)
+    ///   Evening   (18–20h) → 0.30  (alertness signal begins fading)
+    ///   Pre-sleep (20–22h) → 0.50  (sleepiness building — but hunger can still win)
+    ///   Night     (22–6h)  → 1.60  (sleep drive dominates; almost impossible to stay awake)
     /// </summary>
     public float CircadianFactor
     {
         get
         {
             float h = GameHour;
-            if (h >= 6f  && h < 8f)  return 0.40f;
-            if (h >= 8f  && h < 12f) return 0.60f;
-            if (h >= 12f && h < 14f) return 0.75f;
-            if (h >= 14f && h < 18f) return 0.60f;
-            if (h >= 18f && h < 20f) return 0.90f;
-            if (h >= 20f && h < 22f) return 1.20f;
-            return 1.40f; // 22:00 → 6:00
+            if (h >= 6f  && h < 8f)  return 0.10f;
+            if (h >= 8f  && h < 12f) return 0.10f;
+            if (h >= 12f && h < 14f) return 0.15f;
+            if (h >= 14f && h < 18f) return 0.10f;
+            if (h >= 18f && h < 20f) return 0.30f;
+            if (h >= 20f && h < 22f) return 0.50f;
+            return 1.60f; // 22:00 → 6:00
         }
     }
 

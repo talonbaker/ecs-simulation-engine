@@ -10,39 +10,52 @@
   "entities": {
     "human": {
       "metabolism": {
-        "satiationStart":      100.0,
-        "hydrationStart":      100.0,
-        "bodyTemp":             37.0,
-        // At TimeScale=120: hunger sets in after ~4 game hours
-        "satiationDrainRate":   0.007,
-        // At TimeScale=120: thirst sets in after ~2.5 game hours
-        "hydrationDrainRate":   0.011
+        // Starts at 90% (not 100%) so EatUrgency/DrinkUrgency > SleepUrgency at 6 AM
+        // — prevents Billy from falling asleep on the very first tick.
+        "satiationStart":            90.0,
+        "hydrationStart":            90.0,
+        "bodyTemp":                  37.0,
+
+        // Hunger in ~5.6 game hours → ~3 meals/day (breakfast ~10AM, lunch ~1PM, dinner ~6PM)
+        "satiationDrainRate":         0.002,
+
+        // Thirst in ~2.1 game hours awake → ~7 drinks/day while awake
+        "hydrationDrainRate":         0.004,
+
+        // During sleep, metabolism drops to 10% of awake rate.
+        // An 8-hour sleep costs only ~11.5% hydration instead of crashing to zero.
+        "sleepMetabolismMultiplier":  0.10
       },
       "stomach": {
         // ~100 ml digested per game-hour
         "digestionRate": 0.017
       },
       "energy": {
-        "energyStart":         85.0,   // well rested — just woke at 6 AM
-        "sleepinessStart":     15.0,   // low after a full night's sleep
-        // Awake rates: energy depletes ~57 pts over 16 game hours
+        "energyStart":         90.0,   // well rested — just woke at 6 AM
+        "sleepinessStart":      5.0,   // nearly zero after a proper night's sleep
+
+        // Awake: energy drains ~58 pts over 16 game hours
         "energyDrainRate":     0.001,
-        // Awake rates: sleepiness builds ~69 pts over 16 game hours
+
+        // Awake: sleepiness builds ~69 pts over 16 game hours (5% → ~74% by 10 PM)
         "sleepinessGainRate":  0.0012,
-        // Sleep rates: energy restores ~58 pts over 8 game hours asleep
-        "energyRestoreRate":   0.002,
-        // Sleep rates: sleepiness drains ~75 pts over 8 game hours asleep
-        "sleepinessDrainRate": 0.0026
+
+        // Sleep: energy restores to 100% within ~8 game hours
+        "energyRestoreRate":   0.003,
+
+        // Sleep: sleepiness drains from ~74% → 5% in ~8.3 game hours (full night's sleep)
+        "sleepinessDrainRate": 0.002
       }
     },
 
     "cat": {
       "metabolism": {
-        "satiationStart":     100.0,
-        "hydrationStart":     100.0,
-        "bodyTemp":            38.5,
-        "satiationDrainRate":  0.004,
-        "hydrationDrainRate":  0.006
+        "satiationStart":            100.0,
+        "hydrationStart":            100.0,
+        "bodyTemp":                   38.5,
+        "satiationDrainRate":          0.004,
+        "hydrationDrainRate":          0.006,
+        "sleepMetabolismMultiplier":   0.05  // cats barely lose resources during their many naps
       },
       "stomach": {
         "digestionRate": 0.010
@@ -62,15 +75,20 @@
   "systems": {
 
     "biologicalCondition": {
+      // THIRSTY when hydration < 70% (thirst = 30)
       "thirstTagThreshold":     30.0,
+      // DEHYDRATED when hydration < 30% (thirst = 70) — severe
       "dehydratedTagThreshold": 70.0,
+      // HUNGRY when satiation < 70% (hunger = 30)
       "hungerTagThreshold":     30.0,
+      // STARVING when satiation < 20% (hunger = 80) — severe
       "starvingTagThreshold":   80.0,
+      // IRRITABLE when either hunger or thirst exceeds 60
       "irritableThreshold":     60.0
     },
 
     "energy": {
-      // Energy (0-100) below which TiredTag is applied
+      // Energy (0–100) below which TiredTag is applied
       "tiredThreshold":     60.0,
       // Energy below which ExhaustedTag is applied (supersedes Tired)
       "exhaustedThreshold": 25.0
@@ -79,12 +97,14 @@
     "brain": {
       "eatMaxScore":   1.0,
       "drinkMaxScore": 1.0,
-      // SleepMaxScore < 1.0 so life-threatening hunger/thirst can always override sleep
+      // sleepMaxScore < 1.0 so life-threatening hunger/thirst can always override sleep
       "sleepMaxScore": 0.9
     },
 
     "feeding": {
+      // FeedingSystem only acts when hunger > this (satiation < 60%)
       "hungerThreshold":   40.0,
+      // Stop spawning food once this much nutrition is already queued in stomach
       "nutritionQueueCap": 70.0,
       "banana": {
         "volumeMl":       50.0,
@@ -105,8 +125,9 @@
     },
 
     "sleep": {
-      // Sleepiness must drop below this before the entity will wake up naturally
-      "wakeThreshold": 20.0
+      // Sleepiness must drop below this before the entity can wake naturally.
+      // 15 allows a full 8-game-hour night before waking.
+      "wakeThreshold": 15.0
     },
 
     "interaction": {
