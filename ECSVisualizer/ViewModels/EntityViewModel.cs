@@ -50,6 +50,20 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private string _dominantDesire  = "NONE";
     [ObservableProperty] private string _driveScores     = "";
 
+    // ── Mood / Plutchik Emotions ──────────────────────────────────────────────
+    [ObservableProperty] private bool   _hasMood          = false;
+    [ObservableProperty] private float  _moodJoy          = 0f;
+    [ObservableProperty] private float  _moodTrust        = 0f;
+    [ObservableProperty] private float  _moodAnticipation = 0f;
+    [ObservableProperty] private float  _moodAnger        = 0f;
+    [ObservableProperty] private float  _moodSadness      = 0f;
+    [ObservableProperty] private float  _moodDisgust      = 0f;
+    [ObservableProperty] private float  _moodFear         = 0f;
+    [ObservableProperty] private float  _moodSurprise     = 0f;
+    [ObservableProperty] private string _moodValence      = "+0.0";
+    [ObservableProperty] private string _activeEmotionTags = "";
+    [ObservableProperty] private bool   _hasActiveEmotions = false;
+
     // ── Esophagus Transit ─────────────────────────────────────────────────────
     [ObservableProperty] private bool   _isInTransit     = false;
     [ObservableProperty] private float  _transitProgress = 0f;
@@ -132,6 +146,62 @@ public partial class EntityViewModel : ObservableObject
             var d = entity.Get<DriveComponent>();
             DominantDesire = d.Dominant.ToString().ToUpperInvariant();
             DriveScores    = $"eat {d.EatUrgency:F2}  ·  drink {d.DrinkUrgency:F2}  ·  sleep {d.SleepUrgency:F2}";
+        }
+
+        // Mood / Plutchik emotions
+        HasMood = entity.Has<MoodComponent>();
+        if (HasMood)
+        {
+            var mood = entity.Get<MoodComponent>();
+
+            MoodJoy          = mood.Joy;
+            MoodTrust        = mood.Trust;
+            MoodAnticipation = mood.Anticipation;
+            MoodAnger        = mood.Anger;
+            MoodSadness      = mood.Sadness;
+            MoodDisgust      = mood.Disgust;
+            MoodFear         = mood.Fear;
+            MoodSurprise     = mood.Surprise;
+
+            float valence = mood.Valence;
+            MoodValence = valence >= 0 ? $"+{valence:F1}" : $"{valence:F1}";
+
+            var emotionTags = new List<string>();
+            // Joy family
+            if (entity.Has<EcstaticTag>())          emotionTags.Add("ECSTATIC");
+            else if (entity.Has<JoyfulTag>())        emotionTags.Add("Joyful");
+            else if (entity.Has<SereneTag>())        emotionTags.Add("Serene");
+            // Disgust/Boredom family
+            if (entity.Has<LoathingTag>())           emotionTags.Add("LOATHING");
+            else if (entity.Has<DisgustTag>())       emotionTags.Add("Disgusted");
+            else if (entity.Has<BoredTag>())         emotionTags.Add("Bored");
+            // Anger family
+            if (entity.Has<RagingTag>())             emotionTags.Add("RAGING");
+            else if (entity.Has<AngryTag>())         emotionTags.Add("Angry");
+            else if (entity.Has<AnnoyedTag>())       emotionTags.Add("Annoyed");
+            // Sadness family
+            if (entity.Has<GriefTag>())              emotionTags.Add("GRIEF");
+            else if (entity.Has<SadTag>())           emotionTags.Add("Sad");
+            else if (entity.Has<PensiveTag>())       emotionTags.Add("Pensive");
+            // Anticipation family
+            if (entity.Has<VigilantTag>())           emotionTags.Add("Vigilant");
+            else if (entity.Has<AnticipatingTag>())  emotionTags.Add("Anticipating");
+            else if (entity.Has<InterestedTag>())    emotionTags.Add("Interested");
+            // Fear family
+            if (entity.Has<TerrorTag>())             emotionTags.Add("TERRIFIED");
+            else if (entity.Has<FearfulTag>())       emotionTags.Add("Fearful");
+            else if (entity.Has<ApprehensiveTag>())  emotionTags.Add("Apprehensive");
+            // Surprise family
+            if (entity.Has<AmazedTag>())             emotionTags.Add("Amazed");
+            else if (entity.Has<SurprisedTag>())     emotionTags.Add("Surprised");
+            else if (entity.Has<DistractedTag>())    emotionTags.Add("Distracted");
+            // Trust family
+            if (entity.Has<AdmiringTag>())           emotionTags.Add("Admiring");
+            else if (entity.Has<TrustingTag>())      emotionTags.Add("Trusting");
+            else if (entity.Has<AcceptingTag>())     emotionTags.Add("Accepting");
+
+            ActiveEmotionTags  = emotionTags.Count > 0 ? string.Join("  ·  ", emotionTags) : "";
+            HasActiveEmotions  = emotionTags.Count > 0;
         }
 
         // Esophagus transit

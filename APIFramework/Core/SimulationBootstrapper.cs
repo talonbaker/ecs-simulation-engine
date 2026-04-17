@@ -26,17 +26,19 @@ namespace APIFramework.Core;
 ///
 /// SYSTEM PIPELINE (execution order)
 /// ──────────────────────────────────
-///  1. InvariantSystem          — catch/clamp impossible state values (runs FIRST)
-///  2. MetabolismSystem         — drain satiation / hydration
-///  3. EnergySystem             — drain/restore energy + sleepiness; energy-state tags
+///  1. InvariantSystem           — catch/clamp impossible state values (runs FIRST)
+///  2. MetabolismSystem          — drain satiation / hydration (sleep multiplier applied)
+///  3. EnergySystem              — drain/restore energy + sleepiness; energy-state tags
 ///  4. BiologicalConditionSystem — set hunger/thirst/irritable tags
-///  5. BrainSystem              — score all drives (incl. circadian sleep); pick dominant
-///  6. FeedingSystem            — act if Eat is dominant
-///  7. DrinkingSystem           — act if Drink is dominant
-///  8. SleepSystem              — toggle IsSleeping based on dominant desire
-///  9. InteractionSystem        — convert held food to esophagus bolus
-/// 10. EsophagusSystem          — move transit entities toward stomach
-/// 11. DigestionSystem          — release nutrients from stomach to metabolism
+///  5. MoodSystem                — decay emotions, apply Plutchik intensity tags
+///  6. BrainSystem               — score all drives (incl. circadian sleep); pick dominant
+///  7. FeedingSystem             — act if Eat is dominant
+///  8. DrinkingSystem            — act if Drink is dominant
+///  9. SleepSystem               — toggle IsSleeping based on dominant desire
+/// 10. InteractionSystem         — convert held food to esophagus bolus
+/// 11. EsophagusSystem           — move transit entities toward stomach
+/// 12. DigestionSystem           — release nutrients from stomach to metabolism
+/// 13. RotSystem                 — age food entities; apply RotTag when threshold crossed
 /// </summary>
 public class SimulationBootstrapper
 {
@@ -69,13 +71,15 @@ public class SimulationBootstrapper
         Engine.AddSystem(new MetabolismSystem());                                  //  2
         Engine.AddSystem(new EnergySystem(sys.Energy));                           //  3
         Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition)); //  4
-        Engine.AddSystem(new BrainSystem(sys.Brain, Clock));                      //  5
-        Engine.AddSystem(new FeedingSystem(sys.Feeding));                         //  6
-        Engine.AddSystem(new DrinkingSystem(sys.Drinking));                       //  7
-        Engine.AddSystem(new SleepSystem(sys.Sleep));                             //  8
-        Engine.AddSystem(new InteractionSystem(sys.Interaction));                 //  9
-        Engine.AddSystem(new EsophagusSystem());                                  // 10
-        Engine.AddSystem(new DigestionSystem());                                  // 11
+        Engine.AddSystem(new MoodSystem(sys.Mood));                               //  5
+        Engine.AddSystem(new BrainSystem(sys.Brain, Clock));                      //  6
+        Engine.AddSystem(new FeedingSystem(sys.Feeding));                         //  7
+        Engine.AddSystem(new DrinkingSystem(sys.Drinking));                       //  8
+        Engine.AddSystem(new SleepSystem(sys.Sleep));                             //  9
+        Engine.AddSystem(new InteractionSystem(sys.Interaction));                 // 10
+        Engine.AddSystem(new EsophagusSystem());                                  // 11
+        Engine.AddSystem(new DigestionSystem());                                  // 12
+        Engine.AddSystem(new RotSystem(sys.Rot));                                 // 13
     }
 
     private void SpawnWorld()
@@ -112,6 +116,8 @@ public class SimulationBootstrapper
         MergeFlat(newCfg.Systems.Drinking.Water,      Config.Systems.Drinking.Water,      changes);
         MergeFlat(newCfg.Systems.Sleep,               Config.Systems.Sleep,               changes);
         MergeFlat(newCfg.Systems.Interaction,         Config.Systems.Interaction,         changes);
+        MergeFlat(newCfg.Systems.Mood,                Config.Systems.Mood,                changes);
+        MergeFlat(newCfg.Systems.Rot,                 Config.Systems.Rot,                 changes);
 
         // ── Entity starting configs (only affect future spawns) ───────────────
         MergeFlat(newCfg.Entities.Human.Metabolism,   Config.Entities.Human.Metabolism,   changes);

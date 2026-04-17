@@ -8,10 +8,75 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Planned
-- `MoodSystem` — tracks happiness, stress, comfort as affected by sustained need states
 - `AutonomySystem` — Billy's mood-gated disobedience mechanic
 - World food/water sources as spawnable entities (fridge, sink, bowl)
+- Proximity / spatial grid system — so RotTag on nearby food raises Disgust before consumption
+- Nutrient/vitamin absorption layer — tracking macros and micros through the full digestion track
 - Lua scripting layer for moddable system/mechanic definitions (post-stabilization)
+
+---
+
+## [0.6.0] — 2026-04-16
+
+### Added
+- **MoodSystem fully wired** (pipeline position 5) — all 8 Plutchik emotions now have
+  real biological inputs that update each tick:
+  - `Joy` ← satiation, hydration, and energy all above `JoyComfortThreshold` (60%)
+  - `Anger` ← `IrritableTag` present (hunger or thirst > 60%)
+  - `Sadness` ← `HungerTag` or `ThirstTag` present this tick
+  - `Disgust` (boredom at low intensity) ← `Dominant == None` last tick (idle state)
+  - `Disgust` spike ← `ConsumedRottenFoodTag` after eating rotten food (instant +40)
+  - `Anticipation` ← hunger or thirst building between 15% and 50% (drive rising but not dominant)
+  - `Trust`, `Fear`, `Surprise` — stubs with decay wired; inputs pending spatial/threat systems
+  - All emotions have configurable decay rates and gain rates in `SimConfig.json`
+
+- **Minimum urgency floor in BrainSystem** — if all drive scores remain below
+  `MinUrgencyThreshold` (0.05) after mood modifiers, they are zeroed and `Dominant` returns
+  `None`. This is the true idle/mulling state. It's what causes boredom to accumulate naturally.
+
+- **Mood output effects on other systems:**
+  - `BoredTag` → `BrainSystem` adds `BoredUrgencyBonus` (0.04) to all drives, breaking out of idle
+  - `SadTag`   → `BrainSystem` multiplies all drive scores by `SadnessUrgencyMult` (0.80 — mild suppression)
+  - `GriefTag` → `BrainSystem` multiplies all drive scores by `GriefUrgencyMult` (0.50 — strong suppression)
+  - `AngryTag` / `RagingTag` → `MetabolismSystem` raises drain rates by 25% (cortisol stress response)
+
+- **RotSystem** (pipeline position 13) — ages all `RotComponent` food entities each tick.
+  Once `AgeSeconds >= RotStartAge`, `RotLevel` climbs at `RotRate` per game-second.
+  When `RotLevel >= RotTagThreshold` (30%), `RotTag` is applied to the food entity.
+
+- **RotComponent** — tracks `AgeSeconds`, `RotLevel`, `RotStartAge`, `RotRate` per food entity.
+  Computed properties: `IsDecaying`, `Freshness`. Configurable per entity at spawn time.
+
+- **FeedingSystem updated** — checks for world food entities before conjuring food:
+  1. If world food exists with `RotTag` → eats it, adds `ConsumedRottenFoodTag` to eater
+  2. If fresh world food exists → eats it normally
+  3. No world food → conjures a fresh banana bolus with a `RotComponent` attached
+     (the banana can decay if it ever sits in the world uneaten)
+
+- **ConsumedRottenFoodTag** — one-tick signal tag. FeedingSystem writes it; MoodSystem reads it,
+  spikes `Disgust` + `Surprise`, and removes it. Zero coupling between the two systems.
+
+- **Emotion tags visible everywhere** — CliRenderer's MOOD section shows all 8 emotions as
+  ASCII progress bars plus valence score. Avalonia GUI has a full EMOTIONS panel with colored
+  progress bars (positive emotions warm/yellow, negative emotions cool/blue). Both display
+  active emotion tag names (JOYFUL, bored, ANGRY, etc.) updated every tick.
+
+- **Avalonia MOOD panel** — 8 emotion bars with distinct colors per emotion family:
+  Joy (#FFD60A), Trust (#30D158), Anticipation (#FF9F0A), Anger (#FF453A),
+  Sadness (#0A84FF), Disgust (#6E40C9), Fear (#5AC8FA), Surprise (#FF6B35).
+  Valence score (sum of positives minus negatives) shown in the panel header.
+
+### Changed
+- **System pipeline** expanded from 12 to 13 systems. RotSystem added at position 13.
+- **`MoodSystemConfig`** gained 9 new fields: `JoyGainRate`, `JoyComfortThreshold`,
+  `AngerGainRate`, `SadnessGainRate`, `BoredGainRate`, `RottenFoodDisgustSpike`,
+  `AnticipationGainRate`, `AnticipationHungerMin`, `AnticipationHungerMax`.
+- **`BrainSystemConfig`** gained 4 new fields: `BoredUrgencyBonus`, `MinUrgencyThreshold`,
+  `SadnessUrgencyMult`, `GriefUrgencyMult`.
+- **`FeedingSystemConfig`** gained 2 new fields: `FoodFreshnessSeconds`, `FoodRotRate`.
+- **`SimConfig.json`** updated with all new sections: `mood` gain rates, `rot` config,
+  brain urgency threshold and mood modifier multipliers.
+- **Version** bumped 0.5.0 → 0.6.0.
 
 ---
 

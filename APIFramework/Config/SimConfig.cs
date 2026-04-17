@@ -94,6 +94,7 @@ public class EntityConfig
     public MetabolismEntityConfig Metabolism { get; set; } = new();
     public StomachEntityConfig    Stomach    { get; set; } = new();
     public EnergyEntityConfig     Energy     { get; set; } = new();
+    public MoodEntityConfig       Mood       { get; set; } = new();
 
     public static EntityConfig DefaultHuman => new()
     {
@@ -206,6 +207,8 @@ public class SystemsConfig
     public DrinkingSystemConfig            Drinking            { get; set; } = new();
     public SleepSystemConfig               Sleep               { get; set; } = new();
     public InteractionSystemConfig         Interaction         { get; set; } = new();
+    public MoodSystemConfig                Mood                { get; set; } = new();
+    public RotSystemConfig                 Rot                 { get; set; } = new();
 }
 
 // ── BiologicalConditionSystem ─────────────────────────────────────────────────
@@ -246,6 +249,25 @@ public class BrainSystemConfig
     /// so that hunger/thirst override exhaustion in critical situations.
     /// </summary>
     public float SleepMaxScore { get; set; } = 0.9f;
+
+    /// <summary>
+    /// Flat urgency bonus added to ALL drives when the entity has BoredTag.
+    /// Small enough not to override genuine drives; big enough to push one drive
+    /// over MinUrgencyThreshold so the entity picks something to do.
+    /// </summary>
+    public float BoredUrgencyBonus { get; set; } = 0.04f;
+
+    /// <summary>
+    /// If all drive scores remain below this after mood modifiers, they are all
+    /// zeroed — Dominant becomes None (the idle/boredom-accumulation state).
+    /// </summary>
+    public float MinUrgencyThreshold { get; set; } = 0.05f;
+
+    /// <summary>Multiplier applied to all urgency scores when SadTag is present (mild suppression).</summary>
+    public float SadnessUrgencyMult { get; set; } = 0.80f;
+
+    /// <summary>Multiplier applied to all urgency scores when GriefTag is present (strong suppression).</summary>
+    public float GriefUrgencyMult { get; set; } = 0.50f;
 }
 
 // ── FeedingSystem ─────────────────────────────────────────────────────────────
@@ -263,6 +285,17 @@ public class FeedingSystemConfig
 
     /// <summary>Properties of the hardcoded banana food source (temporary until world food exists).</summary>
     public FoodItemConfig Banana { get; set; } = new();
+
+    /// <summary>
+    /// Game-seconds of freshness before a spawned banana starts decaying.
+    /// At TimeScale 120, 3600 game-seconds = 1 game-hour of freshness.
+    /// A conjured banana goes straight into transit so this mainly matters
+    /// for food entities placed in the world ahead of time.
+    /// </summary>
+    public float FoodFreshnessSeconds { get; set; } = 86400f; // 1 game-day
+
+    /// <summary>RotLevel gained per game-second once a food entity passes its freshness window.</summary>
+    public float FoodRotRate { get; set; } = 0.001f; // 100% rotten after ~27.8 game-hours of decay
 }
 
 public class FoodItemConfig
@@ -343,4 +376,90 @@ public class InteractionSystemConfig
 
     /// <summary>Speed of a bite bolus travelling down the esophagus (progress/second).</summary>
     public float EsophagusSpeed { get; set; } = 0.3f;
+}
+
+// ── MoodSystem ────────────────────────────────────────────────────────────────
+
+/// <summary>
+/// Starting values for MoodComponent. All emotions begin near zero for an average
+/// rested, fed, non-threatened entity. Adjust per-entity archetype as needed.
+/// </summary>
+public class MoodEntityConfig
+{
+    // Starting intensities (0–100). Default: emotionally neutral.
+    public float JoyStart          { get; set; } = 0f;
+    public float TrustStart        { get; set; } = 0f;
+    public float FearStart         { get; set; } = 0f;
+    public float SurpriseStart     { get; set; } = 0f;
+    public float SadnessStart      { get; set; } = 0f;
+    public float DisgustStart      { get; set; } = 0f;
+    public float AngerStart        { get; set; } = 0f;
+    public float AnticipationStart { get; set; } = 0f;
+}
+
+/// <summary>
+/// Thresholds at which MoodSystem promotes an emotion to the next intensity tag.
+/// Follows Plutchik's three-tier model: low → medium → high.
+/// </summary>
+public class MoodSystemConfig
+{
+    /// <summary>Emotion value above which the low-intensity tag is applied (serenity, boredom, etc.).</summary>
+    public float LowThreshold  { get; set; } = 10f;
+
+    /// <summary>Emotion value above which the primary tag is applied (joy, disgust, anger, etc.).</summary>
+    public float MidThreshold  { get; set; } = 34f;
+
+    /// <summary>Emotion value above which the high-intensity tag is applied (ecstasy, loathing, rage, etc.).</summary>
+    public float HighThreshold { get; set; } = 67f;
+
+    // ── Decay rates — emotions fade over time if not sustained by inputs ─────
+
+    /// <summary>Rate at which positive emotions (Joy, Trust, Anticipation) decay per game-second.</summary>
+    public float PositiveDecayRate { get; set; } = 0.005f;
+
+    /// <summary>Rate at which negative emotions (Fear, Sadness, Disgust, Anger) decay per game-second.</summary>
+    public float NegativeDecayRate { get; set; } = 0.003f;
+
+    /// <summary>Rate at which Surprise decays (fastest — surprise is brief by nature).</summary>
+    public float SurpriseDecayRate { get; set; } = 0.05f;
+
+    // ── Gain rates — how fast each emotion accumulates from its inputs ────────
+
+    /// <summary>Joy gained per game-second while needs are comfortably met (all resources above JoyComfortThreshold).</summary>
+    public float JoyGainRate { get; set; } = 0.01f;
+
+    /// <summary>Resource level (0–100) all three must exceed (satiation, hydration, energy) for Joy to accumulate.</summary>
+    public float JoyComfortThreshold { get; set; } = 60f;
+
+    /// <summary>Anger gained per game-second while IrritableTag is present.</summary>
+    public float AngerGainRate { get; set; } = 0.015f;
+
+    /// <summary>Sadness gained per game-second while HungerTag or ThirstTag is present.</summary>
+    public float SadnessGainRate { get; set; } = 0.008f;
+
+    /// <summary>Disgust (boredom) gained per game-second while Dominant == None (idle state).</summary>
+    public float BoredGainRate { get; set; } = 0.005f;
+
+    /// <summary>Instant Disgust added when the entity consumes rotten food (ConsumedRottenFoodTag).</summary>
+    public float RottenFoodDisgustSpike { get; set; } = 40f;
+
+    /// <summary>Anticipation gained per game-second while hunger/thirst is building (between Min and Max).</summary>
+    public float AnticipationGainRate { get; set; } = 0.006f;
+
+    /// <summary>Hunger/Thirst value above which anticipation starts accumulating (drive is building).</summary>
+    public float AnticipationHungerMin { get; set; } = 15f;
+
+    /// <summary>Hunger/Thirst value below which anticipation stops (drive is dominant — no longer anticipating).</summary>
+    public float AnticipationHungerMax { get; set; } = 50f;
+}
+
+// ── RotSystem ─────────────────────────────────────────────────────────────────
+
+public class RotSystemConfig
+{
+    /// <summary>
+    /// RotLevel (0–100) at which RotTag is applied to a food entity.
+    /// FeedingSystem checks RotTag before Billy eats; if set, ConsumedRottenFoodTag is applied.
+    /// </summary>
+    public float RotTagThreshold { get; set; } = 30f;
 }

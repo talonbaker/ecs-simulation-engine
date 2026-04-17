@@ -45,6 +45,17 @@
 
         // Sleep: sleepiness drains from ~74% → 5% in ~8.3 game hours (full night's sleep)
         "sleepinessDrainRate": 0.002
+      },
+      "mood": {
+        // Emotionally neutral at start — no initial joy, no initial boredom
+        "joyStart":          0.0,
+        "trustStart":        0.0,
+        "fearStart":         0.0,
+        "surpriseStart":     0.0,
+        "sadnessStart":      0.0,
+        "disgustStart":      0.0,
+        "angerStart":        0.0,
+        "anticipationStart": 0.0
       }
     },
 
@@ -67,6 +78,16 @@
         "sleepinessGainRate":  0.0008,
         "energyRestoreRate":   0.003,
         "sleepinessDrainRate": 0.004
+      },
+      "mood": {
+        "joyStart":          0.0,
+        "trustStart":        0.0,
+        "fearStart":         0.0,
+        "surpriseStart":     0.0,
+        "sadnessStart":      0.0,
+        "disgustStart":      0.0,
+        "angerStart":        0.0,
+        "anticipationStart": 0.0
       }
     }
   },
@@ -98,7 +119,20 @@
       "eatMaxScore":   1.0,
       "drinkMaxScore": 1.0,
       // sleepMaxScore < 1.0 so life-threatening hunger/thirst can always override sleep
-      "sleepMaxScore": 0.9
+      "sleepMaxScore": 0.9,
+
+      // Idle state (Dominant==None) triggers boredom accumulation in MoodSystem.
+      // When BoredTag is present, a flat bonus is added to all drives to make even
+      // small drives feel more pressing — avoiding permanent idle lock.
+      "boredUrgencyBonus": 0.04,
+
+      // If all drive scores remain below this after mood modifiers, zero them
+      // all → Dominant = None (the mulling/zoned-out state).
+      "minUrgencyThreshold": 0.05,
+
+      // Mood suppression multipliers — applied after base scores
+      "sadnessUrgencyMult": 0.80,  // mild suppression (SadTag)
+      "griefUrgencyMult":   0.50   // strong suppression (GriefTag)
     },
 
     "feeding": {
@@ -111,7 +145,14 @@
         "nutritionValue": 35.0,
         "toughness":       0.2,
         "esophagusSpeed":  0.3
-      }
+      },
+
+      // Rot parameters for freshly conjured food entities
+      // At TimeScale 120: 86400 game-seconds = 1 full game-day of freshness
+      "foodFreshnessSeconds": 86400.0,
+      // RotLevel per game-second after freshness window expires
+      // 0.001 → fully rotten (100%) after ~27.8 additional game-hours
+      "foodRotRate": 0.001
     },
 
     "drinking": {
@@ -133,6 +174,51 @@
     "interaction": {
       "biteVolumeMl":   50.0,
       "esophagusSpeed":  0.3
+    },
+
+    "mood": {
+      // ── Tag intensity thresholds (Plutchik three-tier model) ───────────────
+      // Below lowThreshold  → no tag (emotion is negligible)
+      // >= lowThreshold     → low-intensity tag  (serenity, boredom, annoyance…)
+      // >= midThreshold     → primary tag         (joy, disgust, anger…)
+      // >= highThreshold    → high-intensity tag  (ecstasy, loathing, rage…)
+      "lowThreshold":  10.0,
+      "midThreshold":  34.0,
+      "highThreshold": 67.0,
+
+      // ── Decay rates (per game-second) ─────────────────────────────────────
+      "positiveDecayRate": 0.005,   // joy, trust, anticipation fade slowly
+      "negativeDecayRate": 0.003,   // fear, sadness, disgust, anger linger longer
+      "surpriseDecayRate": 0.05,    // surprise is brief — fades fastest
+
+      // ── Gain rates (per game-second unless noted) ─────────────────────────
+      // JOY: all needs comfortably met
+      "joyGainRate":          0.010,
+      "joyComfortThreshold":  60.0,   // satiation/hydration/energy all > 60% required
+
+      // ANGER: irritability unresolved
+      "angerGainRate":        0.015,
+
+      // SADNESS: hunger or thirst sustained
+      "sadnessGainRate":      0.008,
+
+      // DISGUST (BOREDOM): idle state (Dominant==None)
+      "boredGainRate":        0.005,
+
+      // DISGUST SPIKE: consuming rotten food (instant, not per-second)
+      "rottenFoodDisgustSpike": 40.0,
+
+      // ANTICIPATION: hunger/thirst building (between min and max thresholds)
+      "anticipationGainRate":  0.006,
+      "anticipationHungerMin": 15.0,
+      "anticipationHungerMax": 50.0
+    },
+
+    "rot": {
+      // RotLevel (0–100) at which RotTag is applied to a food entity.
+      // FeedingSystem checks RotTag; a rotten meal triggers ConsumedRottenFoodTag
+      // which MoodSystem converts into a Disgust spike.
+      "rotTagThreshold": 30.0
     }
 
   }

@@ -5,8 +5,8 @@ using APIFramework.Core;
 namespace APIFramework.Systems;
 
 /// <summary>
-/// The priority queue. Scores every active drive and writes the dominant DesireType
-/// onto each entity's DriveComponent.
+/// The priority queue. Scores every active drive, applies mood modifiers, and
+/// writes the dominant DesireType onto each entity's DriveComponent.
 ///
 /// Action systems (FeedingSystem, DrinkingSystem, SleepSystem) MUST check
 /// DriveComponent.Dominant before acting. This is the single source of truth for
@@ -18,13 +18,19 @@ namespace APIFramework.Systems;
 ///   DrinkUrgency = (Thirst   / 100) * DrinkMaxScore
 ///   SleepUrgency = (Sleepiness / 100) * SleepMaxScore * CircadianFactor
 ///
-/// CircadianFactor (from SimulationClock) amplifies sleep at night and suppresses
-/// it in the morning, producing a natural 24-hour rhythm.
+/// MOOD MODIFIERS (applied after base scores)
+/// ───────────────────────────────────────────
+///   BoredTag    → +BoredUrgencyBonus flat added to every drive (idle → more likely to act)
+///   SadTag      → ×SadnessUrgencyMult on every drive (sadness reduces motivation)
+///   GriefTag    → ×GriefUrgencyMult  on every drive (grief strongly suppresses action)
 ///
-/// SleepMaxScore (default 0.9) caps sleep below the survival ceiling (1.0) so that
-/// life-threatening hunger or thirst can always override exhaustion.
+/// MINIMUM URGENCY FLOOR
+/// ──────────────────────
+/// If all urgency scores remain below MinUrgencyThreshold after mood modifiers,
+/// all scores are zeroed — Dominant returns None via DriveComponent's 0.001 guard.
+/// This is the idle state from which boredom accumulates in MoodSystem.
 ///
-/// Pipeline position: 4 of 10 — after EnergySystem + BiologicalConditionSystem, before action systems.
+/// Pipeline position: 6 — after MoodSystem has updated emotion tags this tick.
 /// </summary>
 public class BrainSystem : ISystem
 {
@@ -49,11 +55,10 @@ public class BrainSystem : ISystem
                 ? entity.Get<DriveComponent>()
                 : new DriveComponent();
 
-            // ── Survival drives (unaffected by circadian) ─────────────────────
+            // ── Base drive scores ─────────────────────────────────────────────
             drives.EatUrgency   = (meta.Hunger / 100f) * _cfg.EatMaxScore;
             drives.DrinkUrgency = (meta.Thirst / 100f) * _cfg.DrinkMaxScore;
 
-            // ── Sleep drive (amplified / suppressed by time of day) ───────────
             if (entity.Has<EnergyComponent>())
             {
                 var energy = entity.Get<EnergyComponent>();
@@ -61,6 +66,41 @@ public class BrainSystem : ISystem
             }
             else
             {
+                drives.SleepUrgency = 0f;
+            }
+
+            // ── Mood modifiers ────────────────────────────────────────────────
+
+            // Boredom: idle state makes even small drives feel more pressing
+            if (entity.Has<BoredTag>())
+            {
+                drives.EatUrgency   += _cfg.BoredUrgencyBonus;
+                drives.DrinkUrgency += _cfg.BoredUrgencyBonus;
+                drives.SleepUrgency += _cfg.BoredUrgencyBonus;
+            }
+
+            // Grief → heavy suppression; Sadness → mild suppression
+            if (entity.Has<GriefTag>())
+            {
+                drives.EatUrgency   *= _cfg.GriefUrgencyMult;
+                drives.DrinkUrgency *= _cfg.GriefUrgencyMult;
+                drives.SleepUrgency *= _cfg.GriefUrgencyMult;
+            }
+            else if (entity.Has<SadTag>())
+            {
+                drives.EatUrgency   *= _cfg.SadnessUrgencyMult;
+                drives.DrinkUrgency *= _cfg.SadnessUrgencyMult;
+                drives.SleepUrgency *= _cfg.SadnessUrgencyMult;
+            }
+
+            // ── Minimum urgency floor → idle state ────────────────────────────
+            float maxUrgency = MathF.Max(drives.EatUrgency,
+                               MathF.Max(drives.DrinkUrgency, drives.SleepUrgency));
+
+            if (maxUrgency < _cfg.MinUrgencyThreshold)
+            {
+                drives.EatUrgency   = 0f;
+                drives.DrinkUrgency = 0f;
                 drives.SleepUrgency = 0f;
             }
 

@@ -213,6 +213,152 @@
                                             </StackPanel>
                                         </Border>
 
+                                        <!-- Mood / Plutchik Emotions -->
+                                        <Border IsVisible="{Binding HasMood}"
+                                                Background="#0D0A14" CornerRadius="4" Padding="10,10"
+                                                BorderBrush="#2A1A30" BorderThickness="1">
+                                            <StackPanel Spacing="8">
+
+                                                <!-- Section header + valence -->
+                                                <Grid ColumnDefinitions="*, Auto">
+                                                    <TextBlock Grid.Column="0" Text="EMOTIONS"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#666666" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding MoodValence, StringFormat='valence {0}'}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#555555"/>
+                                                </Grid>
+
+                                                <!-- Active emotion tags -->
+                                                <Border CornerRadius="3" Padding="6,3"
+                                                        Background="#1A0E2A" IsVisible="{Binding HasActiveEmotions}">
+                                                    <TextBlock Text="{Binding ActiveEmotionTags}"
+                                                               FontSize="10" FontWeight="Bold"
+                                                               Foreground="#BF5AF2" FontFamily="Consolas"
+                                                               TextWrapping="Wrap"/>
+                                                </Border>
+
+                                                <!-- Positive emotions (warm tones) -->
+                                                <!-- JOY -->
+                                                <Grid ColumnDefinitions="80, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="JOY"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#555555" VerticalAlignment="Center"/>
+                                                    <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                 Value="{Binding MoodJoy}" Maximum="100"
+                                                                 Foreground="#FFD60A" Background="#1A1A0A"
+                                                                 Height="5" CornerRadius="3"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding MoodJoy, StringFormat={}{0:F0}}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#FFD60A" Width="28" TextAlignment="Right"/>
+                                                </Grid>
+
+                                                <!-- TRUST -->
+                                                <Grid ColumnDefinitions="80, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="TRUST"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#555555" VerticalAlignment="Center"/>
+                                                    <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                 Value="{Binding MoodTrust}" Maximum="100"
+                                                                 Foreground="#30D158" Background="#0A1A0A"
+                                                                 Height="5" CornerRadius="3"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding MoodTrust, StringFormat={}{0:F0}}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#30D158" Width="28" TextAlignment="Right"/>
+                                                </Grid>
+
+                                                <!-- ANTICIPATION -->
+                                                <Grid ColumnDefinitions="80, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="ANTICIPATION"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#555555" VerticalAlignment="Center"/>
+                                                    <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                 Value="{Binding MoodAnticipation}" Maximum="100"
+                                                                 Foreground="#FF9F0A" Background="#1A0D00"
+                                                                 Height="5" CornerRadius="3"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding MoodAnticipation, StringFormat={}{0:F0}}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#FF9F0A" Width="28" TextAlignment="Right"/>
+                                                </Grid>
+
+                                                <!-- Divider -->
+                                                <Border Height="1" Background="#2A2A2A" Margin="0,2"/>
+
+                                                <!-- Negative emotions (cool/intense tones) -->
+                                                <!-- ANGER -->
+                                                <Grid ColumnDefinitions="80, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="ANGER"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#555555" VerticalAlignment="Center"/>
+                                                    <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                 Value="{Binding MoodAnger}" Maximum="100"
+                                                                 Foreground="#FF453A" Background="#1A0A0A"
+                                                                 Height="5" CornerRadius="3"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding MoodAnger, StringFormat={}{0:F0}}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#FF453A" Width="28" TextAlignment="Right"/>
+                                                </Grid>
+
+                                                <!-- SADNESS -->
+                                                <Grid ColumnDefinitions="80, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="SADNESS"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#555555" VerticalAlignment="Center"/>
+                                                    <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                 Value="{Binding MoodSadness}" Maximum="100"
+                                                                 Foreground="#0A84FF" Background="#0A0A1A"
+                                                                 Height="5" CornerRadius="3"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding MoodSadness, StringFormat={}{0:F0}}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#0A84FF" Width="28" TextAlignment="Right"/>
+                                                </Grid>
+
+                                                <!-- DISGUST / BOREDOM -->
+                                                <Grid ColumnDefinitions="80, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="DISGUST"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#555555" VerticalAlignment="Center"/>
+                                                    <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                 Value="{Binding MoodDisgust}" Maximum="100"
+                                                                 Foreground="#6E40C9" Background="#0E0A1A"
+                                                                 Height="5" CornerRadius="3"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding MoodDisgust, StringFormat={}{0:F0}}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#6E40C9" Width="28" TextAlignment="Right"/>
+                                                </Grid>
+
+                                                <!-- FEAR -->
+                                                <Grid ColumnDefinitions="80, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="FEAR"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#555555" VerticalAlignment="Center"/>
+                                                    <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                 Value="{Binding MoodFear}" Maximum="100"
+                                                                 Foreground="#5AC8FA" Background="#0A0E1A"
+                                                                 Height="5" CornerRadius="3"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding MoodFear, StringFormat={}{0:F0}}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#5AC8FA" Width="28" TextAlignment="Right"/>
+                                                </Grid>
+
+                                                <!-- SURPRISE -->
+                                                <Grid ColumnDefinitions="80, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="SURPRISE"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#555555" VerticalAlignment="Center"/>
+                                                    <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                 Value="{Binding MoodSurprise}" Maximum="100"
+                                                                 Foreground="#FF6B35" Background="#1A0D0A"
+                                                                 Height="5" CornerRadius="3"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding MoodSurprise, StringFormat={}{0:F0}}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#FF6B35" Width="28" TextAlignment="Right"/>
+                                                </Grid>
+
+                                            </StackPanel>
+                                        </Border>
+
                                         <!-- Stomach -->
                                         <Border IsVisible="{Binding HasStomach}"
                                                 Background="#0D0D0D" CornerRadius="4" Padding="10,10">
