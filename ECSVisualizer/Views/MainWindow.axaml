@@ -383,6 +383,43 @@
                                             </StackPanel>
                                         </Border>
 
+                                        <!-- Body Nutrient Stores (v0.7.0+) -->
+                                        <Border IsVisible="{Binding HasNutrients}"
+                                                Background="#0A1410" CornerRadius="4" Padding="10,10"
+                                                BorderBrush="#1A3020" BorderThickness="1">
+                                            <StackPanel Spacing="4">
+                                                <Grid ColumnDefinitions="70, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="NUTRIENTS"
+                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                               Foreground="#666666" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="body stores — accumulated from digestion"
+                                                               FontSize="9" FontFamily="Consolas"
+                                                               Foreground="#2A3A2A" VerticalAlignment="Center"
+                                                               Margin="6,0"/>
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding NutrientCaloriesLabel}"
+                                                               FontSize="11" FontWeight="Bold" FontFamily="Consolas"
+                                                               Foreground="#30D158" VerticalAlignment="Center"
+                                                               Width="90" TextAlignment="Right"/>
+                                                </Grid>
+                                                <TextBlock Text="{Binding NutrientMacrosLabel}"
+                                                           FontSize="10" FontFamily="Consolas"
+                                                           Foreground="#7A9A7A" Margin="76,2,0,0"/>
+                                                <TextBlock Text="{Binding NutrientWaterLabel}"
+                                                           FontSize="10" FontFamily="Consolas"
+                                                           Foreground="#5AC8FA" Margin="76,0,0,0"/>
+                                                <TextBlock Text="{Binding NutrientVitaminsLabel}"
+                                                           FontSize="9" FontFamily="Consolas"
+                                                           Foreground="#555555" Margin="76,2,0,0"
+                                                           TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding NutrientMineralsLabel}"
+                                                           FontSize="9" FontFamily="Consolas"
+                                                           Foreground="#555555" Margin="76,0,0,0"
+                                                           TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </Border>
+
                                     </StackPanel>
 
                                 </StackPanel>

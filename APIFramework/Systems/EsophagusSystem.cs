@@ -26,16 +26,20 @@ public class EsophagusSystem : ISystem
                     if (entity.Has<LiquidComponent>())
                     {
                         var liquid = entity.Get<LiquidComponent>();
-                        // Physical volume enters the stomach; hydration waits to be absorbed by digestion
+                        // Physical volume enters the stomach; the full nutrient profile
+                        // (water + any dissolved macros/minerals) waits in NutrientsQueued
+                        // to be absorbed by DigestionSystem.
                         stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + liquid.VolumeMl, StomachComponent.MaxVolumeMl);
-                        stomach.HydrationQueued += liquid.HydrationValue;
+                        stomach.NutrientsQueued += liquid.Nutrients;
                     }
                     else if (entity.Has<BolusComponent>())
                     {
                         var bolus = entity.Get<BolusComponent>();
-                        // Physical volume enters the stomach; nutrition waits to be absorbed by digestion
+                        // Physical volume enters the stomach; the full nutrient profile
+                        // (macros, water, vitamins, minerals) waits in NutrientsQueued
+                        // to be absorbed by DigestionSystem.
                         stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + bolus.Volume, StomachComponent.MaxVolumeMl);
-                        stomach.NutritionQueued += bolus.NutritionValue;
+                        stomach.NutrientsQueued += bolus.Nutrients;
                     }
 
                     consumer.Add(stomach);

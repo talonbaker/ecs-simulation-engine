@@ -268,8 +268,25 @@ public static class CliRenderer
         if (entity.Has<StomachComponent>())
         {
             var s = entity.Get<StomachComponent>();
+            var q = s.NutrientsQueued;
             Console.WriteLine($"    Stomach    {Bar(s.Fill, 1f)}  {s.Fill * 100,5:F1}%    ({s.CurrentVolumeMl:F0}/{StomachComponent.MaxVolumeMl:F0} ml)");
-            Console.WriteLine($"               queued  nutr {s.NutritionQueued:F1}  hydr {s.HydrationQueued:F1}");
+            Console.WriteLine($"               queued  {q.Calories,6:F0} kcal  water {q.Water,5:F1}ml  carbs {q.Carbohydrates,4:F1}g  prot {q.Proteins,4:F1}g  fat {q.Fats,4:F1}g");
+        }
+
+        // ── Body nutrient stores (v0.7.0+) ────────────────────────────────────
+        // Cumulative macros/water/vitamins absorbed by the body. Future organ-
+        // systems will subtract from this (daily burn, elimination).
+        var store = meta.NutrientStores;
+        if (!store.IsEmpty)
+        {
+            Console.WriteLine($"    ── Nutrient Stores ───────────────────────────────");
+            Console.WriteLine($"    Calories     {store.Calories,7:F0} kcal");
+            Console.WriteLine($"    Macros       carbs {store.Carbohydrates,5:F1}g  prot {store.Proteins,5:F1}g  fat {store.Fats,5:F1}g  fiber {store.Fiber,5:F1}g");
+            Console.WriteLine($"    Water        {store.Water,7:F0} ml");
+            if (store.VitaminA + store.VitaminB + store.VitaminC + store.VitaminD + store.VitaminE + store.VitaminK > 0.01f)
+                Console.WriteLine($"    Vitamins     A {store.VitaminA:F1}  B {store.VitaminB:F1}  C {store.VitaminC:F1}  D {store.VitaminD:F1}  E {store.VitaminE:F1}  K {store.VitaminK:F1}  (mg)");
+            if (store.Sodium + store.Potassium + store.Calcium + store.Iron + store.Magnesium > 0.01f)
+                Console.WriteLine($"    Minerals     Na {store.Sodium:F0}  K {store.Potassium:F0}  Ca {store.Calcium:F0}  Fe {store.Iron:F1}  Mg {store.Magnesium:F0}  (mg)");
         }
     }
 

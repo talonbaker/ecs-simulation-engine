@@ -11,8 +11,93 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `AutonomySystem` — Billy's mood-gated disobedience mechanic
 - World food/water sources as spawnable entities (fridge, sink, bowl)
 - Proximity / spatial grid system — so RotTag on nearby food raises Disgust before consumption
-- Nutrient/vitamin absorption layer — tracking macros and micros through the full digestion track
+- **v0.7.1 — Intestines.** `SmallIntestineComponent` + `LargeIntestineComponent` on the body;
+  `SmallIntestineSystem` and `LargeIntestineSystem` pull chyme from the stomach and
+  perform delayed nutrient/water reabsorption. Waste compacts into rectal contents.
+- **v0.7.2 — Bladder and kidneys.** `KidneyComponent`, `BladderComponent`, `KidneySystem`,
+  `EliminationUrgeSystem`. Tracks fluid balance; spawns a `Pee` desire that can override
+  other drives when fullness is high.
+- **v0.7.3 — Rectum and elimination.** `RectumComponent`, `EliminationSystem`. `Poop` desire
+  joins the Plutchik/Maslow soup. Entities will eventually travel to a `ToiletEntity`.
+- Spatial / movement layer — Billy in an apartment with fridge, sink, toilet, bed.
 - Lua scripting layer for moddable system/mechanic definitions (post-stabilization)
+
+---
+
+## [0.7.0] — 2026-04-16
+
+### Added
+- **`NutrientProfile` struct** — a universal carrier for real-biology nutrients
+  attached to every piece of food, liquid, bolus, and body store in the simulation.
+  Contains 16 fields: 4 macros (Carbohydrates, Proteins, Fats, Fiber in grams),
+  water (ml), 6 vitamins (A, B, C, D, E, K in mg), and 5 minerals
+  (Sodium, Potassium, Calcium, Iron, Magnesium in mg). Calories derived via
+  Atwater factors (4/4/9 kcal per gram). Operator overloads for `+`, `-`,
+  and scalar `*` give ergonomic nutrient arithmetic throughout the pipeline.
+
+- **`MetabolismComponent.NutrientStores`** — the body's ongoing real-biology layer.
+  DigestionSystem pools absorbed macros, water, vitamins, and minerals here
+  across the run. Future organ-systems (small/large intestine, kidneys) will
+  drain from this pool. Gameplay-facing `Satiation` / `Hydration` (0–100)
+  remain; they are now *derived* from the calorie/water release, not set directly.
+
+- **`DigestionSystemConfig`** — two conversion factors:
+  `SatiationPerCalorie` (0.3) and `HydrationPerMl` (2.0). These map biological
+  absorption back onto the existing 0–100 metrics. Tuned so the pre-v0.7 feel
+  is preserved: a medium banana (117 kcal × 0.3) ≈ 35 satiation, a gulp of
+  water (15 ml × 2.0) = 30 hydration.
+
+- **Real banana nutrition** — the hard-coded banana bolus now carries the real
+  macros for a medium banana: 27 g carbs, 1.3 g protein, 0.4 g fat, 3.1 g
+  fiber, 89 ml water, plus realistic B-complex, C, potassium, and magnesium.
+  Water carries 15 ml and nothing else by default; milk/juice/coffee will
+  layer macros/vitamins onto Water in future drink configs.
+
+- **Stomach nutrient queue** — `StomachComponent.NutrientsQueued` (a full
+  `NutrientProfile`) replaces the two scalars `NutritionQueued` +
+  `HydrationQueued`. EsophagusSystem adds each arriving bolus/liquid's full
+  profile; DigestionSystem releases a ratio-proportional slice each tick.
+
+- **CLI NUTRIENTS section** — `PrintSnapshot()` now shows stored calories,
+  macros in grams, water in ml, plus vitamins and minerals in mg when present.
+  Also shows queued-stomach macros for each tick of absorption.
+
+- **Avalonia NUTRIENTS panel** — green accumulator panel beneath the Stomach
+  panel showing total calories (large), macros line, water line, vitamins
+  and minerals lines. Panel hides automatically when stores are empty.
+
+### Changed
+- **`BolusComponent.NutritionValue` → `BolusComponent.Nutrients`** (now a
+  `NutrientProfile`). Every consumer updated (EsophagusSystem, FeedingSystem,
+  InteractionSystem).
+- **`LiquidComponent.HydrationValue` → `LiquidComponent.Nutrients`** (also a
+  `NutrientProfile` — water plus any dissolved macros/minerals).
+- **`FoodObjectComponent.NutritionPerBite` → `NutrientsPerBite`** (full breakdown
+  per bite; future food items can have wildly different profiles).
+- **`FoodItemConfig.NutritionValue` → `Nutrients`** (NutrientProfile) and
+  **`DrinkItemConfig.HydrationValue` → `Nutrients`** in `SimConfig.cs`.
+- **`FeedingSystemConfig.NutritionQueueCap`** now measured in kcal (was flat
+  "nutrition points"). Default bumped `70 → 240` so two bananas still fit under
+  the cap at the new 0.3 sat/kcal factor.
+- **`DrinkingSystemConfig.HydrationQueueCap` / `HydrationQueueCapDehydrated`**
+  now measured in ml of water queued (was flat hydration points).
+  Defaults `30 → 15` and `60 → 30` so one/two gulps in flight still match
+  the old feel at the new 2.0 hydr/ml factor.
+- **DigestionSystem** now takes `DigestionSystemConfig`, releases a fraction
+  of the queued `NutrientProfile` each tick, pools it into `NutrientStores`,
+  and derives Satiation/Hydration increments from released Calories/Water.
+- **System pipeline** still 13 systems; DigestionSystem (position 12) now
+  accepts its config via the bootstrapper and `ApplyConfig` merges it.
+- **SimConfig.json** gained a `systems.digestion` section and restructured
+  `banana.nutrients` and `water.nutrients` as embedded profile objects.
+- **Version** bumped 0.6.0 → 0.7.0.
+
+### Notes
+Pre-v0.7 tuning is preserved by design — the digestion factors are calibrated
+so Billy still gets ~35 satiation from a banana and 30 hydration from a gulp
+of water. Everything that changed is additive biology plumbing; gameplay feel
+should be identical, and the `NutrientStores` field gives future systems the
+data they need to simulate real metabolic load without touching behaviour.
 
 ---
 

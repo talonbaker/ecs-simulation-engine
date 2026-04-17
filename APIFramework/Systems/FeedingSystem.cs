@@ -43,12 +43,14 @@ public class FeedingSystem : ISystem
                 .Any(t => t.Get<EsophagusTransitComponent>().TargetEntityId == entity.Id);
             if (throatBusy) continue;
 
-            // Don't queue more food than the stomach can digest soon
+            // Don't queue more food than the stomach can digest soon.
+            // Use queued-Calories as the stand-in for "nutrition pressure" — lets
+            // us keep a single meaningful cap even after the scalar field is gone.
             if (entity.Has<StomachComponent>())
             {
                 var stomach = entity.Get<StomachComponent>();
                 if (stomach.IsFull) continue;
-                if (stomach.NutritionQueued >= _cfg.NutritionQueueCap) continue;
+                if (stomach.NutrientsQueued.Calories >= _cfg.NutritionQueueCap) continue;
             }
 
             // ── Look for world food entities sitting in the world (not in transit) ──
@@ -83,10 +85,10 @@ public class FeedingSystem : ISystem
                 bolus.Add(new IdentityComponent("Banana Bolus", "Bolus"));
                 bolus.Add(new BolusComponent
                 {
-                    Volume         = banana.VolumeMl,
-                    NutritionValue = banana.NutritionValue,
-                    FoodType       = "Banana",
-                    Toughness      = banana.Toughness
+                    Volume    = banana.VolumeMl,
+                    Nutrients = banana.Nutrients,  // full real-biology breakdown (macros, water, vitamins, minerals)
+                    FoodType  = "Banana",
+                    Toughness = banana.Toughness
                 });
                 bolus.Add(new EsophagusTransitComponent
                 {

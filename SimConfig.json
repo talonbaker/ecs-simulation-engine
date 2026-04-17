@@ -138,11 +138,27 @@
     "feeding": {
       // FeedingSystem only acts when hunger > this (satiation < 60%)
       "hungerThreshold":   40.0,
-      // Stop spawning food once this much nutrition is already queued in stomach
-      "nutritionQueueCap": 70.0,
+      // Stop spawning food once this many kcal are already queued in stomach.
+      // v0.7.0+: measured in calories. 240 kcal × 0.3 satiationPerCalorie ≈ 72
+      // satiation, matching the pre-v0.7 cap of 70 "nutrition points".
+      "nutritionQueueCap": 240.0,
       "banana": {
         "volumeMl":       50.0,
-        "nutritionValue": 35.0,
+        // Real-world averages for a medium banana (~118 g edible).
+        // DigestionSystem converts Calories → Satiation and Water → Hydration
+        // using the factors in "digestion" below. Banana: 27g carb + 1.3g prot
+        // + 0.4g fat = ~117 kcal × 0.3 = ~35 satiation (matches pre-v0.7 feel).
+        "nutrients": {
+          "carbohydrates": 27.0,
+          "proteins":       1.3,
+          "fats":           0.4,
+          "fiber":          3.1,
+          "water":         89.0,   // ml
+          "vitaminB":       0.4,   // mg (mostly B6)
+          "vitaminC":      10.0,   // mg
+          "potassium":    422.0,   // mg
+          "magnesium":     32.0    // mg
+        },
         "toughness":       0.2,
         "esophagusSpeed":  0.3
       },
@@ -156,13 +172,30 @@
     },
 
     "drinking": {
-      "hydrationQueueCap":           30.0,
-      "hydrationQueueCapDehydrated": 60.0,
+      // v0.7.0+: caps now measured in ml of water already queued in stomach.
+      // 15 ml = one gulp in flight at a time (matches pre-v0.7 feel of cap 30).
+      "hydrationQueueCap":           15.0,
+      "hydrationQueueCapDehydrated": 30.0,
       "water": {
         "volumeMl":       15.0,
-        "hydrationValue": 30.0,
+        // Pure water — 15 ml per gulp, nothing else.
+        // Via "digestion" factors below: 15ml × 2.0 hydrationPerMl = 30 hydration
+        // (matches pre-v0.7 feel of a single gulp restoring ~30% hydration).
+        "nutrients": {
+          "water": 15.0
+        },
         "esophagusSpeed":  0.8
       }
+    },
+
+    // ── Digestion ──────────────────────────────────────────────────────────────
+    // Converts real-biology nutrients (grams, ml, kcal) into gameplay 0-100
+    // metrics. Tuned so the new system matches the pre-v0.7 flat values:
+    //   banana 117 kcal × 0.3 = ~35 satiation
+    //   water  15 ml  × 2.0 = 30 hydration
+    "digestion": {
+      "satiationPerCalorie": 0.3,
+      "hydrationPerMl":      2.0
     },
 
     "sleep": {
