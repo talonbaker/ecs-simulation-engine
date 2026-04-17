@@ -14,7 +14,7 @@ namespace APIFramework.Core;
 public static class SimVersion
 {
     public const int Major = 0;
-    public const int Minor = 4;
+    public const int Minor = 5;
     public const int Patch = 0;
 
     /// <summary>Optional pre-release label. e.g. "-alpha", "-rc1". Empty for stable.</summary>

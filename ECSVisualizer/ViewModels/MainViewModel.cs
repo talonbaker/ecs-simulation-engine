@@ -3,6 +3,7 @@ using APIFramework.Core;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -37,15 +38,42 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel() : this(new SimulationBootstrapper()) { }
 
     // ── Runtime constructor ───────────────────────────────────────────────────
+    private SimConfigWatcher? _configWatcher;
+
     public MainViewModel(SimulationBootstrapper sim)
     {
         _sim = sim;
         // Sync the UI slider to whatever TimeScale the config loaded
         _timeScale = sim.Clock.TimeScale;
 
+        // Hot-reload: watch SimConfig.json, marshal apply onto the UI thread so
+        // the config change lands between ticks (DispatcherTimer is single-threaded)
+        var configPath = FindConfigPath("SimConfig.json");
+        if (configPath != null)
+        {
+            _configWatcher = new SimConfigWatcher(configPath, newCfg =>
+            {
+                Dispatcher.UIThread.InvokeAsync(() => _sim.ApplyConfig(newCfg));
+            });
+        }
+
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) }; // ~60 fps
         _timer.Tick += OnTick;
         _timer.Start();
+    }
+
+    private static string? FindConfigPath(string fileName)
+    {
+        var dir = Directory.GetCurrentDirectory();
+        for (int i = 0; i < 8; i++)
+        {
+            var candidate = Path.Combine(dir, fileName);
+            if (File.Exists(candidate)) return candidate;
+            var parent = Directory.GetParent(dir);
+            if (parent == null) break;
+            dir = parent.FullName;
+        }
+        return null;
     }
 
     private void OnTick(object? sender, EventArgs e)

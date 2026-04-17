@@ -1,66 +1,121 @@
+using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Diagnostics;
 using ECSCli;
 using System.Diagnostics;
 
-// ── Parse CLI args ────────────────────────────────────────────────────────────
+// ── Parse CLI args ─────────────────────────────────────────────────────────────
 var options = CliOptions.Parse(args);
 
 Console.WriteLine($"{SimVersion.Full}  —  Headless CLI");
-Console.WriteLine($"  Timescale  : {options.TimeScale}x");
-Console.WriteLine($"  Snapshot   : every {options.SnapshotInterval:F1} sim-seconds");
+Console.WriteLine($"  Default TimeScale : loaded from SimConfig.json");
 
 if (options.Duration.HasValue)
-    Console.WriteLine($"  Duration   : {options.Duration:F1} sim-seconds then exit");
+    Console.WriteLine($"  Duration         : {options.Duration:F0} game-seconds " +
+                      $"({options.Duration.Value / 3600:F1} game-hours)");
 else if (options.MaxTicks.HasValue)
-    Console.WriteLine($"  Ticks      : {options.MaxTicks:N0} then exit");
+    Console.WriteLine($"  Ticks            : {options.MaxTicks:N0} then exit");
 else
-    Console.WriteLine("  Duration   : run until Ctrl+C");
+    Console.WriteLine("  Duration         : run until Ctrl+C");
 
 if (options.Quiet)
-    Console.WriteLine("  Output     : quiet (final summary only)");
+    Console.WriteLine("  Output           : quiet (final report only)");
+else
+    Console.WriteLine($"  Snapshot         : every {options.SnapshotInterval:F0} game-seconds" +
+                      $" ({options.SnapshotInterval / 60:F0} game-minutes)");
 
 Console.WriteLine();
 
 // ── Boot simulation ───────────────────────────────────────────────────────────
 //
 // SimulationBootstrapper is the composition root — it wires every system and
-// spawns the initial entities.  The CLI is just another "frontend" that drives
-// Engine.Update() in its own loop, exactly like the Avalonia DispatcherTimer does.
+// spawns the initial entities.  The CLI drives Engine.Update() in its own loop,
+// exactly like the Avalonia DispatcherTimer does.
 //
-var sim = new SimulationBootstrapper();
-sim.Clock.TimeScale = options.TimeScale;
+const string configFile = "SimConfig.json";
+var sim = new SimulationBootstrapper(configFile);
+
+// Override TimeScale only if the user explicitly passed --timescale
+if (options.TimeScale != 1.0f)
+{
+    sim.Clock.TimeScale = options.TimeScale;
+    Console.WriteLine($"  TimeScale override: {options.TimeScale}x");
+}
+Console.WriteLine($"  Active TimeScale : {sim.Clock.TimeScale}x  " +
+                  $"(1 real-sec = {sim.Clock.TimeScale / 60:F1} game-min)");
+Console.WriteLine();
+
+// ── Hot-reload watcher ────────────────────────────────────────────────────────
+//
+// Runs on a background thread; sets a flag.  The main loop checks the flag at
+// the start of each tick and applies the new config before any system runs.
+// This ensures no tick ever reads a partially-applied config.
+//
+SimConfig? _pendingConfig = null;
+var _pendingLock = new object();
+
+string? configPath = FindConfigPath(configFile);
+SimConfigWatcher? watcher = null;
+
+if (configPath != null)
+{
+    watcher = new SimConfigWatcher(configPath, newCfg =>
+    {
+        lock (_pendingLock) _pendingConfig = newCfg;
+        Console.WriteLine($"\n[Hot-reload] Change detected in {configFile} — applying next tick...");
+    });
+    Console.WriteLine($"[Hot-reload] Watching: {configPath}");
+    Console.WriteLine($"             Edit & save SimConfig.json to tune values live.");
+    Console.WriteLine();
+}
+else
+{
+    Console.WriteLine("[Hot-reload] SimConfig.json not found — hot-reload disabled.");
+    Console.WriteLine();
+}
+
+// ── Metrics collector ─────────────────────────────────────────────────────────
+var metrics = new SimMetrics(sim);
 
 // ── Run state ─────────────────────────────────────────────────────────────────
 long   tick         = 0;
-double nextSnapshot = options.SnapshotInterval;
+double nextSnapshot = options.SnapshotInterval > 0 ? options.SnapshotInterval : double.MaxValue;
 bool   running      = true;
 var    wallStart    = Stopwatch.GetTimestamp();
 
-// Graceful shutdown on Ctrl+C — prints a final snapshot before exiting
 Console.CancelKeyPress += (_, e) =>
 {
-    e.Cancel = true;   // don't kill the process immediately; let the loop exit cleanly
+    e.Cancel = true;
     running  = false;
     Console.WriteLine();
-    Console.WriteLine("  (Ctrl+C — stopping after this tick)");
+    Console.WriteLine("  (Ctrl+C — finishing current tick then stopping)");
 };
 
-// ── Main loop — runs as fast as the CPU allows ────────────────────────────────
-//
-// Why 1/60 as the fixed delta?
-//   The Avalonia GUI drives the engine at ~60fps using 1/60 as its realDeltaTime.
-//   We use the same value here so the physics feel identical regardless of frontend.
-//   TimeScale then multiplies this inside Engine.Update() — so setting TimeScale=60
-//   means each loop iteration advances 1 sim-second of biological time.
-//
+// ── Main loop ─────────────────────────────────────────────────────────────────
 const float dt = 1f / 60f;
 
 while (running)
 {
+    // ── Hot-reload: apply pending config BEFORE any system runs this tick ─────
+    SimConfig? pending;
+    lock (_pendingLock) { pending = _pendingConfig; _pendingConfig = null; }
+    if (pending != null) sim.ApplyConfig(pending);
+
+    // ── Advance simulation ────────────────────────────────────────────────────
     sim.Engine.Update(dt);
     tick++;
 
-    // ── Snapshot ─────────────────────────────────────────────────────────────
+    // ── Collect metrics ───────────────────────────────────────────────────────
+    metrics.Tick(tick);
+
+    // ── Print live invariant violations ──────────────────────────────────────
+    if (options.LiveViolations)
+    {
+        foreach (var v in sim.Invariants.FlushNewViolations())
+            Console.WriteLine($"  ⚠  INVARIANT  {sim.Clock.DayTimeDisplay,-20}  {v}");
+    }
+
+    // ── Snapshot ──────────────────────────────────────────────────────────────
     if (!options.Quiet && sim.Clock.TotalTime >= nextSnapshot)
     {
         CliRenderer.PrintSnapshot(sim, tick, wallStart);
@@ -75,8 +130,30 @@ while (running)
         break;
 }
 
-// ── Final summary ─────────────────────────────────────────────────────────────
+// ── Final snapshot + report ───────────────────────────────────────────────────
 Console.WriteLine();
-Console.WriteLine("══ SIMULATION ENDED ════════════════════════════════════════");
+Console.WriteLine("══ SIMULATION ENDED ════════════════════════════════════════════");
 CliRenderer.PrintSnapshot(sim, tick, wallStart);
+
+if (options.Report)
+    CliRenderer.PrintReport(sim, metrics, tick, wallStart);
+
+// ── Cleanup ───────────────────────────────────────────────────────────────────
+watcher?.Dispose();
 Console.WriteLine();
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+static string? FindConfigPath(string fileName)
+{
+    var dir = Directory.GetCurrentDirectory();
+    for (int i = 0; i < 8; i++)
+    {
+        var candidate = Path.Combine(dir, fileName);
+        if (File.Exists(candidate)) return candidate;
+        var parent = Directory.GetParent(dir);
+        if (parent == null) break;
+        dir = parent.FullName;
+    }
+    return null;
+}
