@@ -76,6 +76,12 @@ public class InvariantSystem : ISystem
         (m.Hydration, var v2) = Guard(m.Hydration, 0f, 100f, "MetabolismComponent", "Hydration", name, t);
         dirty = v1 | v2;
 
+        // NutrientStores are cumulative and unbounded upward (future organ-systems
+        // will drain them), so we only guard against floating-point negatives.
+        var store = m.NutrientStores;
+        bool storeDirty = GuardNonNegative(ref store, "MetabolismComponent.NutrientStores", name, t);
+        if (storeDirty) { m.NutrientStores = store; dirty = true; }
+
         if (dirty) entity.Add(m);
     }
 
@@ -100,13 +106,44 @@ public class InvariantSystem : ISystem
 
         (s.CurrentVolumeMl, var v1) = Guard(s.CurrentVolumeMl, 0f, StomachComponent.MaxVolumeMl,
                                             "StomachComponent", "CurrentVolumeMl", name, t);
-        (s.NutritionQueued, var v2) = Guard(s.NutritionQueued, 0f, 500f,
-                                            "StomachComponent", "NutritionQueued", name, t);
-        (s.HydrationQueued, var v3) = Guard(s.HydrationQueued, 0f, 500f,
-                                            "StomachComponent", "HydrationQueued", name, t);
-        dirty = v1 | v2 | v3;
+        dirty = v1;
+
+        // NutrientsQueued is a full profile. It can never legally contain negative
+        // values — DigestionSystem's ratio-proportional release can drift one of
+        // the fields slightly negative on the last tick before empty, but that's
+        // the worst case we need to clamp.
+        var queued = s.NutrientsQueued;
+        bool queuedDirty = GuardNonNegative(ref queued, "StomachComponent.NutrientsQueued", name, t);
+        if (queuedDirty) { s.NutrientsQueued = queued; dirty = true; }
 
         if (dirty) entity.Add(s);
+    }
+
+    /// <summary>
+    /// Clamps every field of a NutrientProfile to [0, ∞). Returns true if any
+    /// field was negative (violations are logged per-field).
+    /// </summary>
+    private bool GuardNonNegative(ref NutrientProfile p, string label, string entity, double t)
+    {
+        bool violated = false;
+        (p.Carbohydrates, var v1)  = Guard(p.Carbohydrates, 0f, float.MaxValue, label, "Carbohydrates", entity, t);
+        (p.Proteins,      var v2)  = Guard(p.Proteins,      0f, float.MaxValue, label, "Proteins",      entity, t);
+        (p.Fats,           var v3) = Guard(p.Fats,           0f, float.MaxValue, label, "Fats",           entity, t);
+        (p.Fiber,          var v4) = Guard(p.Fiber,          0f, float.MaxValue, label, "Fiber",          entity, t);
+        (p.Water,          var v5) = Guard(p.Water,          0f, float.MaxValue, label, "Water",          entity, t);
+        (p.VitaminA,       var v6) = Guard(p.VitaminA,       0f, float.MaxValue, label, "VitaminA",       entity, t);
+        (p.VitaminB,       var v7) = Guard(p.VitaminB,       0f, float.MaxValue, label, "VitaminB",       entity, t);
+        (p.VitaminC,       var v8) = Guard(p.VitaminC,       0f, float.MaxValue, label, "VitaminC",       entity, t);
+        (p.VitaminD,       var v9) = Guard(p.VitaminD,       0f, float.MaxValue, label, "VitaminD",       entity, t);
+        (p.VitaminE,       var v10)= Guard(p.VitaminE,       0f, float.MaxValue, label, "VitaminE",       entity, t);
+        (p.VitaminK,       var v11)= Guard(p.VitaminK,       0f, float.MaxValue, label, "VitaminK",       entity, t);
+        (p.Sodium,         var v12)= Guard(p.Sodium,         0f, float.MaxValue, label, "Sodium",         entity, t);
+        (p.Potassium,      var v13)= Guard(p.Potassium,      0f, float.MaxValue, label, "Potassium",      entity, t);
+        (p.Calcium,        var v14)= Guard(p.Calcium,        0f, float.MaxValue, label, "Calcium",        entity, t);
+        (p.Iron,           var v15)= Guard(p.Iron,           0f, float.MaxValue, label, "Iron",           entity, t);
+        (p.Magnesium,      var v16)= Guard(p.Magnesium,      0f, float.MaxValue, label, "Magnesium",      entity, t);
+        violated = v1 | v2 | v3 | v4 | v5 | v6 | v7 | v8 | v9 | v10 | v11 | v12 | v13 | v14 | v15 | v16;
+        return violated;
     }
 
     private void CheckDrives(Entity entity, string name, double t)

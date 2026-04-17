@@ -78,7 +78,7 @@ public class SimulationBootstrapper
         Engine.AddSystem(new SleepSystem(sys.Sleep));                             //  9
         Engine.AddSystem(new InteractionSystem(sys.Interaction));                 // 10
         Engine.AddSystem(new EsophagusSystem());                                  // 11
-        Engine.AddSystem(new DigestionSystem());                                  // 12
+        Engine.AddSystem(new DigestionSystem(sys.Digestion));                     // 12
         Engine.AddSystem(new RotSystem(sys.Rot));                                 // 13
     }
 
@@ -114,6 +114,7 @@ public class SimulationBootstrapper
         MergeFlat(newCfg.Systems.Feeding.Banana,      Config.Systems.Feeding.Banana,      changes);
         MergeFlat(newCfg.Systems.Drinking,            Config.Systems.Drinking,            changes);
         MergeFlat(newCfg.Systems.Drinking.Water,      Config.Systems.Drinking.Water,      changes);
+        MergeFlat(newCfg.Systems.Digestion,           Config.Systems.Digestion,           changes);
         MergeFlat(newCfg.Systems.Sleep,               Config.Systems.Sleep,               changes);
         MergeFlat(newCfg.Systems.Interaction,         Config.Systems.Interaction,         changes);
         MergeFlat(newCfg.Systems.Mood,                Config.Systems.Mood,                changes);

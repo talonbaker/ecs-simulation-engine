@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using APIFramework.Components;
 
 namespace APIFramework.Config;
 
@@ -205,6 +206,7 @@ public class SystemsConfig
     public BrainSystemConfig               Brain               { get; set; } = new();
     public FeedingSystemConfig             Feeding             { get; set; } = new();
     public DrinkingSystemConfig            Drinking            { get; set; } = new();
+    public DigestionSystemConfig           Digestion           { get; set; } = new();
     public SleepSystemConfig               Sleep               { get; set; } = new();
     public InteractionSystemConfig         Interaction         { get; set; } = new();
     public MoodSystemConfig                Mood                { get; set; } = new();
@@ -278,10 +280,12 @@ public class FeedingSystemConfig
     public float HungerThreshold { get; set; } = 40f;
 
     /// <summary>
-    /// Max nutrition already queued in the stomach before FeedingSystem stops spawning.
-    /// Prevents over-eating when digestion hasn't caught up.
+    /// Max Calories already queued in the stomach before FeedingSystem stops spawning.
+    /// Prevents over-eating when digestion hasn't caught up. Measured in kcal now —
+    /// under the v0.7.0 digestion factors (0.3 sat/kcal), 240 kcal ≈ 72 satiation,
+    /// matching the pre-v0.7 cap of 70 "nutrition points".
     /// </summary>
-    public float NutritionQueueCap { get; set; } = 70f;
+    public float NutritionQueueCap { get; set; } = 240f;
 
     /// <summary>Properties of the hardcoded banana food source (temporary until world food exists).</summary>
     public FoodItemConfig Banana { get; set; } = new();
@@ -303,8 +307,24 @@ public class FoodItemConfig
     /// <summary>Physical volume that enters the stomach (ml).</summary>
     public float VolumeMl { get; set; } = 50f;
 
-    /// <summary>Nutrition points released to Satiation after digestion.</summary>
-    public float NutritionValue { get; set; } = 35f;
+    /// <summary>
+    /// Full nutritional breakdown released to the stomach when the bolus arrives.
+    /// DigestionSystem uses the Atwater-derived Calories and Water fields to
+    /// compute gameplay Satiation/Hydration increments as contents absorb.
+    /// </summary>
+    public NutrientProfile Nutrients { get; set; } = new()
+    {
+        // Sensible banana defaults (real-world averages for a medium banana ≈ 118 g).
+        Carbohydrates = 27f,
+        Proteins      = 1.3f,
+        Fats          = 0.4f,
+        Fiber         = 3.1f,
+        Water         = 89f,    // ml — most of a banana's mass is water
+        VitaminB      = 0.4f,   // mg (primarily B6)
+        VitaminC      = 10f,
+        Potassium     = 422f,
+        Magnesium     = 32f,
+    };
 
     /// <summary>Chew resistance 0.0 (soft) → 1.0 (very tough). Affects bite time.</summary>
     public float Toughness { get; set; } = 0.2f;
@@ -318,16 +338,18 @@ public class FoodItemConfig
 public class DrinkingSystemConfig
 {
     /// <summary>
-    /// Maximum hydration queued in stomach before the system stops spawning water.
-    /// Prevents machine-gun gulping under normal thirst.
+    /// Maximum ml of water already queued in the stomach before the system stops
+    /// spawning new gulps. Prevents machine-gun gulping under normal thirst.
+    /// v0.7.0+: measured in ml (matches NutrientProfile.Water). Default 15 ml =
+    /// one gulp in flight at a time, matching the pre-v0.7 cap of 30 hydration pts.
     /// </summary>
-    public float HydrationQueueCap { get; set; } = 30f;
+    public float HydrationQueueCap { get; set; } = 15f;
 
     /// <summary>
-    /// Raised hydration queue cap when the entity is severely dehydrated (DehydratedTag).
-    /// Allows faster water intake during emergencies.
+    /// Raised queue cap when the entity is severely dehydrated (DehydratedTag).
+    /// v0.7.0+: measured in ml. 30 ml ≈ two gulps in flight — matches pre-v0.7 60.
     /// </summary>
-    public float HydrationQueueCapDehydrated { get; set; } = 60f;
+    public float HydrationQueueCapDehydrated { get; set; } = 30f;
 
     /// <summary>Properties of the hardcoded water source (temporary until world water exists).</summary>
     public DrinkItemConfig Water { get; set; } = new();
@@ -338,11 +360,40 @@ public class DrinkItemConfig
     /// <summary>Physical volume that enters the stomach per gulp (ml).</summary>
     public float VolumeMl { get; set; } = 15f;
 
-    /// <summary>Hydration points released to Hydration after digestion.</summary>
-    public float HydrationValue { get; set; } = 30f;
+    /// <summary>
+    /// Full nutritional breakdown released to the stomach when the gulp arrives.
+    /// Pure water by default (15 ml water per gulp, no macros or minerals).
+    /// Future drinks (milk, juice, coffee) layer macros/vitamins on top of Water.
+    /// </summary>
+    public NutrientProfile Nutrients { get; set; } = new()
+    {
+        Water = 15f,   // ml — a single gulp
+    };
 
     /// <summary>Speed at which liquid travels down the esophagus (progress/second).</summary>
     public float EsophagusSpeed { get; set; } = 0.8f;
+}
+
+// ── DigestionSystem ───────────────────────────────────────────────────────────
+
+/// <summary>
+/// Conversion factors from real-biology nutrients (NutrientProfile) to gameplay
+/// metrics (Satiation / Hydration). Keeps the 0-100 HUD fields tuned to the
+/// existing feel while the underlying NutrientStores accumulate real grams/ml.
+/// </summary>
+public class DigestionSystemConfig
+{
+    /// <summary>
+    /// Satiation points per absorbed kcal. A medium banana (~117 kcal) at 0.3
+    /// yields ~35 satiation — matching the pre-v0.7 flat NutritionValue.
+    /// </summary>
+    public float SatiationPerCalorie { get; set; } = 0.3f;
+
+    /// <summary>
+    /// Hydration points per absorbed ml of water. A 15 ml gulp at 2.0 yields
+    /// 30 hydration — matching the pre-v0.7 flat HydrationValue.
+    /// </summary>
+    public float HydrationPerMl { get; set; } = 2.0f;
 }
 
 // ── EnergySystem ─────────────────────────────────────────────────────────────

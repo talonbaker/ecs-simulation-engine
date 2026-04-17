@@ -27,14 +27,14 @@ public static class EntityTemplates
             BodyTemp                  = m.BodyTemp,
             SatiationDrainRate        = m.SatiationDrainRate,
             HydrationDrainRate        = m.HydrationDrainRate,
-            SleepMetabolismMultiplier = m.SleepMetabolismMultiplier
+            SleepMetabolismMultiplier = m.SleepMetabolismMultiplier,
+            NutrientStores            = new NutrientProfile()   // body starts with empty stores
         });
         entity.Add(new StomachComponent
         {
             CurrentVolumeMl = 0f,
             DigestionRate   = s.DigestionRate,
-            NutritionQueued = 0f,
-            HydrationQueued = 0f
+            NutrientsQueued = new NutrientProfile()   // empty stomach — zeroed profile
         });
         entity.Add(new EnergyComponent
         {
@@ -79,14 +79,14 @@ public static class EntityTemplates
             BodyTemp                  = m.BodyTemp,
             SatiationDrainRate        = m.SatiationDrainRate,
             HydrationDrainRate        = m.HydrationDrainRate,
-            SleepMetabolismMultiplier = m.SleepMetabolismMultiplier
+            SleepMetabolismMultiplier = m.SleepMetabolismMultiplier,
+            NutrientStores            = new NutrientProfile()   // body starts with empty stores
         });
         entity.Add(new StomachComponent
         {
             CurrentVolumeMl = 0f,
             DigestionRate   = s.DigestionRate,
-            NutritionQueued = 0f,
-            HydrationQueued = 0f
+            NutrientsQueued = new NutrientProfile()   // empty stomach — zeroed profile
         });
         entity.Add(new EnergyComponent
         {

@@ -36,6 +36,16 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private string _stomachLabel    = "";
     [ObservableProperty] private string _digestionLabel  = "";
 
+    // ── Body Nutrient Stores (v0.7.0+) ────────────────────────────────────────
+    // Cumulative real-biology stores extracted by DigestionSystem.
+    [ObservableProperty] private bool   _hasNutrients     = false;
+    [ObservableProperty] private float  _nutrientCalories = 0f;
+    [ObservableProperty] private string _nutrientCaloriesLabel = "0 kcal";
+    [ObservableProperty] private string _nutrientMacrosLabel   = "";
+    [ObservableProperty] private string _nutrientWaterLabel    = "";
+    [ObservableProperty] private string _nutrientVitaminsLabel = "";
+    [ObservableProperty] private string _nutrientMineralsLabel = "";
+
     // ── Energy / Sleep ────────────────────────────────────────────────────────
     [ObservableProperty] private bool   _hasEnergy        = false;
     [ObservableProperty] private float  _energy           = 100f;
@@ -109,6 +119,16 @@ public partial class EntityViewModel : ObservableObject
             ThirstLabel = meta.Thirst < 5f
                 ? "Hydrated"
                 : $"Thirst  {meta.Thirst:F1}%";
+
+            // Body nutrient stores — pooled across the run
+            var store       = meta.NutrientStores;
+            HasNutrients    = !store.IsEmpty;
+            NutrientCalories      = store.Calories;
+            NutrientCaloriesLabel = $"{store.Calories:F0} kcal";
+            NutrientMacrosLabel   = $"Carbs {store.Carbohydrates:F1}g · Prot {store.Proteins:F1}g · Fat {store.Fats:F1}g · Fiber {store.Fiber:F1}g";
+            NutrientWaterLabel    = $"Water  {store.Water:F0} ml";
+            NutrientVitaminsLabel = $"A {store.VitaminA:F1}  B {store.VitaminB:F1}  C {store.VitaminC:F1}  D {store.VitaminD:F1}  E {store.VitaminE:F1}  K {store.VitaminK:F1}  (mg)";
+            NutrientMineralsLabel = $"Na {store.Sodium:F0}  K {store.Potassium:F0}  Ca {store.Calcium:F0}  Fe {store.Iron:F1}  Mg {store.Magnesium:F0}  (mg)";
         }
 
         // Stomach
@@ -116,9 +136,10 @@ public partial class EntityViewModel : ObservableObject
         if (HasStomach)
         {
             var stomach    = entity.Get<StomachComponent>();
+            var queued     = stomach.NutrientsQueued;
             StomachFill    = stomach.Fill * 100f;
             StomachLabel   = $"{stomach.Fill:P0}  ({stomach.CurrentVolumeMl:F0} / {StomachComponent.MaxVolumeMl:F0} ml)";
-            DigestionLabel = $"Queued — Nutr: {stomach.NutritionQueued:F1}  Hydr: {stomach.HydrationQueued:F1}";
+            DigestionLabel = $"Queued — {queued.Calories:F0} kcal  ·  water {queued.Water:F0}ml  ·  carbs {queued.Carbohydrates:F1}g  ·  prot {queued.Proteins:F1}g  ·  fat {queued.Fats:F1}g";
         }
 
         // Energy / Sleep

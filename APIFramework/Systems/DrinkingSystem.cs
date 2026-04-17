@@ -35,6 +35,7 @@ public class DrinkingSystem : ISystem
             if (throatBusy) continue;
 
             // Don't queue more water than the stomach can absorb soon.
+            // v0.7.0+: cap is ml of water pending in the queued nutrient profile.
             // Cap is higher when severely dehydrated so intake keeps pace with need.
             if (entity.Has<StomachComponent>())
             {
@@ -42,7 +43,7 @@ public class DrinkingSystem : ISystem
                 float cap    = entity.Has<DehydratedTag>()
                     ? _cfg.HydrationQueueCapDehydrated
                     : _cfg.HydrationQueueCap;
-                if (stomach.HydrationQueued >= cap) continue;
+                if (stomach.NutrientsQueued.Water >= cap) continue;
             }
 
             // Spawn a gulp of water into the esophagus
@@ -50,9 +51,9 @@ public class DrinkingSystem : ISystem
             water.Add(new IdentityComponent("Water", "Liquid"));
             water.Add(new LiquidComponent
             {
-                VolumeMl       = _cfg.Water.VolumeMl,
-                HydrationValue = _cfg.Water.HydrationValue,
-                LiquidType     = "Water"
+                VolumeMl   = _cfg.Water.VolumeMl,
+                Nutrients  = _cfg.Water.Nutrients,   // full profile — pure water by default
+                LiquidType = "Water"
             });
             water.Add(new EsophagusTransitComponent
             {
