@@ -5,33 +5,44 @@ using APIFramework.Core;
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Drains the stomach over time and releases queued nutrients into the body.
+/// Drains the stomach over time and hands chyme to the small intestine.
 ///
 /// PIPELINE POSITION
 /// ─────────────────
-///   FeedingSystem → EsophagusSystem → StomachComponent → DigestionSystem → MetabolismComponent
+///   FeedingSystem → EsophagusSystem → StomachComponent → DigestionSystem
+///                → SmallIntestineComponent → SmallIntestineSystem → ...
 ///
-/// v0.7.0 BIOLOGY LAYER
-/// ────────────────────
-/// Food is now a <see cref="NutrientProfile"/> (macros, water, vitamins, minerals) rather
-/// than flat scalar points. Each tick we compute the ratio of stomach volume digested,
-/// release that same fraction of the queued NutrientProfile, and:
+/// v0.7.0 CHANGE — BIOLOGY LAYER
+/// ──────────────────────────────
+/// Food is a NutrientProfile (macros, water, vitamins, minerals) rather than flat
+/// scalar points. Each tick a ratio of stomach volume is digested, the same fraction
+/// of NutrientsQueued is released, and Satiation/Hydration are updated via configurable
+/// conversion factors (SatiationPerCalorie, HydrationPerMl).
 ///
-///   1. Accumulate the released nutrients into MetabolismComponent.NutrientStores
-///      (the ongoing biology state that future organ-systems will draw from).
-///   2. Convert them into the gameplay-facing 0-100 metrics via configurable factors:
-///        - Released Calories * SatiationPerCalorie → Satiation
-///        - Released Water    * HydrationPerMl      → Hydration
+/// v0.7.1 CHANGE — INTESTINE HANDOFF
+/// ───────────────────────────────────
+/// In v0.7.0 DigestionSystem wrote released nutrients directly into
+/// MetabolismComponent.NutrientStores. That was an acknowledged shortcut — the
+/// FORWARD COMPAT note in the original DigestionSystem comment anticipated exactly
+/// this change. Now chyme goes to SmallIntestineComponent.Contents instead, and
+/// SmallIntestineSystem handles the per-nutrient absorption fractions and the
+/// NutrientStores write.
 ///
-/// The factors are tuned so behaviour matches pre-v0.7 tuning out of the box
-/// (banana ≈117 kcal * 0.3 ≈ 35 satiation; 15 ml water * 2.0 = 30 hydration).
+/// The Satiation/Hydration conversion REMAINS HERE by design. Physiologically,
+/// the feeling of fullness begins in the stomach — stretch receptors signal satiation
+/// as the stomach fills and empties, and hormones like CCK are released during gastric
+/// digestion, not intestinal absorption. Keeping this conversion in DigestionSystem
+/// correctly represents "Billy feels full because his stomach is digesting", while
+/// SmallIntestineSystem fills the real-biology NutrientStores pool for v0.8+.
 ///
-/// FORWARD COMPAT (v0.7.1+)
-/// ────────────────────────
-/// When the SmallIntestine component lands, DigestionSystem will hand off partially-
-/// digested chyme to it instead of depositing directly into NutrientStores. The
-/// Satiation/Hydration conversion stays here; downstream organs drive long-term
-/// deficiency/toxicity tags (MoodSystem in v0.8+).
+/// BACKPRESSURE
+/// ─────────────
+/// If the small intestine is at capacity, DigestionSystem stops releasing chyme
+/// until space opens up. This creates realistic gastric backpressure: a plugged
+/// intestine means the stomach cannot empty, which means eating triggers IsFull
+/// sooner. The FeedingSystem's NutritionQueueCap prevents the stomach from
+/// overfilling in the first place, so backpressure is only a concern at
+/// extreme time-scale values or very high feeding rates.
 /// </summary>
 public class DigestionSystem : ISystem
 {
@@ -49,14 +60,32 @@ public class DigestionSystem : ISystem
             var stomach = entity.Get<StomachComponent>();
             if (stomach.IsEmpty) continue;
 
-            // How much volume is broken down this tick (clamped to what's actually in the stomach).
-            float digested = MathF.Min(stomach.DigestionRate * deltaTime, stomach.CurrentVolumeMl);
+            // v0.7.1+: chyme must have somewhere to go. If the entity has no
+            // SmallIntestineComponent, skip — this system no longer writes directly
+            // to NutrientStores. All digestive entities (human, cat) receive a
+            // SmallIntestineComponent via EntityTemplates.
+            if (!entity.Has<SmallIntestineComponent>()) continue;
+            if (!entity.Has<MetabolismComponent>())     continue;
 
-            // Ratio of the stomach's content digested this tick — nutrients are
-            // released at the same fraction as volume drains.
+            var si   = entity.Get<SmallIntestineComponent>();
+            var meta = entity.Get<MetabolismComponent>();
+
+            // How much capacity the small intestine can still receive.
+            float receivableVolume = SmallIntestineComponent.CapacityMl - si.CurrentVolumeMl;
+            if (receivableVolume <= 0f) continue; // SI full — stomach backs up this tick
+
+            // How much volume the stomach wants to release this tick.
+            float wantToDigest = MathF.Min(stomach.DigestionRate * deltaTime, stomach.CurrentVolumeMl);
+
+            // Actual release is the lesser of what the stomach wants to release
+            // and what the SI can receive. Under normal parameters these are identical.
+            float digested = MathF.Min(wantToDigest, receivableVolume);
+
+            // Ratio of the stomach's content digested this tick — nutrients release
+            // at the same proportional rate as volume drains.
             float ratio = digested / stomach.CurrentVolumeMl;
 
-            // Extract a proportional slice of the queued nutrients to release into the body.
+            // Extract the proportional nutrient slice from the stomach queue.
             NutrientProfile released = stomach.NutrientsQueued * ratio;
 
             stomach.CurrentVolumeMl -= digested;
@@ -67,18 +96,24 @@ public class DigestionSystem : ISystem
 
             entity.Add(stomach);
 
-            if (!entity.Has<MetabolismComponent>()) continue;
+            // ── Hand chyme to the small intestine ─────────────────────────────
+            // This is the v0.7.1 change: instead of depositing released nutrients
+            // straight into NutrientStores, we queue them into the SI for per-nutrient
+            // absorption via SmallIntestineSystem. The volume tracking mirrors the
+            // StomachComponent pattern exactly.
+            si.CurrentVolumeMl += digested;
+            si.Contents        += released;
 
-            var meta = entity.Get<MetabolismComponent>();
+            entity.Add(si);
 
-            // ── 1. Accumulate into the biology layer ─────────────────────────────
-            // Real grams of carbs/protein/fat, ml of water, mg of vitamins/minerals
-            // pool into NutrientStores. Future organ-systems will drain from here.
-            meta.NutrientStores += released;
-
-            // ── 2. Derive gameplay metrics from the release ──────────────────────
-            // Calories  → Satiation (how fed Billy feels)
-            // Water (ml) → Hydration (how quenched Billy feels)
+            // ── Derive gameplay metrics from the release ───────────────────────
+            // Satiation and Hydration are updated HERE (not in SmallIntestineSystem)
+            // because they represent stomach-level fullness, not intestinal absorption.
+            // See the class-level comment for the physiology reasoning.
+            //
+            // Tuning invariant (must not change without re-calibrating the whole chain):
+            //   banana ~117 kcal × 0.3 SatiationPerCalorie ≈ 35 satiation gain
+            //   water  15 ml    × 2.0 HydrationPerMl        = 30 hydration gain
             float satiationGain = released.Calories * _cfg.SatiationPerCalorie;
             float hydrationGain = released.Water    * _cfg.HydrationPerMl;
 

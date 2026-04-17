@@ -37,8 +37,10 @@ namespace APIFramework.Core;
 ///  9. SleepSystem               — toggle IsSleeping based on dominant desire
 /// 10. InteractionSystem         — convert held food to esophagus bolus
 /// 11. EsophagusSystem           — move transit entities toward stomach
-/// 12. DigestionSystem           — release nutrients from stomach to metabolism
-/// 13. RotSystem                 — age food entities; apply RotTag when threshold crossed
+/// 12. DigestionSystem           — release nutrients from stomach → SmallIntestineComponent
+/// 13. SmallIntestineSystem      — absorb nutrients into body stores; residue → LargeIntestine
+/// 14. LargeIntestineSystem      — recapture water; compact waste into WasteReadyMl
+/// 15. RotSystem                 — age food entities; apply RotTag when threshold crossed
 /// </summary>
 public class SimulationBootstrapper
 {
@@ -79,7 +81,9 @@ public class SimulationBootstrapper
         Engine.AddSystem(new InteractionSystem(sys.Interaction));                 // 10
         Engine.AddSystem(new EsophagusSystem());                                  // 11
         Engine.AddSystem(new DigestionSystem(sys.Digestion));                     // 12
-        Engine.AddSystem(new RotSystem(sys.Rot));                                 // 13
+        Engine.AddSystem(new SmallIntestineSystem(sys.SmallIntestine));           // 13
+        Engine.AddSystem(new LargeIntestineSystem(sys.LargeIntestine));           // 14
+        Engine.AddSystem(new RotSystem(sys.Rot));                                 // 15
     }
 
     private void SpawnWorld()
@@ -115,6 +119,8 @@ public class SimulationBootstrapper
         MergeFlat(newCfg.Systems.Drinking,            Config.Systems.Drinking,            changes);
         MergeFlat(newCfg.Systems.Drinking.Water,      Config.Systems.Drinking.Water,      changes);
         MergeFlat(newCfg.Systems.Digestion,           Config.Systems.Digestion,           changes);
+        MergeFlat(newCfg.Systems.SmallIntestine,      Config.Systems.SmallIntestine,      changes);
+        MergeFlat(newCfg.Systems.LargeIntestine,      Config.Systems.LargeIntestine,      changes);
         MergeFlat(newCfg.Systems.Sleep,               Config.Systems.Sleep,               changes);
         MergeFlat(newCfg.Systems.Interaction,         Config.Systems.Interaction,         changes);
         MergeFlat(newCfg.Systems.Mood,                Config.Systems.Mood,                changes);

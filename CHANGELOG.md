@@ -11,16 +11,110 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `AutonomySystem` — Billy's mood-gated disobedience mechanic
 - World food/water sources as spawnable entities (fridge, sink, bowl)
 - Proximity / spatial grid system — so RotTag on nearby food raises Disgust before consumption
-- **v0.7.1 — Intestines.** `SmallIntestineComponent` + `LargeIntestineComponent` on the body;
-  `SmallIntestineSystem` and `LargeIntestineSystem` pull chyme from the stomach and
-  perform delayed nutrient/water reabsorption. Waste compacts into rectal contents.
 - **v0.7.2 — Bladder and kidneys.** `KidneyComponent`, `BladderComponent`, `KidneySystem`,
   `EliminationUrgeSystem`. Tracks fluid balance; spawns a `Pee` desire that can override
   other drives when fullness is high.
 - **v0.7.3 — Rectum and elimination.** `RectumComponent`, `EliminationSystem`. `Poop` desire
   joins the Plutchik/Maslow soup. Entities will eventually travel to a `ToiletEntity`.
+  LargeIntestineSystem.WasteReadyMl feeds RectumComponent as the handoff point.
 - Spatial / movement layer — Billy in an apartment with fridge, sink, toilet, bed.
 - Lua scripting layer for moddable system/mechanic definitions (post-stabilization)
+
+---
+
+## [0.7.1] — 2026-04-17
+
+### Added
+
+- **`SmallIntestineComponent`** — holds the volume and `NutrientProfile` of chyme
+  currently in transit through the small intestine. Lives as a component on the body
+  entity (not a travelling entity), consistent with `StomachComponent`.
+  Capacity: 200 ml. `Fill`, `IsEmpty` computed properties for UI and systems.
+
+- **`LargeIntestineComponent`** — holds the residue forwarded from the small intestine:
+  primarily fiber, unabsorbed water, and the unabsorbed mineral fraction. Tracks
+  `WasteReadyMl` — the compacted dry-waste volume that will feed `RectumComponent`
+  in v0.7.3. Capacity: 500 ml.
+
+- **`SmallIntestineSystem`** — processes `SmallIntestineComponent.Contents` each tick
+  at a configurable `AbsorptionRate` (default 0.004 ml/game-s). Applies per-nutrient
+  absorption fractions to the batch (carbs 98%, protein 92%, fat 90%, water 50%,
+  fat-soluble vitamins 80%, water-soluble vitamins 85%, minerals 50%); writes the
+  absorbed portion to `MetabolismComponent.NutrientStores`; forwards the residue
+  (fiber + unabsorbed fractions) to `LargeIntestineComponent`. At 120× timescale
+  a banana's 50 ml of chyme clears the SI in ~3.5 game-hours (~1.75 real-minutes).
+
+- **`LargeIntestineSystem`** — processes `LargeIntestineComponent.Contents` at
+  `WaterExtractionRate` (default 0.002 ml/game-s). Recaptures 90% of passing water
+  into `MetabolismComponent.NutrientStores` (the biology-layer pool, not the gameplay
+  `Hydration` metric — double-counting was explicitly avoided). Accumulates compacted
+  waste volume in `WasteReadyMl`. At 120× timescale, residue from one banana clears
+  the LI water-extraction stage in ~1 game-hour.
+
+- **`SmallIntestineSystemConfig`** — all absorption fractions and transit rate configurable
+  in `SimConfig.json` under `"smallIntestine"`. Hot-reload via `ApplyConfig` supported.
+
+- **`LargeIntestineSystemConfig`** — `waterExtractionRate`, `waterRecaptureFraction`, and
+  `transitThresholdMl` (v0.7.3 handoff threshold) all in `SimConfig.json` under
+  `"largeIntestine"`. Hot-reload supported.
+
+- **InvariantSystem guards** for both new components: `CurrentVolumeMl` clamped to
+  `[0, CapacityMl]`; `Contents` guarded non-negative via the existing
+  `GuardNonNegative(ref NutrientProfile)` helper; `WasteReadyMl` guarded non-negative
+  (unbounded upward, since v0.7.3 will provide the drain).
+
+- **CLI renderer** (`CliRenderer.cs`) — intestinal transit section in `PrintSnapshot()`:
+  a SMALL INT fill bar (hidden when empty) and a LARGE INT fill bar + waste-ready
+  readout (hidden when both empty and zero waste). Avoids visual clutter between meals.
+
+- **Avalonia visualizer** (`MainWindow.axaml`, `EntityViewModel.cs`) — two new organ
+  panels between STOMACH and NUTRIENTS: SMALL INT (green, `#34C759`) and LARGE INT
+  (purple, `#8E4EC6`). Both are `IsVisible`-gated — they only appear when the organ
+  has active content, keeping the idle-state UI minimal. New observable properties:
+  `HasSmallIntestineContent`, `SmallIntestineFill`, `SmallIntestineLabel`,
+  `SmallIntestineContents`, `HasLargeIntestineContent`, `LargeIntestineFill`,
+  `LargeIntestineLabel`, `WasteReadyLabel`.
+
+### Changed
+
+- **`DigestionSystem`** — no longer writes to `MetabolismComponent.NutrientStores`
+  directly. Instead, the released chyme (volume + `NutrientProfile`) is passed to
+  `SmallIntestineComponent`. The `Satiation`/`Hydration` gameplay-metric conversion
+  (`SatiationPerCalorie`, `HydrationPerMl`) remains in `DigestionSystem` by design —
+  these represent stomach-level fullness cues (stretch receptors, gut hormones),
+  not intestinal absorption. The pre-v0.7.1 tuning invariant is preserved:
+  banana ~117 kcal × 0.3 ≈ 35 satiation; water 15 ml × 2.0 = 30 hydration.
+
+  A backpressure mechanism was added: if `SmallIntestineComponent` is at capacity,
+  `DigestionSystem` skips release that tick. In practice the SI never fills under
+  normal operating conditions, but the guard prevents runaway volume at extreme
+  time-scale values.
+
+- **`EntityTemplates.SpawnHuman` and `SpawnCat`** — both now initialise
+  `SmallIntestineComponent` and `LargeIntestineComponent` at empty state on spawn.
+  All digestive entities receive the full intestinal pipeline; `DigestionSystem`
+  requires `SmallIntestineComponent` to be present (skips entities without it).
+
+- **`SimulationBootstrapper.RegisterSystems`** — pipeline grows from 13 to 15 systems.
+  `SmallIntestineSystem` (position 13) and `LargeIntestineSystem` (position 14) slot
+  between `DigestionSystem` and `RotSystem`. `ApplyConfig` gains two new `MergeFlat`
+  calls for the new config classes, maintaining hot-reload coverage.
+
+### Architecture note
+
+The organs-as-components-on-body pattern established by `StomachComponent` in v0.6
+is extended here without breaking changes. The digestive pipeline is now:
+
+  FeedingSystem → InteractionSystem → EsophagusSystem → StomachComponent
+  → DigestionSystem → SmallIntestineComponent → SmallIntestineSystem
+  → LargeIntestineComponent → LargeIntestineSystem → WasteReadyMl
+  → (v0.7.3) RectumComponent → EliminationSystem
+
+`NutrientStores` in `MetabolismComponent` is now filled by `SmallIntestineSystem`
+(macros + vitamins + minerals) and `LargeIntestineSystem` (water recapture) rather
+than `DigestionSystem`. The v0.8 `BodyMetabolismSystem` and `NutrientDeficiencySystem`
+will read from `NutrientStores`; nothing else changes about how those systems
+are designed.
 
 ---
 

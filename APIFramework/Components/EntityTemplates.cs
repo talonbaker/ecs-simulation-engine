@@ -36,6 +36,21 @@ public static class EntityTemplates
             DigestionRate   = s.DigestionRate,
             NutrientsQueued = new NutrientProfile()   // empty stomach — zeroed profile
         });
+        // v0.7.1+: the full intestinal pipeline is wired here. Every digestive entity
+        // (human, cat) gets both intestine components so DigestionSystem can hand off
+        // chyme to the SI, and SmallIntestineSystem can forward residue to the LI.
+        // Both start empty — no food in transit at spawn time.
+        entity.Add(new SmallIntestineComponent
+        {
+            CurrentVolumeMl = 0f,
+            Contents        = new NutrientProfile()
+        });
+        entity.Add(new LargeIntestineComponent
+        {
+            CurrentVolumeMl = 0f,
+            Contents        = new NutrientProfile(),
+            WasteReadyMl    = 0f
+        });
         entity.Add(new EnergyComponent
         {
             Energy              = e.EnergyStart,
@@ -86,7 +101,18 @@ public static class EntityTemplates
         {
             CurrentVolumeMl = 0f,
             DigestionRate   = s.DigestionRate,
-            NutrientsQueued = new NutrientProfile()   // empty stomach — zeroed profile
+            NutrientsQueued = new NutrientProfile()
+        });
+        entity.Add(new SmallIntestineComponent
+        {
+            CurrentVolumeMl = 0f,
+            Contents        = new NutrientProfile()
+        });
+        entity.Add(new LargeIntestineComponent
+        {
+            CurrentVolumeMl = 0f,
+            Contents        = new NutrientProfile(),
+            WasteReadyMl    = 0f
         });
         entity.Add(new EnergyComponent
         {

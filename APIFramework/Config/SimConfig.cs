@@ -207,6 +207,8 @@ public class SystemsConfig
     public FeedingSystemConfig             Feeding             { get; set; } = new();
     public DrinkingSystemConfig            Drinking            { get; set; } = new();
     public DigestionSystemConfig           Digestion           { get; set; } = new();
+    public SmallIntestineSystemConfig      SmallIntestine      { get; set; } = new();
+    public LargeIntestineSystemConfig      LargeIntestine      { get; set; } = new();
     public SleepSystemConfig               Sleep               { get; set; } = new();
     public InteractionSystemConfig         Interaction         { get; set; } = new();
     public MoodSystemConfig                Mood                { get; set; } = new();
@@ -394,6 +396,106 @@ public class DigestionSystemConfig
     /// 30 hydration — matching the pre-v0.7 flat HydrationValue.
     /// </summary>
     public float HydrationPerMl { get; set; } = 2.0f;
+}
+
+// ── SmallIntestineSystem ──────────────────────────────────────────────────────
+
+/// <summary>
+/// Absorption fractions and transit rate for the small intestine.
+///
+/// Absorption fractions represent the percentage of each nutrient class that
+/// enters the bloodstream vs. passes to the large intestine as residue. These
+/// are derived from published gastrointestinal physiology (Guyton &amp; Hall, 2020)
+/// but simplified into configurable constants so they can be tuned if the
+/// simulation's nutritional balance needs adjustment.
+///
+/// At the defaults below and TimeScale 120×:
+///   A banana's 50 ml chyme clears the SI in ~12,500 game-s ≈ 3.5 game-hours.
+///   15% of that volume (7.5 ml) passes to the large intestine as residue.
+/// </summary>
+public class SmallIntestineSystemConfig
+{
+    /// <summary>
+    /// Volume of chyme processed (absorbed + forwarded) per game-second.
+    /// Lower values slow down SI transit; higher values speed it up.
+    /// Default 0.004 ml/s = 50 ml cleared in ~3.5 game-hours.
+    /// </summary>
+    public float AbsorptionRate { get; set; } = 0.004f;
+
+    /// <summary>Fraction of carbohydrates absorbed into the bloodstream. ~98% in healthy adults.</summary>
+    public float CarbohydrateAbsorptionFraction { get; set; } = 0.98f;
+
+    /// <summary>Fraction of protein absorbed. ~92% in healthy adults.</summary>
+    public float ProteinAbsorptionFraction { get; set; } = 0.92f;
+
+    /// <summary>Fraction of fat absorbed. ~90% in healthy adults with adequate bile production.</summary>
+    public float FatAbsorptionFraction { get; set; } = 0.90f;
+
+    /// <summary>
+    /// Fraction of water absorbed in the small intestine. Roughly 50% — the
+    /// large intestine recaptures most of the remainder. Fiber is always 0% absorbed.
+    /// </summary>
+    public float WaterAbsorptionFraction { get; set; } = 0.50f;
+
+    /// <summary>
+    /// Fraction of fat-soluble vitamins (A, D, E, K) absorbed. These dissolve in
+    /// dietary fat and are carried into lymphatics via chylomicrons. ~80% efficiency.
+    /// </summary>
+    public float FatSolubleVitaminAbsorptionFraction { get; set; } = 0.80f;
+
+    /// <summary>
+    /// Fraction of water-soluble vitamins (B-complex, C) absorbed in the jejunum.
+    /// ~85% — some excess is filtered by the kidneys rather than absorbed.
+    /// </summary>
+    public float WaterSolubleVitaminAbsorptionFraction { get; set; } = 0.85f;
+
+    /// <summary>
+    /// Single average fraction for all minerals (Na, K, Ca, Fe, Mg). A rough
+    /// approximation — potassium absorbs at ~90%, iron at ~15%. In v0.8 when
+    /// iron-deficiency anemia and similar conditions are modeled, each mineral
+    /// can get its own fraction.
+    /// </summary>
+    public float MineralAbsorptionFraction { get; set; } = 0.50f;
+
+    /// <summary>
+    /// Fraction of the processed chyme volume that becomes residue forwarded to
+    /// the large intestine. Represents the solid/fiber mass plus unabsorbed water.
+    /// At 0.15, one banana's 50 ml of chyme leaves ~7.5 ml of residue.
+    /// </summary>
+    public float ResidueVolumeFraction { get; set; } = 0.15f;
+}
+
+// ── LargeIntestineSystem ──────────────────────────────────────────────────────
+
+/// <summary>
+/// Water recapture rate and compaction parameters for the large intestine.
+///
+/// At the defaults below and TimeScale 120×:
+///   7.5 ml of residue (from one banana) has its water extracted in:
+///   7.5 / 0.002 = 3,750 game-s ≈ 1 game-hour. Biologically the colon
+///   takes 12–36 hours; the faster rate ensures observable LI transit in
+///   a single session. Tune WaterExtractionRate to slow it down.
+/// </summary>
+public class LargeIntestineSystemConfig
+{
+    /// <summary>
+    /// Volume of LI contents desiccated (water extracted) per game-second.
+    /// Default 0.002 ml/s gives observable transit in a single session.
+    /// </summary>
+    public float WaterExtractionRate { get; set; } = 0.002f;
+
+    /// <summary>
+    /// Fraction of water in each processed batch that is recaptured into body stores.
+    /// ~90% in healthy adults. The remaining 10% stays in the stool as moisture.
+    /// </summary>
+    public float WaterRecaptureFraction { get; set; } = 0.90f;
+
+    /// <summary>
+    /// WasteReadyMl threshold (ml) at which LargeIntestineSystem will transfer
+    /// compacted waste into RectumComponent (v0.7.3). Until that system lands,
+    /// this threshold is read but no transfer occurs.
+    /// </summary>
+    public float TransitThresholdMl { get; set; } = 50f;
 }
 
 // ── EnergySystem ─────────────────────────────────────────────────────────────

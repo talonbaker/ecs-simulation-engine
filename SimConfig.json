@@ -198,6 +198,35 @@
       "hydrationPerMl":      2.0
     },
 
+    // ── Small Intestine ────────────────────────────────────────────────────────
+    // Absorption fractions for each nutrient class. All are derived from published
+    // gastrointestinal physiology but intentionally configurable so the simulation's
+    // nutritional balance can be tuned without code changes.
+    //
+    // At 120× timescale, the default AbsorptionRate of 0.004 ml/s clears
+    // a banana's 50 ml of chyme in ~3.5 game-hours (~1.75 real minutes).
+    "smallIntestine": {
+      "absorptionRate":                       0.004,  // ml of chyme absorbed per game-second
+      "carbohydrateAbsorptionFraction":       0.98,   // ~98% — glucose absorbed readily
+      "proteinAbsorptionFraction":            0.92,   // ~92% — amino acids via active transport
+      "fatAbsorptionFraction":                0.90,   // ~90% — requires bile for emulsification
+      "waterAbsorptionFraction":              0.50,   // ~50% — large intestine gets the rest
+      "fatSolubleVitaminAbsorptionFraction":  0.80,   // A, D, E, K — depends on fat absorption
+      "waterSolubleVitaminAbsorptionFraction": 0.85,  // B-complex, C — jejunum absorption
+      "mineralAbsorptionFraction":            0.50,   // rough average (K ~90%, Fe ~15%)
+      "residueVolumeFraction":                0.15    // 15% of chyme volume passes to large intestine
+    },
+
+    // ── Large Intestine ────────────────────────────────────────────────────────
+    // The colon's primary job is water recapture. At the default rate of 0.002 ml/s,
+    // the 7.5 ml of residue from one banana clears in ~1 game-hour at 1× timescale.
+    // At 120× timescale that is ~30 real-seconds — observable in a single session.
+    "largeIntestine": {
+      "waterExtractionRate":    0.002,  // ml of LI contents desiccated per game-second
+      "waterRecaptureFraction": 0.90,   // 90% of passing water recaptured into body stores
+      "transitThresholdMl":     50.0    // waste volume (ml) before transfer to rectum (v0.7.3)
+    },
+
     "sleep": {
       // Sleepiness must drop below this before the entity can wake naturally.
       // 15 allows a full 8-game-hour night before waking.

@@ -36,6 +36,18 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private string _stomachLabel    = "";
     [ObservableProperty] private string _digestionLabel  = "";
 
+    // ── Small Intestine (v0.7.1+) ─────────────────────────────────────────────
+    [ObservableProperty] private bool   _hasSmallIntestineContent  = false;
+    [ObservableProperty] private float  _smallIntestineFill        = 0f;
+    [ObservableProperty] private string _smallIntestineLabel       = "";
+    [ObservableProperty] private string _smallIntestineContents    = "";
+
+    // ── Large Intestine (v0.7.1+) ─────────────────────────────────────────────
+    [ObservableProperty] private bool   _hasLargeIntestineContent  = false;
+    [ObservableProperty] private float  _largeIntestineFill        = 0f;
+    [ObservableProperty] private string _largeIntestineLabel       = "";
+    [ObservableProperty] private string _wasteReadyLabel           = "";
+
     // ── Body Nutrient Stores (v0.7.0+) ────────────────────────────────────────
     // Cumulative real-biology stores extracted by DigestionSystem.
     [ObservableProperty] private bool   _hasNutrients     = false;
@@ -140,6 +152,43 @@ public partial class EntityViewModel : ObservableObject
             StomachFill    = stomach.Fill * 100f;
             StomachLabel   = $"{stomach.Fill:P0}  ({stomach.CurrentVolumeMl:F0} / {StomachComponent.MaxVolumeMl:F0} ml)";
             DigestionLabel = $"Queued — {queued.Calories:F0} kcal  ·  water {queued.Water:F0}ml  ·  carbs {queued.Carbohydrates:F1}g  ·  prot {queued.Proteins:F1}g  ·  fat {queued.Fats:F1}g";
+        }
+
+        // Small Intestine (v0.7.1+)
+        // Only show the panel when the SI has active content — keeps the UI clean
+        // between meals. HasSmallIntestineContent gates the IsVisible binding.
+        if (entity.Has<SmallIntestineComponent>())
+        {
+            var si = entity.Get<SmallIntestineComponent>();
+            HasSmallIntestineContent = !si.IsEmpty;
+            if (HasSmallIntestineContent)
+            {
+                var c = si.Contents;
+                SmallIntestineFill     = si.Fill * 100f;
+                SmallIntestineLabel    = $"{si.Fill:P0}  ({si.CurrentVolumeMl:F1} / {SmallIntestineComponent.CapacityMl:F0} ml)";
+                SmallIntestineContents = $"Absorbing — {c.Calories:F0} kcal  ·  water {c.Water:F1}ml  ·  carbs {c.Carbohydrates:F1}g  ·  prot {c.Proteins:F1}g  ·  fat {c.Fats:F1}g  ·  fiber {c.Fiber:F1}g";
+            }
+        }
+        else
+        {
+            HasSmallIntestineContent = false;
+        }
+
+        // Large Intestine (v0.7.1+)
+        if (entity.Has<LargeIntestineComponent>())
+        {
+            var li = entity.Get<LargeIntestineComponent>();
+            HasLargeIntestineContent = !li.IsEmpty || li.WasteReadyMl > 0.01f;
+            if (HasLargeIntestineContent)
+            {
+                LargeIntestineFill  = li.Fill * 100f;
+                LargeIntestineLabel = $"{li.Fill:P0}  ({li.CurrentVolumeMl:F1} / {LargeIntestineComponent.CapacityMl:F0} ml)";
+                WasteReadyLabel     = $"Waste ready  {li.WasteReadyMl:F1} ml  (rectum pending v0.7.3)";
+            }
+        }
+        else
+        {
+            HasLargeIntestineContent = false;
         }
 
         // Energy / Sleep

@@ -15,7 +15,7 @@ public static class SimVersion
 {
     public const int Major = 0;
     public const int Minor = 7;
-    public const int Patch = 0;
+    public const int Patch = 1;
 
     /// <summary>Optional pre-release label. e.g. "-alpha", "-rc1". Empty for stable.</summary>
     public const string Label = "";

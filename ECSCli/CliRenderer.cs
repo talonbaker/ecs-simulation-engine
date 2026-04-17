@@ -273,6 +273,29 @@ public static class CliRenderer
             Console.WriteLine($"               queued  {q.Calories,6:F0} kcal  water {q.Water,5:F1}ml  carbs {q.Carbohydrates,4:F1}g  prot {q.Proteins,4:F1}g  fat {q.Fats,4:F1}g");
         }
 
+        // ── Intestinal transit (v0.7.1+) ──────────────────────────────────────
+        if (entity.Has<SmallIntestineComponent>())
+        {
+            var si = entity.Get<SmallIntestineComponent>();
+            // Only print the SI row when it has content — avoids visual clutter
+            // during the long stretches when the intestine is empty between meals.
+            if (!si.IsEmpty)
+            {
+                Console.WriteLine($"    SmallInt   {Bar(si.Fill, 1f)}  {si.Fill * 100,5:F1}%    ({si.CurrentVolumeMl:F1}/{SmallIntestineComponent.CapacityMl:F0} ml)");
+                var sc = si.Contents;
+                Console.WriteLine($"               absorbing  {sc.Calories,6:F0} kcal  water {sc.Water,5:F1}ml  carbs {sc.Carbohydrates,4:F1}g  prot {sc.Proteins,4:F1}g  fat {sc.Fats,4:F1}g");
+            }
+        }
+
+        if (entity.Has<LargeIntestineComponent>())
+        {
+            var li = entity.Get<LargeIntestineComponent>();
+            if (!li.IsEmpty || li.WasteReadyMl > 0.01f)
+            {
+                Console.WriteLine($"    LargeInt   {Bar(li.Fill, 1f)}  {li.Fill * 100,5:F1}%    ({li.CurrentVolumeMl:F1}/{LargeIntestineComponent.CapacityMl:F0} ml)   waste {li.WasteReadyMl:F1}ml");
+            }
+        }
+
         // ── Body nutrient stores (v0.7.0+) ────────────────────────────────────
         // Cumulative macros/water/vitamins absorbed by the body. Future organ-
         // systems will subtract from this (daily burn, elimination).

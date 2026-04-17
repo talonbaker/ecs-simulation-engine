@@ -56,11 +56,13 @@ public class InvariantSystem : ISystem
                 ? entity.Get<IdentityComponent>().Name
                 : entity.ShortId;
 
-            CheckMetabolism(entity, name, gameTime);
-            CheckEnergy    (entity, name, gameTime);
-            CheckStomach   (entity, name, gameTime);
-            CheckDrives    (entity, name, gameTime);
-            CheckTransit   (entity, name, gameTime);
+            CheckMetabolism      (entity, name, gameTime);
+            CheckEnergy          (entity, name, gameTime);
+            CheckStomach         (entity, name, gameTime);
+            CheckSmallIntestine  (entity, name, gameTime);
+            CheckLargeIntestine  (entity, name, gameTime);
+            CheckDrives          (entity, name, gameTime);
+            CheckTransit         (entity, name, gameTime);
         }
     }
 
@@ -144,6 +146,44 @@ public class InvariantSystem : ISystem
         (p.Magnesium,      var v16)= Guard(p.Magnesium,      0f, float.MaxValue, label, "Magnesium",      entity, t);
         violated = v1 | v2 | v3 | v4 | v5 | v6 | v7 | v8 | v9 | v10 | v11 | v12 | v13 | v14 | v15 | v16;
         return violated;
+    }
+
+    private void CheckSmallIntestine(Entity entity, string name, double t)
+    {
+        if (!entity.Has<SmallIntestineComponent>()) return;
+        var si    = entity.Get<SmallIntestineComponent>();
+        bool dirty = false;
+
+        (si.CurrentVolumeMl, var v1) = Guard(si.CurrentVolumeMl, 0f, SmallIntestineComponent.CapacityMl,
+                                             "SmallIntestineComponent", "CurrentVolumeMl", name, t);
+        dirty = v1;
+
+        var contents = si.Contents;
+        bool contentsDirty = GuardNonNegative(ref contents, "SmallIntestineComponent.Contents", name, t);
+        if (contentsDirty) { si.Contents = contents; dirty = true; }
+
+        if (dirty) entity.Add(si);
+    }
+
+    private void CheckLargeIntestine(Entity entity, string name, double t)
+    {
+        if (!entity.Has<LargeIntestineComponent>()) return;
+        var li    = entity.Get<LargeIntestineComponent>();
+        bool dirty = false;
+
+        (li.CurrentVolumeMl, var v1) = Guard(li.CurrentVolumeMl, 0f, LargeIntestineComponent.CapacityMl,
+                                             "LargeIntestineComponent", "CurrentVolumeMl", name, t);
+        // WasteReadyMl is unbounded upward (it accumulates until v0.7.3 rectum drains it),
+        // so we only guard against negatives — same pattern as NutrientStores.
+        (li.WasteReadyMl,    var v2) = Guard(li.WasteReadyMl, 0f, float.MaxValue,
+                                             "LargeIntestineComponent", "WasteReadyMl", name, t);
+        dirty = v1 | v2;
+
+        var contents = li.Contents;
+        bool contentsDirty = GuardNonNegative(ref contents, "LargeIntestineComponent.Contents", name, t);
+        if (contentsDirty) { li.Contents = contents; dirty = true; }
+
+        if (dirty) entity.Add(li);
     }
 
     private void CheckDrives(Entity entity, string name, double t)
