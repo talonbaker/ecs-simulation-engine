@@ -47,6 +47,19 @@ public static class EntityTemplates
             SleepinessDrainRate = e.SleepinessDrainRate
         });
 
+        var mo = cfg.Mood;
+        entity.Add(new MoodComponent
+        {
+            Joy          = mo.JoyStart,
+            Trust        = mo.TrustStart,
+            Fear         = mo.FearStart,
+            Surprise     = mo.SurpriseStart,
+            Sadness      = mo.SadnessStart,
+            Disgust      = mo.DisgustStart,
+            Anger        = mo.AngerStart,
+            Anticipation = mo.AnticipationStart
+        });
+
         return entity;
     }
 
@@ -84,6 +97,19 @@ public static class EntityTemplates
             SleepinessGainRate  = e.SleepinessGainRate,
             EnergyRestoreRate   = e.EnergyRestoreRate,
             SleepinessDrainRate = e.SleepinessDrainRate
+        });
+
+        var mo = cfg.Mood;
+        entity.Add(new MoodComponent
+        {
+            Joy          = mo.JoyStart,
+            Trust        = mo.TrustStart,
+            Fear         = mo.FearStart,
+            Surprise     = mo.SurpriseStart,
+            Sadness      = mo.SadnessStart,
+            Disgust      = mo.DisgustStart,
+            Anger        = mo.AngerStart,
+            Anticipation = mo.AnticipationStart
         });
 
         return entity;

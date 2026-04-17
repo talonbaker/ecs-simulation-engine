@@ -243,6 +243,28 @@ public static class CliRenderer
                               $"  eat {d.EatUrgency:F2}  drink {d.DrinkUrgency:F2}  sleep {d.SleepUrgency:F2}");
         }
 
+        if (entity.Has<MoodComponent>())
+        {
+            var mood = entity.Get<MoodComponent>();
+            Console.WriteLine($"    ── Emotions ──────────────────────────────────────");
+            Console.WriteLine($"    Joy          {Bar(mood.Joy,          100f)}  {mood.Joy,5:F1}");
+            Console.WriteLine($"    Trust        {Bar(mood.Trust,        100f)}  {mood.Trust,5:F1}");
+            Console.WriteLine($"    Anticipation {Bar(mood.Anticipation, 100f)}  {mood.Anticipation,5:F1}");
+            Console.WriteLine($"    Anger        {Bar(mood.Anger,        100f)}  {mood.Anger,5:F1}");
+            Console.WriteLine($"    Sadness      {Bar(mood.Sadness,      100f)}  {mood.Sadness,5:F1}");
+            Console.WriteLine($"    Disgust      {Bar(mood.Disgust,      100f)}  {mood.Disgust,5:F1}");
+            Console.WriteLine($"    Fear         {Bar(mood.Fear,         100f)}  {mood.Fear,5:F1}");
+            Console.WriteLine($"    Surprise     {Bar(mood.Surprise,     100f)}  {mood.Surprise,5:F1}");
+
+            float valence = mood.Valence;
+            string valStr = valence >= 0 ? $"+{valence:F1}" : $"{valence:F1}";
+            Console.WriteLine($"    Valence {valStr,7}  (+ positive  − negative)");
+
+            var emotionTags = BuildEmotionTagList(entity);
+            if (emotionTags.Count > 0)
+                Console.WriteLine($"    Mood tags  {string.Join("  ·  ", emotionTags)}");
+        }
+
         if (entity.Has<StomachComponent>())
         {
             var s = entity.Get<StomachComponent>();
@@ -267,6 +289,44 @@ public static class CliRenderer
         if (entity.Has<ExhaustedTag>())  tags.Add("EXHAUSTED");
         if (entity.Has<SleepingTag>())   tags.Add("SLEEPING");
         if (entity.Has<IrritableTag>())  tags.Add("IRRITABLE");
+        return tags;
+    }
+
+    private static List<string> BuildEmotionTagList(Entity entity)
+    {
+        var tags = new List<string>();
+        // Joy family
+        if (entity.Has<EcstaticTag>())      tags.Add("ECSTATIC");
+        else if (entity.Has<JoyfulTag>())   tags.Add("JOYFUL");
+        else if (entity.Has<SereneTag>())   tags.Add("serene");
+        // Disgust/Boredom family
+        if (entity.Has<LoathingTag>())      tags.Add("LOATHING");
+        else if (entity.Has<DisgustTag>())  tags.Add("DISGUSTED");
+        else if (entity.Has<BoredTag>())    tags.Add("bored");
+        // Anger family
+        if (entity.Has<RagingTag>())        tags.Add("RAGING");
+        else if (entity.Has<AngryTag>())    tags.Add("ANGRY");
+        else if (entity.Has<AnnoyedTag>())  tags.Add("annoyed");
+        // Sadness family
+        if (entity.Has<GriefTag>())         tags.Add("GRIEF");
+        else if (entity.Has<SadTag>())      tags.Add("SAD");
+        else if (entity.Has<PensiveTag>())  tags.Add("pensive");
+        // Anticipation family
+        if (entity.Has<VigilantTag>())          tags.Add("VIGILANT");
+        else if (entity.Has<AnticipatingTag>()) tags.Add("anticipating");
+        else if (entity.Has<InterestedTag>())   tags.Add("interested");
+        // Fear family
+        if (entity.Has<TerrorTag>())            tags.Add("TERRIFIED");
+        else if (entity.Has<FearfulTag>())      tags.Add("FEARFUL");
+        else if (entity.Has<ApprehensiveTag>()) tags.Add("apprehensive");
+        // Surprise family
+        if (entity.Has<AmazedTag>())            tags.Add("AMAZED");
+        else if (entity.Has<SurprisedTag>())    tags.Add("surprised");
+        else if (entity.Has<DistractedTag>())   tags.Add("distracted");
+        // Trust family
+        if (entity.Has<AdmiringTag>())          tags.Add("ADMIRING");
+        else if (entity.Has<TrustingTag>())     tags.Add("trusting");
+        else if (entity.Has<AcceptingTag>())    tags.Add("accepting");
         return tags;
     }
 
