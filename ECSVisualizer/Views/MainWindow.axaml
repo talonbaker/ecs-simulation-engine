@@ -3,7 +3,7 @@
         xmlns:vm="using:ECSVisualizer.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="800"
+        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="900"
         x:Class="ECSVisualizer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="ECS Biological Simulation"
@@ -17,7 +17,7 @@
     <ScrollViewer>
         <StackPanel Margin="16" Spacing="16">
 
-            <!-- ── HEADER: Version + Clock + Time Scale ───────────────────── -->
+            <!-- ── HEADER: Version + Game Clock + Day/Night + Time Scale ─────── -->
             <Border Background="#141414" CornerRadius="6" Padding="16,14"
                     BorderBrush="#2A2A2A" BorderThickness="1">
                 <Grid ColumnDefinitions="*, Auto">
@@ -26,27 +26,38 @@
                         <TextBlock Text="{Binding VersionDisplay}"
                                    FontSize="9" FontWeight="Bold" LetterSpacing="1"
                                    Foreground="#333333"/>
+                        <!-- Game time: large green clock -->
                         <TextBlock Text="{Binding CurrentTimeDisplay}"
-                                   FontSize="36" FontFamily="Consolas" FontWeight="Light"
+                                   FontSize="32" FontFamily="Consolas" FontWeight="Light"
                                    Foreground="#00FF41"/>
+                        <!-- Day number + day/night icon -->
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{Binding DayNightIcon}"
+                                       FontSize="13"/>
+                            <TextBlock Text="{Binding DayDisplay}"
+                                       FontSize="11" FontFamily="Consolas"
+                                       Foreground="#444444" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center"
                                 Spacing="2" Margin="16,0,0,0">
                         <TextBlock Text="TIME SCALE" FontSize="9" LetterSpacing="1"
                                    Foreground="#444444" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding TimeScale, StringFormat={}{0:F1}x}"
+                        <TextBlock Text="{Binding TimeScale, StringFormat={}{0:F0}x}"
                                    FontSize="18" FontWeight="Bold" Foreground="#BB86FC"
                                    HorizontalAlignment="Center"/>
                         <Slider Value="{Binding TimeScale}"
-                                Minimum="0" Maximum="10" Width="110"
-                                TickFrequency="0.5" IsSnapToTickEnabled="True"/>
+                                Minimum="0" Maximum="480" Width="110"
+                                TickFrequency="10" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="game speed" FontSize="8" LetterSpacing="1"
+                                   Foreground="#2A2A2A" HorizontalAlignment="Center"/>
                     </StackPanel>
 
                 </Grid>
             </Border>
 
-            <!-- ── LIVING ENTITIES ─────────────────────────────────────────── -->
+            <!-- ── LIVING ENTITIES ─────────────────────────────────────────────── -->
             <StackPanel Spacing="6">
                 <TextBlock Text="LIVING ENTITIES"
                            FontSize="9" FontWeight="Bold" LetterSpacing="2"
@@ -129,6 +140,54 @@
                                                     <TextBlock Text="{Binding ThirstLabel}"
                                                                FontSize="10" FontFamily="Consolas"
                                                                Foreground="#5AC8FA" Margin="76,0,0,0"/>
+                                                </StackPanel>
+
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Energy / Sleep -->
+                                        <Border IsVisible="{Binding HasEnergy}"
+                                                Background="#0D0D14" CornerRadius="4" Padding="10,10"
+                                                BorderBrush="#1A1A2A" BorderThickness="1">
+                                            <StackPanel Spacing="10">
+
+                                                <!-- ENERGY bar -->
+                                                <StackPanel Spacing="4">
+                                                    <Grid ColumnDefinitions="70, *, Auto">
+                                                        <TextBlock Grid.Column="0" Text="ENERGY"
+                                                                   FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                                   Foreground="#666666" VerticalAlignment="Center"/>
+                                                        <ProgressBar Grid.Column="1" Margin="6,0"
+                                                                     Value="{Binding Energy}" Maximum="100"
+                                                                     Foreground="#FFD60A" Background="#1A1A1A"
+                                                                     Height="7" CornerRadius="4"/>
+                                                        <TextBlock Grid.Column="2"
+                                                                   Text="{Binding EnergyLabel}"
+                                                                   FontSize="11" FontFamily="Consolas"
+                                                                   Foreground="#FFD60A" VerticalAlignment="Center"
+                                                                   Width="42" TextAlignment="Right"/>
+                                                    </Grid>
+                                                    <TextBlock Text="{Binding SleepStateLabel}"
+                                                               FontSize="10" FontFamily="Consolas"
+                                                               Foreground="#555555" Margin="76,0,0,0"/>
+                                                </StackPanel>
+
+                                                <!-- SLEEPINESS bar -->
+                                                <StackPanel Spacing="4">
+                                                    <Grid ColumnDefinitions="70, *, Auto">
+                                                        <TextBlock Grid.Column="0" Text="SLEEPINESS"
+                                                                   FontSize="9" FontWeight="Bold" LetterSpacing="1"
+                                                                   Foreground="#666666" VerticalAlignment="Center"/>
+                                                        <ProgressBar Grid.Column="1" Margin="6,0"
+                                                                     Value="{Binding Sleepiness}" Maximum="100"
+                                                                     Foreground="#6E40C9" Background="#1A1A1A"
+                                                                     Height="7" CornerRadius="4"/>
+                                                        <TextBlock Grid.Column="2"
+                                                                   Text="{Binding SleepinessLabel}"
+                                                                   FontSize="11" FontFamily="Consolas"
+                                                                   Foreground="#6E40C9" VerticalAlignment="Center"
+                                                                   Width="42" TextAlignment="Right"/>
+                                                    </Grid>
                                                 </StackPanel>
 
                                             </StackPanel>

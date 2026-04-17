@@ -8,13 +8,46 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Planned
-- `EnergySystem` — drains energy over time, restores during sleep
-- `SleepSystem` — manages sleep/wake cycle, scores SleepUrgency in BrainSystem
 - `MoodSystem` — tracks happiness, stress, comfort as affected by sustained need states
-- `TimeSystem` — simulates time-of-day and daylight; modifies drive score multipliers
 - `AutonomySystem` — Billy's mood-gated disobedience mechanic
 - World food/water sources as spawnable entities (fridge, sink, bowl)
 - Lua scripting layer for moddable system definitions
+
+---
+
+## [0.4.0] — 2026-04-15
+
+### Added
+- **EnergyComponent** — two new physiological resources per entity: `Energy` (0–100,
+  starts 85 — well rested) and `Sleepiness` (0–100, starts 15 — just woke up).
+  `IsSleeping` flag is the contract between `SleepSystem` and `EnergySystem`.
+- **EnergySystem** — drains `Energy` and accumulates `Sleepiness` while awake;
+  restores both during sleep. Manages `TiredTag`, `ExhaustedTag`, and `SleepingTag`.
+  Pipeline position 2 of 10.
+- **SleepSystem** — toggles `IsSleeping` when `BrainSystem` picks SLEEP as dominant.
+  Enforces a `wakeThreshold` (Sleepiness ≤ 20) so entities don't snap awake mid-sleep.
+  Pipeline position 7 of 10.
+- **Day/Night cycle** — `SimulationClock` now tracks game time starting at 6:00 AM.
+  `GameTimeDisplay` ("6:05 AM"), `DayNumber`, `IsDaytime`, and `CircadianFactor` are
+  all computed properties on the clock. No extra system needed — it's pure math.
+- **Circadian factor** — piecewise multiplier applied to `SleepUrgency` in `BrainSystem`.
+  Morning (0.40) suppresses sleep drive after waking; night (1.20–1.40) amplifies it.
+  Produces a natural ~16-hour awake / ~8-hour sleep rhythm without scripted events.
+- **WorldConfig** in `SimConfig.json` — `defaultTimeScale` (120) controls the default
+  game speed. 1 real second = 120 game seconds = 2 game minutes.
+- `TiredTag` — new condition tag for energy between ExhaustedThreshold and TiredThreshold.
+
+### Changed
+- **Default TimeScale** changed from 1 to 120 (2 game minutes per real second).
+  The game-speed slider in the Avalonia GUI now ranges 0–480×.
+- **All drain rates re-tuned** for the new game-time units. Human hunger in ~4 game
+  hours, thirst in ~2.5 game hours at default speed.
+- **BrainSystem** now takes `SimulationClock` as a constructor argument to read
+  `CircadianFactor` each tick. `SleepUrgency` is fully live — no more placeholder 0.
+- **Clock display** changed from sim-seconds (`hh:mm:ss`) to 12-hour game time
+  (`6:05 AM`) in both frontends. Day number shown alongside.
+- **CliRenderer** header now shows `DayTimeDisplay` and the circadian factor per entity.
+- **SimulationBootstrapper** system pipeline expanded from 8 to 10 systems.
 
 ---
 

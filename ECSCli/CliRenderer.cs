@@ -7,7 +7,7 @@ namespace ECSCli;
 /// <summary>
 /// Renders the current simulation state as a text snapshot to stdout.
 /// Mirrors what the Avalonia GUI shows, but as plain ASCII.
-/// No UI dependencies — reads from EntityManager directly.
+/// No UI dependencies — reads from EntityManager and SimulationClock directly.
 /// </summary>
 public static class CliRenderer
 {
@@ -25,17 +25,16 @@ public static class CliRenderer
             ? sim.Clock.TotalTime / wallSeconds
             : 0;
 
-        var simTime = TimeSpan.FromSeconds(sim.Clock.TotalTime);
-
         // ── Header ──────────────────────────────────────────────────────────
-        string line = new('─', LineWidth);
+        string line     = new('─', LineWidth);
+        string dayNight = sim.Clock.IsDaytime ? "day" : "night";
+
         Console.WriteLine();
         Console.WriteLine(line);
+        Console.WriteLine($"  {SimVersion.Full}");
         Console.WriteLine(
-            $"  {SimVersion.Full}");
-        Console.WriteLine(
-            $"  TICK {tick,-8:N0}  SIM {simTime:hh\\:mm\\:ss}  " +
-            $"WALL {wallSeconds:F2}s  SPEED {simSpeed:F0}x");
+            $"  TICK {tick,-8:N0}  {sim.Clock.DayTimeDisplay,-22}" +
+            $"  [{dayNight}]  WALL {wallSeconds:F1}s  ({simSpeed:F0}x)");
         Console.WriteLine(line);
 
         // ── Living entities ──────────────────────────────────────────────────
@@ -48,7 +47,7 @@ public static class CliRenderer
         else
         {
             foreach (var entity in living)
-                PrintEntity(entity);
+                PrintEntity(entity, sim.Clock);
         }
 
         // ── Esophagus pipeline ───────────────────────────────────────────────
@@ -81,7 +80,7 @@ public static class CliRenderer
 
     // ─────────────────────────────────────────────────────────────────────────
 
-    private static void PrintEntity(Entity entity)
+    private static void PrintEntity(Entity entity, SimulationClock clock)
     {
         string name = entity.Has<IdentityComponent>()
             ? entity.Get<IdentityComponent>().Name
@@ -90,7 +89,7 @@ public static class CliRenderer
         Console.WriteLine();
         Console.WriteLine($"  ◈ {name}  [{entity.ShortId}]");
 
-        // Tags — always show so you can confirm the system ran (— none — means healthy)
+        // Tags — always shown ("— none —" means healthy)
         var tagList = BuildTagList(entity);
         string tags = tagList.Count > 0
             ? string.Join("  ·  ", tagList)
@@ -99,14 +98,25 @@ public static class CliRenderer
 
         // Metabolism resources + derived sensations
         var meta = entity.Get<MetabolismComponent>();
-
         Console.WriteLine(
             $"    Satiation  {ProgressBar(meta.Satiation, 100f)}  {meta.Satiation,5:F1}%  " +
             $"  hunger {meta.Hunger,5:F1}%");
-
         Console.WriteLine(
             $"    Hydration  {ProgressBar(meta.Hydration, 100f)}  {meta.Hydration,5:F1}%  " +
             $"  thirst {meta.Thirst,5:F1}%");
+
+        // Energy / Sleep
+        if (entity.Has<EnergyComponent>())
+        {
+            var en = entity.Get<EnergyComponent>();
+            string sleepState = en.IsSleeping ? "SLEEPING" : "awake";
+            Console.WriteLine(
+                $"    Energy     {ProgressBar(en.Energy, 100f)}  {en.Energy,5:F1}%  " +
+                $"  {sleepState}");
+            Console.WriteLine(
+                $"    Sleepiness {ProgressBar(en.Sleepiness, 100f)}  {en.Sleepiness,5:F1}%  " +
+                $"  circadian ×{clock.CircadianFactor:F2}");
+        }
 
         // Brain — dominant desire + urgency scores
         if (entity.Has<DriveComponent>())
@@ -138,11 +148,13 @@ public static class CliRenderer
         if (entity.Has<ThirstTag>())     tags.Add("THIRSTY");
         if (entity.Has<StarvingTag>())   tags.Add("STARVING");
         if (entity.Has<DehydratedTag>()) tags.Add("DEHYDRATED");
+        if (entity.Has<TiredTag>())      tags.Add("TIRED");
+        if (entity.Has<ExhaustedTag>())  tags.Add("EXHAUSTED");
+        if (entity.Has<SleepingTag>())   tags.Add("SLEEPING");
         if (entity.Has<IrritableTag>())  tags.Add("IRRITABLE");
         return tags;
     }
 
-    /// <summary>Renders a filled/empty block progress bar.</summary>
     private static string ProgressBar(float value, float max)
     {
         float ratio  = Math.Clamp(value / max, 0f, 1f);

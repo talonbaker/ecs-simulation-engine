@@ -12,6 +12,19 @@ namespace APIFramework.Core;
 /// Any frontend — Avalonia GUI, CLI, Unity, test harness — creates one instance
 /// of this class and drives it by calling Engine.Update(deltaTime) in its own loop.
 /// APIFramework never knows a frontend exists.
+///
+/// SYSTEM PIPELINE (execution order)
+/// ──────────────────────────────────
+///  1. MetabolismSystem         — drain satiation / hydration
+///  2. EnergySystem             — drain/restore energy + sleepiness; energy-state tags
+///  3. BiologicalConditionSystem — set hunger/thirst/irritable tags
+///  4. BrainSystem              — score all drives (incl. circadian sleep); pick dominant
+///  5. FeedingSystem            — act if Eat is dominant
+///  6. DrinkingSystem           — act if Drink is dominant
+///  7. SleepSystem              — toggle IsSleeping based on dominant desire
+///  8. InteractionSystem        — convert held food to esophagus bolus
+///  9. EsophagusSystem          — move transit entities toward stomach
+/// 10. DigestionSystem          — release nutrients from stomach to metabolism
 /// </summary>
 public class SimulationBootstrapper
 {
@@ -24,7 +37,7 @@ public class SimulationBootstrapper
     {
         Config        = SimConfig.Load(configPath);
         EntityManager = new EntityManager();
-        Clock         = new SimulationClock { TimeScale = 1.0f };
+        Clock         = new SimulationClock { TimeScale = Config.World.DefaultTimeScale };
         Engine        = new SimulationEngine(EntityManager, Clock);
 
         RegisterSystems();
@@ -35,15 +48,16 @@ public class SimulationBootstrapper
     {
         var sys = Config.Systems;
 
-        // ── Execution order is load order. Change it here, nowhere else. ────
-        Engine.AddSystem(new MetabolismSystem());                              // 1. Drain resources
-        Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition)); // 2. Set condition tags
-        Engine.AddSystem(new BrainSystem(sys.Brain));                         // 3. Score drives, pick dominant
-        Engine.AddSystem(new FeedingSystem(sys.Feeding));                     // 4. Act if Eat is dominant
-        Engine.AddSystem(new DrinkingSystem(sys.Drinking));                   // 5. Act if Drink is dominant
-        Engine.AddSystem(new InteractionSystem(sys.Interaction));             // 6. Process held food (bite → bolus)
-        Engine.AddSystem(new EsophagusSystem());                              // 7. Move transit entities
-        Engine.AddSystem(new DigestionSystem());                              // 8. Release nutrients to metabolism
+        Engine.AddSystem(new MetabolismSystem());                                  //  1
+        Engine.AddSystem(new EnergySystem(sys.Energy));                           //  2
+        Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition)); //  3
+        Engine.AddSystem(new BrainSystem(sys.Brain, Clock));                      //  4
+        Engine.AddSystem(new FeedingSystem(sys.Feeding));                         //  5
+        Engine.AddSystem(new DrinkingSystem(sys.Drinking));                       //  6
+        Engine.AddSystem(new SleepSystem(sys.Sleep));                             //  7
+        Engine.AddSystem(new InteractionSystem(sys.Interaction));                 //  8
+        Engine.AddSystem(new EsophagusSystem());                                  //  9
+        Engine.AddSystem(new DigestionSystem());                                  // 10
     }
 
     private void SpawnWorld()

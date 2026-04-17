@@ -10,6 +10,7 @@ namespace APIFramework.Config;
 /// </summary>
 public class SimConfig
 {
+    public WorldConfig    World    { get; set; } = new();
     public EntitiesConfig Entities { get; set; } = new();
     public SystemsConfig  Systems  { get; set; } = new();
 
@@ -77,10 +78,22 @@ public class EntitiesConfig
     public EntityConfig Cat   { get; set; } = EntityConfig.DefaultCat;
 }
 
+// ── World / clock ─────────────────────────────────────────────────────────────
+
+public class WorldConfig
+{
+    /// <summary>
+    /// How many game-seconds pass per real second (default 120 = 2 game-minutes/s).
+    /// The user-facing time-scale slider in the GUI multiplies on top of this.
+    /// </summary>
+    public float DefaultTimeScale { get; set; } = 120f;
+}
+
 public class EntityConfig
 {
     public MetabolismEntityConfig Metabolism { get; set; } = new();
     public StomachEntityConfig    Stomach    { get; set; } = new();
+    public EnergyEntityConfig     Energy     { get; set; } = new();
 
     public static EntityConfig DefaultHuman => new()
     {
@@ -89,10 +102,20 @@ public class EntityConfig
             SatiationStart     = 100f,
             HydrationStart     = 100f,
             BodyTemp           = 37.0f,
-            SatiationDrainRate = 0.3f,
-            HydrationDrainRate = 0.5f
+            // Re-tuned for TimeScale=120: hunger in ~4 game hours, thirst in ~2.5 game hours
+            SatiationDrainRate = 0.007f,
+            HydrationDrainRate = 0.011f
         },
-        Stomach = new StomachEntityConfig { DigestionRate = 2.0f }
+        Stomach = new StomachEntityConfig { DigestionRate = 0.017f }, // ~100 ml/game-hour
+        Energy  = new EnergyEntityConfig
+        {
+            EnergyStart          = 85f,  // well rested — just woke up
+            SleepinessStart      = 15f,  // low after a full night's sleep
+            EnergyDrainRate      = 0.001f,  // depletes ~57 pts over 16 game hours awake
+            SleepinessGainRate   = 0.0012f, // gains ~69 pts over 16 game hours awake
+            EnergyRestoreRate    = 0.002f,  // restores ~58 pts over 8 game hours asleep
+            SleepinessDrainRate  = 0.0026f  // drains ~75 pts over 8 game hours asleep
+        }
     };
 
     public static EntityConfig DefaultCat => new()
@@ -102,10 +125,19 @@ public class EntityConfig
             SatiationStart     = 100f,
             HydrationStart     = 100f,
             BodyTemp           = 38.5f,
-            SatiationDrainRate = 0.15f,
-            HydrationDrainRate = 0.25f
+            SatiationDrainRate = 0.004f,  // cats eat every ~7 game hours
+            HydrationDrainRate = 0.006f
         },
-        Stomach = new StomachEntityConfig { DigestionRate = 1.0f }
+        Stomach = new StomachEntityConfig { DigestionRate = 0.010f },
+        Energy  = new EnergyEntityConfig
+        {
+            EnergyStart         = 75f,   // cats are perpetually in a semi-nap state
+            SleepinessStart     = 30f,
+            EnergyDrainRate     = 0.0006f,
+            SleepinessGainRate  = 0.0008f,
+            EnergyRestoreRate   = 0.003f,   // cats restore energy very quickly
+            SleepinessDrainRate = 0.004f
+        }
     };
 }
 
@@ -129,8 +161,29 @@ public class MetabolismEntityConfig
 
 public class StomachEntityConfig
 {
-    /// <summary>ml of stomach content digested per second.</summary>
-    public float DigestionRate { get; set; } = 2.0f;
+    /// <summary>ml of stomach content digested per game-second.</summary>
+    public float DigestionRate { get; set; } = 0.017f;
+}
+
+public class EnergyEntityConfig
+{
+    /// <summary>Starting Energy (0–100). 85 = well rested.</summary>
+    public float EnergyStart { get; set; } = 85f;
+
+    /// <summary>Starting Sleepiness (0–100). 15 = just woke up.</summary>
+    public float SleepinessStart { get; set; } = 15f;
+
+    /// <summary>Energy lost per game-second while awake.</summary>
+    public float EnergyDrainRate { get; set; } = 0.001f;
+
+    /// <summary>Sleepiness gained per game-second while awake.</summary>
+    public float SleepinessGainRate { get; set; } = 0.0012f;
+
+    /// <summary>Energy restored per game-second while sleeping.</summary>
+    public float EnergyRestoreRate { get; set; } = 0.002f;
+
+    /// <summary>Sleepiness lost per game-second while sleeping.</summary>
+    public float SleepinessDrainRate { get; set; } = 0.0026f;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -140,9 +193,11 @@ public class StomachEntityConfig
 public class SystemsConfig
 {
     public BiologicalConditionSystemConfig BiologicalCondition { get; set; } = new();
+    public EnergySystemConfig              Energy              { get; set; } = new();
     public BrainSystemConfig               Brain               { get; set; } = new();
     public FeedingSystemConfig             Feeding             { get; set; } = new();
     public DrinkingSystemConfig            Drinking            { get; set; } = new();
+    public SleepSystemConfig               Sleep               { get; set; } = new();
     public InteractionSystemConfig         Interaction         { get; set; } = new();
 }
 
@@ -248,6 +303,28 @@ public class DrinkItemConfig
 
     /// <summary>Speed at which liquid travels down the esophagus (progress/second).</summary>
     public float EsophagusSpeed { get; set; } = 0.8f;
+}
+
+// ── EnergySystem ─────────────────────────────────────────────────────────────
+
+public class EnergySystemConfig
+{
+    /// <summary>Energy threshold (0–100) below which TiredTag is applied.</summary>
+    public float TiredThreshold { get; set; } = 60f;
+
+    /// <summary>Energy threshold below which ExhaustedTag is applied (severe).</summary>
+    public float ExhaustedThreshold { get; set; } = 25f;
+}
+
+// ── SleepSystem ───────────────────────────────────────────────────────────────
+
+public class SleepSystemConfig
+{
+    /// <summary>
+    /// Sleepiness level below which the entity can wake up (if brain also agrees).
+    /// Prevents immediately waking back up right after falling asleep.
+    /// </summary>
+    public float WakeThreshold { get; set; } = 20f;
 }
 
 // ── InteractionSystem ─────────────────────────────────────────────────────────

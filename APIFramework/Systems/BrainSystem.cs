@@ -5,43 +5,64 @@ using APIFramework.Core;
 namespace APIFramework.Systems;
 
 /// <summary>
-/// The priority queue. Runs after BiologicalConditionSystem has set condition tags,
-/// scores every active drive, and writes the dominant DesireType onto each entity.
+/// The priority queue. Scores every active drive and writes the dominant DesireType
+/// onto each entity's DriveComponent.
 ///
-/// Action systems (FeedingSystem, DrinkingSystem, SleepSystem…) MUST check
-/// DriveComponent.Dominant before acting. If it is not their drive, they stand down.
-/// This is the single source of truth for "what should Billy do right now."
+/// Action systems (FeedingSystem, DrinkingSystem, SleepSystem) MUST check
+/// DriveComponent.Dominant before acting. This is the single source of truth for
+/// "what should Billy do right now."
 ///
-/// Pipeline position: 3 of 8 — after condition tagging, before any action systems.
+/// SCORING FORMULA
+/// ───────────────
+///   EatUrgency   = (Hunger   / 100) * EatMaxScore
+///   DrinkUrgency = (Thirst   / 100) * DrinkMaxScore
+///   SleepUrgency = (Sleepiness / 100) * SleepMaxScore * CircadianFactor
+///
+/// CircadianFactor (from SimulationClock) amplifies sleep at night and suppresses
+/// it in the morning, producing a natural 24-hour rhythm.
+///
+/// SleepMaxScore (default 0.9) caps sleep below the survival ceiling (1.0) so that
+/// life-threatening hunger or thirst can always override exhaustion.
+///
+/// Pipeline position: 4 of 10 — after EnergySystem + BiologicalConditionSystem, before action systems.
 /// </summary>
 public class BrainSystem : ISystem
 {
     private readonly BrainSystemConfig _cfg;
+    private readonly SimulationClock   _clock;
 
-    public BrainSystem(BrainSystemConfig cfg) => _cfg = cfg;
+    public BrainSystem(BrainSystemConfig cfg, SimulationClock clock)
+    {
+        _cfg   = cfg;
+        _clock = clock;
+    }
 
     public void Update(EntityManager em, float deltaTime)
     {
+        float circadian = _clock.CircadianFactor;
+
         foreach (var entity in em.Query<MetabolismComponent>().ToList())
         {
             var meta = entity.Get<MetabolismComponent>();
 
-            // ── Score each drive ─────────────────────────────────────────────
-            //
-            // Score = (sensation_0_to_100 / 100) * maxScore
-            // maxScore caps the priority ceiling — sleep is 0.9 so it can never
-            // outbid a life-threatening hunger or thirst (which reach 1.0).
-            //
             var drives = entity.Has<DriveComponent>()
                 ? entity.Get<DriveComponent>()
                 : new DriveComponent();
 
+            // ── Survival drives (unaffected by circadian) ─────────────────────
             drives.EatUrgency   = (meta.Hunger / 100f) * _cfg.EatMaxScore;
             drives.DrinkUrgency = (meta.Thirst / 100f) * _cfg.DrinkMaxScore;
 
-            // SleepUrgency will be driven by EnergyComponent once implemented.
-            // Placeholder: stays at 0 until that system exists.
-            drives.SleepUrgency = 0f;
+            // ── Sleep drive (amplified / suppressed by time of day) ───────────
+            if (entity.Has<EnergyComponent>())
+            {
+                var energy = entity.Get<EnergyComponent>();
+                drives.SleepUrgency = (energy.Sleepiness / 100f) * _cfg.SleepMaxScore * circadian;
+            }
+            else
+            {
+                drives.SleepUrgency = 0f;
+            }
 
             entity.Add(drives);
         }
