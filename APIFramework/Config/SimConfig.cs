@@ -22,6 +22,11 @@ public class SimConfig
         PropertyNameCaseInsensitive = true,
         AllowTrailingCommas         = true,
         ReadCommentHandling         = JsonCommentHandling.Skip,
+        // REQUIRED: NutrientProfile is a struct of public fields (not properties).
+        // System.Text.Json ignores public fields by default — without this flag
+        // every NutrientProfile in SimConfig.json deserialises to all-zeros,
+        // which caused the stomach-filling / starvation bug found in v0.7.2 testing.
+        IncludeFields               = true,
     };
 
     /// <summary>

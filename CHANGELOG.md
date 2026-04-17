@@ -24,6 +24,92 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.2] — 2026-04-17
+
+### Added
+
+- **`ISpatialIndex` interface** (`APIFramework/Core/ISpatialIndex.cs`) — contract
+  for spatial lookup structures used by v0.9+ world systems. Defines `Register`,
+  `Unregister`, `Update`, `QueryRadius`, and `QueryNearest`. No production
+  implementation yet; stub exists so that v0.8 world components can declare their
+  spatial dependency from the start. Systems that receive `ISpatialIndex` via
+  constructor injection are automatically decoupled from the concrete data
+  structure choice (SimpleGrid, Quadtree, BVH, or NullIndex for tests).
+
+- **`SystemPhase` enum** (`APIFramework/Core/SystemPhase.cs`) — explicit phase
+  model for system execution order. Eight phases with numeric values that define
+  their run order: `PreUpdate(0)`, `Physiology(10)`, `Condition(20)`,
+  `Cognition(30)`, `Behavior(40)`, `Transit(50)`, `World(60)`, `PostUpdate(100)`.
+  Phase boundaries document data dependencies and are the prerequisite for future
+  parallel execution.
+
+- **`SystemRegistration` record** (`APIFramework/Core/SystemPhase.cs`) — wraps
+  an `ISystem` with its declared phase. Used by `SimulationEngine` to group and
+  sort systems without requiring them to know about phases themselves.
+
+- **`docs/ARCHITECTURE.md`** — decision records covering component storage
+  (Dictionary boxing and why ComponentStore<T> is deferred), the O(E)→O(1)
+  query index change, the system phase model, ISpatialIndex contract-first
+  design, honest capacity assessment ("thousands of entities"), and what was
+  explicitly not done and why.
+
+### Changed
+
+- **`Entity` onChange callback** (`APIFramework/Core/Entity.cs`) — constructors
+  now accept an optional `Action<Entity, Type, bool>? onChange` parameter. The
+  callback fires when a component type is first added (`added=true`) or removed
+  (`added=false`). Overwriting an existing component via `Add<T>()` does not
+  fire the callback. This change is backward-compatible — the zero-argument
+  constructor still works.
+
+- **`EntityManager` component index** (`APIFramework/Core/EntityManager.cs`) —
+  now maintains `Dictionary<Type, HashSet<Entity>> _componentIndex` updated via
+  the Entity onChange callback. `Query<T>()` returns the pre-built bucket in
+  O(1) instead of scanning all entities in O(E). `DestroyEntity` cleans the
+  index in O(buckets) by removing the entity from every bucket it occupies.
+  `CreateEntity(Guid existingId)` overload added for deserialization.
+
+- **`SimulationEngine` phase-aware execution** (`APIFramework/Core/SimulationEngine.cs`) —
+  `AddSystem(ISystem)` now has an explicit-phase overload `AddSystem(ISystem, SystemPhase)`.
+  The engine groups all `SystemRegistration` records by phase and runs them in
+  ascending numeric order. The sorted execution list is built lazily and cached
+  until the next `AddSystem` call. Systems within a phase remain sequential.
+  The old `AddSystem(ISystem)` signature is preserved for backward compatibility
+  (defaults to `Physiology` phase).
+
+- **`SimulationBootstrapper` phase assignments** (`APIFramework/Core/SimulationBootstrapper.cs`) —
+  all 13 registered systems now use the explicit `AddSystem(system, phase)` overload.
+  Phase assignments: `InvariantSystem→PreUpdate`, `MetabolismSystem+EnergySystem→Physiology`,
+  `BiologicalConditionSystem→Condition`, `MoodSystem+BrainSystem→Cognition`,
+  `FeedingSystem+DrinkingSystem+SleepSystem→Behavior`,
+  `InteractionSystem+EsophagusSystem+DigestionSystem→Transit`, `RotSystem→World`.
+
+### Fixed (post-release patch, same version tag)
+
+- **`NutrientProfile` JSON deserialization** — `System.Text.Json` ignores public
+  fields by default and only reads public properties. `NutrientProfile` is a
+  struct of 16 public fields, so every `Nutrients` sub-object in `SimConfig.json`
+  silently deserialised to all-zeros, overriding the C# class initializer defaults.
+  This caused `DrinkingSystemConfig.Water.Nutrients.Water = 0` (instead of 15 ml),
+  making the drinking cap check `NutrientsQueued.Water >= 15` unreachable, which
+  triggered infinite water-entity spawning and filled the stomach to 1000ml with
+  zero nutrients — the entity starved and dehydrated while the stomach stayed full.
+  Fix: added `IncludeFields = true` to `JsonSerializerOptions` in `SimConfig.Load`.
+
+- **Performance report in CLI** — Added a PERFORMANCE section to `CliRenderer.PrintReport`
+  showing: entity counts, average tick µs, ticks-per-second, system phase layout,
+  component index bucket count, and a concrete estimate of entity-checks eliminated
+  by the O(1) Query index (previously O(E) scan per system per tick).
+
+### Architecture notes
+
+This release is a pure architectural refactor. Simulation behavior is unchanged —
+no tuning values, component data, or system logic was modified. The observable
+difference: `Query<T>()` is now O(1); at 100+ entities the engine will show
+measurably lower CPU time in profiler traces.
+
+---
+
 ## [0.7.0] — 2026-04-16
 
 ### Added

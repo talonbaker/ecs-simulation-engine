@@ -24,21 +24,21 @@ namespace APIFramework.Core;
 /// EnergyStart only take effect for entities spawned AFTER the reload. To test
 /// different starting conditions, restart the simulation.
 ///
-/// SYSTEM PIPELINE (execution order)
-/// ──────────────────────────────────
-///  1. InvariantSystem           — catch/clamp impossible state values (runs FIRST)
-///  2. MetabolismSystem          — drain satiation / hydration (sleep multiplier applied)
-///  3. EnergySystem              — drain/restore energy + sleepiness; energy-state tags
-///  4. BiologicalConditionSystem — set hunger/thirst/irritable tags
-///  5. MoodSystem                — decay emotions, apply Plutchik intensity tags
-///  6. BrainSystem               — score all drives (incl. circadian sleep); pick dominant
-///  7. FeedingSystem             — act if Eat is dominant
-///  8. DrinkingSystem            — act if Drink is dominant
-///  9. SleepSystem               — toggle IsSleeping based on dominant desire
-/// 10. InteractionSystem         — convert held food to esophagus bolus
-/// 11. EsophagusSystem           — move transit entities toward stomach
-/// 12. DigestionSystem           — release nutrients from stomach to metabolism
-/// 13. RotSystem                 — age food entities; apply RotTag when threshold crossed
+/// SYSTEM PIPELINE (phase → execution order within phase)
+/// ────────────────────────────────────────────────────────
+///  PreUpdate  (0)  InvariantSystem           — catch/clamp impossible state values
+///  Physiology (10) MetabolismSystem          — drain satiation / hydration
+///  Physiology (10) EnergySystem              — drain/restore energy + sleepiness
+///  Condition  (20) BiologicalConditionSystem — set hunger/thirst/irritable tags
+///  Cognition  (30) MoodSystem                — decay emotions; apply Plutchik intensity tags
+///  Cognition  (30) BrainSystem               — score drives (incl. circadian); pick dominant
+///  Behavior   (40) FeedingSystem             — act if Eat is dominant
+///  Behavior   (40) DrinkingSystem            — act if Drink is dominant
+///  Behavior   (40) SleepSystem               — toggle IsSleeping based on dominant desire
+///  Transit    (50) InteractionSystem         — convert held food to esophagus bolus
+///  Transit    (50) EsophagusSystem           — move transit entities toward stomach
+///  Transit    (50) DigestionSystem           — release nutrients from stomach to metabolism
+///  World      (60) RotSystem                 — age food entities; apply RotTag at threshold
 /// </summary>
 public class SimulationBootstrapper
 {
@@ -67,19 +67,32 @@ public class SimulationBootstrapper
     {
         var sys = Config.Systems;
 
-        Engine.AddSystem(Invariants);                                              //  1 — catch impossible states
-        Engine.AddSystem(new MetabolismSystem());                                  //  2
-        Engine.AddSystem(new EnergySystem(sys.Energy));                           //  3
-        Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition)); //  4
-        Engine.AddSystem(new MoodSystem(sys.Mood));                               //  5
-        Engine.AddSystem(new BrainSystem(sys.Brain, Clock));                      //  6
-        Engine.AddSystem(new FeedingSystem(sys.Feeding));                         //  7
-        Engine.AddSystem(new DrinkingSystem(sys.Drinking));                       //  8
-        Engine.AddSystem(new SleepSystem(sys.Sleep));                             //  9
-        Engine.AddSystem(new InteractionSystem(sys.Interaction));                 // 10
-        Engine.AddSystem(new EsophagusSystem());                                  // 11
-        Engine.AddSystem(new DigestionSystem(sys.Digestion));                     // 12
-        Engine.AddSystem(new RotSystem(sys.Rot));                                 // 13
+        // PreUpdate — invariant enforcement; always first
+        Engine.AddSystem(Invariants,                                               SystemPhase.PreUpdate);
+
+        // Physiology — raw biological resource drain/restore
+        Engine.AddSystem(new MetabolismSystem(),                                   SystemPhase.Physiology);
+        Engine.AddSystem(new EnergySystem(sys.Energy),                            SystemPhase.Physiology);
+
+        // Condition — derive sensation tags from physiology values
+        Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition),  SystemPhase.Condition);
+
+        // Cognition — process conditions into emotions and drive scores
+        Engine.AddSystem(new MoodSystem(sys.Mood),                                SystemPhase.Cognition);
+        Engine.AddSystem(new BrainSystem(sys.Brain, Clock),                       SystemPhase.Cognition);
+
+        // Behavior — act on the dominant drive
+        Engine.AddSystem(new FeedingSystem(sys.Feeding),                          SystemPhase.Behavior);
+        Engine.AddSystem(new DrinkingSystem(sys.Drinking),                        SystemPhase.Behavior);
+        Engine.AddSystem(new SleepSystem(sys.Sleep),                              SystemPhase.Behavior);
+
+        // Transit — move content through the digestive pipeline
+        Engine.AddSystem(new InteractionSystem(sys.Interaction),                  SystemPhase.Transit);
+        Engine.AddSystem(new EsophagusSystem(),                                   SystemPhase.Transit);
+        Engine.AddSystem(new DigestionSystem(sys.Digestion),                      SystemPhase.Transit);
+
+        // World — environmental systems independent of entity biology
+        Engine.AddSystem(new RotSystem(sys.Rot),                                  SystemPhase.World);
     }
 
     private void SpawnWorld()

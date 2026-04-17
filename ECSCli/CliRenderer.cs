@@ -117,6 +117,38 @@ public static class CliRenderer
             }
         }
 
+        // ── Performance diagnostics (v0.7.2 — O(1) component index) ─────────────
+        Console.WriteLine();
+        Console.WriteLine(dash);
+        Console.WriteLine("  PERFORMANCE  —  v0.7.2 Query Index");
+        Console.WriteLine(dash);
+
+        int totalEntities = sim.EntityManager.Entities.Count;
+        int livingCount   = sim.EntityManager.Query<MetabolismComponent>().Count();
+        double avgTickUs  = tick > 0 ? (wallSec * 1_000_000.0) / tick : 0;
+
+        Console.WriteLine($"    Entities (total / living) : {totalEntities} / {livingCount}");
+        Console.WriteLine($"    Ticks completed           : {tick:N0}");
+        Console.WriteLine($"    Avg tick wall time        : {avgTickUs:F2} µs  ({1_000_000.0 / avgTickUs:N0} ticks/sec)");
+        Console.WriteLine();
+
+        Console.WriteLine("    System phase layout:");
+        var phaseGroups = sim.Engine.Registrations
+            .GroupBy(r => r.Phase)
+            .OrderBy(g => (int)g.Key);
+        foreach (var group in phaseGroups)
+        {
+            string names = string.Join(", ", group.Select(r => r.System.GetType().Name.Replace("System", "")));
+            Console.WriteLine($"      {group.Key,-10} ({(int)group.Key,3})  ×{group.Count()}  →  {names}");
+        }
+
+        Console.WriteLine();
+        long scansAvoided = (long)tick * sim.Engine.Registrations.Count * totalEntities;
+        Console.WriteLine($"    Query model   : O(1) component-index bucket lookup (v0.7.2+)");
+        Console.WriteLine($"    Index buckets : {sim.EntityManager.ComponentTypeCount} component types indexed");
+        Console.WriteLine($"    Scans avoided : ~{scansAvoided:N0} entity checks eliminated");
+        Console.WriteLine($"                    ({sim.Engine.Registrations.Count} systems × {tick:N0} ticks × {totalEntities} entities)");
+
         // ── Per-entity stats ─────────────────────────────────────────────────
         foreach (var em in metrics.EntityStats)
         {
