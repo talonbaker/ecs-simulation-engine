@@ -56,11 +56,14 @@ public class InvariantSystem : ISystem
                 ? entity.Get<IdentityComponent>().Name
                 : entity.ShortId;
 
-            CheckMetabolism(entity, name, gameTime);
-            CheckEnergy    (entity, name, gameTime);
-            CheckStomach   (entity, name, gameTime);
-            CheckDrives    (entity, name, gameTime);
-            CheckTransit   (entity, name, gameTime);
+            CheckMetabolism     (entity, name, gameTime);
+            CheckEnergy         (entity, name, gameTime);
+            CheckStomach        (entity, name, gameTime);
+            CheckSmallIntestine (entity, name, gameTime);
+            CheckLargeIntestine (entity, name, gameTime);
+            CheckColon          (entity, name, gameTime);
+            CheckDrives         (entity, name, gameTime);
+            CheckTransit        (entity, name, gameTime);
         }
     }
 
@@ -146,16 +149,63 @@ public class InvariantSystem : ISystem
         return violated;
     }
 
+    private void CheckSmallIntestine(Entity entity, string name, double t)
+    {
+        if (!entity.Has<SmallIntestineComponent>()) return;
+        var si    = entity.Get<SmallIntestineComponent>();
+        bool dirty = false;
+
+        (si.ChymeVolumeMl, var v1) = Guard(si.ChymeVolumeMl, 0f, SmallIntestineComponent.MaxVolumeMl,
+                                           "SmallIntestineComponent", "ChymeVolumeMl", name, t);
+        dirty = v1;
+
+        // Guard the tracked chyme profile against floating-point negatives.
+        var chyme = si.Chyme;
+        bool chymeDirty = GuardNonNegative(ref chyme, "SmallIntestineComponent.Chyme", name, t);
+        if (chymeDirty) { si.Chyme = chyme; dirty = true; }
+
+        if (dirty) entity.Add(si);
+    }
+
+    private void CheckLargeIntestine(Entity entity, string name, double t)
+    {
+        if (!entity.Has<LargeIntestineComponent>()) return;
+        var li    = entity.Get<LargeIntestineComponent>();
+        bool dirty = false;
+
+        (li.ContentVolumeMl, var v1) = Guard(li.ContentVolumeMl, 0f, LargeIntestineComponent.MaxVolumeMl,
+                                             "LargeIntestineComponent", "ContentVolumeMl", name, t);
+        dirty = v1;
+
+        if (dirty) entity.Add(li);
+    }
+
+    private void CheckColon(Entity entity, string name, double t)
+    {
+        if (!entity.Has<ColonComponent>()) return;
+        var colon = entity.Get<ColonComponent>();
+        bool dirty = false;
+
+        // Use the entity's own CapacityMl as the upper bound — it varies by entity type.
+        float cap = colon.CapacityMl > 0f ? colon.CapacityMl : 200f;
+        (colon.StoolVolumeMl, var v1) = Guard(colon.StoolVolumeMl, 0f, cap,
+                                              "ColonComponent", "StoolVolumeMl", name, t);
+        dirty = v1;
+
+        if (dirty) entity.Add(colon);
+    }
+
     private void CheckDrives(Entity entity, string name, double t)
     {
         if (!entity.Has<DriveComponent>()) return;
         var d     = entity.Get<DriveComponent>();
         bool dirty = false;
 
-        (d.EatUrgency,   var v1) = Guard(d.EatUrgency,   0f, 1f, "DriveComponent", "EatUrgency",   name, t);
-        (d.DrinkUrgency, var v2) = Guard(d.DrinkUrgency, 0f, 1f, "DriveComponent", "DrinkUrgency", name, t);
-        (d.SleepUrgency, var v3) = Guard(d.SleepUrgency, 0f, 1f, "DriveComponent", "SleepUrgency", name, t);
-        dirty = v1 | v2 | v3;
+        (d.EatUrgency,      var v1) = Guard(d.EatUrgency,      0f, 1f, "DriveComponent", "EatUrgency",      name, t);
+        (d.DrinkUrgency,    var v2) = Guard(d.DrinkUrgency,    0f, 1f, "DriveComponent", "DrinkUrgency",    name, t);
+        (d.SleepUrgency,    var v3) = Guard(d.SleepUrgency,    0f, 1f, "DriveComponent", "SleepUrgency",    name, t);
+        (d.DefecateUrgency, var v4) = Guard(d.DefecateUrgency, 0f, 1f, "DriveComponent", "DefecateUrgency", name, t);
+        dirty = v1 | v2 | v3 | v4;
 
         if (dirty) entity.Add(d);
     }
