@@ -1,471 +1,547 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ECSVisualizer.ViewModels"
+        xmlns:controls="using:ECSVisualizer.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="900"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
         x:Class="ECSVisualizer.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="ECS Biological Simulation"
-        Background="#0D0D0D"
-        Width="460" MinWidth="380">
+        Title="ECS Biological Simulation — Dashboard"
+        Background="#080808"
+        Width="1200" MinWidth="900" Height="800" MinHeight="600">
 
     <Design.DataContext>
         <vm:MainViewModel/>
     </Design.DataContext>
 
-    <ScrollViewer>
-        <StackPanel Margin="16" Spacing="16">
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <!-- ROOT: header bar + two-column main area                               -->
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <Grid RowDefinitions="Auto, *">
 
-            <!-- ── HEADER: Version + Game Clock + Day/Night + Time Scale ─────── -->
-            <Border Background="#141414" CornerRadius="6" Padding="16,14"
-                    BorderBrush="#2A2A2A" BorderThickness="1">
-                <Grid ColumnDefinitions="*, Auto">
+        <!-- ── HEADER: full-width top bar ────────────────────────────────── -->
+        <Border Grid.Row="0"
+                Background="#0D0D0D" BorderBrush="#1E1E1E" BorderThickness="0,0,0,1"
+                Padding="20,10">
+            <Grid ColumnDefinitions="Auto, *, Auto, Auto, Auto">
 
-                    <StackPanel Grid.Column="0" Spacing="2">
-                        <TextBlock Text="{Binding VersionDisplay}"
-                                   FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                   Foreground="#333333"/>
-                        <!-- Game time: large green clock -->
+                <!-- Game clock + day -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="{Binding DayNightIcon}" FontSize="18" VerticalAlignment="Center"/>
+                    <StackPanel Spacing="0">
                         <TextBlock Text="{Binding CurrentTimeDisplay}"
-                                   FontSize="32" FontFamily="Consolas" FontWeight="Light"
+                                   FontSize="26" FontFamily="Consolas" FontWeight="Light"
                                    Foreground="#00FF41"/>
-                        <!-- Day number + day/night icon -->
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="{Binding DayNightIcon}"
-                                       FontSize="13"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
                             <TextBlock Text="{Binding DayDisplay}"
-                                       FontSize="11" FontFamily="Consolas"
-                                       Foreground="#444444" VerticalAlignment="Center"/>
+                                       FontSize="10" FontFamily="Consolas" Foreground="#333333"/>
+                            <TextBlock Text="{Binding CircadianLabel}"
+                                       FontSize="10" FontFamily="Consolas" Foreground="#1A4A2A"/>
                         </StackPanel>
                     </StackPanel>
+                </StackPanel>
 
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center"
-                                Spacing="2" Margin="16,0,0,0">
-                        <TextBlock Text="TIME SCALE" FontSize="9" LetterSpacing="1"
-                                   Foreground="#444444" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding TimeScale, StringFormat={}{0:F0}x}"
-                                   FontSize="18" FontWeight="Bold" Foreground="#BB86FC"
-                                   HorizontalAlignment="Center"/>
-                        <Slider Value="{Binding TimeScale}"
-                                Minimum="0" Maximum="480" Width="110"
-                                TickFrequency="10" IsSnapToTickEnabled="True"/>
-                        <TextBlock Text="game speed" FontSize="8" LetterSpacing="1"
-                                   Foreground="#2A2A2A" HorizontalAlignment="Center"/>
-                    </StackPanel>
+                <!-- Version (centre-left) -->
+                <TextBlock Grid.Column="1" Text="{Binding VersionDisplay}"
+                           FontSize="9" LetterSpacing="1" Foreground="#2A2A2A"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"/>
 
-                </Grid>
-            </Border>
+                <!-- Entity count + invariant status -->
+                <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center" Margin="16,0">
+                    <TextBlock Text="{Binding EntityCountLabel}"
+                               FontSize="11" FontFamily="Consolas" Foreground="#444444"
+                               HorizontalAlignment="Right"/>
+                    <TextBlock Text="{Binding InvariantViolations, StringFormat='⚠ {0} violations'}"
+                               FontSize="10" FontFamily="Consolas" Foreground="#FF453A"
+                               IsVisible="{Binding HasViolations}" HorizontalAlignment="Right"/>
+                    <TextBlock Text="✓ no violations"
+                               FontSize="10" FontFamily="Consolas" Foreground="#1A4A1A"
+                               IsVisible="{Binding !HasViolations}" HorizontalAlignment="Right"/>
+                </StackPanel>
 
-            <!-- ── LIVING ENTITIES ─────────────────────────────────────────────── -->
-            <StackPanel Spacing="6">
-                <TextBlock Text="LIVING ENTITIES"
-                           FontSize="9" FontWeight="Bold" LetterSpacing="2"
-                           Foreground="#444444"/>
+                <!-- FPS + adaptive refresh -->
+                <StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center" Margin="16,0">
+                    <TextBlock Text="{Binding FpsLabel}"
+                               FontSize="11" FontFamily="Consolas" Foreground="#00FF41"
+                               HorizontalAlignment="Right"/>
+                    <TextBlock Text="{Binding RefreshRateLabel}"
+                               FontSize="9" FontFamily="Consolas" Foreground="#2A2A2A"
+                               HorizontalAlignment="Right"/>
+                </StackPanel>
 
-                <ItemsControl ItemsSource="{Binding LivingEntities}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:EntityViewModel">
-                            <Border Margin="0,0,0,4" Padding="14,12"
-                                    Background="#141414" CornerRadius="6"
-                                    BorderBrush="#252525" BorderThickness="1">
-                                <StackPanel Spacing="10">
+                <!-- Time Scale -->
+                <StackPanel Grid.Column="4" Spacing="2" VerticalAlignment="Center" Margin="24,0,0,0">
+                    <TextBlock Text="TIME SCALE" FontSize="8" LetterSpacing="1"
+                               Foreground="#333333" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding TimeScale, StringFormat={}{0:F0}×}"
+                               FontSize="20" FontWeight="Bold" Foreground="#BB86FC"
+                               HorizontalAlignment="Center"/>
+                    <Slider Value="{Binding TimeScale}"
+                            Minimum="0" Maximum="1200" Width="140"
+                            TickFrequency="10" IsSnapToTickEnabled="True"/>
+                </StackPanel>
 
-                                    <!-- Name + ID -->
-                                    <Grid ColumnDefinitions="*, Auto">
-                                        <TextBlock Grid.Column="0" Text="{Binding Name}"
-                                                   FontSize="15" FontWeight="SemiBold"
-                                                   Foreground="#E0E0E0"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding EntityId}"
-                                                   FontSize="10" FontFamily="Consolas"
-                                                   Foreground="#383838" VerticalAlignment="Center"/>
-                                    </Grid>
+            </Grid>
+        </Border>
 
-                                    <!-- Tag display: yellow when active, dim when clear -->
-                                    <Border CornerRadius="3" Padding="8,4"
-                                            Background="#1E1A00" IsVisible="{Binding HasActiveTags}">
-                                        <TextBlock Text="{Binding ActiveTags}"
-                                                   FontSize="10" FontWeight="Bold"
-                                                   Foreground="#FFD60A" FontFamily="Consolas"/>
-                                    </Border>
-                                    <Border CornerRadius="3" Padding="8,4"
-                                            Background="#141414" IsVisible="{Binding !HasActiveTags}">
-                                        <TextBlock Text="— no active conditions —"
-                                                   FontSize="10" Foreground="#2A2A2A"
-                                                   FontFamily="Consolas"/>
-                                    </Border>
+        <!-- ── MAIN CONTENT: entity panel (left) + charts (right) ─────────── -->
+        <Grid Grid.Row="1" ColumnDefinitions="420, *">
 
-                                    <!-- Metabolism -->
-                                    <StackPanel IsVisible="{Binding HasMetabolism}" Spacing="8">
-                                        <Border Background="#0D0D0D" CornerRadius="4" Padding="10,10">
-                                            <StackPanel Spacing="10">
+            <!-- ──────────────────────────────────────────────────────────── -->
+            <!-- LEFT PANEL: Entity Cards                                     -->
+            <!-- ──────────────────────────────────────────────────────────── -->
+            <Border Grid.Column="0"
+                    BorderBrush="#161616" BorderThickness="0,0,1,0">
+                <ScrollViewer>
+                    <StackPanel Margin="14,12" Spacing="14">
 
-                                                <!-- SATIATION resource bar -->
-                                                <StackPanel Spacing="4">
-                                                    <Grid ColumnDefinitions="70, *, Auto">
-                                                        <TextBlock Grid.Column="0" Text="SATIATION"
-                                                                   FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                                   Foreground="#666666" VerticalAlignment="Center"/>
-                                                        <ProgressBar Grid.Column="1" Margin="6,0"
-                                                                     Value="{Binding Satiation}" Maximum="100"
-                                                                     Foreground="#30D158" Background="#1A1A1A"
-                                                                     Height="7" CornerRadius="4"/>
-                                                        <TextBlock Grid.Column="2"
-                                                                   Text="{Binding SatiationLabel}"
-                                                                   FontSize="11" FontFamily="Consolas"
-                                                                   Foreground="#30D158" VerticalAlignment="Center"
-                                                                   Width="42" TextAlignment="Right"/>
-                                                    </Grid>
-                                                    <TextBlock Text="{Binding HungerLabel}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#FF6B35" Margin="76,0,0,0"/>
-                                                </StackPanel>
+                        <!-- LIVING ENTITIES section label -->
+                        <TextBlock Text="LIVING ENTITIES"
+                                   FontSize="9" FontWeight="Bold" LetterSpacing="2"
+                                   Foreground="#383838"/>
 
-                                                <!-- HYDRATION resource bar -->
-                                                <StackPanel Spacing="4">
-                                                    <Grid ColumnDefinitions="70, *, Auto">
-                                                        <TextBlock Grid.Column="0" Text="HYDRATION"
-                                                                   FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                                   Foreground="#666666" VerticalAlignment="Center"/>
-                                                        <ProgressBar Grid.Column="1" Margin="6,0"
-                                                                     Value="{Binding Hydration}" Maximum="100"
-                                                                     Foreground="#0A84FF" Background="#1A1A1A"
-                                                                     Height="7" CornerRadius="4"/>
-                                                        <TextBlock Grid.Column="2"
-                                                                   Text="{Binding HydrationLabel}"
-                                                                   FontSize="11" FontFamily="Consolas"
-                                                                   Foreground="#0A84FF" VerticalAlignment="Center"
-                                                                   Width="42" TextAlignment="Right"/>
-                                                    </Grid>
-                                                    <TextBlock Text="{Binding ThirstLabel}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#5AC8FA" Margin="76,0,0,0"/>
-                                                </StackPanel>
+                        <ItemsControl ItemsSource="{Binding LivingEntities}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:EntityViewModel">
+                                    <Border Margin="0,0,0,4" Padding="12,10"
+                                            Background="#0F0F0F" CornerRadius="6"
+                                            BorderBrush="#1E1E1E" BorderThickness="1">
+                                        <StackPanel Spacing="8">
 
-                                            </StackPanel>
-                                        </Border>
-
-                                        <!-- Energy / Sleep -->
-                                        <Border IsVisible="{Binding HasEnergy}"
-                                                Background="#0D0D14" CornerRadius="4" Padding="10,10"
-                                                BorderBrush="#1A1A2A" BorderThickness="1">
-                                            <StackPanel Spacing="10">
-
-                                                <!-- ENERGY bar -->
-                                                <StackPanel Spacing="4">
-                                                    <Grid ColumnDefinitions="70, *, Auto">
-                                                        <TextBlock Grid.Column="0" Text="ENERGY"
-                                                                   FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                                   Foreground="#666666" VerticalAlignment="Center"/>
-                                                        <ProgressBar Grid.Column="1" Margin="6,0"
-                                                                     Value="{Binding Energy}" Maximum="100"
-                                                                     Foreground="#FFD60A" Background="#1A1A1A"
-                                                                     Height="7" CornerRadius="4"/>
-                                                        <TextBlock Grid.Column="2"
-                                                                   Text="{Binding EnergyLabel}"
-                                                                   FontSize="11" FontFamily="Consolas"
-                                                                   Foreground="#FFD60A" VerticalAlignment="Center"
-                                                                   Width="42" TextAlignment="Right"/>
-                                                    </Grid>
-                                                    <TextBlock Text="{Binding SleepStateLabel}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#555555" Margin="76,0,0,0"/>
-                                                </StackPanel>
-
-                                                <!-- SLEEPINESS bar -->
-                                                <StackPanel Spacing="4">
-                                                    <Grid ColumnDefinitions="70, *, Auto">
-                                                        <TextBlock Grid.Column="0" Text="SLEEPINESS"
-                                                                   FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                                   Foreground="#666666" VerticalAlignment="Center"/>
-                                                        <ProgressBar Grid.Column="1" Margin="6,0"
-                                                                     Value="{Binding Sleepiness}" Maximum="100"
-                                                                     Foreground="#6E40C9" Background="#1A1A1A"
-                                                                     Height="7" CornerRadius="4"/>
-                                                        <TextBlock Grid.Column="2"
-                                                                   Text="{Binding SleepinessLabel}"
-                                                                   FontSize="11" FontFamily="Consolas"
-                                                                   Foreground="#6E40C9" VerticalAlignment="Center"
-                                                                   Width="42" TextAlignment="Right"/>
-                                                    </Grid>
-                                                </StackPanel>
-
-                                            </StackPanel>
-                                        </Border>
-
-                                        <!-- Brain / Priority Queue -->
-                                        <Border IsVisible="{Binding HasDrives}"
-                                                Background="#0A0D12" CornerRadius="4" Padding="10,10"
-                                                BorderBrush="#1A2030" BorderThickness="1">
-                                            <StackPanel Spacing="4">
-                                                <Grid ColumnDefinitions="70, *">
-                                                    <TextBlock Grid.Column="0" Text="BRAIN"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#666666" VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Column="1"
-                                                               Text="{Binding DominantDesire}"
-                                                               FontSize="13" FontWeight="Bold"
-                                                               Foreground="#64D2FF" FontFamily="Consolas"/>
-                                                </Grid>
-                                                <TextBlock Text="{Binding DriveScores}"
+                                            <!-- Name + ID -->
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <TextBlock Grid.Column="0" Text="{Binding Name}"
+                                                           FontSize="14" FontWeight="SemiBold"
+                                                           Foreground="#D0D0D0"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding EntityId}"
                                                            FontSize="10" FontFamily="Consolas"
-                                                           Foreground="#2A3A4A" Margin="76,0,0,0"/>
-                                            </StackPanel>
-                                        </Border>
+                                                           Foreground="#303030" VerticalAlignment="Center"/>
+                                            </Grid>
 
-                                        <!-- Mood / Plutchik Emotions -->
-                                        <Border IsVisible="{Binding HasMood}"
-                                                Background="#0D0A14" CornerRadius="4" Padding="10,10"
-                                                BorderBrush="#2A1A30" BorderThickness="1">
-                                            <StackPanel Spacing="8">
+                                            <!-- Active condition tags -->
+                                            <Border CornerRadius="3" Padding="6,3"
+                                                    Background="#1E1A00" IsVisible="{Binding HasActiveTags}">
+                                                <TextBlock Text="{Binding ActiveTags}"
+                                                           FontSize="10" FontWeight="Bold"
+                                                           Foreground="#FFD60A" FontFamily="Consolas"/>
+                                            </Border>
+                                            <Border CornerRadius="3" Padding="6,3"
+                                                    Background="#0F0F0F" IsVisible="{Binding !HasActiveTags}">
+                                                <TextBlock Text="— no active conditions —"
+                                                           FontSize="9" Foreground="#222222"
+                                                           FontFamily="Consolas"/>
+                                            </Border>
 
-                                                <!-- Section header + valence -->
-                                                <Grid ColumnDefinitions="*, Auto">
-                                                    <TextBlock Grid.Column="0" Text="EMOTIONS"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#666666" VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Column="1"
-                                                               Text="{Binding MoodValence, StringFormat='valence {0}'}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#555555"/>
-                                                </Grid>
+                                            <!-- Metabolism resource bars -->
+                                            <StackPanel IsVisible="{Binding HasMetabolism}" Spacing="6">
+                                                <Border Background="#090909" CornerRadius="4" Padding="8,8">
+                                                    <StackPanel Spacing="8">
 
-                                                <!-- Active emotion tags -->
-                                                <Border CornerRadius="3" Padding="6,3"
-                                                        Background="#1A0E2A" IsVisible="{Binding HasActiveEmotions}">
-                                                    <TextBlock Text="{Binding ActiveEmotionTags}"
-                                                               FontSize="10" FontWeight="Bold"
-                                                               Foreground="#BF5AF2" FontFamily="Consolas"
-                                                               TextWrapping="Wrap"/>
+                                                        <!-- SATIATION -->
+                                                        <StackPanel Spacing="3">
+                                                            <Grid ColumnDefinitions="66, *, Auto">
+                                                                <TextBlock Grid.Column="0" Text="SATIATION"
+                                                                           FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                           Foreground="#555555" VerticalAlignment="Center"/>
+                                                                <ProgressBar Grid.Column="1" Margin="5,0"
+                                                                             Value="{Binding Satiation}" Maximum="100"
+                                                                             Foreground="#30D158" Background="#181818"
+                                                                             Height="6" CornerRadius="3"/>
+                                                                <TextBlock Grid.Column="2" Text="{Binding SatiationLabel}"
+                                                                           FontSize="10" FontFamily="Consolas"
+                                                                           Foreground="#30D158" VerticalAlignment="Center"
+                                                                           Width="40" TextAlignment="Right"/>
+                                                            </Grid>
+                                                            <TextBlock Text="{Binding HungerLabel}"
+                                                                       FontSize="9" FontFamily="Consolas"
+                                                                       Foreground="#CC5522" Margin="71,0,0,0"/>
+                                                        </StackPanel>
+
+                                                        <!-- HYDRATION -->
+                                                        <StackPanel Spacing="3">
+                                                            <Grid ColumnDefinitions="66, *, Auto">
+                                                                <TextBlock Grid.Column="0" Text="HYDRATION"
+                                                                           FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                           Foreground="#555555" VerticalAlignment="Center"/>
+                                                                <ProgressBar Grid.Column="1" Margin="5,0"
+                                                                             Value="{Binding Hydration}" Maximum="100"
+                                                                             Foreground="#0A84FF" Background="#181818"
+                                                                             Height="6" CornerRadius="3"/>
+                                                                <TextBlock Grid.Column="2" Text="{Binding HydrationLabel}"
+                                                                           FontSize="10" FontFamily="Consolas"
+                                                                           Foreground="#0A84FF" VerticalAlignment="Center"
+                                                                           Width="40" TextAlignment="Right"/>
+                                                            </Grid>
+                                                            <TextBlock Text="{Binding ThirstLabel}"
+                                                                       FontSize="9" FontFamily="Consolas"
+                                                                       Foreground="#3A80BB" Margin="71,0,0,0"/>
+                                                        </StackPanel>
+
+                                                        <!-- BODY TEMPERATURE -->
+                                                        <Grid ColumnDefinitions="66, *, Auto">
+                                                            <TextBlock Grid.Column="0" Text="BODY TEMP"
+                                                                       FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                       Foreground="#555555" VerticalAlignment="Center"/>
+                                                            <ProgressBar Grid.Column="1" Margin="5,0"
+                                                                         Value="{Binding BodyTemp}" Minimum="34" Maximum="41"
+                                                                         Foreground="#FF9F0A" Background="#181818"
+                                                                         Height="6" CornerRadius="3"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding BodyTempLabel}"
+                                                                       FontSize="10" FontFamily="Consolas"
+                                                                       Foreground="#FF9F0A" VerticalAlignment="Center"
+                                                                       Width="40" TextAlignment="Right"/>
+                                                        </Grid>
+
+                                                    </StackPanel>
                                                 </Border>
 
-                                                <!-- Positive emotions (warm tones) -->
-                                                <!-- JOY -->
-                                                <Grid ColumnDefinitions="80, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="JOY"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#555555" VerticalAlignment="Center"/>
-                                                    <ProgressBar Grid.Column="1" Margin="4,0"
-                                                                 Value="{Binding MoodJoy}" Maximum="100"
-                                                                 Foreground="#FFD60A" Background="#1A1A0A"
-                                                                 Height="5" CornerRadius="3"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding MoodJoy, StringFormat={}{0:F0}}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#FFD60A" Width="28" TextAlignment="Right"/>
-                                                </Grid>
+                                                <!-- Energy / Sleep -->
+                                                <Border IsVisible="{Binding HasEnergy}"
+                                                        Background="#090912" CornerRadius="4" Padding="8,8">
+                                                    <StackPanel Spacing="8">
 
-                                                <!-- TRUST -->
-                                                <Grid ColumnDefinitions="80, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="TRUST"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#555555" VerticalAlignment="Center"/>
-                                                    <ProgressBar Grid.Column="1" Margin="4,0"
-                                                                 Value="{Binding MoodTrust}" Maximum="100"
-                                                                 Foreground="#30D158" Background="#0A1A0A"
-                                                                 Height="5" CornerRadius="3"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding MoodTrust, StringFormat={}{0:F0}}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#30D158" Width="28" TextAlignment="Right"/>
-                                                </Grid>
+                                                        <!-- ENERGY -->
+                                                        <StackPanel Spacing="3">
+                                                            <Grid ColumnDefinitions="66, *, Auto">
+                                                                <TextBlock Grid.Column="0" Text="ENERGY"
+                                                                           FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                           Foreground="#555555" VerticalAlignment="Center"/>
+                                                                <ProgressBar Grid.Column="1" Margin="5,0"
+                                                                             Value="{Binding Energy}" Maximum="100"
+                                                                             Foreground="#FFD60A" Background="#181818"
+                                                                             Height="6" CornerRadius="3"/>
+                                                                <TextBlock Grid.Column="2" Text="{Binding EnergyLabel}"
+                                                                           FontSize="10" FontFamily="Consolas"
+                                                                           Foreground="#FFD60A" VerticalAlignment="Center"
+                                                                           Width="40" TextAlignment="Right"/>
+                                                            </Grid>
+                                                            <TextBlock Text="{Binding SleepStateLabel}"
+                                                                       FontSize="9" FontFamily="Consolas"
+                                                                       Foreground="#444444" Margin="71,0,0,0"/>
+                                                        </StackPanel>
 
-                                                <!-- ANTICIPATION -->
-                                                <Grid ColumnDefinitions="80, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="ANTICIPATION"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#555555" VerticalAlignment="Center"/>
-                                                    <ProgressBar Grid.Column="1" Margin="4,0"
-                                                                 Value="{Binding MoodAnticipation}" Maximum="100"
-                                                                 Foreground="#FF9F0A" Background="#1A0D00"
-                                                                 Height="5" CornerRadius="3"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding MoodAnticipation, StringFormat={}{0:F0}}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#FF9F0A" Width="28" TextAlignment="Right"/>
-                                                </Grid>
+                                                        <!-- SLEEPINESS -->
+                                                        <Grid ColumnDefinitions="66, *, Auto">
+                                                            <TextBlock Grid.Column="0" Text="SLEEPINESS"
+                                                                       FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                       Foreground="#555555" VerticalAlignment="Center"/>
+                                                            <ProgressBar Grid.Column="1" Margin="5,0"
+                                                                         Value="{Binding Sleepiness}" Maximum="100"
+                                                                         Foreground="#6E40C9" Background="#181818"
+                                                                         Height="6" CornerRadius="3"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding SleepinessLabel}"
+                                                                       FontSize="10" FontFamily="Consolas"
+                                                                       Foreground="#6E40C9" VerticalAlignment="Center"
+                                                                       Width="40" TextAlignment="Right"/>
+                                                        </Grid>
 
-                                                <!-- Divider -->
-                                                <Border Height="1" Background="#2A2A2A" Margin="0,2"/>
+                                                    </StackPanel>
+                                                </Border>
 
-                                                <!-- Negative emotions (cool/intense tones) -->
-                                                <!-- ANGER -->
-                                                <Grid ColumnDefinitions="80, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="ANGER"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#555555" VerticalAlignment="Center"/>
-                                                    <ProgressBar Grid.Column="1" Margin="4,0"
-                                                                 Value="{Binding MoodAnger}" Maximum="100"
-                                                                 Foreground="#FF453A" Background="#1A0A0A"
-                                                                 Height="5" CornerRadius="3"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding MoodAnger, StringFormat={}{0:F0}}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#FF453A" Width="28" TextAlignment="Right"/>
-                                                </Grid>
+                                                <!-- Brain drives -->
+                                                <Border IsVisible="{Binding HasDrives}"
+                                                        Background="#08090E" CornerRadius="4" Padding="8,8">
+                                                    <StackPanel Spacing="3">
+                                                        <Grid ColumnDefinitions="66, *">
+                                                            <TextBlock Grid.Column="0" Text="BRAIN"
+                                                                       FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                       Foreground="#555555" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding DominantDesire}"
+                                                                       FontSize="12" FontWeight="Bold"
+                                                                       Foreground="#64D2FF" FontFamily="Consolas"/>
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding DriveScores}"
+                                                                   FontSize="9" FontFamily="Consolas"
+                                                                   Foreground="#222A33" Margin="71,0,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
 
-                                                <!-- SADNESS -->
-                                                <Grid ColumnDefinitions="80, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="SADNESS"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#555555" VerticalAlignment="Center"/>
-                                                    <ProgressBar Grid.Column="1" Margin="4,0"
-                                                                 Value="{Binding MoodSadness}" Maximum="100"
-                                                                 Foreground="#0A84FF" Background="#0A0A1A"
-                                                                 Height="5" CornerRadius="3"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding MoodSadness, StringFormat={}{0:F0}}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#0A84FF" Width="28" TextAlignment="Right"/>
-                                                </Grid>
+                                                <!-- Mood (compact — full emotions in chart panel) -->
+                                                <Border IsVisible="{Binding HasMood}"
+                                                        Background="#0C0A12" CornerRadius="4" Padding="8,8">
+                                                    <StackPanel Spacing="4">
+                                                        <Grid ColumnDefinitions="*, Auto">
+                                                            <TextBlock Grid.Column="0" Text="EMOTIONS"
+                                                                       FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                       Foreground="#555555"/>
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding MoodValence, StringFormat='valence {0}'}"
+                                                                       FontSize="9" FontFamily="Consolas"
+                                                                       Foreground="#333333"/>
+                                                        </Grid>
+                                                        <Border CornerRadius="3" Padding="5,2"
+                                                                Background="#140E20" IsVisible="{Binding HasActiveEmotions}">
+                                                            <TextBlock Text="{Binding ActiveEmotionTags}"
+                                                                       FontSize="9" FontWeight="Bold"
+                                                                       Foreground="#BF5AF2" FontFamily="Consolas"
+                                                                       TextWrapping="Wrap"/>
+                                                        </Border>
+                                                        <!-- Compact emotion bars: Joy / Anger / Sadness -->
+                                                        <Grid ColumnDefinitions="50, *, Auto">
+                                                            <TextBlock Grid.Column="0" Text="JOY"
+                                                                       FontSize="8" LetterSpacing="1"
+                                                                       Foreground="#444444" VerticalAlignment="Center"/>
+                                                            <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                         Value="{Binding MoodJoy}" Maximum="100"
+                                                                         Foreground="#FFD60A" Background="#181818"
+                                                                         Height="4" CornerRadius="2"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding MoodJoy, StringFormat={}{0:F0}}"
+                                                                       FontSize="9" FontFamily="Consolas"
+                                                                       Foreground="#FFD60A" Width="24" TextAlignment="Right"/>
+                                                        </Grid>
+                                                        <Grid ColumnDefinitions="50, *, Auto">
+                                                            <TextBlock Grid.Column="0" Text="ANGER"
+                                                                       FontSize="8" LetterSpacing="1"
+                                                                       Foreground="#444444" VerticalAlignment="Center"/>
+                                                            <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                         Value="{Binding MoodAnger}" Maximum="100"
+                                                                         Foreground="#FF453A" Background="#181818"
+                                                                         Height="4" CornerRadius="2"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding MoodAnger, StringFormat={}{0:F0}}"
+                                                                       FontSize="9" FontFamily="Consolas"
+                                                                       Foreground="#FF453A" Width="24" TextAlignment="Right"/>
+                                                        </Grid>
+                                                        <Grid ColumnDefinitions="50, *, Auto">
+                                                            <TextBlock Grid.Column="0" Text="SADNESS"
+                                                                       FontSize="8" LetterSpacing="1"
+                                                                       Foreground="#444444" VerticalAlignment="Center"/>
+                                                            <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                         Value="{Binding MoodSadness}" Maximum="100"
+                                                                         Foreground="#0A84FF" Background="#181818"
+                                                                         Height="4" CornerRadius="2"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding MoodSadness, StringFormat={}{0:F0}}"
+                                                                       FontSize="9" FontFamily="Consolas"
+                                                                       Foreground="#0A84FF" Width="24" TextAlignment="Right"/>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Border>
 
-                                                <!-- DISGUST / BOREDOM -->
-                                                <Grid ColumnDefinitions="80, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="DISGUST"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#555555" VerticalAlignment="Center"/>
-                                                    <ProgressBar Grid.Column="1" Margin="4,0"
-                                                                 Value="{Binding MoodDisgust}" Maximum="100"
-                                                                 Foreground="#6E40C9" Background="#0E0A1A"
-                                                                 Height="5" CornerRadius="3"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding MoodDisgust, StringFormat={}{0:F0}}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#6E40C9" Width="28" TextAlignment="Right"/>
-                                                </Grid>
+                                                <!-- Stomach -->
+                                                <Border IsVisible="{Binding HasStomach}"
+                                                        Background="#0D0D0D" CornerRadius="4" Padding="8,8">
+                                                    <StackPanel Spacing="3">
+                                                        <Grid ColumnDefinitions="66, *, Auto">
+                                                            <TextBlock Grid.Column="0" Text="STOMACH"
+                                                                       FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                       Foreground="#555555" VerticalAlignment="Center"/>
+                                                            <ProgressBar Grid.Column="1" Margin="5,0"
+                                                                         Value="{Binding StomachFill}" Maximum="100"
+                                                                         Foreground="#FF9F0A" Background="#181818"
+                                                                         Height="6" CornerRadius="3"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding StomachLabel}"
+                                                                       FontSize="9" FontFamily="Consolas"
+                                                                       Foreground="#FF9F0A" VerticalAlignment="Center"
+                                                                       Width="40" TextAlignment="Right"/>
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding DigestionLabel}"
+                                                                   FontSize="9" FontFamily="Consolas"
+                                                                   Foreground="#2A2A2A" Margin="71,0,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
 
-                                                <!-- FEAR -->
-                                                <Grid ColumnDefinitions="80, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="FEAR"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#555555" VerticalAlignment="Center"/>
-                                                    <ProgressBar Grid.Column="1" Margin="4,0"
-                                                                 Value="{Binding MoodFear}" Maximum="100"
-                                                                 Foreground="#5AC8FA" Background="#0A0E1A"
-                                                                 Height="5" CornerRadius="3"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding MoodFear, StringFormat={}{0:F0}}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#5AC8FA" Width="28" TextAlignment="Right"/>
-                                                </Grid>
-
-                                                <!-- SURPRISE -->
-                                                <Grid ColumnDefinitions="80, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="SURPRISE"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#555555" VerticalAlignment="Center"/>
-                                                    <ProgressBar Grid.Column="1" Margin="4,0"
-                                                                 Value="{Binding MoodSurprise}" Maximum="100"
-                                                                 Foreground="#FF6B35" Background="#1A0D0A"
-                                                                 Height="5" CornerRadius="3"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding MoodSurprise, StringFormat={}{0:F0}}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#FF6B35" Width="28" TextAlignment="Right"/>
-                                                </Grid>
+                                                <!-- Nutrient stores -->
+                                                <Border IsVisible="{Binding HasNutrients}"
+                                                        Background="#081008" CornerRadius="4" Padding="8,8"
+                                                        BorderBrush="#102010" BorderThickness="1">
+                                                    <StackPanel Spacing="3">
+                                                        <Grid ColumnDefinitions="66, *, Auto">
+                                                            <TextBlock Grid.Column="0" Text="NUTRIENTS"
+                                                                       FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                       Foreground="#555555" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="body stores"
+                                                                       FontSize="8" FontFamily="Consolas"
+                                                                       Foreground="#1E2E1E" VerticalAlignment="Center"
+                                                                       Margin="5,0"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding NutrientCaloriesLabel}"
+                                                                       FontSize="10" FontWeight="Bold" FontFamily="Consolas"
+                                                                       Foreground="#30D158" VerticalAlignment="Center"
+                                                                       Width="70" TextAlignment="Right"/>
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding NutrientMacrosLabel}"
+                                                                   FontSize="9" FontFamily="Consolas"
+                                                                   Foreground="#4A6A4A" Margin="71,1,0,0"/>
+                                                        <TextBlock Text="{Binding NutrientWaterLabel}"
+                                                                   FontSize="9" FontFamily="Consolas"
+                                                                   Foreground="#2A5A7A" Margin="71,0,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
 
                                             </StackPanel>
-                                        </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
-                                        <!-- Stomach -->
-                                        <Border IsVisible="{Binding HasStomach}"
-                                                Background="#0D0D0D" CornerRadius="4" Padding="10,10">
-                                            <StackPanel Spacing="4">
-                                                <Grid ColumnDefinitions="70, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="STOMACH"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#666666" VerticalAlignment="Center"/>
-                                                    <ProgressBar Grid.Column="1" Margin="6,0"
-                                                                 Value="{Binding StomachFill}" Maximum="100"
-                                                                 Foreground="#FF9F0A" Background="#1A1A1A"
-                                                                 Height="7" CornerRadius="4"/>
-                                                    <TextBlock Grid.Column="2"
-                                                               Text="{Binding StomachLabel}"
-                                                               FontSize="10" FontFamily="Consolas"
-                                                               Foreground="#FF9F0A" VerticalAlignment="Center"
-                                                               Width="42" TextAlignment="Right"/>
-                                                </Grid>
-                                                <TextBlock Text="{Binding DigestionLabel}"
+                        <!-- ESOPHAGUS PIPELINE section -->
+                        <TextBlock Text="ESOPHAGUS PIPELINE"
+                                   FontSize="9" FontWeight="Bold" LetterSpacing="2"
+                                   Foreground="#383838"/>
+                        <TextBlock Text="— nothing in transit —"
+                                   IsVisible="{Binding !PipelineEntities.Count}"
+                                   FontSize="10" FontFamily="Consolas"
+                                   Foreground="#222222" Margin="4,0"/>
+                        <ItemsControl ItemsSource="{Binding PipelineEntities}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:EntityViewModel">
+                                    <Border Margin="0,0,0,4" Padding="10,8"
+                                            Background="#100E18" CornerRadius="5"
+                                            BorderBrush="#1E1828" BorderThickness="1">
+                                        <StackPanel Spacing="5">
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <TextBlock Grid.Column="0" Text="{Binding TransitLabel}"
                                                            FontSize="10" FontFamily="Consolas"
-                                                           Foreground="#333333" Margin="76,0,0,0"/>
-                                            </StackPanel>
-                                        </Border>
+                                                           Foreground="#BF5AF2"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding EntityId}"
+                                                           FontSize="9" FontFamily="Consolas"
+                                                           Foreground="#282828"/>
+                                            </Grid>
+                                            <ProgressBar Value="{Binding TransitProgress}" Maximum="100"
+                                                         Foreground="#BF5AF2" Background="#180E24"
+                                                         Height="4" CornerRadius="2"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
-                                        <!-- Body Nutrient Stores (v0.7.0+) -->
-                                        <Border IsVisible="{Binding HasNutrients}"
-                                                Background="#0A1410" CornerRadius="4" Padding="10,10"
-                                                BorderBrush="#1A3020" BorderThickness="1">
-                                            <StackPanel Spacing="4">
-                                                <Grid ColumnDefinitions="70, *, Auto">
-                                                    <TextBlock Grid.Column="0" Text="NUTRIENTS"
-                                                               FontSize="9" FontWeight="Bold" LetterSpacing="1"
-                                                               Foreground="#666666" VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Column="1"
-                                                               Text="body stores — accumulated from digestion"
+                        <!-- WORLD ITEMS section -->
+                        <TextBlock Text="WORLD ITEMS"
+                                   FontSize="9" FontWeight="Bold" LetterSpacing="2"
+                                   Foreground="#383838"/>
+                        <TextBlock Text="— no items in world —"
+                                   IsVisible="{Binding !WorldEntities.Count}"
+                                   FontSize="10" FontFamily="Consolas"
+                                   Foreground="#222222" Margin="4,0"/>
+                        <ItemsControl ItemsSource="{Binding WorldEntities}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:WorldEntityViewModel">
+                                    <Border Margin="0,0,0,4" Padding="10,8"
+                                            Background="#0C140C" CornerRadius="5"
+                                            BorderBrush="#142014" BorderThickness="1">
+                                        <StackPanel Spacing="3">
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <TextBlock Grid.Column="0" Text="{Binding ItemLabel}"
+                                                           FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="#809A80"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding EntityId}"
+                                                           FontSize="9" FontFamily="Consolas"
+                                                           Foreground="#282828"/>
+                                            </Grid>
+                                            <TextBlock Text="{Binding NutritionLabel}"
+                                                       FontSize="9" FontFamily="Consolas"
+                                                       Foreground="#2A4A2A"/>
+                                            <StackPanel IsVisible="{Binding HasRot}" Spacing="2">
+                                                <Grid ColumnDefinitions="40, *, Auto">
+                                                    <TextBlock Grid.Column="0" Text="ROT"
+                                                               FontSize="8" FontWeight="Bold"
+                                                               Foreground="#444444" VerticalAlignment="Center"/>
+                                                    <ProgressBar Grid.Column="1" Margin="4,0"
+                                                                 Value="{Binding RotLevel}" Maximum="100"
+                                                                 Foreground="#7A3A0A" Background="#181008"
+                                                                 Height="4" CornerRadius="2"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding RotLabel}"
                                                                FontSize="9" FontFamily="Consolas"
-                                                               Foreground="#2A3A2A" VerticalAlignment="Center"
-                                                               Margin="6,0"/>
-                                                    <TextBlock Grid.Column="2"
-                                                               Text="{Binding NutrientCaloriesLabel}"
-                                                               FontSize="11" FontWeight="Bold" FontFamily="Consolas"
-                                                               Foreground="#30D158" VerticalAlignment="Center"
-                                                               Width="90" TextAlignment="Right"/>
+                                                               Foreground="#7A3A0A" TextAlignment="Right"/>
                                                 </Grid>
-                                                <TextBlock Text="{Binding NutrientMacrosLabel}"
-                                                           FontSize="10" FontFamily="Consolas"
-                                                           Foreground="#7A9A7A" Margin="76,2,0,0"/>
-                                                <TextBlock Text="{Binding NutrientWaterLabel}"
-                                                           FontSize="10" FontFamily="Consolas"
-                                                           Foreground="#5AC8FA" Margin="76,0,0,0"/>
-                                                <TextBlock Text="{Binding NutrientVitaminsLabel}"
-                                                           FontSize="9" FontFamily="Consolas"
-                                                           Foreground="#555555" Margin="76,2,0,0"
-                                                           TextWrapping="Wrap"/>
-                                                <TextBlock Text="{Binding NutrientMineralsLabel}"
-                                                           FontSize="9" FontFamily="Consolas"
-                                                           Foreground="#555555" Margin="76,0,0,0"
-                                                           TextWrapping="Wrap"/>
+                                                <Border CornerRadius="3" Padding="5,2"
+                                                        Background="#200800" IsVisible="{Binding IsRotten}">
+                                                    <TextBlock Text="⚠ ROTTEN"
+                                                               FontSize="9" FontWeight="Bold"
+                                                               Foreground="#FF453A" FontFamily="Consolas"/>
+                                                </Border>
                                             </StackPanel>
-                                        </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
-                                    </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
 
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
+            <!-- ──────────────────────────────────────────────────────────── -->
+            <!-- RIGHT PANEL: Live Charts                                     -->
+            <!-- ──────────────────────────────────────────────────────────── -->
+            <ScrollViewer Grid.Column="1">
+                <StackPanel Margin="12,10" Spacing="12">
 
-            <!-- ── PIPELINE: Esophagus Transit ────────────────────────────── -->
-            <StackPanel Spacing="6">
-                <TextBlock Text="ESOPHAGUS PIPELINE"
-                           FontSize="9" FontWeight="Bold" LetterSpacing="2"
-                           Foreground="#444444"/>
+                    <!-- Section label -->
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="LIVE CHARTS"
+                                   FontSize="9" FontWeight="Bold" LetterSpacing="2"
+                                   Foreground="#383838" VerticalAlignment="Center"/>
+                        <TextBlock Text="1 point = 1 game-minute  ·  history = 8 game-hours"
+                                   FontSize="9" FontFamily="Consolas" Foreground="#242424"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
 
-                <TextBlock Text="— nothing in transit —"
-                           IsVisible="{Binding !PipelineEntities.Count}"
-                           FontSize="11" FontFamily="Consolas"
-                           Foreground="#2A2A2A" Margin="4,0"/>
+                    <!-- ── Biological charts — 2 per row ─────────────────── -->
 
-                <ItemsControl ItemsSource="{Binding PipelineEntities}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:EntityViewModel">
-                            <Border Margin="0,0,0,4" Padding="12,10"
-                                    Background="#12101A" CornerRadius="6"
-                                    BorderBrush="#2A2040" BorderThickness="1">
-                                <StackPanel Spacing="6">
-                                    <Grid ColumnDefinitions="*, Auto">
-                                        <TextBlock Grid.Column="0" Text="{Binding TransitLabel}"
-                                                   FontSize="11" FontFamily="Consolas"
-                                                   Foreground="#BF5AF2"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding EntityId}"
-                                                   FontSize="10" FontFamily="Consolas"
-                                                   Foreground="#333333"/>
-                                    </Grid>
-                                    <ProgressBar Value="{Binding TransitProgress}" Maximum="100"
-                                                 Foreground="#BF5AF2" Background="#1E1A2A"
-                                                 Height="5" CornerRadius="3"/>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </StackPanel>
+                    <!-- Row 1: Satiation | Hydration -->
+                    <Grid ColumnDefinitions="*, 4, *">
+                        <controls:ScrollingChart Grid.Column="0"
+                                                 Series="{Binding Charts.Satiation}"
+                                                 Height="140"/>
+                        <controls:ScrollingChart Grid.Column="2"
+                                                 Series="{Binding Charts.Hydration}"
+                                                 Height="140"/>
+                    </Grid>
 
-        </StackPanel>
-    </ScrollViewer>
+                    <!-- Row 2: Energy | Sleepiness -->
+                    <Grid ColumnDefinitions="*, 4, *">
+                        <controls:ScrollingChart Grid.Column="0"
+                                                 Series="{Binding Charts.Energy}"
+                                                 Height="140"/>
+                        <controls:ScrollingChart Grid.Column="2"
+                                                 Series="{Binding Charts.Sleepiness}"
+                                                 Height="140"/>
+                    </Grid>
+
+                    <!-- Row 3: Joy | Anger -->
+                    <Grid ColumnDefinitions="*, 4, *">
+                        <controls:ScrollingChart Grid.Column="0"
+                                                 Series="{Binding Charts.Joy}"
+                                                 Height="140"/>
+                        <controls:ScrollingChart Grid.Column="2"
+                                                 Series="{Binding Charts.Anger}"
+                                                 Height="140"/>
+                    </Grid>
+
+                    <!-- Row 4: Sadness | Body Temp -->
+                    <Grid ColumnDefinitions="*, 4, *">
+                        <controls:ScrollingChart Grid.Column="0"
+                                                 Series="{Binding Charts.Sadness}"
+                                                 Height="140"/>
+                        <controls:ScrollingChart Grid.Column="2"
+                                                 Series="{Binding Charts.BodyTemp}"
+                                                 Height="140"/>
+                    </Grid>
+
+                    <!-- ── Performance section label ──────────────────────── -->
+                    <Border Height="1" Background="#161616" Margin="0,4"/>
+                    <TextBlock Text="PERFORMANCE"
+                               FontSize="9" FontWeight="Bold" LetterSpacing="2"
+                               Foreground="#383838"/>
+
+                    <!-- Row 5: Real FPS | Entity Load -->
+                    <Grid ColumnDefinitions="*, 4, *">
+                        <controls:ScrollingChart Grid.Column="0"
+                                                 Series="{Binding Charts.Fps}"
+                                                 Height="100"/>
+                        <controls:ScrollingChart Grid.Column="2"
+                                                 Series="{Binding Charts.EntityLoad}"
+                                                 Height="100"/>
+                    </Grid>
+
+                </StackPanel>
+            </ScrollViewer>
+
+        </Grid>
+    </Grid>
 
 </Window>

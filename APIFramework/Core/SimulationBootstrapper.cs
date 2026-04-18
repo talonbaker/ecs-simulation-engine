@@ -48,12 +48,13 @@ public class SimulationBootstrapper
     public SimConfig        Config         { get; }
     public InvariantSystem  Invariants     { get; }
 
-    private readonly string _configPath;
-
-    public SimulationBootstrapper(string configPath = "SimConfig.json")
+    /// <summary>
+    /// Primary constructor — accepts any IConfigProvider.
+    /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
+    /// </summary>
+    public SimulationBootstrapper(IConfigProvider configProvider)
     {
-        _configPath   = configPath;
-        Config        = SimConfig.Load(configPath);
+        Config        = configProvider.GetConfig();
         EntityManager = new EntityManager();
         Clock         = new SimulationClock { TimeScale = Config.World.DefaultTimeScale };
         Engine        = new SimulationEngine(EntityManager, Clock);
@@ -62,6 +63,13 @@ public class SimulationBootstrapper
         RegisterSystems();
         SpawnWorld();
     }
+
+    /// <summary>
+    /// Convenience overload — loads config from the JSON file at <paramref name="configPath"/>.
+    /// This is the default used by the Avalonia GUI and CLI.
+    /// </summary>
+    public SimulationBootstrapper(string configPath = "SimConfig.json")
+        : this(new FileConfigProvider(configPath)) { }
 
     private void RegisterSystems()
     {
@@ -99,6 +107,19 @@ public class SimulationBootstrapper
     {
         EntityTemplates.SpawnHuman(EntityManager, Config.Entities.Human);
     }
+
+    // ── Snapshot ──────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Captures the current engine state as an immutable SimulationSnapshot.
+    /// Call once per frame from any frontend's render loop; hand the result to
+    /// every system that needs to display or log it.
+    ///
+    /// Usage:
+    ///   var snap = sim.Capture();
+    ///   Console.WriteLine(snap.Clock.TimeDisplay);
+    /// </summary>
+    public SimulationSnapshot Capture() => SimulationSnapshot.Capture(this);
 
     // ── Hot-reload ────────────────────────────────────────────────────────────
 

@@ -26,6 +26,12 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private string _satiationLabel   = "100%";
     [ObservableProperty] private string _hydrationLabel   = "100%";
 
+    // ── Metabolism — Body Temperature ────────────────────────────────────────
+    [ObservableProperty] private float  _bodyTemp      = 37.0f;
+    [ObservableProperty] private string _bodyTempLabel = "37.0°C";
+    // Tier 0=hypothermia(<35), 1=normal(35–37.5), 2=fever(37.6–39), 3=hyperthermia(>39)
+    [ObservableProperty] private int    _bodyTempTier  = 1;
+
     // ── Metabolism — Sensations ───────────────────────────────────────────────
     [ObservableProperty] private string _hungerLabel  = "Not hungry";
     [ObservableProperty] private string _thirstLabel  = "Not thirsty";
@@ -111,6 +117,13 @@ public partial class EntityViewModel : ObservableObject
             Hydration      = meta.Hydration;
             SatiationLabel = $"{meta.Satiation:F1}%";
             HydrationLabel = $"{meta.Hydration:F1}%";
+
+            BodyTemp      = meta.BodyTemp;
+            BodyTempLabel = $"{meta.BodyTemp:F1}°C";
+            BodyTempTier  = meta.BodyTemp < 35f   ? 0   // hypothermia
+                          : meta.BodyTemp < 37.6f ? 1   // normal
+                          : meta.BodyTemp < 39f   ? 2   // fever
+                                                  : 3;  // hyperthermia
 
             HungerLabel = meta.Hunger < 5f
                 ? "Satisfied"
