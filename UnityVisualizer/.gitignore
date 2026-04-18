@@ -1,0 +1,32 @@
+# ── Unity generated / cached folders ─────────────────────────────────────────
+# These are all recreated by the editor on first open — never commit them.
+/[Ll]ibrary/
+/[Tt]emp/
+/[Ll]ogs/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Uu]ser[Ss]ettings/
+/[Mm]emory[Cc]aptures/
+
+# ── Generated DLL + symbols ───────────────────────────────────────────────────
+# Built by build-unity-dll.bat / build-unity-dll.sh — never committed.
+# The .gitkeep in this folder IS committed (documents how to populate it).
+Assets/Plugins/APIFramework.dll
+Assets/Plugins/APIFramework.pdb
+
+# ── Unity crash / analytics artefacts ────────────────────────────────────────
+sysinfo.txt
+crashlytics-build.properties
+
+# ── Unity Addressables (generated per-platform caches) ───────────────────────
+Assets/AddressableAssetsData/**/Any Platform/
+Assets/StreamingAssets/aa.meta
+Assets/StreamingAssets/aa/
+
+# ── TextMesh Pro generated settings (auto-created on first use) ──────────────
+Assets/TextMesh Pro/
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

@@ -420,3 +420,19 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# ── Unity Visualizer (UnityVisualizer/) ──────────────────────────────────────
+# The Unity subfolder has its own .gitignore for editor-generated folders
+# (Library/, Temp/, Logs/, UserSettings/ etc.) and the generated DLL.
+# The rules below handle the two places where the root .gitignore would
+# otherwise incorrectly interfere with the Unity project.
+
+# (1) *.meta files in the Unity project MUST be committed.
+#     They carry the stable GUIDs that wire scripts → prefabs → scenes.
+#     The "*.meta" rule in the Visual Studio section above would silently
+#     drop them, so we explicitly un-ignore everything under UnityVisualizer/.
+!UnityVisualizer/**/*.meta
+
+# (2) Intermediate DLL build output written by build-unity-dll.bat / .sh.
+#     The compiled APIFramework.dll is copied from here into Assets/Plugins/.
+.build/
