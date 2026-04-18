@@ -13,7 +13,8 @@ public enum DesireType
     Drink,
     Sleep,
     Defecate,   // Scored from ColonComponent.Fill; overrides all at BowelCriticalTag
-    // Future: Pee, Socialise, Play, Flee, ...
+    Pee,        // Scored from BladderComponent.Fill; overrides all at BladderCriticalTag
+    // Future: Socialise, Play, Flee, ...
 }
 
 /// <summary>
@@ -41,13 +42,18 @@ public struct DriveComponent
     /// </summary>
     public float DefecateUrgency;
 
+    /// <summary>
+    /// Urgency to urinate. Driven by BladderComponent.Fill.
+    /// Jumps to 1.0 when BladderCriticalTag is present (bladder at capacity).
+    /// </summary>
+    public float PeeUrgency;
+
     // ── Dominant drive ───────────────────────────────────────────────────────
 
     /// <summary>
     /// The single drive with the highest urgency score this tick.
     /// BrainSystem guarantees this is always current before action systems run.
-    /// Ties favour the drive listed first (Eat > Drink > Sleep > Defecate) — a
-    /// known limitation to be replaced by a weighted tiebreaker in future.
+    /// Ties favour the drive listed first (Eat > Drink > Sleep > Defecate > Pee).
     /// </summary>
     public readonly DesireType Dominant
     {
@@ -55,17 +61,19 @@ public struct DriveComponent
         {
             float max = MathF.Max(EatUrgency,
                         MathF.Max(DrinkUrgency,
-                        MathF.Max(SleepUrgency, DefecateUrgency)));
+                        MathF.Max(SleepUrgency,
+                        MathF.Max(DefecateUrgency, PeeUrgency))));
             if (max < 0.001f)                                    return DesireType.None;
             if (EatUrgency      >= max - float.Epsilon)          return DesireType.Eat;
             if (DrinkUrgency    >= max - float.Epsilon)          return DesireType.Drink;
             if (SleepUrgency    >= max - float.Epsilon)          return DesireType.Sleep;
             if (DefecateUrgency >= max - float.Epsilon)          return DesireType.Defecate;
+            if (PeeUrgency      >= max - float.Epsilon)          return DesireType.Pee;
             return DesireType.None;
         }
     }
 
     public override string ToString() =>
         $"Dominant: {Dominant}  (eat {EatUrgency:F2}  drink {DrinkUrgency:F2}  " +
-        $"sleep {SleepUrgency:F2}  defecate {DefecateUrgency:F2})";
+        $"sleep {SleepUrgency:F2}  defecate {DefecateUrgency:F2}  pee {PeeUrgency:F2})";
 }

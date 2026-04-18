@@ -21,6 +21,20 @@ public struct DefecationUrgeTag { }
 /// Removed when StoolVolumeMl falls back below CapacityMl.
 /// </summary>
 public struct BowelCriticalTag { }
+
+/// <summary>
+/// Applied by BladderSystem when BladderComponent.VolumeML &gt;= UrgeThresholdMl.
+/// BrainSystem reads this to raise PeeUrgency above baseline.
+/// Removed when the bladder empties.
+/// </summary>
+public struct UrinationUrgeTag { }
+
+/// <summary>
+/// Applied by BladderSystem when BladderComponent.VolumeML &gt;= CapacityMl (bladder is full).
+/// Overrides normal drive prioritisation — the entity MUST urinate.
+/// Removed when VolumeML falls back below CapacityMl.
+/// </summary>
+public struct BladderCriticalTag { }
 #endregion
 
 #region Vital State Tags

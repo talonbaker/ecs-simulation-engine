@@ -84,6 +84,19 @@ public class BrainSystem : ISystem
                 drives.DefecateUrgency = 0f;
             }
 
+            // Urination: urgency scales with bladder fill; critical tag forces override
+            if (entity.Has<BladderComponent>())
+            {
+                var bladder = entity.Get<BladderComponent>();
+                drives.PeeUrgency = entity.Has<BladderCriticalTag>()
+                    ? 1.0f
+                    : bladder.Fill * _cfg.PeeMaxScore;
+            }
+            else
+            {
+                drives.PeeUrgency = 0f;
+            }
+
             // ── Mood modifiers ────────────────────────────────────────────────
 
             // Boredom: idle state makes even small drives feel more pressing
@@ -92,31 +105,36 @@ public class BrainSystem : ISystem
                 drives.EatUrgency      += _cfg.BoredUrgencyBonus;
                 drives.DrinkUrgency    += _cfg.BoredUrgencyBonus;
                 drives.SleepUrgency    += _cfg.BoredUrgencyBonus;
-                // Defecation urgency is a physiological signal — boredom doesn't amplify it
+                // Elimination urgencies are purely physiological — boredom doesn't amplify them
             }
 
-            // Grief → heavy suppression; Sadness → mild suppression
-            // BowelCriticalTag bypasses suppression (you can't willpower away a full colon)
-            bool bowelOverride = entity.Has<BowelCriticalTag>();
+            // Grief → heavy suppression; Sadness → mild suppression.
+            // Critical bladder/bowel tags bypass suppression — you can't willpower away
+            // a full colon or bladder.
+            bool bowelOverride   = entity.Has<BowelCriticalTag>();
+            bool bladderOverride = entity.Has<BladderCriticalTag>();
             if (entity.Has<GriefTag>())
             {
-                drives.EatUrgency   *= _cfg.GriefUrgencyMult;
-                drives.DrinkUrgency *= _cfg.GriefUrgencyMult;
-                drives.SleepUrgency *= _cfg.GriefUrgencyMult;
-                if (!bowelOverride) drives.DefecateUrgency *= _cfg.GriefUrgencyMult;
+                drives.EatUrgency      *= _cfg.GriefUrgencyMult;
+                drives.DrinkUrgency    *= _cfg.GriefUrgencyMult;
+                drives.SleepUrgency    *= _cfg.GriefUrgencyMult;
+                if (!bowelOverride)   drives.DefecateUrgency *= _cfg.GriefUrgencyMult;
+                if (!bladderOverride) drives.PeeUrgency      *= _cfg.GriefUrgencyMult;
             }
             else if (entity.Has<SadTag>())
             {
                 drives.EatUrgency      *= _cfg.SadnessUrgencyMult;
                 drives.DrinkUrgency    *= _cfg.SadnessUrgencyMult;
                 drives.SleepUrgency    *= _cfg.SadnessUrgencyMult;
-                if (!bowelOverride) drives.DefecateUrgency *= _cfg.SadnessUrgencyMult;
+                if (!bowelOverride)   drives.DefecateUrgency *= _cfg.SadnessUrgencyMult;
+                if (!bladderOverride) drives.PeeUrgency      *= _cfg.SadnessUrgencyMult;
             }
 
             // ── Minimum urgency floor → idle state ────────────────────────────
             float maxUrgency = MathF.Max(drives.EatUrgency,
                                MathF.Max(drives.DrinkUrgency,
-                               MathF.Max(drives.SleepUrgency, drives.DefecateUrgency)));
+                               MathF.Max(drives.SleepUrgency,
+                               MathF.Max(drives.DefecateUrgency, drives.PeeUrgency))));
 
             if (maxUrgency < _cfg.MinUrgencyThreshold)
             {
@@ -124,6 +142,7 @@ public class BrainSystem : ISystem
                 drives.DrinkUrgency    = 0f;
                 drives.SleepUrgency    = 0f;
                 drives.DefecateUrgency = 0f;
+                drives.PeeUrgency      = 0f;
             }
 
             entity.Add(drives);

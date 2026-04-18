@@ -271,8 +271,9 @@ public static class CliRenderer
         if (entity.Has<DriveComponent>())
         {
             var d = entity.Get<DriveComponent>();
-            Console.WriteLine($"    Brain      dominant {d.Dominant.ToString().ToUpperInvariant(),-6}" +
-                              $"  eat {d.EatUrgency:F2}  drink {d.DrinkUrgency:F2}  sleep {d.SleepUrgency:F2}");
+            Console.WriteLine($"    Brain      dominant {d.Dominant.ToString().ToUpperInvariant(),-9}" +
+                              $"  eat {d.EatUrgency:F2}  drink {d.DrinkUrgency:F2}  sleep {d.SleepUrgency:F2}" +
+                              $"  poop {d.DefecateUrgency:F2}  pee {d.PeeUrgency:F2}");
         }
 
         if (entity.Has<MoodComponent>())
@@ -295,6 +296,30 @@ public static class CliRenderer
             var emotionTags = BuildEmotionTagList(entity);
             if (emotionTags.Count > 0)
                 Console.WriteLine($"    Mood tags  {string.Join("  ·  ", emotionTags)}");
+        }
+
+        // ── GI pipeline (v0.7.3+) ────────────────────────────────────────────
+        bool hasGi = entity.Has<SmallIntestineComponent>()
+                  && entity.Has<LargeIntestineComponent>()
+                  && entity.Has<ColonComponent>();
+        if (hasGi)
+        {
+            var si    = entity.Get<SmallIntestineComponent>();
+            var li    = entity.Get<LargeIntestineComponent>();
+            var colon = entity.Get<ColonComponent>();
+            string colonStatus = colon.IsCritical ? " CRITICAL" : colon.HasUrge ? " URGE" : "";
+            Console.WriteLine($"    ── GI Pipeline ───────────────────────────────────");
+            Console.WriteLine($"    S.Int      {Bar(si.Fill,    1f)}  {si.Fill    * 100,5:F1}%  ({si.ChymeVolumeMl:F1}/{SmallIntestineComponent.MaxVolumeMl:F0} ml)");
+            Console.WriteLine($"    L.Int      {Bar(li.Fill,    1f)}  {li.Fill    * 100,5:F1}%  ({li.ContentVolumeMl:F1}/{LargeIntestineComponent.MaxVolumeMl:F0} ml)");
+            Console.WriteLine($"    Colon      {Bar(colon.Fill, 1f)}  {colon.Fill * 100,5:F1}%  ({colon.StoolVolumeMl:F1}/{colon.CapacityMl:F0} ml){colonStatus}");
+        }
+
+        // ── Bladder (v0.7.4+) ─────────────────────────────────────────────────
+        if (entity.Has<BladderComponent>())
+        {
+            var bladder = entity.Get<BladderComponent>();
+            string bladderStatus = bladder.IsCritical ? " CRITICAL" : bladder.HasUrge ? " URGE" : "";
+            Console.WriteLine($"    Bladder    {Bar(bladder.Fill, 1f)}  {bladder.Fill * 100,5:F1}%  ({bladder.VolumeML:F1}/{bladder.CapacityMl:F0} ml){bladderStatus}");
         }
 
         if (entity.Has<StomachComponent>())
@@ -330,14 +355,20 @@ public static class CliRenderer
     private static List<string> BuildTagList(Entity entity)
     {
         var tags = new List<string>();
-        if (entity.Has<HungerTag>())     tags.Add("HUNGRY");
-        if (entity.Has<ThirstTag>())     tags.Add("THIRSTY");
-        if (entity.Has<StarvingTag>())   tags.Add("STARVING");
-        if (entity.Has<DehydratedTag>()) tags.Add("DEHYDRATED");
-        if (entity.Has<TiredTag>())      tags.Add("TIRED");
-        if (entity.Has<ExhaustedTag>())  tags.Add("EXHAUSTED");
-        if (entity.Has<SleepingTag>())   tags.Add("SLEEPING");
-        if (entity.Has<IrritableTag>())  tags.Add("IRRITABLE");
+        // Vital state
+        if (entity.Has<HungerTag>())         tags.Add("HUNGRY");
+        if (entity.Has<ThirstTag>())         tags.Add("THIRSTY");
+        if (entity.Has<StarvingTag>())       tags.Add("STARVING");
+        if (entity.Has<DehydratedTag>())     tags.Add("DEHYDRATED");
+        if (entity.Has<TiredTag>())          tags.Add("TIRED");
+        if (entity.Has<ExhaustedTag>())      tags.Add("EXHAUSTED");
+        if (entity.Has<SleepingTag>())       tags.Add("SLEEPING");
+        if (entity.Has<IrritableTag>())      tags.Add("IRRITABLE");
+        // Elimination urges (v0.7.3+)
+        if (entity.Has<BowelCriticalTag>())  tags.Add("BOWEL CRITICAL");
+        else if (entity.Has<DefecationUrgeTag>()) tags.Add("DEFECATION URGE");
+        if (entity.Has<BladderCriticalTag>())tags.Add("BLADDER CRITICAL");
+        else if (entity.Has<UrinationUrgeTag>())  tags.Add("URINATION URGE");
         return tags;
     }
 

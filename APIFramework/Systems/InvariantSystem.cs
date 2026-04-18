@@ -62,6 +62,7 @@ public class InvariantSystem : ISystem
             CheckSmallIntestine (entity, name, gameTime);
             CheckLargeIntestine (entity, name, gameTime);
             CheckColon          (entity, name, gameTime);
+            CheckBladder        (entity, name, gameTime);
             CheckDrives         (entity, name, gameTime);
             CheckTransit        (entity, name, gameTime);
         }
@@ -195,6 +196,20 @@ public class InvariantSystem : ISystem
         if (dirty) entity.Add(colon);
     }
 
+    private void CheckBladder(Entity entity, string name, double t)
+    {
+        if (!entity.Has<BladderComponent>()) return;
+        var bladder = entity.Get<BladderComponent>();
+        bool dirty  = false;
+
+        float cap = bladder.CapacityMl > 0f ? bladder.CapacityMl : 100f;
+        (bladder.VolumeML, var v1) = Guard(bladder.VolumeML, 0f, cap,
+                                           "BladderComponent", "VolumeML", name, t);
+        dirty = v1;
+
+        if (dirty) entity.Add(bladder);
+    }
+
     private void CheckDrives(Entity entity, string name, double t)
     {
         if (!entity.Has<DriveComponent>()) return;
@@ -205,7 +220,8 @@ public class InvariantSystem : ISystem
         (d.DrinkUrgency,    var v2) = Guard(d.DrinkUrgency,    0f, 1f, "DriveComponent", "DrinkUrgency",    name, t);
         (d.SleepUrgency,    var v3) = Guard(d.SleepUrgency,    0f, 1f, "DriveComponent", "SleepUrgency",    name, t);
         (d.DefecateUrgency, var v4) = Guard(d.DefecateUrgency, 0f, 1f, "DriveComponent", "DefecateUrgency", name, t);
-        dirty = v1 | v2 | v3 | v4;
+        (d.PeeUrgency,      var v5) = Guard(d.PeeUrgency,      0f, 1f, "DriveComponent", "PeeUrgency",      name, t);
+        dirty = v1 | v2 | v3 | v4 | v5;
 
         if (dirty) entity.Add(d);
     }
