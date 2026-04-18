@@ -6,7 +6,12 @@ namespace APIFramework.Components;
 // ── World-object marker components ────────────────────────────────────────────
 // Empty structs — used as tags to identify the type of a world-object entity.
 
-public struct FridgeComponent  { }
+/// <summary>Marks the fridge. FoodCount tracks how many bananas remain before starvation.</summary>
+public struct FridgeComponent
+{
+    /// <summary>Number of banana servings remaining. 0 = fridge empty → Billy starves.</summary>
+    public int FoodCount;
+}
 public struct SinkComponent    { }
 public struct ToiletComponent  { }
 public struct BedComponent     { }

@@ -179,7 +179,11 @@ public sealed class SimulationSnapshot
             if (!e.Has<PositionComponent>()) continue;
             var p  = e.Get<PositionComponent>();
             string nm = e.Has<IdentityComponent>() ? e.Get<IdentityComponent>().Name : e.ShortId;
-            int stock = e.Has<ContainerComponent>() ? e.Get<ContainerComponent>().Count : -1;
+            // FridgeComponent now carries FoodCount directly.
+            // ContainerComponent is a fallback for any other container-type world object.
+            int stock = e.Has<FridgeComponent>()    ? e.Get<FridgeComponent>().FoodCount
+                      : e.Has<ContainerComponent>() ? e.Get<ContainerComponent>().Count
+                      : -1;
             worldObjects.Add(new WorldObjectSnapshot(
                 Id:        e.Id,
                 Name:      nm,
