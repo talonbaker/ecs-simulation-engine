@@ -80,6 +80,20 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private string _activeEmotionTags = "";
     [ObservableProperty] private bool   _hasActiveEmotions = false;
 
+    // ── GI Pipeline (v0.7.3+) ─────────────────────────────────────────────────
+    // Fill values are 0–100 for ProgressBar binding.
+    [ObservableProperty] private bool   _hasGiPipeline    = false;
+    [ObservableProperty] private float  _siFill           = 0f;
+    [ObservableProperty] private float  _liFill           = 0f;
+    [ObservableProperty] private float  _colonFill        = 0f;
+    [ObservableProperty] private string _siFillLabel      = "0%";
+    [ObservableProperty] private string _liFillLabel      = "0%";
+    [ObservableProperty] private string _colonFillLabel   = "0%";
+    // Colon status — three mutually exclusive bools drive IsVisible for colour-coded text
+    [ObservableProperty] private bool   _colonIsOk       = true;
+    [ObservableProperty] private bool   _colonIsUrge     = false;
+    [ObservableProperty] private bool   _colonIsCritical = false;
+
     // ── Esophagus Transit ─────────────────────────────────────────────────────
     [ObservableProperty] private bool   _isInTransit     = false;
     [ObservableProperty] private float  _transitProgress = 0f;
@@ -96,14 +110,16 @@ public partial class EntityViewModel : ObservableObject
 
         // Tags
         var tags = new List<string>();
-        if (entity.Has<HungerTag>())     tags.Add("HUNGRY");
-        if (entity.Has<ThirstTag>())     tags.Add("THIRSTY");
-        if (entity.Has<StarvingTag>())   tags.Add("STARVING");
-        if (entity.Has<DehydratedTag>()) tags.Add("DEHYDRATED");
-        if (entity.Has<TiredTag>())      tags.Add("TIRED");
-        if (entity.Has<ExhaustedTag>())  tags.Add("EXHAUSTED");
-        if (entity.Has<SleepingTag>())   tags.Add("SLEEPING");
-        if (entity.Has<IrritableTag>())  tags.Add("IRRITABLE");
+        if (entity.Has<HungerTag>())          tags.Add("HUNGRY");
+        if (entity.Has<ThirstTag>())          tags.Add("THIRSTY");
+        if (entity.Has<StarvingTag>())        tags.Add("STARVING");
+        if (entity.Has<DehydratedTag>())      tags.Add("DEHYDRATED");
+        if (entity.Has<TiredTag>())           tags.Add("TIRED");
+        if (entity.Has<ExhaustedTag>())       tags.Add("EXHAUSTED");
+        if (entity.Has<SleepingTag>())        tags.Add("SLEEPING");
+        if (entity.Has<IrritableTag>())       tags.Add("IRRITABLE");
+        if (entity.Has<BowelCriticalTag>())   tags.Add("BOWEL CRITICAL");
+        else if (entity.Has<DefecationUrgeTag>()) tags.Add("DEFECATION URGE");
         ActiveTags    = tags.Count > 0 ? string.Join("  ·  ", tags) : "";
         HasActiveTags = tags.Count > 0;
 
@@ -155,6 +171,28 @@ public partial class EntityViewModel : ObservableObject
             DigestionLabel = $"Queued — {queued.Calories:F0} kcal  ·  water {queued.Water:F0}ml  ·  carbs {queued.Carbohydrates:F1}g  ·  prot {queued.Proteins:F1}g  ·  fat {queued.Fats:F1}g";
         }
 
+        // GI Pipeline — SmallIntestine → LargeIntestine → Colon
+        HasGiPipeline = entity.Has<SmallIntestineComponent>()
+                     && entity.Has<LargeIntestineComponent>()
+                     && entity.Has<ColonComponent>();
+        if (HasGiPipeline)
+        {
+            var si    = entity.Get<SmallIntestineComponent>();
+            var li    = entity.Get<LargeIntestineComponent>();
+            var colon = entity.Get<ColonComponent>();
+
+            SiFill       = si.Fill    * 100f;
+            LiFill       = li.Fill    * 100f;
+            ColonFill    = colon.Fill * 100f;
+            SiFillLabel  = $"{si.Fill:P0}";
+            LiFillLabel  = $"{li.Fill:P0}";
+            ColonFillLabel = $"{colon.Fill:P0}";
+
+            ColonIsCritical = colon.IsCritical;
+            ColonIsUrge     = colon.HasUrge && !colon.IsCritical;
+            ColonIsOk       = !colon.HasUrge;
+        }
+
         // Energy / Sleep
         HasEnergy = entity.Has<EnergyComponent>();
         if (HasEnergy)
@@ -179,7 +217,7 @@ public partial class EntityViewModel : ObservableObject
         {
             var d = entity.Get<DriveComponent>();
             DominantDesire = d.Dominant.ToString().ToUpperInvariant();
-            DriveScores    = $"eat {d.EatUrgency:F2}  ·  drink {d.DrinkUrgency:F2}  ·  sleep {d.SleepUrgency:F2}";
+            DriveScores    = $"eat {d.EatUrgency:F2}  ·  drink {d.DrinkUrgency:F2}  ·  sleep {d.SleepUrgency:F2}  ·  poop {d.DefecateUrgency:F2}";
         }
 
         // Mood / Plutchik emotions

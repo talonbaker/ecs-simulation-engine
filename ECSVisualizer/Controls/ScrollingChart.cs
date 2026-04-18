@@ -35,9 +35,12 @@ public sealed class ScrollingChart : Control
 
     private static readonly IBrush BgBrush    = new SolidColorBrush(Color.Parse("#080808"));
     private static readonly Pen    GridPen    = new(new SolidColorBrush(Color.Parse("#1A1A1A")), 0.5);
-    private static readonly IBrush LabelColor = new SolidColorBrush(Color.Parse("#444444"));
-    private static readonly IBrush ValueColor = new SolidColorBrush(Color.Parse("#777777"));
+    private static readonly IBrush LabelColor = new SolidColorBrush(Color.Parse("#606060"));
+    private static readonly IBrush ValueColor = new SolidColorBrush(Color.Parse("#909090"));
     private static readonly Typeface MonoFace = new("Consolas");
+
+    private const double LabelFontSize = 13;
+    private const double ValueFontSize = 11;
 
     // ── Per-instance caches ───────────────────────────────────────────────────
 
@@ -95,12 +98,12 @@ public sealed class ScrollingChart : Control
         // ── No data ───────────────────────────────────────────────────────────
         if (series == null)
         {
-            DrawText(ctx, "NO DATA", LabelColor, new Point(5, 4));
+            DrawText(ctx, "NO DATA", LabelColor, new Point(5, 4), LabelFontSize);
             return;
         }
 
-        DrawText(ctx, series.Label, LabelColor, new Point(5, 4));
-        DrawText(ctx, $"{series.Current:F1}", ValueColor, new Point(w - 38, 4));
+        DrawText(ctx, series.Label, LabelColor, new Point(5, 4), LabelFontSize);
+        DrawText(ctx, $"{series.Current:F1}", ValueColor, new Point(w - 44, 4), ValueFontSize);
 
         int n = series.Count;
         if (n < 2) return;
@@ -138,14 +141,14 @@ public sealed class ScrollingChart : Control
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private void DrawText(DrawingContext ctx, string text, IBrush brush, Point origin)
+    private void DrawText(DrawingContext ctx, string text, IBrush brush, Point origin, double fontSize)
     {
         var ft = new FormattedText(
             text,
             CultureInfo.InvariantCulture,
             FlowDirection.LeftToRight,
             MonoFace,
-            9,
+            fontSize,
             brush);
         ctx.DrawText(ft, origin);
     }
