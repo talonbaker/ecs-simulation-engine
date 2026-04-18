@@ -80,8 +80,11 @@ public sealed class SimulationSnapshot
         foreach (var e in em.Query<MetabolismComponent>())
         {
             var meta   = e.Get<MetabolismComponent>();
-            var drives = e.Has<DriveComponent>() ? e.Get<DriveComponent>() : default;
-            var energy = e.Has<EnergyComponent>() ? e.Get<EnergyComponent>() : default;
+            var drives = e.Has<DriveComponent>()          ? e.Get<DriveComponent>()          : default;
+            var energy = e.Has<EnergyComponent>()         ? e.Get<EnergyComponent>()         : default;
+            var si     = e.Has<SmallIntestineComponent>() ? e.Get<SmallIntestineComponent>() : default;
+            var li     = e.Has<LargeIntestineComponent>() ? e.Get<LargeIntestineComponent>() : default;
+            var colon  = e.Has<ColonComponent>()          ? e.Get<ColonComponent>()          : default;
 
             living.Add(new EntitySnapshot(
                 Id:         e.Id,
@@ -93,10 +96,16 @@ public sealed class SimulationSnapshot
                 Energy:     energy.Energy,
                 Sleepiness: energy.Sleepiness,
                 IsSleeping: energy.IsSleeping,
-                Dominant:   drives.Dominant,  // DesireType enum
-                EatUrgency:   drives.EatUrgency,
-                DrinkUrgency: drives.DrinkUrgency,
-                SleepUrgency: drives.SleepUrgency
+                Dominant:        drives.Dominant,
+                EatUrgency:      drives.EatUrgency,
+                DrinkUrgency:    drives.DrinkUrgency,
+                SleepUrgency:    drives.SleepUrgency,
+                DefecateUrgency: drives.DefecateUrgency,
+                SiFill:          si.Fill,
+                LiFill:          li.Fill,
+                ColonFill:       colon.Fill,
+                ColonHasUrge:    colon.HasUrge,
+                ColonIsCritical: colon.IsCritical
             ));
         }
 
@@ -177,7 +186,14 @@ public sealed record EntitySnapshot(
     DesireType  Dominant,
     float       EatUrgency,
     float       DrinkUrgency,
-    float       SleepUrgency
+    float       SleepUrgency,
+    // ── GI pipeline (v0.7.3+) ──────────────────────────────────────────────
+    float       DefecateUrgency,
+    float       SiFill,         // SmallIntestine fill 0–1
+    float       LiFill,         // LargeIntestine fill 0–1
+    float       ColonFill,      // Colon fill 0–1 (relative to CapacityMl)
+    bool        ColonHasUrge,
+    bool        ColonIsCritical
 );
 
 public sealed record TransitItemSnapshot(

@@ -11,16 +11,137 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `AutonomySystem` — Billy's mood-gated disobedience mechanic
 - World food/water sources as spawnable entities (fridge, sink, bowl)
 - Proximity / spatial grid system — so RotTag on nearby food raises Disgust before consumption
-- **v0.7.1 — Intestines.** `SmallIntestineComponent` + `LargeIntestineComponent` on the body;
-  `SmallIntestineSystem` and `LargeIntestineSystem` pull chyme from the stomach and
-  perform delayed nutrient/water reabsorption. Waste compacts into rectal contents.
-- **v0.7.2 — Bladder and kidneys.** `KidneyComponent`, `BladderComponent`, `KidneySystem`,
+- **v0.7.4 — Bladder and kidneys.** `KidneyComponent`, `BladderComponent`, `KidneySystem`,
   `EliminationUrgeSystem`. Tracks fluid balance; spawns a `Pee` desire that can override
   other drives when fullness is high.
-- **v0.7.3 — Rectum and elimination.** `RectumComponent`, `EliminationSystem`. `Poop` desire
-  joins the Plutchik/Maslow soup. Entities will eventually travel to a `ToiletEntity`.
 - Spatial / movement layer — Billy in an apartment with fridge, sink, toilet, bed.
 - Lua scripting layer for moddable system/mechanic definitions (post-stabilization)
+
+---
+
+## [0.7.3] — 2026-04-17
+
+### Added
+
+- **Full GI elimination pipeline** — three new components, four new systems, and the
+  `Defecate` desire type complete the digestive tract from stomach to elimination.
+
+- **`SmallIntestineComponent`** (`APIFramework/Components/SmallIntestineComponent.cs`) —
+  holds chyme (semi-digested stomach output) in transit. Fields: `ChymeVolumeMl`,
+  `AbsorptionRate`, `Chyme` (NutrientProfile for display), `ResidueToLargeFraction`.
+  Capacity: 250 ml. `Fill` and `IsEmpty` computed properties.
+
+- **`LargeIntestineComponent`** (`APIFramework/Components/LargeIntestineComponent.cs`) —
+  receives indigestible residue from the SI. Performs water reabsorption and stool
+  compaction. Fields: `ContentVolumeMl`, `WaterReabsorptionRate`, `MobilityRate`,
+  `StoolFraction`. Capacity: 300 ml.
+
+- **`ColonComponent`** (`APIFramework/Components/ColonComponent.cs`) — terminal stool
+  holding vessel. Fields: `StoolVolumeMl`, `UrgeThresholdMl`, `CapacityMl`. Computed:
+  `Fill` (0–1 relative to capacity), `HasUrge`, `IsCritical`, `IsEmpty`.
+
+- **`SmallIntestineSystem`** (`APIFramework/Systems/SmallIntestineSystem.cs`) — drains
+  `ChymeVolumeMl` at `AbsorptionRate` per game-second. Passes `ResidueToLargeFraction`
+  of each processed batch to `LargeIntestineComponent`. No re-absorption of nutrients
+  (DigestionSystem already handled that); the chyme NutrientProfile is decremented
+  proportionally for display purposes only. Phase: Elimination (55).
+
+- **`LargeIntestineSystem`** (`APIFramework/Systems/LargeIntestineSystem.cs`) — two
+  concurrent processes each tick: (1) water reabsorption — adds `WaterReabsorptionRate × dt`
+  to `MetabolismComponent.Hydration` while content is present (secondary hydration source,
+  slower than drinking); (2) stool formation — advances content at `MobilityRate`, deposits
+  `StoolFraction` of processed volume into `ColonComponent`. Phase: Elimination (55).
+
+- **`ColonSystem`** (`APIFramework/Systems/ColonSystem.cs`) — pure tag manager. Each tick:
+  applies/removes `DefecationUrgeTag` when `StoolVolumeMl >= UrgeThresholdMl`; applies/
+  removes `BowelCriticalTag` when `StoolVolumeMl >= CapacityMl`. Owns all writes to these
+  two tags — no other system touches them. Phase: Elimination (55).
+
+- **`DefecationSystem`** (`APIFramework/Systems/DefecationSystem.cs`) — action system
+  (Behavior/40). When `DriveComponent.Dominant == Defecate`, sets `ColonComponent.StoolVolumeMl`
+  to 0, modelling a complete bowel movement. Backwards-compatible: entities without
+  `ColonComponent` are silently skipped.
+
+- **`Elimination` system phase** (`SystemPhase.Elimination = 55`) — inserted between
+  Transit (50) and World (60). SmallIntestineSystem, LargeIntestineSystem, and ColonSystem
+  all run here, one tick after DigestionSystem deposits chyme.
+
+- **`DefecationUrgeTag`** and **`BowelCriticalTag`** — two new biological urge tags.
+  Both appear in `EntityViewModel.ActiveTags` (DEFECATION URGE, BOWEL CRITICAL) and
+  are checked by `BrainSystem` to score the Defecate drive.
+
+- **`DesireType.Defecate`** — added to the `DesireType` enum. `DriveComponent` gained
+  `DefecateUrgency` (0–1). `Dominant` computed property updated to include it at the
+  lowest priority (Eat > Drink > Sleep > Defecate in tie-breaking). `BowelCriticalTag`
+  overrides DefecateUrgency to 1.0, making defecation the absolute dominant drive.
+
+- **`BrainSystemConfig.DefecateMaxScore`** (0.85) — ceiling for DefecateUrgency at
+  full colon fill. Keeps defecation below sleep urgency in normal circumstances, but above
+  it when `BowelCriticalTag` forces a 1.0 override.
+
+- **`DigestionSystemConfig.ResidueFraction`** (0.2) — fraction of digested stomach volume
+  deposited as chyme into SmallIntestineComponent. The remaining 80% is considered directly
+  absorbed by the stomach lining (pre-existing behavior). Backwards-compatible guard:
+  `if (!entity.Has<SmallIntestineComponent>()) continue`.
+
+- **GI pipeline config in `SimConfig.json`** — `smallIntestine`, `largeIntestine`, and
+  `colon` sections added for both `human` and `cat` entity types. `defecateMaxScore`
+  added to the `brain` section; `residueFraction` added to `digestion`. At TimeScale 120,
+  the human pipeline produces a defecation urge roughly once per game-day (matching
+  biological frequency of 1–2 bowel movements daily).
+
+- **`EntityTemplates` updated** — `SpawnHuman` and `SpawnCat` now add
+  `SmallIntestineComponent`, `LargeIntestineComponent`, and `ColonComponent` from
+  entity config on spawn.
+
+- **`SimulationBootstrapper` updated** — `RegisterSystems` adds DefecationSystem
+  (Behavior), SmallIntestineSystem, LargeIntestineSystem, ColonSystem (Elimination).
+  `ApplyConfig` merges SI, LI, Colon configs via `MergeFlat`. System pipeline grows from
+  13 → 17 registered systems.
+
+- **`InvariantSystem` updated** — three new `Check*` methods guard the new components:
+  `CheckSmallIntestine` (ChymeVolumeMl ∈ [0, MaxVolumeMl], Chyme fields ≥ 0),
+  `CheckLargeIntestine` (ContentVolumeMl ∈ [0, MaxVolumeMl]),
+  `CheckColon` (StoolVolumeMl ∈ [0, CapacityMl]).
+  `CheckDrives` extended with `DefecateUrgency ∈ [0, 1]`.
+
+- **`SimulationSnapshot.EntitySnapshot` updated** — five new fields added:
+  `DefecateUrgency`, `SiFill`, `LiFill`, `ColonFill`, `ColonHasUrge`, `ColonIsCritical`.
+  `Capture()` populates them from the GI components when present (defaults to 0/false for
+  entities without the pipeline).
+
+- **Avalonia GI PIPELINE panel** — added to the entity card in `MainWindow.axaml`.
+  Three horizontal fill bars (SI / LI / COLON) with percentage labels, driven by
+  `EntityViewModel.SiFill`, `LiFill`, `ColonFill`. A status text line shows "Urge" in
+  amber and "CRITICAL" in red when ColonComponent threshold is exceeded.
+
+- **`EntityViewModel` extended** — 10 new observable properties for the GI pipeline
+  (`HasGiPipeline`, `SiFill/LiFill/ColonFill`, `*FillLabel`, `ColonIsOk/IsUrge/IsCritical`).
+  `DriveScores` label now includes `poop {DefecateUrgency:F2}`.
+
+- **`IntestineSystemTests.cs`** (`APIFramework.Tests/Systems/`) — 26 unit tests covering
+  SmallIntestineSystem (volume drain, chyme proportional drain, residue handoff, LI caps,
+  missing-LI robustness), LargeIntestineSystem (water reabsorption, hydration cap, empty
+  skip, no-Metabolism robustness, content mobility, stool formation, colon capping,
+  missing-Colon robustness), ColonSystem (tag lifecycle: below urge → no tags; at/above
+  urge → UrgeTag; at capacity → both tags; drops below → tags removed), and a full
+  pipeline integration test (SI → LI → Colon in one pass).
+
+- **GI tract HTML prototype** (`gi-tract-prototype.html`) — standalone canvas visualization
+  of the GI pipeline with particle animation. Particle types cycle bolus (bright) → chyme
+  (tan) → residue (brown) → stool (dark) through 6 anatomical segments. Controls: EAT,
+  DRINK, POOP, AUTO. Annotation panels mirror the ECS component data for design review.
+
+### Changed
+
+- **System pipeline** expanded from 13 → 17 registered systems. New phase `Elimination(55)`
+  inserted between Transit(50) and World(60).
+- **`CliRenderer` / `PrintSnapshot`** — `DriveScores` line now includes defecate urgency
+  and the colon fill level. Active tags section shows DEFECATION URGE and BOWEL CRITICAL.
+- **`ScrollingChart`** — chart height reduced 140 → 85 (biological charts), 100 → 70
+  (performance charts). Label font bumped to 13pt; value font to 11pt; label colors
+  brightened (#444 → #606060, #777 → #909090).
+- **Version** bumped 0.7.2 → 0.7.3.
 
 ---
 

@@ -55,8 +55,9 @@ public enum SystemPhase
     Condition  = 20,
     Cognition  = 30,
     Behavior   = 40,
-    Transit    = 50,
-    World      = 60,
+    Transit     = 50,
+    Elimination = 55,  // intestine systems — after transit, before world
+    World       = 60,
     PostUpdate = 100,
 }
 

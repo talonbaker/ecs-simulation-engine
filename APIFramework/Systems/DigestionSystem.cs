@@ -10,6 +10,7 @@ namespace APIFramework.Systems;
 /// PIPELINE POSITION
 /// ─────────────────
 ///   FeedingSystem → EsophagusSystem → StomachComponent → DigestionSystem → MetabolismComponent
+///                                                                         ↘ SmallIntestineComponent (residue)
 ///
 /// v0.7.0 BIOLOGY LAYER
 /// ────────────────────
@@ -26,12 +27,12 @@ namespace APIFramework.Systems;
 /// The factors are tuned so behaviour matches pre-v0.7 tuning out of the box
 /// (banana ≈117 kcal * 0.3 ≈ 35 satiation; 15 ml water * 2.0 = 30 hydration).
 ///
-/// FORWARD COMPAT (v0.7.1+)
-/// ────────────────────────
-/// When the SmallIntestine component lands, DigestionSystem will hand off partially-
-/// digested chyme to it instead of depositing directly into NutrientStores. The
-/// Satiation/Hydration conversion stays here; downstream organs drive long-term
-/// deficiency/toxicity tags (MoodSystem in v0.8+).
+/// RESIDUE HANDOFF (v0.7.3+)
+/// ─────────────────────────
+/// When an entity has a SmallIntestineComponent, DigestionSystem additionally
+/// deposits a fraction of digested volume as chyme (ResidueFraction from config).
+/// Satiation/Hydration conversion stays here; the intestine pipeline is purely
+/// a volume-routing model that drives the defecation cycle.
 /// </summary>
 public class DigestionSystem : ISystem
 {
@@ -86,6 +87,20 @@ public class DigestionSystem : ISystem
             meta.Hydration = MathF.Min(100f, meta.Hydration + hydrationGain);
 
             entity.Add(meta);
+
+            // ── 3. Residue handoff to small intestine (optional component) ───
+            // Backwards-compatible: skipped when no SmallIntestineComponent exists.
+            // ResidueFraction of the digested volume becomes chyme in the SI.
+            // The chyme NutrientProfile inherits the same fraction of released
+            // nutrients (fiber, unabsorbed minerals) for display purposes.
+            if (!entity.Has<SmallIntestineComponent>()) continue;
+
+            var si          = entity.Get<SmallIntestineComponent>();
+            float chymeVol  = digested * _cfg.ResidueFraction;
+            si.ChymeVolumeMl = MathF.Min(SmallIntestineComponent.MaxVolumeMl,
+                                          si.ChymeVolumeMl + chymeVol);
+            si.Chyme        += released * _cfg.ResidueFraction;
+            entity.Add(si);
         }
     }
 }

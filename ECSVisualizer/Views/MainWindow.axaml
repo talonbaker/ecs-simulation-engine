@@ -341,6 +341,96 @@
                                                     </StackPanel>
                                                 </Border>
 
+                                                <!-- GI Pipeline: SI → LI → COLON -->
+                                                <Border IsVisible="{Binding HasGiPipeline}"
+                                                        Background="#0A0C0A" CornerRadius="4" Padding="8,8"
+                                                        BorderBrush="#141E14" BorderThickness="1">
+                                                    <StackPanel Spacing="5">
+
+                                                        <TextBlock Text="GI PIPELINE"
+                                                                   FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                   Foreground="#555555"/>
+
+                                                        <!-- Three-segment horizontal pipeline -->
+                                                        <Grid ColumnDefinitions="*, 6, *, 6, *">
+
+                                                            <!-- Small Intestine -->
+                                                            <StackPanel Grid.Column="0" Spacing="3">
+                                                                <Grid ColumnDefinitions="*, Auto">
+                                                                    <TextBlock Grid.Column="0" Text="S.INT"
+                                                                               FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                               Foreground="#A08060" VerticalAlignment="Center"/>
+                                                                    <TextBlock Grid.Column="1"
+                                                                               Text="{Binding SiFillLabel}"
+                                                                               FontSize="9" FontFamily="Consolas"
+                                                                               Foreground="#A08060" TextAlignment="Right"/>
+                                                                </Grid>
+                                                                <ProgressBar Value="{Binding SiFill}" Maximum="100"
+                                                                             Foreground="#A08060" Background="#181818"
+                                                                             Height="5" CornerRadius="2"/>
+                                                            </StackPanel>
+
+                                                            <!-- Arrow -->
+                                                            <TextBlock Grid.Column="1" Text="›"
+                                                                       FontSize="10" Foreground="#2A2A2A"
+                                                                       VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+
+                                                            <!-- Large Intestine -->
+                                                            <StackPanel Grid.Column="2" Spacing="3">
+                                                                <Grid ColumnDefinitions="*, Auto">
+                                                                    <TextBlock Grid.Column="0" Text="L.INT"
+                                                                               FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                               Foreground="#805840" VerticalAlignment="Center"/>
+                                                                    <TextBlock Grid.Column="1"
+                                                                               Text="{Binding LiFillLabel}"
+                                                                               FontSize="9" FontFamily="Consolas"
+                                                                               Foreground="#805840" TextAlignment="Right"/>
+                                                                </Grid>
+                                                                <ProgressBar Value="{Binding LiFill}" Maximum="100"
+                                                                             Foreground="#805840" Background="#181818"
+                                                                             Height="5" CornerRadius="2"/>
+                                                            </StackPanel>
+
+                                                            <!-- Arrow -->
+                                                            <TextBlock Grid.Column="3" Text="›"
+                                                                       FontSize="10" Foreground="#2A2A2A"
+                                                                       VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+
+                                                            <!-- Colon -->
+                                                            <StackPanel Grid.Column="4" Spacing="3">
+                                                                <Grid ColumnDefinitions="*, Auto">
+                                                                    <TextBlock Grid.Column="0" Text="COLON"
+                                                                               FontSize="8" FontWeight="Bold" LetterSpacing="1"
+                                                                               Foreground="#884422" VerticalAlignment="Center"/>
+                                                                    <TextBlock Grid.Column="1"
+                                                                               Text="{Binding ColonFillLabel}"
+                                                                               FontSize="9" FontFamily="Consolas"
+                                                                               Foreground="#884422" TextAlignment="Right"/>
+                                                                </Grid>
+                                                                <ProgressBar Value="{Binding ColonFill}" Maximum="100"
+                                                                             Foreground="#884422" Background="#181818"
+                                                                             Height="5" CornerRadius="2"/>
+                                                            </StackPanel>
+
+                                                        </Grid>
+
+                                                        <!-- Colon status — one of three visible at a time -->
+                                                        <TextBlock Text="colon clear"
+                                                                   IsVisible="{Binding ColonIsOk}"
+                                                                   FontSize="9" FontFamily="Consolas"
+                                                                   Foreground="#1E3A1E"/>
+                                                        <TextBlock Text="⚑ defecation urge"
+                                                                   IsVisible="{Binding ColonIsUrge}"
+                                                                   FontSize="9" FontFamily="Consolas" FontWeight="Bold"
+                                                                   Foreground="#CC7722"/>
+                                                        <TextBlock Text="⚠ BOWEL CRITICAL — must defecate"
+                                                                   IsVisible="{Binding ColonIsCritical}"
+                                                                   FontSize="9" FontFamily="Consolas" FontWeight="Bold"
+                                                                   Foreground="#FF453A"/>
+
+                                                    </StackPanel>
+                                                </Border>
+
                                                 <!-- Nutrient stores -->
                                                 <Border IsVisible="{Binding HasNutrients}"
                                                         Background="#081008" CornerRadius="4" Padding="8,8"
@@ -473,69 +563,78 @@
                     <!-- Section label -->
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <TextBlock Text="LIVE CHARTS"
-                                   FontSize="9" FontWeight="Bold" LetterSpacing="2"
-                                   Foreground="#383838" VerticalAlignment="Center"/>
-                        <TextBlock Text="1 point = 1 game-minute  ·  history = 8 game-hours"
-                                   FontSize="9" FontFamily="Consolas" Foreground="#242424"
+                                   FontSize="11" FontWeight="Bold" LetterSpacing="2"
+                                   Foreground="#606060" VerticalAlignment="Center"/>
+                        <TextBlock Text="1 pt = 1 game-min  ·  8 game-hr history"
+                                   FontSize="10" FontFamily="Consolas" Foreground="#303030"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- ── Biological charts — 2 per row ─────────────────── -->
 
                     <!-- Row 1: Satiation | Hydration -->
+                    <TextBlock Text="METABOLISM" Margin="0,2,0,0"
+                               FontSize="10" FontWeight="Bold" LetterSpacing="2"
+                               Foreground="#484848"/>
                     <Grid ColumnDefinitions="*, 4, *">
                         <controls:ScrollingChart Grid.Column="0"
                                                  Series="{Binding Charts.Satiation}"
-                                                 Height="140"/>
+                                                 Height="85"/>
                         <controls:ScrollingChart Grid.Column="2"
                                                  Series="{Binding Charts.Hydration}"
-                                                 Height="140"/>
+                                                 Height="85"/>
                     </Grid>
 
                     <!-- Row 2: Energy | Sleepiness -->
+                    <TextBlock Text="ENERGY / SLEEP"
+                               FontSize="10" FontWeight="Bold" LetterSpacing="2"
+                               Foreground="#484848"/>
                     <Grid ColumnDefinitions="*, 4, *">
                         <controls:ScrollingChart Grid.Column="0"
                                                  Series="{Binding Charts.Energy}"
-                                                 Height="140"/>
+                                                 Height="85"/>
                         <controls:ScrollingChart Grid.Column="2"
                                                  Series="{Binding Charts.Sleepiness}"
-                                                 Height="140"/>
+                                                 Height="85"/>
                     </Grid>
 
                     <!-- Row 3: Joy | Anger -->
+                    <TextBlock Text="EMOTIONS"
+                               FontSize="10" FontWeight="Bold" LetterSpacing="2"
+                               Foreground="#484848"/>
                     <Grid ColumnDefinitions="*, 4, *">
                         <controls:ScrollingChart Grid.Column="0"
                                                  Series="{Binding Charts.Joy}"
-                                                 Height="140"/>
+                                                 Height="85"/>
                         <controls:ScrollingChart Grid.Column="2"
                                                  Series="{Binding Charts.Anger}"
-                                                 Height="140"/>
+                                                 Height="85"/>
                     </Grid>
 
                     <!-- Row 4: Sadness | Body Temp -->
                     <Grid ColumnDefinitions="*, 4, *">
                         <controls:ScrollingChart Grid.Column="0"
                                                  Series="{Binding Charts.Sadness}"
-                                                 Height="140"/>
+                                                 Height="85"/>
                         <controls:ScrollingChart Grid.Column="2"
                                                  Series="{Binding Charts.BodyTemp}"
-                                                 Height="140"/>
+                                                 Height="85"/>
                     </Grid>
 
-                    <!-- ── Performance section label ──────────────────────── -->
+                    <!-- ── Performance section ───────────────────────────── -->
                     <Border Height="1" Background="#161616" Margin="0,4"/>
                     <TextBlock Text="PERFORMANCE"
-                               FontSize="9" FontWeight="Bold" LetterSpacing="2"
-                               Foreground="#383838"/>
+                               FontSize="10" FontWeight="Bold" LetterSpacing="2"
+                               Foreground="#484848"/>
 
                     <!-- Row 5: Real FPS | Entity Load -->
                     <Grid ColumnDefinitions="*, 4, *">
                         <controls:ScrollingChart Grid.Column="0"
                                                  Series="{Binding Charts.Fps}"
-                                                 Height="100"/>
+                                                 Height="70"/>
                         <controls:ScrollingChart Grid.Column="2"
                                                  Series="{Binding Charts.EntityLoad}"
-                                                 Height="100"/>
+                                                 Height="70"/>
                     </Grid>
 
                 </StackPanel>

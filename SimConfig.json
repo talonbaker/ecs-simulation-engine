@@ -56,6 +56,26 @@
         "disgustStart":      0.0,
         "angerStart":        0.0,
         "anticipationStart": 0.0
+      },
+      "smallIntestine": {
+        // 25 ml of chyme clears in ~52 game-minutes — realistic SI transit
+        "absorptionRate":         0.008,
+        // 40% of processed SI volume becomes LI waste
+        "residueToLargeFraction": 0.4
+      },
+      "largeIntestine": {
+        // Slow, persistent water recovery from waste content
+        "waterReabsorptionRate": 0.001,
+        // ~10.8 ml/game-hour toward the colon
+        "mobilityRate":          0.003,
+        // 60% of LI content solidifies into stool; remainder dissipates
+        "stoolFraction":         0.6
+      },
+      "colon": {
+        // Urge kicks in at 100 ml (50% fill) — entity is aware but not desperate
+        "urgeThresholdMl": 100.0,
+        // At 200 ml the colon is full; BowelCriticalTag forces Defecate as dominant
+        "capacityMl":      200.0
       }
     },
 
@@ -88,6 +108,19 @@
         "disgustStart":      0.0,
         "angerStart":        0.0,
         "anticipationStart": 0.0
+      },
+      "smallIntestine": {
+        "absorptionRate":         0.010,
+        "residueToLargeFraction": 0.35
+      },
+      "largeIntestine": {
+        "waterReabsorptionRate": 0.0008,
+        "mobilityRate":          0.004,
+        "stoolFraction":         0.55
+      },
+      "colon": {
+        "urgeThresholdMl": 80.0,
+        "capacityMl":      160.0
       }
     }
   },
@@ -132,7 +165,12 @@
 
       // Mood suppression multipliers — applied after base scores
       "sadnessUrgencyMult": 0.80,  // mild suppression (SadTag)
-      "griefUrgencyMult":   0.50   // strong suppression (GriefTag)
+      "griefUrgencyMult":   0.50,  // strong suppression (GriefTag)
+
+      // Defecate drive ceiling. Scaled by ColonComponent.Fill (0–1).
+      // At Fill=1.0 with this score = 0.85, defecation beats sleep (0.9 × ~0.75) but
+      // yields to critical hunger/thirst. BowelCriticalTag overrides to 1.0 regardless.
+      "defecateMaxScore":   0.85
     },
 
     "feeding": {
@@ -195,7 +233,10 @@
     //   water  15 ml  × 2.0 = 30 hydration
     "digestion": {
       "satiationPerCalorie": 0.3,
-      "hydrationPerMl":      2.0
+      "hydrationPerMl":      2.0,
+      // 20% of digested stomach volume passes as chyme to the small intestine.
+      // The remainder is considered directly absorbed by the stomach.
+      "residueFraction":     0.2
     },
 
     "sleep": {
