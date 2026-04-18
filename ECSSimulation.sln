@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECSVisualizer", "ECSVisuali
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECSCli", "ECSCli\ECSCli.csproj", "{711F290C-E800-4885-837B-EA0E91965EDD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIFramework.Tests", "APIFramework.Tests\APIFramework.Tests.csproj", "{5A56EC32-9F68-4D9C-8AAC-2738B4BC9692}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{711F290C-E800-4885-837B-EA0E91965EDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{711F290C-E800-4885-837B-EA0E91965EDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{711F290C-E800-4885-837B-EA0E91965EDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A56EC32-9F68-4D9C-8AAC-2738B4BC9692}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A56EC32-9F68-4D9C-8AAC-2738B4BC9692}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A56EC32-9F68-4D9C-8AAC-2738B4BC9692}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A56EC32-9F68-4D9C-8AAC-2738B4BC9692}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
