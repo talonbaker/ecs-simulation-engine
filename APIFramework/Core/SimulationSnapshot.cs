@@ -50,6 +50,9 @@ public sealed class SimulationSnapshot
     /// <summary>Items currently traveling through the esophagus pipeline.</summary>
     public IReadOnlyList<TransitItemSnapshot> TransitItems    { get; init; } = Array.Empty<TransitItemSnapshot>();
 
+    /// <summary>Fixed world objects (fridge, sink, toilet, bed) and their positions.</summary>
+    public IReadOnlyList<WorldObjectSnapshot> WorldObjects    { get; init; } = Array.Empty<WorldObjectSnapshot>();
+
     // ── Invariant health ─────────────────────────────────────────────────────
     /// <summary>Total invariant violations recorded since simulation start.</summary>
     public int ViolationCount { get; init; }
@@ -84,8 +87,10 @@ public sealed class SimulationSnapshot
             var energy = e.Has<EnergyComponent>()         ? e.Get<EnergyComponent>()         : default;
             var si      = e.Has<SmallIntestineComponent>() ? e.Get<SmallIntestineComponent>() : default;
             var li      = e.Has<LargeIntestineComponent>() ? e.Get<LargeIntestineComponent>() : default;
-            var colon   = e.Has<ColonComponent>()          ? e.Get<ColonComponent>()          : default;
-            var bladder = e.Has<BladderComponent>()        ? e.Get<BladderComponent>()        : default;
+            var colon   = e.Has<ColonComponent>()           ? e.Get<ColonComponent>()           : default;
+            var bladder = e.Has<BladderComponent>()         ? e.Get<BladderComponent>()         : default;
+            var pos     = e.Has<PositionComponent>()        ? e.Get<PositionComponent>()        : default;
+            var mvtTgt  = e.Has<MovementTargetComponent>()  ? e.Get<MovementTargetComponent>()  : default;
 
             living.Add(new EntitySnapshot(
                 Id:         e.Id,
@@ -110,7 +115,14 @@ public sealed class SimulationSnapshot
                 ColonIsCritical: colon.IsCritical,
                 BladderFill:        bladder.Fill,
                 BladderHasUrge:     bladder.HasUrge,
-                BladderIsCritical:  bladder.IsCritical
+                BladderIsCritical:  bladder.IsCritical,
+                // ── Spatial (v0.8+) ───────────────────────────────────────────
+                PosX:        pos.X,
+                PosY:        pos.Y,
+                PosZ:        pos.Z,
+                HasPosition: e.Has<PositionComponent>(),
+                IsMoving:    e.Has<MovementTargetComponent>(),
+                MoveTarget:  mvtTgt.Label ?? string.Empty
             ));
         }
 
@@ -156,12 +168,37 @@ public sealed class SimulationSnapshot
             ));
         }
 
+        // ── World objects (fridge, sink, toilet, bed) ────────────────────────
+        var worldObjects = new List<WorldObjectSnapshot>();
+        foreach (var e in em.GetAllEntities()
+                             .Where(e => e.Has<FridgeComponent>()  ||
+                                         e.Has<SinkComponent>()    ||
+                                         e.Has<ToiletComponent>()  ||
+                                         e.Has<BedComponent>()))
+        {
+            if (!e.Has<PositionComponent>()) continue;
+            var p  = e.Get<PositionComponent>();
+            string nm = e.Has<IdentityComponent>() ? e.Get<IdentityComponent>().Name : e.ShortId;
+            int stock = e.Has<ContainerComponent>() ? e.Get<ContainerComponent>().Count : -1;
+            worldObjects.Add(new WorldObjectSnapshot(
+                Id:        e.Id,
+                Name:      nm,
+                X: p.X, Y: p.Y, Z: p.Z,
+                IsFridge:   e.Has<FridgeComponent>(),
+                IsSink:     e.Has<SinkComponent>(),
+                IsToilet:   e.Has<ToiletComponent>(),
+                IsBed:      e.Has<BedComponent>(),
+                StockCount: stock
+            ));
+        }
+
         return new SimulationSnapshot
         {
             Clock          = clockSnap,
             LivingEntities = living,
             TransitItems   = transit,
             WorldItems     = worldItems,
+            WorldObjects   = worldObjects,
             ViolationCount = sim.Invariants.Violations.Count,
         };
     }
@@ -204,7 +241,14 @@ public sealed record EntitySnapshot(
     // ── Bladder (v0.7.4+) ─────────────────────────────────────────────────
     float       BladderFill,        // 0–1 relative to CapacityMl
     bool        BladderHasUrge,
-    bool        BladderIsCritical
+    bool        BladderIsCritical,
+    // ── Spatial (v0.8+) ───────────────────────────────────────────────────
+    float       PosX,
+    float       PosY,
+    float       PosZ,
+    bool        HasPosition,        // false for entities without PositionComponent
+    bool        IsMoving,           // true while MovementTargetComponent is present
+    string      MoveTarget          // label of current destination ("Fridge", "Bed", etc.)
 );
 
 public sealed record TransitItemSnapshot(
@@ -219,4 +263,17 @@ public sealed record WorldItemSnapshot(
     string Label,
     float  RotLevel,
     bool   IsRotten
+);
+
+public sealed record WorldObjectSnapshot(
+    Guid   Id,
+    string Name,
+    float  X,
+    float  Y,
+    float  Z,
+    bool   IsFridge,
+    bool   IsSink,
+    bool   IsToilet,
+    bool   IsBed,
+    int    StockCount  // -1 if no ContainerComponent; banana count for fridge
 );

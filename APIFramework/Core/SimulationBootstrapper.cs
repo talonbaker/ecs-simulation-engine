@@ -117,11 +117,34 @@ public class SimulationBootstrapper
 
         // World — environmental systems independent of entity biology
         Engine.AddSystem(new RotSystem(sys.Rot),                                  SystemPhase.World);
+        Engine.AddSystem(new MovementSystem(),                                     SystemPhase.World);
     }
 
     private void SpawnWorld()
     {
+        // ── Living entities ───────────────────────────────────────────────────
         EntityTemplates.SpawnHuman(EntityManager, Config.Entities.Human);
+        EntityTemplates.SpawnCat(EntityManager, Config.Entities.Cat);
+
+        // ── World objects (kitchen / bedroom / bathroom) ──────────────────────
+        // Layout: 10×10 unit room.
+        //   Fridge  (2, 0, 2)  — kitchen NW corner
+        //   Sink    (7, 0, 2)  — kitchen NE
+        //   Bed     (2, 0, 8)  — bedroom SW
+        //   Toilet  (7, 0, 8)  — bathroom SE
+        SpawnWorldObject<FridgeComponent> ("Fridge",  2f, 0f, 2f);
+        SpawnWorldObject<SinkComponent>   ("Sink",    7f, 0f, 2f);
+        SpawnWorldObject<BedComponent>    ("Bed",     2f, 0f, 8f);
+        SpawnWorldObject<ToiletComponent> ("Toilet",  7f, 0f, 8f);
+    }
+
+    private void SpawnWorldObject<TTag>(string name, float x, float y, float z)
+        where TTag : struct
+    {
+        var e = EntityManager.CreateEntity();
+        e.Add(new IdentityComponent { Name = name });
+        e.Add(new PositionComponent { X = x, Y = y, Z = z });
+        e.Add(default(TTag));
     }
 
     // ── Snapshot ──────────────────────────────────────────────────────────────

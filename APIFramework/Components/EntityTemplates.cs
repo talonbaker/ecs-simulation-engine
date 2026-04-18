@@ -24,6 +24,8 @@ public static class EntityTemplates
 
         var entity = manager.CreateEntity();
         entity.Add(new IdentityComponent { Name = "Human" });
+        entity.Add(new PositionComponent  { X = 5f, Y = 0f, Z = 5f });
+        entity.Add(new MovementComponent  { Speed = 0.04f, ArrivalDistance = 0.4f });
         entity.Add(new MetabolismComponent
         {
             Satiation                 = m.SatiationStart,
@@ -109,6 +111,8 @@ public static class EntityTemplates
 
         var entity = manager.CreateEntity();
         entity.Add(new IdentityComponent { Name = "Cat" });
+        entity.Add(new PositionComponent  { X = 3f, Y = 0f, Z = 4f });
+        entity.Add(new MovementComponent  { Speed = 0.06f, ArrivalDistance = 0.4f });
         entity.Add(new MetabolismComponent
         {
             Satiation                 = m.SatiationStart,
