@@ -94,6 +94,15 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private bool   _colonIsUrge     = false;
     [ObservableProperty] private bool   _colonIsCritical = false;
 
+    // ── Bladder (v0.7.4+) ─────────────────────────────────────────────────────
+    // Fill is 0–100 for ProgressBar binding.
+    [ObservableProperty] private bool   _hasBladder        = false;
+    [ObservableProperty] private float  _bladderFill       = 0f;
+    [ObservableProperty] private string _bladderFillLabel  = "0%";
+    [ObservableProperty] private bool   _bladderIsOk       = true;
+    [ObservableProperty] private bool   _bladderIsUrge     = false;
+    [ObservableProperty] private bool   _bladderIsCritical = false;
+
     // ── Esophagus Transit ─────────────────────────────────────────────────────
     [ObservableProperty] private bool   _isInTransit     = false;
     [ObservableProperty] private float  _transitProgress = 0f;
@@ -118,8 +127,10 @@ public partial class EntityViewModel : ObservableObject
         if (entity.Has<ExhaustedTag>())       tags.Add("EXHAUSTED");
         if (entity.Has<SleepingTag>())        tags.Add("SLEEPING");
         if (entity.Has<IrritableTag>())       tags.Add("IRRITABLE");
-        if (entity.Has<BowelCriticalTag>())   tags.Add("BOWEL CRITICAL");
+        if (entity.Has<BowelCriticalTag>())       tags.Add("BOWEL CRITICAL");
         else if (entity.Has<DefecationUrgeTag>()) tags.Add("DEFECATION URGE");
+        if (entity.Has<BladderCriticalTag>())     tags.Add("BLADDER CRITICAL");
+        else if (entity.Has<UrinationUrgeTag>())  tags.Add("URINATION URGE");
         ActiveTags    = tags.Count > 0 ? string.Join("  ·  ", tags) : "";
         HasActiveTags = tags.Count > 0;
 
@@ -217,7 +228,7 @@ public partial class EntityViewModel : ObservableObject
         {
             var d = entity.Get<DriveComponent>();
             DominantDesire = d.Dominant.ToString().ToUpperInvariant();
-            DriveScores    = $"eat {d.EatUrgency:F2}  ·  drink {d.DrinkUrgency:F2}  ·  sleep {d.SleepUrgency:F2}  ·  poop {d.DefecateUrgency:F2}";
+            DriveScores    = $"eat {d.EatUrgency:F2}  ·  drink {d.DrinkUrgency:F2}  ·  sleep {d.SleepUrgency:F2}  ·  poop {d.DefecateUrgency:F2}  ·  pee {d.PeeUrgency:F2}";
         }
 
         // Mood / Plutchik emotions
@@ -274,6 +285,18 @@ public partial class EntityViewModel : ObservableObject
 
             ActiveEmotionTags  = emotionTags.Count > 0 ? string.Join("  ·  ", emotionTags) : "";
             HasActiveEmotions  = emotionTags.Count > 0;
+        }
+
+        // Bladder
+        HasBladder = entity.Has<BladderComponent>();
+        if (HasBladder)
+        {
+            var bladder      = entity.Get<BladderComponent>();
+            BladderFill      = bladder.Fill * 100f;
+            BladderFillLabel = $"{bladder.Fill:P0}";
+            BladderIsCritical = bladder.IsCritical;
+            BladderIsUrge    = bladder.HasUrge && !bladder.IsCritical;
+            BladderIsOk      = !bladder.HasUrge;
         }
 
         // Esophagus transit

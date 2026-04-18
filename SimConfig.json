@@ -76,6 +76,13 @@
         "urgeThresholdMl": 100.0,
         // At 200 ml the colon is full; BowelCriticalTag forces Defecate as dominant
         "capacityMl":      200.0
+      },
+      "bladder": {
+        // FillRate 0.010 ml/game-second → urge threshold (70 ml) in ~2 game-hours.
+        // At TimeScale 120 this gives ~6–8 urination events per awake game-day.
+        "fillRate":        0.010,
+        "urgeThresholdMl": 70.0,
+        "capacityMl":      100.0
       }
     },
 
@@ -121,6 +128,12 @@
       "colon": {
         "urgeThresholdMl": 80.0,
         "capacityMl":      160.0
+      },
+      "bladder": {
+        // Cats urinate less frequently — roughly every 4–6 game-hours.
+        "fillRate":        0.004,
+        "urgeThresholdMl": 40.0,
+        "capacityMl":      60.0
       }
     }
   },
@@ -170,7 +183,12 @@
       // Defecate drive ceiling. Scaled by ColonComponent.Fill (0–1).
       // At Fill=1.0 with this score = 0.85, defecation beats sleep (0.9 × ~0.75) but
       // yields to critical hunger/thirst. BowelCriticalTag overrides to 1.0 regardless.
-      "defecateMaxScore":   0.85
+      "defecateMaxScore":   0.85,
+
+      // Pee drive ceiling. Scaled by BladderComponent.Fill (0–1).
+      // Slightly below defecate (0.85) — a full bladder is uncomfortable but less
+      // dangerous than a full colon. BladderCriticalTag overrides to 1.0 regardless.
+      "peeMaxScore":        0.80
     },
 
     "feeding": {

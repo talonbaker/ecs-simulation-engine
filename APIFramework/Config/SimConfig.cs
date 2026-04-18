@@ -97,13 +97,14 @@ public class WorldConfig
 
 public class EntityConfig
 {
-    public MetabolismEntityConfig    Metabolism    { get; set; } = new();
-    public StomachEntityConfig       Stomach       { get; set; } = new();
-    public EnergyEntityConfig        Energy        { get; set; } = new();
-    public MoodEntityConfig          Mood          { get; set; } = new();
+    public MetabolismEntityConfig     Metabolism     { get; set; } = new();
+    public StomachEntityConfig        Stomach        { get; set; } = new();
+    public EnergyEntityConfig         Energy         { get; set; } = new();
+    public MoodEntityConfig           Mood           { get; set; } = new();
     public SmallIntestineEntityConfig SmallIntestine { get; set; } = new();
     public LargeIntestineEntityConfig LargeIntestine { get; set; } = new();
-    public ColonEntityConfig         Colon         { get; set; } = new();
+    public ColonEntityConfig          Colon          { get; set; } = new();
+    public BladderEntityConfig        Bladder        { get; set; } = new();
 
     public static EntityConfig DefaultHuman => new()
     {
@@ -142,6 +143,14 @@ public class EntityConfig
         {
             UrgeThresholdMl = 100f,   // urge at ~50% fill — comfortable awareness
             CapacityMl      = 200f    // critical at capacity — must act now
+        },
+        Bladder = new BladderEntityConfig
+        {
+            // FillRate 0.010 ml/game-second → urge threshold (70ml) in ~2 game-hours.
+            // At TimeScale 120 this gives ~6–8 urination events per awake game-day.
+            FillRate        = 0.010f,
+            UrgeThresholdMl = 70f,
+            CapacityMl      = 100f
         }
     };
 
@@ -181,6 +190,13 @@ public class EntityConfig
         {
             UrgeThresholdMl = 80f,
             CapacityMl      = 160f
+        },
+        Bladder = new BladderEntityConfig
+        {
+            // Cats urinate less frequently than humans — roughly every 4–6 game-hours.
+            FillRate        = 0.004f,
+            UrgeThresholdMl = 40f,
+            CapacityMl      = 60f
         }
     };
 }
@@ -251,6 +267,18 @@ public class ColonEntityConfig
     public float CapacityMl { get; set; } = 200f;
 }
 
+public class BladderEntityConfig
+{
+    /// <summary>ml of urine produced per game-second. At TimeScale 120, 0.010 ml/sec → urge in ~2 game-hours.</summary>
+    public float FillRate { get; set; } = 0.010f;
+
+    /// <summary>VolumeML at which UrinationUrgeTag is applied.</summary>
+    public float UrgeThresholdMl { get; set; } = 70f;
+
+    /// <summary>Maximum bladder volume before BladderCriticalTag is applied (overrides all drives).</summary>
+    public float CapacityMl { get; set; } = 100f;
+}
+
 public class EnergyEntityConfig
 {
     /// <summary>Starting Energy (0–100). 85 = well rested.</summary>
@@ -288,6 +316,7 @@ public class SystemsConfig
     public InteractionSystemConfig         Interaction         { get; set; } = new();
     public MoodSystemConfig                Mood                { get; set; } = new();
     public RotSystemConfig                 Rot                 { get; set; } = new();
+    // Note: BladderFillSystem has no system-level config — all values live in BladderEntityConfig.
 }
 
 // ── BiologicalConditionSystem ─────────────────────────────────────────────────
@@ -354,6 +383,13 @@ public class BrainSystemConfig
     /// but food and water remain higher priority unless BowelCriticalTag forces it to 1.0.
     /// </summary>
     public float DefecateMaxScore { get; set; } = 0.85f;
+
+    /// <summary>
+    /// Score ceiling for the Pee drive. Scored as BladderComponent.Fill * PeeMaxScore.
+    /// Slightly below DefecateMaxScore — a full bladder is uncomfortable but less
+    /// immediately dangerous than a full colon. BladderCriticalTag overrides to 1.0.
+    /// </summary>
+    public float PeeMaxScore { get; set; } = 0.80f;
 }
 
 // ── FeedingSystem ─────────────────────────────────────────────────────────────

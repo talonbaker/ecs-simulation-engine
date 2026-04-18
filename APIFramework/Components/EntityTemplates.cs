@@ -20,6 +20,7 @@ public static class EntityTemplates
         var si = cfg.SmallIntestine;
         var li = cfg.LargeIntestine;
         var co = cfg.Colon;
+        var bl = cfg.Bladder;
 
         var entity = manager.CreateEntity();
         entity.Add(new IdentityComponent { Name = "Human" });
@@ -84,6 +85,13 @@ public static class EntityTemplates
             UrgeThresholdMl = co.UrgeThresholdMl,
             CapacityMl      = co.CapacityMl
         });
+        entity.Add(new BladderComponent
+        {
+            VolumeML        = 0f,
+            FillRate        = bl.FillRate,
+            UrgeThresholdMl = bl.UrgeThresholdMl,
+            CapacityMl      = bl.CapacityMl
+        });
 
         return entity;
     }
@@ -97,6 +105,7 @@ public static class EntityTemplates
         var si = cfg.SmallIntestine;
         var li = cfg.LargeIntestine;
         var co = cfg.Colon;
+        var bl = cfg.Bladder;
 
         var entity = manager.CreateEntity();
         entity.Add(new IdentityComponent { Name = "Cat" });
@@ -160,6 +169,13 @@ public static class EntityTemplates
             StoolVolumeMl   = 0f,
             UrgeThresholdMl = co.UrgeThresholdMl,
             CapacityMl      = co.CapacityMl
+        });
+        entity.Add(new BladderComponent
+        {
+            VolumeML        = 0f,
+            FillRate        = bl.FillRate,
+            UrgeThresholdMl = bl.UrgeThresholdMl,
+            CapacityMl      = bl.CapacityMl
         });
 
         return entity;
