@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 # ============================================================
 # build-unity-dll.sh
-# Builds APIFramework as a .NET DLL and copies it into the
-# Unity project's Plugins folder.
+# Builds APIFramework and copies the DLL into the Unity
+# project's Plugins folder.
+#
+# System.Text.Json is part of Unity 6's .NET 8 shared runtime
+# and does NOT need to be copied alongside the DLL.
+# Reference validation for the plugin is disabled via the
+# committed APIFramework.dll.meta file.
 #
 # Run from the repo root:
 #   ./build-unity-dll.sh

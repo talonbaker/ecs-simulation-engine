@@ -10,20 +10,22 @@ public static class EcsColors
 {
     // ── Organ colours ─────────────────────────────────────────────────────────
     public static readonly Color Esophagus      = new Color(0.65f, 0.65f, 0.65f); // grey tube
-    public static readonly Color Stomach        = new Color(1.00f, 0.85f, 0.20f); // yellow
-    public static readonly Color SmallIntestine = new Color(0.90f, 0.75f, 0.50f); // tan
-    public static readonly Color LargeIntestine = new Color(0.75f, 0.55f, 0.25f); // brown
-    public static readonly Color Colon          = new Color(0.50f, 0.30f, 0.10f); // dark brown
-    public static readonly Color Bladder        = new Color(0.30f, 0.60f, 1.00f); // blue
+    public static readonly Color Stomach        = new Color(1.00f, 0.60f, 0.10f); // orange  (food being digested)
+    public static readonly Color SmallIntestine = new Color(0.95f, 0.55f, 0.20f); // orange-tan (nutrient chyme)
+    public static readonly Color LargeIntestine = new Color(0.65f, 0.38f, 0.12f); // medium brown
+    public static readonly Color Colon          = new Color(0.38f, 0.18f, 0.04f); // dark brown  (waste)
+    public static readonly Color Bladder        = new Color(0.90f, 0.82f, 0.08f); // YELLOW  — urine
 
-    // ── Transit item colours ──────────────────────────────────────────────────
-    public static readonly Color Bolus          = new Color(1.00f, 0.55f, 0.10f); // orange food
-    public static readonly Color Water          = new Color(0.20f, 0.80f, 1.00f); // cyan water
+    // ── Transit / discharge colours ───────────────────────────────────────────
+    public static readonly Color Bolus          = new Color(1.00f, 0.55f, 0.10f); // orange  — food bolus in esophagus
+    public static readonly Color Water          = new Color(0.20f, 0.80f, 1.00f); // cyan    — water bolus in esophagus
+    public static readonly Color Urine          = new Color(0.92f, 0.84f, 0.06f); // yellow  — bladder discharge drop
+    public static readonly Color Waste          = new Color(0.35f, 0.16f, 0.03f); // brown   — colon discharge drop
 
-    // ── Status colours (fill-driven blending and critical pulsing) ────────────
+    // ── Status colours ────────────────────────────────────────────────────────
     public static readonly Color Warn           = new Color(1.00f, 0.65f, 0.00f); // amber
     public static readonly Color Critical       = Color.red;
-    public static readonly Color Hungry         = new Color(0.90f, 0.30f, 0.10f); // red-orange
+    public static readonly Color OrganEmpty     = new Color(0.15f, 0.15f, 0.15f); // near-black (empty organ)
 
     // ── World object colours ──────────────────────────────────────────────────
     public static readonly Color FridgeColor    = new Color(0.50f, 0.80f, 1.00f); // light blue
@@ -35,23 +37,23 @@ public static class EcsColors
     public static Color ForEntity(EntitySnapshot snap)
     {
         if (snap.IsSleeping)
-            return new Color(0.30f, 0.30f, 0.80f);   // blue — sleeping
+            return new Color(0.30f, 0.30f, 0.80f);   // blue        — sleeping
 
         if (snap.ColonIsCritical || snap.BladderIsCritical)
-            return Critical;                           // red — emergency
+            return Critical;                           // red         — emergency
 
         return snap.Dominant switch
         {
             DesireType.Eat      => snap.IsMoving
                                     ? new Color(1.0f, 0.75f, 0.15f)   // bright gold — walking to fridge
-                                    : new Color(0.9f, 0.50f, 0.00f),   // orange — eating
+                                    : new Color(0.9f, 0.50f, 0.00f),   // orange      — eating
             DesireType.Drink    => snap.IsMoving
                                     ? new Color(0.3f, 0.90f, 1.00f)   // bright cyan — walking to sink
-                                    : new Color(0.1f, 0.60f, 0.90f),   // blue — drinking
+                                    : new Color(0.1f, 0.60f, 0.90f),   // blue        — drinking
             DesireType.Sleep    => new Color(0.4f, 0.40f, 0.90f),     // purple-blue — sleepy
             DesireType.Defecate => new Color(0.6f, 0.40f, 0.10f),     // brown
             DesireType.Pee      => new Color(0.8f, 0.80f, 0.20f),     // yellow
-            _                   => new Color(0.3f, 0.80f, 0.30f),     // green — idle / all good
+            _                   => new Color(0.3f, 0.80f, 0.30f),     // green       — idle / all good
         };
     }
 

@@ -65,7 +65,11 @@ public class SimulationManager : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[ECS] Failed to start simulation: {ex.Message}\n{ex.StackTrace}");
+            // NOTE: Do NOT use ex.StackTrace — Unity's Mono cannot resolve
+            // NullableContextAttribute from System.Runtime 8.0.0.0 (a net8.0 artefact),
+            // causing StackTrace.ToString() to throw and hide the real error.
+            Debug.LogError("[ECS] Failed to start simulation: "
+                + ex.GetType().Name + ": " + ex.Message);
         }
     }
 

@@ -54,7 +54,7 @@ public class WorldSceneBuilder : MonoBehaviour
         var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
         floor.name = "Floor";
         // Plane default = 10×10 units.  Scale 5 → 50×50 — big enough for any layout.
-        floor.transform.localScale  = new Vector3(5f, 1f, 5f);
+        floor.transform.localScale  = new Vector3(1.2f, 1f, 1.2f); // 12×12 units — fits 10×10 world
         floor.transform.position    = Vector3.zero;
         var mat = new Material(Shader.Find("Standard"));
         mat.color = new Color(0.20f, 0.20f, 0.22f);   // dark grey floor

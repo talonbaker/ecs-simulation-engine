@@ -1,5 +1,4 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 using APIFramework.Components;
 
 namespace APIFramework.Config;
@@ -17,16 +16,17 @@ public class SimConfig
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    // Newtonsoft.Json settings:
+    //   MissingMemberHandling.Ignore  — unknown JSON keys are silently skipped
+    //   NullValueHandling.Ignore      — missing JSON keys keep their C# defaults
+    //
+    // NOTE: Newtonsoft.Json serialises public fields on structs (like NutrientProfile)
+    // by default, so no extra flag is needed (unlike System.Text.Json which required
+    // IncludeFields = true).
+    private static readonly JsonSerializerSettings JsonSettings = new()
     {
-        PropertyNameCaseInsensitive = true,
-        AllowTrailingCommas         = true,
-        ReadCommentHandling         = JsonCommentHandling.Skip,
-        // REQUIRED: NutrientProfile is a struct of public fields (not properties).
-        // System.Text.Json ignores public fields by default — without this flag
-        // every NutrientProfile in SimConfig.json deserialises to all-zeros,
-        // which caused the stomach-filling / starvation bug found in v0.7.2 testing.
-        IncludeFields               = true,
+        MissingMemberHandling = MissingMemberHandling.Ignore,
+        NullValueHandling     = NullValueHandling.Ignore,
     };
 
     /// <summary>
@@ -47,7 +47,7 @@ public class SimConfig
         try
         {
             var json   = File.ReadAllText(path);
-            var config = JsonSerializer.Deserialize<SimConfig>(json, JsonOptions);
+            var config = JsonConvert.DeserializeObject<SimConfig>(json, JsonSettings);
             Console.WriteLine($"[SimConfig] Loaded from '{path}'");
             return config ?? new SimConfig();
         }

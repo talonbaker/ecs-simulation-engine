@@ -1,9 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Newtonsoft.Json is used for SimConfig JSON loading.
+      In Unity, Newtonsoft.Json is provided by the com.unity.nuget.newtonsoft-json
+      package (declared in UnityVisualizer/Packages/manifest.json).
+      We do NOT ship Newtonsoft.Json.dll in Assets/Plugins — putting a duplicate
+      copy there causes a Mono assembly-conflict crash at editor startup.
+    -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
 
 </Project>
