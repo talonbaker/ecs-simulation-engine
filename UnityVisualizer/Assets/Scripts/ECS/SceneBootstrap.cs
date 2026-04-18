@@ -34,8 +34,9 @@ public static class SceneBootstrap
         CreateWorldSceneBuilder();
         SetupDirectionalLight();
         SetupCamera();
+        CreateBiologyOverlay();
 
-        Debug.Log("[SceneBootstrap] Scene ready. SimulationManager + WorldSceneBuilder active.");
+        Debug.Log("[SceneBootstrap] Scene ready. SimulationManager + WorldSceneBuilder + BiologyOverlay active.");
     }
 
     // ── SimulationManager ─────────────────────────────────────────────────────
@@ -85,6 +86,14 @@ public static class SceneBootstrap
         go.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
     }
 
+    // ── Biology overlay ───────────────────────────────────────────────────────
+
+    private static void CreateBiologyOverlay()
+    {
+        var go = new GameObject("BiologyOverlay");
+        go.AddComponent<BiologyOverlayUI>();
+    }
+
     // ── Camera ────────────────────────────────────────────────────────────────
     //
     //  The world is roughly 10×10 units.  Entities walk around in the centre.
@@ -118,7 +127,10 @@ public static class SceneBootstrap
         // 10×10 world: objects at corners (2,2) (7,2) (2,8) (7,8).
         // Camera sits above-left looking across the floor and down the organ strips.
         // Adjust freely in the Inspector while running.
+        // Left half of screen — right half is the Biology Overlay canvas.
+        cam.rect = new Rect(0f, 0f, 0.5f, 1f);
+
         cam.transform.position = new Vector3(-2f, 14f, -4f);
-        cam.transform.LookAt(new Vector3(6f, 0f, 5f));
+        cam.transform.LookAt(new Vector3(5f, 0f, 5f));
     }
 }

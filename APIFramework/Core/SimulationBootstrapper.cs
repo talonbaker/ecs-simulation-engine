@@ -123,19 +123,25 @@ public class SimulationBootstrapper
     private void SpawnWorld()
     {
         // ── Living entities ───────────────────────────────────────────────────
+        // One human (Billy) only — cat removed for focused starvation demo.
         EntityTemplates.SpawnHuman(EntityManager, Config.Entities.Human);
-        EntityTemplates.SpawnCat(EntityManager, Config.Entities.Cat);
 
-        // ── World objects (kitchen / bedroom / bathroom) ──────────────────────
-        // Layout: 10×10 unit room.
-        //   Fridge  (2, 0, 2)  — kitchen NW corner
-        //   Sink    (7, 0, 2)  — kitchen NE
-        //   Bed     (2, 0, 8)  — bedroom SW
-        //   Toilet  (7, 0, 8)  — bathroom SE
-        SpawnWorldObject<FridgeComponent> ("Fridge",  2f, 0f, 2f);
-        SpawnWorldObject<SinkComponent>   ("Sink",    7f, 0f, 2f);
-        SpawnWorldObject<BedComponent>    ("Bed",     2f, 0f, 8f);
-        SpawnWorldObject<ToiletComponent> ("Toilet",  7f, 0f, 8f);
+        // ── World objects — 10×10 unit apartment ─────────────────────────────
+        //   Fridge  (2, 0, 2)  NW — kitchen
+        //   Sink    (7, 0, 2)  NE — kitchen
+        //   Bed     (2, 0, 8)  SW — bedroom
+        //   Toilet  (7, 0, 8)  SE — bathroom
+
+        // Fridge gets a stock count — Billy must visit it to eat.
+        // 5 bananas: enough for a few meals before starvation sets in.
+        var fridge = EntityManager.CreateEntity();
+        fridge.Add(new IdentityComponent { Name = "Fridge" });
+        fridge.Add(new PositionComponent { X = 2f, Y = 0f, Z = 2f });
+        fridge.Add(new FridgeComponent   { FoodCount = 5 });
+
+        SpawnWorldObject<SinkComponent>   ("Sink",   7f, 0f, 2f);
+        SpawnWorldObject<BedComponent>    ("Bed",    2f, 0f, 8f);
+        SpawnWorldObject<ToiletComponent> ("Toilet", 7f, 0f, 8f);
     }
 
     private void SpawnWorldObject<TTag>(string name, float x, float y, float z)
