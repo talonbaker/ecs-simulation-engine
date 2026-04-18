@@ -7,6 +7,20 @@ public struct HungryTag { }
 public struct StarvingTag { }
 public struct ThirstyTag { }
 public struct DehydratedTag { }
+
+/// <summary>
+/// Applied by ColonSystem when StoolVolumeMl &gt;= UrgeThresholdMl.
+/// BrainSystem reads this to raise DefecateUrgency above baseline.
+/// Removed when the colon empties.
+/// </summary>
+public struct DefecationUrgeTag { }
+
+/// <summary>
+/// Applied by ColonSystem when StoolVolumeMl &gt;= CapacityMl (colon is full).
+/// This overrides normal drive prioritisation — the entity MUST defecate.
+/// Removed when StoolVolumeMl falls back below CapacityMl.
+/// </summary>
+public struct BowelCriticalTag { }
 #endregion
 
 #region Vital State Tags

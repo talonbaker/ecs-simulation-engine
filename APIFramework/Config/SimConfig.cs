@@ -97,10 +97,13 @@ public class WorldConfig
 
 public class EntityConfig
 {
-    public MetabolismEntityConfig Metabolism { get; set; } = new();
-    public StomachEntityConfig    Stomach    { get; set; } = new();
-    public EnergyEntityConfig     Energy     { get; set; } = new();
-    public MoodEntityConfig       Mood       { get; set; } = new();
+    public MetabolismEntityConfig    Metabolism    { get; set; } = new();
+    public StomachEntityConfig       Stomach       { get; set; } = new();
+    public EnergyEntityConfig        Energy        { get; set; } = new();
+    public MoodEntityConfig          Mood          { get; set; } = new();
+    public SmallIntestineEntityConfig SmallIntestine { get; set; } = new();
+    public LargeIntestineEntityConfig LargeIntestine { get; set; } = new();
+    public ColonEntityConfig         Colon         { get; set; } = new();
 
     public static EntityConfig DefaultHuman => new()
     {
@@ -122,6 +125,23 @@ public class EntityConfig
             SleepinessGainRate   = 0.0012f, // builds ~69 pts over 16 game hours awake
             EnergyRestoreRate    = 0.003f,  // restores to 100% within 8 game hours asleep
             SleepinessDrainRate  = 0.002f   // 74% → 15% in ~8.3 hours (full night's sleep)
+        },
+        SmallIntestine = new SmallIntestineEntityConfig
+        {
+            // 25 ml residue clears in ~52 game-minutes — realistic SI transit time
+            AbsorptionRate         = 0.008f,
+            ResidueToLargeFraction = 0.4f   // 40% of SI volume becomes LI waste
+        },
+        LargeIntestine = new LargeIntestineEntityConfig
+        {
+            WaterReabsorptionRate = 0.001f, // slow, persistent secondary hydration
+            MobilityRate          = 0.003f, // ~10.8 ml/game-hour toward the colon
+            StoolFraction         = 0.6f    // 60% of LI content forms formed stool
+        },
+        Colon = new ColonEntityConfig
+        {
+            UrgeThresholdMl = 100f,   // urge at ~50% fill — comfortable awareness
+            CapacityMl      = 200f    // critical at capacity — must act now
         }
     };
 
@@ -145,6 +165,22 @@ public class EntityConfig
             SleepinessGainRate  = 0.0008f,
             EnergyRestoreRate   = 0.003f,   // cats restore energy very quickly
             SleepinessDrainRate = 0.004f
+        },
+        SmallIntestine = new SmallIntestineEntityConfig
+        {
+            AbsorptionRate         = 0.010f,  // cats have faster SI transit
+            ResidueToLargeFraction = 0.35f
+        },
+        LargeIntestine = new LargeIntestineEntityConfig
+        {
+            WaterReabsorptionRate = 0.0008f,
+            MobilityRate          = 0.004f,
+            StoolFraction         = 0.55f
+        },
+        Colon = new ColonEntityConfig
+        {
+            UrgeThresholdMl = 80f,
+            CapacityMl      = 160f
         }
     };
 }
@@ -177,6 +213,42 @@ public class StomachEntityConfig
 {
     /// <summary>ml of stomach content digested per game-second.</summary>
     public float DigestionRate { get; set; } = 0.017f;
+}
+
+public class SmallIntestineEntityConfig
+{
+    /// <summary>ml of chyme processed (absorbed) per game-second in the small intestine.</summary>
+    public float AbsorptionRate { get; set; } = 0.008f;
+
+    /// <summary>
+    /// Fraction of processed SI volume transferred to the large intestine as residue.
+    /// 0.4 → 40% becomes LI waste; 60% is considered absorbed (water + nutrients).
+    /// </summary>
+    public float ResidueToLargeFraction { get; set; } = 0.4f;
+}
+
+public class LargeIntestineEntityConfig
+{
+    /// <summary>ml of water recovered from LI content per game-second → Hydration.</summary>
+    public float WaterReabsorptionRate { get; set; } = 0.001f;
+
+    /// <summary>ml of LI content advanced toward the colon per game-second.</summary>
+    public float MobilityRate { get; set; } = 0.003f;
+
+    /// <summary>
+    /// Fraction of processed LI volume that becomes formed stool in ColonComponent.
+    /// The remainder (1 - StoolFraction) dissipates as water/gas.
+    /// </summary>
+    public float StoolFraction { get; set; } = 0.6f;
+}
+
+public class ColonEntityConfig
+{
+    /// <summary>StoolVolumeMl at which DefecationUrgeTag is applied.</summary>
+    public float UrgeThresholdMl { get; set; } = 100f;
+
+    /// <summary>Maximum stool volume before BowelCriticalTag is applied (overrides all drives).</summary>
+    public float CapacityMl { get; set; } = 200f;
 }
 
 public class EnergyEntityConfig
@@ -275,6 +347,13 @@ public class BrainSystemConfig
 
     /// <summary>Multiplier applied to all urgency scores when GriefTag is present (strong suppression).</summary>
     public float GriefUrgencyMult { get; set; } = 0.50f;
+
+    /// <summary>
+    /// Score ceiling for the Defecate drive. Scored as ColonComponent.Fill * DefecateMaxScore.
+    /// Slightly below survival drives (eat/drink = 1.0) by default — defecation is urgent
+    /// but food and water remain higher priority unless BowelCriticalTag forces it to 1.0.
+    /// </summary>
+    public float DefecateMaxScore { get; set; } = 0.85f;
 }
 
 // ── FeedingSystem ─────────────────────────────────────────────────────────────
@@ -399,6 +478,14 @@ public class DigestionSystemConfig
     /// 30 hydration — matching the pre-v0.7 flat HydrationValue.
     /// </summary>
     public float HydrationPerMl { get; set; } = 2.0f;
+
+    /// <summary>
+    /// Fraction of digested stomach volume transferred to SmallIntestineComponent as chyme.
+    /// 0.0 = nothing passes to the intestine (pre-v0.7.3 behaviour).
+    /// 0.2 = 20% of digested volume becomes chyme (fiber + unabsorbed matter).
+    /// Ignored when the entity has no SmallIntestineComponent.
+    /// </summary>
+    public float ResidueFraction { get; set; } = 0.2f;
 }
 
 // ── EnergySystem ─────────────────────────────────────────────────────────────

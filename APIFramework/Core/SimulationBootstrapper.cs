@@ -26,19 +26,23 @@ namespace APIFramework.Core;
 ///
 /// SYSTEM PIPELINE (phase → execution order within phase)
 /// ────────────────────────────────────────────────────────
-///  PreUpdate  (0)  InvariantSystem           — catch/clamp impossible state values
-///  Physiology (10) MetabolismSystem          — drain satiation / hydration
-///  Physiology (10) EnergySystem              — drain/restore energy + sleepiness
-///  Condition  (20) BiologicalConditionSystem — set hunger/thirst/irritable tags
-///  Cognition  (30) MoodSystem                — decay emotions; apply Plutchik intensity tags
-///  Cognition  (30) BrainSystem               — score drives (incl. circadian); pick dominant
-///  Behavior   (40) FeedingSystem             — act if Eat is dominant
-///  Behavior   (40) DrinkingSystem            — act if Drink is dominant
-///  Behavior   (40) SleepSystem               — toggle IsSleeping based on dominant desire
-///  Transit    (50) InteractionSystem         — convert held food to esophagus bolus
-///  Transit    (50) EsophagusSystem           — move transit entities toward stomach
-///  Transit    (50) DigestionSystem           — release nutrients from stomach to metabolism
-///  World      (60) RotSystem                 — age food entities; apply RotTag at threshold
+///  PreUpdate   (0)  InvariantSystem           — catch/clamp impossible state values
+///  Physiology  (10) MetabolismSystem          — drain satiation / hydration
+///  Physiology  (10) EnergySystem              — drain/restore energy + sleepiness
+///  Condition   (20) BiologicalConditionSystem — set hunger/thirst/irritable tags
+///  Cognition   (30) MoodSystem                — decay emotions; apply Plutchik intensity tags
+///  Cognition   (30) BrainSystem               — score drives (incl. circadian, colon); pick dominant
+///  Behavior    (40) FeedingSystem             — act if Eat is dominant
+///  Behavior    (40) DrinkingSystem            — act if Drink is dominant
+///  Behavior    (40) SleepSystem               — toggle IsSleeping based on dominant desire
+///  Behavior    (40) DefecationSystem          — empty colon if Defecate is dominant
+///  Transit     (50) InteractionSystem         — convert held food to esophagus bolus
+///  Transit     (50) EsophagusSystem           — move transit entities toward stomach
+///  Transit     (50) DigestionSystem           — release nutrients; deposit chyme to small intestine
+///  Elimination (55) SmallIntestineSystem      — drain chyme; pass residue to large intestine
+///  Elimination (55) LargeIntestineSystem      — reabsorb water; form stool into colon
+///  Elimination (55) ColonSystem               — apply DefecationUrgeTag / BowelCriticalTag
+///  World       (60) RotSystem                 — age food entities; apply RotTag at threshold
 /// </summary>
 public class SimulationBootstrapper
 {
@@ -93,11 +97,17 @@ public class SimulationBootstrapper
         Engine.AddSystem(new FeedingSystem(sys.Feeding),                          SystemPhase.Behavior);
         Engine.AddSystem(new DrinkingSystem(sys.Drinking),                        SystemPhase.Behavior);
         Engine.AddSystem(new SleepSystem(sys.Sleep),                              SystemPhase.Behavior);
+        Engine.AddSystem(new DefecationSystem(),                                  SystemPhase.Behavior);
 
-        // Transit — move content through the digestive pipeline
+        // Transit — move content through the upper digestive pipeline
         Engine.AddSystem(new InteractionSystem(sys.Interaction),                  SystemPhase.Transit);
         Engine.AddSystem(new EsophagusSystem(),                                   SystemPhase.Transit);
         Engine.AddSystem(new DigestionSystem(sys.Digestion),                      SystemPhase.Transit);
+
+        // Elimination — lower digestive pipeline; intestines → colon → tags
+        Engine.AddSystem(new SmallIntestineSystem(),                              SystemPhase.Elimination);
+        Engine.AddSystem(new LargeIntestineSystem(),                              SystemPhase.Elimination);
+        Engine.AddSystem(new ColonSystem(),                                       SystemPhase.Elimination);
 
         // World — environmental systems independent of entity biology
         Engine.AddSystem(new RotSystem(sys.Rot),                                  SystemPhase.World);
@@ -155,12 +165,18 @@ public class SimulationBootstrapper
         MergeFlat(newCfg.Systems.Rot,                 Config.Systems.Rot,                 changes);
 
         // ── Entity starting configs (only affect future spawns) ───────────────
-        MergeFlat(newCfg.Entities.Human.Metabolism,   Config.Entities.Human.Metabolism,   changes);
-        MergeFlat(newCfg.Entities.Human.Stomach,      Config.Entities.Human.Stomach,      changes);
-        MergeFlat(newCfg.Entities.Human.Energy,       Config.Entities.Human.Energy,       changes);
-        MergeFlat(newCfg.Entities.Cat.Metabolism,     Config.Entities.Cat.Metabolism,     changes);
-        MergeFlat(newCfg.Entities.Cat.Stomach,        Config.Entities.Cat.Stomach,        changes);
-        MergeFlat(newCfg.Entities.Cat.Energy,         Config.Entities.Cat.Energy,         changes);
+        MergeFlat(newCfg.Entities.Human.Metabolism,     Config.Entities.Human.Metabolism,     changes);
+        MergeFlat(newCfg.Entities.Human.Stomach,       Config.Entities.Human.Stomach,       changes);
+        MergeFlat(newCfg.Entities.Human.Energy,        Config.Entities.Human.Energy,        changes);
+        MergeFlat(newCfg.Entities.Human.SmallIntestine, Config.Entities.Human.SmallIntestine, changes);
+        MergeFlat(newCfg.Entities.Human.LargeIntestine, Config.Entities.Human.LargeIntestine, changes);
+        MergeFlat(newCfg.Entities.Human.Colon,         Config.Entities.Human.Colon,         changes);
+        MergeFlat(newCfg.Entities.Cat.Metabolism,      Config.Entities.Cat.Metabolism,      changes);
+        MergeFlat(newCfg.Entities.Cat.Stomach,         Config.Entities.Cat.Stomach,         changes);
+        MergeFlat(newCfg.Entities.Cat.Energy,          Config.Entities.Cat.Energy,          changes);
+        MergeFlat(newCfg.Entities.Cat.SmallIntestine,  Config.Entities.Cat.SmallIntestine,  changes);
+        MergeFlat(newCfg.Entities.Cat.LargeIntestine,  Config.Entities.Cat.LargeIntestine,  changes);
+        MergeFlat(newCfg.Entities.Cat.Colon,           Config.Entities.Cat.Colon,           changes);
 
         if (changes.Count == 0)
         {

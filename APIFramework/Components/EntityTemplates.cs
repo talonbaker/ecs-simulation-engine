@@ -14,9 +14,12 @@ public static class EntityTemplates
     public static Entity SpawnHuman(EntityManager manager, EntityConfig? cfg = null)
     {
         cfg ??= EntityConfig.DefaultHuman;
-        var m = cfg.Metabolism;
-        var s = cfg.Stomach;
-        var e = cfg.Energy;
+        var m  = cfg.Metabolism;
+        var s  = cfg.Stomach;
+        var e  = cfg.Energy;
+        var si = cfg.SmallIntestine;
+        var li = cfg.LargeIntestine;
+        var co = cfg.Colon;
 
         var entity = manager.CreateEntity();
         entity.Add(new IdentityComponent { Name = "Human" });
@@ -60,15 +63,40 @@ public static class EntityTemplates
             Anticipation = mo.AnticipationStart
         });
 
+        // ── Digestive pipeline (small intestine → large intestine → colon) ────
+        entity.Add(new SmallIntestineComponent
+        {
+            ChymeVolumeMl          = 0f,
+            AbsorptionRate         = si.AbsorptionRate,
+            Chyme                  = new NutrientProfile(),
+            ResidueToLargeFraction = si.ResidueToLargeFraction
+        });
+        entity.Add(new LargeIntestineComponent
+        {
+            ContentVolumeMl       = 0f,
+            WaterReabsorptionRate = li.WaterReabsorptionRate,
+            MobilityRate          = li.MobilityRate,
+            StoolFraction         = li.StoolFraction
+        });
+        entity.Add(new ColonComponent
+        {
+            StoolVolumeMl   = 0f,
+            UrgeThresholdMl = co.UrgeThresholdMl,
+            CapacityMl      = co.CapacityMl
+        });
+
         return entity;
     }
 
     public static Entity SpawnCat(EntityManager manager, EntityConfig? cfg = null)
     {
         cfg ??= EntityConfig.DefaultCat;
-        var m = cfg.Metabolism;
-        var s = cfg.Stomach;
-        var e = cfg.Energy;
+        var m  = cfg.Metabolism;
+        var s  = cfg.Stomach;
+        var e  = cfg.Energy;
+        var si = cfg.SmallIntestine;
+        var li = cfg.LargeIntestine;
+        var co = cfg.Colon;
 
         var entity = manager.CreateEntity();
         entity.Add(new IdentityComponent { Name = "Cat" });
@@ -110,6 +138,28 @@ public static class EntityTemplates
             Disgust      = mo.DisgustStart,
             Anger        = mo.AngerStart,
             Anticipation = mo.AnticipationStart
+        });
+
+        // ── Digestive pipeline ────────────────────────────────────────────────
+        entity.Add(new SmallIntestineComponent
+        {
+            ChymeVolumeMl          = 0f,
+            AbsorptionRate         = si.AbsorptionRate,
+            Chyme                  = new NutrientProfile(),
+            ResidueToLargeFraction = si.ResidueToLargeFraction
+        });
+        entity.Add(new LargeIntestineComponent
+        {
+            ContentVolumeMl       = 0f,
+            WaterReabsorptionRate = li.WaterReabsorptionRate,
+            MobilityRate          = li.MobilityRate,
+            StoolFraction         = li.StoolFraction
+        });
+        entity.Add(new ColonComponent
+        {
+            StoolVolumeMl   = 0f,
+            UrgeThresholdMl = co.UrgeThresholdMl,
+            CapacityMl      = co.CapacityMl
         });
 
         return entity;
