@@ -11,7 +11,15 @@ using APIFramework.Components;
 /// </summary>
 public static class EntityTemplates
 {
-    public static Entity SpawnHuman(EntityManager manager, EntityConfig? cfg = null)
+    /// <summary>
+    /// Spawns a human entity.  The optional <paramref name="spawnX"/> /
+    /// <paramref name="spawnZ"/> parameters let the caller place it anywhere in
+    /// the world — useful when spawning many humans at distinct grid positions.
+    /// Defaults to (5, 5) — the centre of the 10×10 world.
+    /// </summary>
+    public static Entity SpawnHuman(EntityManager manager, EntityConfig? cfg = null,
+                                    float spawnX = 5f, float spawnZ = 5f,
+                                    string? name = null)
     {
         cfg ??= EntityConfig.DefaultHuman;
         var m  = cfg.Metabolism;
@@ -23,8 +31,8 @@ public static class EntityTemplates
         var bl = cfg.Bladder;
 
         var entity = manager.CreateEntity();
-        entity.Add(new IdentityComponent { Name = "Human" });
-        entity.Add(new PositionComponent  { X = 5f, Y = 0f, Z = 5f });
+        entity.Add(new IdentityComponent { Name = name ?? "Human" });
+        entity.Add(new PositionComponent  { X = spawnX, Y = 0f, Z = spawnZ });
         entity.Add(new MovementComponent  { Speed = 0.04f, ArrivalDistance = 0.4f });
         entity.Add(new MetabolismComponent
         {
