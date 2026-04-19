@@ -125,12 +125,15 @@ public static class SceneBootstrap
         cam.farClipPlane    = 200f;
 
         // 10×10 world: objects at corners (2,2) (7,2) (2,8) (7,8).
-        // Camera sits above-left looking across the floor and down the organ strips.
-        // Adjust freely in the Inspector while running.
+        // Camera is pulled back high enough to see the full 10×10 grid clearly —
+        // this covers the 100-human stress-test where all cells are occupied.
         // Left half of screen — right half is the Biology Overlay canvas.
+        // Adjust freely in the Inspector while running.
         cam.rect = new Rect(0f, 0f, 0.5f, 1f);
 
-        cam.transform.position = new Vector3(-2f, 14f, -4f);
+        // Y=22 gives a bird's-eye view of the full 10×10 grid.
+        // Swap to Y=14 if you want a closer angled shot for single-Billy mode.
+        cam.transform.position = new Vector3(5f, 22f, -4f);
         cam.transform.LookAt(new Vector3(5f, 0f, 5f));
     }
 }

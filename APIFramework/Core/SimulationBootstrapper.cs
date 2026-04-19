@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
@@ -120,28 +122,72 @@ public class SimulationBootstrapper
         Engine.AddSystem(new MovementSystem(),                                     SystemPhase.World);
     }
 
+    // ── How many humans to spawn ──────────────────────────────────────────────
+    // Change this one constant to switch between single-Billy (1) and stress-test mode.
+    private const int HumanCount = 100;
+
     private void SpawnWorld()
     {
         // ── Living entities ───────────────────────────────────────────────────
-        // One human (Billy) only — cat removed for focused starvation demo.
-        EntityTemplates.SpawnHuman(EntityManager, Config.Entities.Human);
+        // Spawn HumanCount humans on a uniform grid inside the 10×10 world.
+        // For HumanCount = 1  → single Billy at centre (5, 5).
+        // For HumanCount = 100 → 10×10 grid from (1,1) to (9,9).
+        SpawnHumanGrid(HumanCount);
 
         // ── World objects — 10×10 unit apartment ─────────────────────────────
         //   Fridge  (2, 0, 2)  NW — kitchen
         //   Sink    (7, 0, 2)  NE — kitchen
         //   Bed     (2, 0, 8)  SW — bedroom
         //   Toilet  (7, 0, 8)  SE — bathroom
-
-        // Fridge gets a stock count — Billy must visit it to eat.
-        // 5 bananas: enough for a few meals before starvation sets in.
+        //
+        // Fridge food is set high for the stress test so the 100 humans don't
+        // instantly starve — each one still has to physically walk to the fridge.
         var fridge = EntityManager.CreateEntity();
         fridge.Add(new IdentityComponent { Name = "Fridge" });
         fridge.Add(new PositionComponent { X = 2f, Y = 0f, Z = 2f });
-        fridge.Add(new FridgeComponent   { FoodCount = 5 });
+        fridge.Add(new FridgeComponent   { FoodCount = HumanCount == 1 ? 5 : 10_000 });
 
         SpawnWorldObject<SinkComponent>   ("Sink",   7f, 0f, 2f);
         SpawnWorldObject<BedComponent>    ("Bed",    2f, 0f, 8f);
         SpawnWorldObject<ToiletComponent> ("Toilet", 7f, 0f, 8f);
+    }
+
+    /// <summary>
+    /// Spreads <paramref name="count"/> humans evenly on a rectangular grid.
+    /// For count = 1 the single entity lands at centre (5, 5).
+    /// </summary>
+    private void SpawnHumanGrid(int count)
+    {
+        if (count <= 0) return;
+
+        if (count == 1)
+        {
+            EntityTemplates.SpawnHuman(EntityManager, Config.Entities.Human,
+                spawnX: 5f, spawnZ: 5f, name: "Billy");
+            return;
+        }
+
+        // cols × rows ≥ count, shaped as square as possible.
+        int cols = (int)Math.Ceiling(Math.Sqrt(count));
+        int rows = (int)Math.Ceiling((double)count / cols);
+
+        float margin = 1f;         // keep entities away from walls
+        float worldSz = 10f;
+        float stepX = cols > 1 ? (worldSz - margin * 2f) / (cols - 1) : 0f;
+        float stepZ = rows > 1 ? (worldSz - margin * 2f) / (rows - 1) : 0f;
+
+        int spawned = 0;
+        for (int r = 0; r < rows && spawned < count; r++)
+        {
+            for (int c = 0; c < cols && spawned < count; c++)
+            {
+                float x = margin + c * stepX;
+                float z = margin + r * stepZ;
+                EntityTemplates.SpawnHuman(EntityManager, Config.Entities.Human,
+                    spawnX: x, spawnZ: z, name: $"Human {spawned + 1}");
+                spawned++;
+            }
+        }
     }
 
     private void SpawnWorldObject<TTag>(string name, float x, float y, float z)

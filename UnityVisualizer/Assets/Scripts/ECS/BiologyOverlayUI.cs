@@ -5,15 +5,22 @@ using APIFramework.Core;
 /// <summary>
 /// Draws a retro diagnostic panel on the RIGHT half of the screen using
 /// Unity's immediate-mode GUI (OnGUI).  The 3D camera is constrained to the
-/// LEFT half; this overlay fills the right half with Billy's biology data.
+/// LEFT half; this overlay fills the right half with one entity's biology data.
 ///
 /// LAYOUT
 /// ──────
-///  Header    — FIG. 01, clock, dominant drive
+///  Header    — entity name + index counter + Tab key hint
+///  Drive     — dominant drive + movement destination
 ///  GI Column — fill bar + label for each organ (esophagus → bladder)
 ///  Vitals    — satiation, hydration, energy, sleepiness bars
-///  Status    — fridge stock, move destination, day/time
+///  Status    — fridge stock, clock, urgency values
 ///  Footer    — violation count
+///
+/// ENTITY CYCLING
+/// ──────────────
+/// Press Tab to step forward through the living entity list.
+/// Press Shift+Tab to step backward.
+/// Works in both single-Billy and 100-human stress-test mode.
 ///
 /// No GameObjects or UGUI components are created — everything is drawn via
 /// GUI.DrawTexture and GUI.Label each frame.  This keeps setup trivial and
@@ -22,6 +29,9 @@ using APIFramework.Core;
 [DefaultExecutionOrder(100)]   // run after SimulationManager.Update()
 public class BiologyOverlayUI : MonoBehaviour
 {
+    // ── Entity index (which human is displayed) ───────────────────────────────
+    private int _entityIndex = 0;   // wraps around [0, LivingEntities.Count)
+
     // ── Cached 1x1 textures (each a solid colour) ────────────────────────────
     private Texture2D _texBg;           // dark warm-black panel
     private Texture2D _texBarBg;        // very dark bar background
@@ -67,6 +77,26 @@ public class BiologyOverlayUI : MonoBehaviour
         BuildTextures();
     }
 
+    void Update()
+    {
+        // Tab / Shift+Tab cycle through entities — reads keyboard outside OnGUI
+        // so we can use Input.GetKeyDown which is unavailable inside OnGUI.
+        var snap = SimulationManager.Snapshot;
+        if (snap == null || snap.LivingEntities.Count == 0) return;
+
+        int total = snap.LivingEntities.Count;
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            bool backward = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            _entityIndex = backward
+                ? (_entityIndex - 1 + total) % total
+                : (_entityIndex + 1) % total;
+        }
+
+        // Clamp in case entities are removed at runtime
+        _entityIndex = Mathf.Clamp(_entityIndex, 0, total - 1);
+    }
+
     void OnGUI()
     {
         if (!_stylesBuilt) BuildStyles();
@@ -74,8 +104,11 @@ public class BiologyOverlayUI : MonoBehaviour
         var snap = SimulationManager.Snapshot;
         if (snap == null) { DrawWaiting(); return; }
 
-        var billy = snap.LivingEntities.Count > 0 ? snap.LivingEntities[0] : null;
-        if (billy == null) { DrawWaiting(); return; }
+        int total = snap.LivingEntities.Count;
+        if (total == 0) { DrawWaiting(); return; }
+
+        _entityIndex = Mathf.Clamp(_entityIndex, 0, total - 1);
+        var billy = snap.LivingEntities[_entityIndex];
 
         var fridge = snap.WorldObjects.FirstOrDefault(o => o.IsFridge);
 
@@ -92,7 +125,16 @@ public class BiologyOverlayUI : MonoBehaviour
         int y = pad;
 
         // ── Header ────────────────────────────────────────────────────────────
+        // Left: panel title.  Right: entity counter + Tab hint.
+        string counterLabel = total > 1
+            ? $"[TAB]  {_entityIndex + 1} / {total}"
+            : "FIG. 01  —  DIAGNOSTIC";
         GUI.Label(new Rect(px + pad, y, iw, 22), "FIG. 01  —  DIAGNOSTIC", _subHeader);
+        if (total > 1)
+        {
+            _small.normal.textColor = ColDim;
+            GUI.Label(new Rect(px + pad, y, iw, 22), counterLabel, _value);  // right-aligned via _value style
+        }
         y += 24;
         GUI.Label(new Rect(px + pad, y, iw, 34), billy.Name.ToUpper(), _header);
         y += 36;
