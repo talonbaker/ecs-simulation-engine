@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>ECSCli</RootNamespace>
     <AssemblyName>ECSCli</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- Disable native apphost generation.
          NTFS (Windows filesystem via WSL2 /mnt/c/) can't set Unix chmod 755 on the
          apphost binary, so CreateAppHost fails. With this off, 'dotnet run' uses the
@@ -15,7 +16,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- System.CommandLine used ONLY for the `ai` verb subtree. -->
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\APIFramework\APIFramework.csproj" />
+    <ProjectReference Include="..\Warden.Contracts\Warden.Contracts.csproj" />
+    <ProjectReference Include="..\Warden.Telemetry\Warden.Telemetry.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿namespace APIFramework.Core;
+namespace APIFramework.Core;
 
 /// <summary>
 /// Owns all Entity instances and maintains a component-type index so that
@@ -26,19 +26,51 @@ public class EntityManager
     private readonly List<Entity>                       _entities        = new();
     private readonly Dictionary<Type, HashSet<Entity>> _componentIndex  = new();
 
+    // ── Deterministic entity ID counter ──────────────────────────────────────
+    //
+    // Using a sequential counter instead of Guid.NewGuid() makes every entity
+    // ID reproducible across runs: given the same bootstrapper code path, the
+    // same counter value is always assigned to the same logical entity.
+    //
+    // This is a prerequisite for the deterministic replay guarantee (WP-04):
+    //   Guid.NewGuid() -> different addresses every run -> non-deterministic JSONL.
+    //   Counter-based  -> same ID every run             -> byte-identical JSONL.
+    //
+    // The EntityManager instance is per-simulation, so counter resets to 0
+    // for each new simulation. Existing callers that pass an explicit Guid via
+    // CreateEntity(Guid) are unaffected.
+    private long _idCounter = 0;
+
     public IReadOnlyList<Entity> Entities => _entities;
 
     /// <summary>
     /// Number of distinct component types currently tracked in the index.
-    /// Useful for diagnostics — shows how many query buckets are live.
+    /// Useful for diagnostics -- shows how many query buckets are live.
     /// </summary>
     public int ComponentTypeCount => _componentIndex.Count;
 
     // ── Entity lifecycle ──────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Creates a new entity with a deterministic, counter-based ID.
+    /// The first entity created by an EntityManager instance always gets the
+    /// same ID, making telemetry byte-identical across runs.
+    /// </summary>
     public Entity CreateEntity()
     {
-        var entity = new Entity(OnComponentChanged);
+        // Build a 16-byte GUID from the counter (little-endian, upper 8 bytes = 0).
+        long count = ++_idCounter;
+        var bytes  = new byte[16];
+        bytes[0]  = (byte)( count        & 0xFF);
+        bytes[1]  = (byte)((count >>  8) & 0xFF);
+        bytes[2]  = (byte)((count >> 16) & 0xFF);
+        bytes[3]  = (byte)((count >> 24) & 0xFF);
+        bytes[4]  = (byte)((count >> 32) & 0xFF);
+        bytes[5]  = (byte)((count >> 40) & 0xFF);
+        bytes[6]  = (byte)((count >> 48) & 0xFF);
+        bytes[7]  = (byte)((count >> 56) & 0xFF);
+
+        var entity = new Entity(new Guid(bytes), OnComponentChanged);
         _entities.Add(entity);
         return entity;
     }
@@ -64,7 +96,7 @@ public class EntityManager
 
     /// <summary>
     /// Returns all entities that currently have component T.
-    /// O(1) — returns the pre-built bucket from the component index.
+    /// O(1) -- returns the pre-built bucket from the component index.
     /// Returns an empty enumerable (not null) when no entities have T.
     /// </summary>
     public IEnumerable<Entity> Query<T>() where T : struct
