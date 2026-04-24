@@ -61,7 +61,14 @@ public class SimulationBootstrapper
     /// Primary constructor — accepts any IConfigProvider.
     /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
     /// </summary>
-    public SimulationBootstrapper(IConfigProvider configProvider)
+    /// <param name="configProvider">Config source.</param>
+    /// <param name="humanCount">
+    /// How many human entities to spawn on startup.
+    /// Default is 100 (full stress-test world).
+    /// Pass 1 for isolated single-entity tests; pass 0 to spawn no humans
+    /// (useful for world-object-only unit tests).
+    /// </param>
+    public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount)
     {
         Config        = configProvider.GetConfig();
         EntityManager = new EntityManager();
@@ -70,15 +77,19 @@ public class SimulationBootstrapper
         Invariants    = new InvariantSystem(Clock);
 
         RegisterSystems();
-        SpawnWorld();
+        SpawnWorld(humanCount);
     }
 
     /// <summary>
     /// Convenience overload — loads config from the JSON file at <paramref name="configPath"/>.
     /// This is the default used by the Avalonia GUI and CLI.
     /// </summary>
-    public SimulationBootstrapper(string configPath = "SimConfig.json")
-        : this(new FileConfigProvider(configPath)) { }
+    /// <param name="configPath">Path to SimConfig.json.</param>
+    /// <param name="humanCount">
+    /// How many human entities to spawn.  Defaults to <see cref="DefaultHumanCount"/> (100).
+    /// </param>
+    public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount)
+        : this(new FileConfigProvider(configPath), humanCount) { }
 
     private void RegisterSystems()
     {
@@ -122,17 +133,22 @@ public class SimulationBootstrapper
         Engine.AddSystem(new MovementSystem(),                                     SystemPhase.World);
     }
 
-    // ── How many humans to spawn ──────────────────────────────────────────────
-    // Change this one constant to switch between single-Billy (1) and stress-test mode.
-    private const int HumanCount = 100;
+    // ── Human count ───────────────────────────────────────────────────────────
+    /// <summary>
+    /// Default number of humans spawned when no <c>humanCount</c> argument is
+    /// supplied.  100 gives a realistic stress-test world; pass 1 to
+    /// <see cref="SimulationBootstrapper(IConfigProvider,int)"/> for isolated
+    /// single-entity tests.
+    /// </summary>
+    public const int DefaultHumanCount = 100;
 
-    private void SpawnWorld()
+    private void SpawnWorld(int humanCount)
     {
         // ── Living entities ───────────────────────────────────────────────────
-        // Spawn HumanCount humans on a uniform grid inside the 10×10 world.
-        // For HumanCount = 1  → single Billy at centre (5, 5).
-        // For HumanCount = 100 → 10×10 grid from (1,1) to (9,9).
-        SpawnHumanGrid(HumanCount);
+        // Spread humanCount humans on a uniform grid inside the 10×10 world.
+        // humanCount = 1  → single Billy at centre (5, 5).
+        // humanCount = 100 → 10×10 grid from (1,1) to (9,9).
+        SpawnHumanGrid(humanCount);
 
         // ── World objects — 10×10 unit apartment ─────────────────────────────
         //   Fridge  (2, 0, 2)  NW — kitchen
@@ -140,12 +156,12 @@ public class SimulationBootstrapper
         //   Bed     (2, 0, 8)  SW — bedroom
         //   Toilet  (7, 0, 8)  SE — bathroom
         //
-        // Fridge food is set high for the stress test so the 100 humans don't
-        // instantly starve — each one still has to physically walk to the fridge.
+        // Fridge food scales with population so every human has a realistic
+        // chance of getting fed: 5 items per human, minimum 5.
         var fridge = EntityManager.CreateEntity();
         fridge.Add(new IdentityComponent { Name = "Fridge" });
         fridge.Add(new PositionComponent { X = 2f, Y = 0f, Z = 2f });
-        fridge.Add(new FridgeComponent   { FoodCount = HumanCount == 1 ? 5 : 10_000 });
+        fridge.Add(new FridgeComponent   { FoodCount = Math.Max(5, humanCount * 5) });
 
         SpawnWorldObject<SinkComponent>   ("Sink",   7f, 0f, 2f);
         SpawnWorldObject<BedComponent>    ("Bed",    2f, 0f, 8f);

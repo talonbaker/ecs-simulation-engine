@@ -14,9 +14,13 @@ namespace APIFramework.Tests.Integration;
 /// over a full day" check — the safety net that would have caught the
 /// zero-nutrition starvation bug (v0.7.2) before it ever reached a real run.
 ///
-/// Each test stands up a complete SimulationBootstrapper using compiled defaults
-/// (no SimConfig.json required — the bootstrapper falls back gracefully).
-/// TimeScale is left at 120 (default) so 1 real second = 120 game seconds.
+/// SINGLE-HUMAN SCOPE
+/// ───────────────────
+/// Every test in this file spins up exactly ONE human entity. The intent is to
+/// validate each biological pipeline (metabolism, digestion, energy, mood, etc.)
+/// in isolation, free from resource-contention noise that arises when 100 agents
+/// share one fridge, one sink, one bed, and one toilet. Multi-agent interaction
+/// tests will live in a separate file once that feature set is built out.
 ///
 /// TIMING
 /// ───────
@@ -48,13 +52,19 @@ public class SmokeTests
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Runs a full 24-hour simulation using compiled defaults and returns the
-    /// bootstrapper so assertions can inspect the final state.
+    /// Spins up a fresh single-human simulation and runs it for exactly one
+    /// game day (720 ticks at TimeScale 120).
     /// </summary>
-    private static SimulationBootstrapper RunOneDay()
+    private static SimulationBootstrapper RunOneDay() => RunFor(TicksPerDay);
+
+    /// <summary>
+    /// Spins up a fresh single-human simulation and runs it for
+    /// <paramref name="ticks"/> ticks.
+    /// </summary>
+    private static SimulationBootstrapper RunFor(int ticks)
     {
-        var sim = new SimulationBootstrapper(); // no config path → uses defaults
-        for (int i = 0; i < TicksPerDay; i++)
+        var sim = new SimulationBootstrapper(humanCount: 1);
+        for (int i = 0; i < ticks; i++)
             sim.Engine.Update(TickDelta);
         return sim;
     }
@@ -72,11 +82,11 @@ public class SmokeTests
     [Fact]
     public void FullDayRun_EntityManager_StillHasHumanEntity()
     {
-        // The human entity must survive the day — not be accidentally destroyed.
+        // The human entity must survive the day — not be accidentally destroyed
+        // by any system.  We identify the human by MetabolismComponent, which
+        // only human entities carry (world objects use tag structs, not metabolism).
         var sim    = RunOneDay();
-        var humans = sim.EntityManager.Query<IdentityComponent>()
-            .Where(e => e.Get<IdentityComponent>().Name == "Human")
-            .ToList();
+        var humans = sim.EntityManager.Query<MetabolismComponent>().ToList();
 
         Assert.Single(humans);
     }
@@ -85,9 +95,9 @@ public class SmokeTests
     public void FullDayRun_Satiation_RemainsWithinValidRange()
     {
         // MetabolismComponent.Satiation must stay in [0, 100] after a full day.
-        var sim  = RunOneDay();
-        var human = sim.EntityManager.Query<MetabolismComponent>().First();
-        var meta  = human.Get<MetabolismComponent>();
+        var sim   = RunOneDay();
+        var meta  = sim.EntityManager.Query<MetabolismComponent>()
+                       .First().Get<MetabolismComponent>();
 
         Assert.InRange(meta.Satiation, 0f, 100f);
     }
@@ -95,9 +105,9 @@ public class SmokeTests
     [Fact]
     public void FullDayRun_Hydration_RemainsWithinValidRange()
     {
-        var sim   = RunOneDay();
-        var human = sim.EntityManager.Query<MetabolismComponent>().First();
-        var meta  = human.Get<MetabolismComponent>();
+        var sim  = RunOneDay();
+        var meta = sim.EntityManager.Query<MetabolismComponent>()
+                      .First().Get<MetabolismComponent>();
 
         Assert.InRange(meta.Hydration, 0f, 100f);
     }
@@ -105,9 +115,9 @@ public class SmokeTests
     [Fact]
     public void FullDayRun_Energy_RemainsWithinValidRange()
     {
-        var sim   = RunOneDay();
-        var human = sim.EntityManager.Query<EnergyComponent>().First();
-        var energy = human.Get<EnergyComponent>();
+        var sim    = RunOneDay();
+        var energy = sim.EntityManager.Query<EnergyComponent>()
+                        .First().Get<EnergyComponent>();
 
         Assert.InRange(energy.Energy,     0f, 100f);
         Assert.InRange(energy.Sleepiness, 0f, 100f);
@@ -131,9 +141,9 @@ public class SmokeTests
     [Fact]
     public void FullDayRun_NutrientStores_Accumulate_CarbohydratesAndWater()
     {
-        var sim   = RunOneDay();
-        var human = sim.EntityManager.Query<MetabolismComponent>().First();
-        var meta  = human.Get<MetabolismComponent>();
+        var sim  = RunOneDay();
+        var meta = sim.EntityManager.Query<MetabolismComponent>()
+                      .First().Get<MetabolismComponent>();
 
         // Carbohydrates must be positive — food went through the pipeline.
         Assert.True(meta.NutrientStores.Carbohydrates > 0f,
@@ -154,15 +164,15 @@ public class SmokeTests
         // The old bug: stomach fills to exactly MaxVolumeMl (1000ml) and
         // NutrientsQueued stays at zero forever. FeedingSystem sees IsFull=true
         // and never fires again. Detect by checking end state.
-        var sim   = RunOneDay();
-        var human = sim.EntityManager.Query<StomachComponent>().First();
-        var stomach = human.Get<StomachComponent>();
+        var sim     = RunOneDay();
+        var stomach = sim.EntityManager.Query<StomachComponent>()
+                         .First().Get<StomachComponent>();
 
         // If the bug is present: volume = 1000ml, nutrients = 0.
         // Either the stomach empties (volume < 1000ml) or it has real nutrients queued.
-        bool stomachFull            = stomach.CurrentVolumeMl >= StomachComponent.MaxVolumeMl;
-        bool noNutrientsQueued      = stomach.NutrientsQueued.Calories < 0.01f;
-        bool bugPatternDetected     = stomachFull && noNutrientsQueued;
+        bool stomachFull        = stomach.CurrentVolumeMl >= StomachComponent.MaxVolumeMl;
+        bool noNutrientsQueued  = stomach.NutrientsQueued.Calories < 0.01f;
+        bool bugPatternDetected = stomachFull && noNutrientsQueued;
 
         Assert.False(bugPatternDetected,
             $"Bug pattern detected: stomach is at {stomach.CurrentVolumeMl:F0}ml with " +
@@ -181,8 +191,8 @@ public class SmokeTests
         //
         // Threshold: 50 violations across 720 ticks / 13 systems / 1 entity.
         // The v0.7.2 healthy run produced 0 violations. This is a loose guard.
-        var sim       = RunOneDay();
-        int count     = sim.Invariants.Violations.Count;
+        var sim   = RunOneDay();
+        int count = sim.Invariants.Violations.Count;
 
         Assert.True(count < 50,
             $"Too many invariant violations: {count}. " +
@@ -194,7 +204,7 @@ public class SmokeTests
     {
         // If Satiation hits 0 and STAYS there for the whole second half of the day,
         // feeding is broken. We check mid-day and end-of-day don't both equal 0.
-        var sim = new SimulationBootstrapper();
+        var sim = new SimulationBootstrapper(humanCount: 1);
 
         // Run half a day
         for (int i = 0; i < TicksPerDay / 2; i++)
@@ -223,7 +233,7 @@ public class SmokeTests
     {
         // Longer run to catch any accumulation issues (growing lists, etc.)
         // Three days = 2160 ticks. Still sub-millisecond on modern hardware.
-        var sim = new SimulationBootstrapper();
+        var sim = new SimulationBootstrapper(humanCount: 1);
         var ex  = Record.Exception(() =>
         {
             for (int i = 0; i < TicksPerDay * 3; i++)
@@ -235,7 +245,7 @@ public class SmokeTests
     [Fact]
     public void ThreeDayRun_InvariantViolations_UnderReasonableLimit()
     {
-        var sim = new SimulationBootstrapper();
+        var sim = new SimulationBootstrapper(humanCount: 1);
         for (int i = 0; i < TicksPerDay * 3; i++)
             sim.Engine.Update(TickDelta);
 
