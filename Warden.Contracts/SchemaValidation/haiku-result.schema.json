@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ecs-sim-engine.local/schemas/haiku-result.schema.json",
+  "title": "HaikuResult",
+  "description": "Verdict returned by one Tier-3 Haiku on one scenario. Parsed and rolled up per Sonnet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scenarioId", "parentBatchId", "workerId", "outcome", "assertionResults", "tokensUsed"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "0.1.0" },
+    "scenarioId":    { "type": "string", "pattern": "^sc-[0-9]{2,3}$" },
+    "parentBatchId": { "type": "string", "pattern": "^batch-[a-z0-9-]{1,48}$" },
+    "workerId":      { "type": "string", "pattern": "^haiku-[0-9]{2}$" },
+
+    "outcome": {
+      "type": "string",
+      "enum": ["ok", "failed", "blocked"],
+      "description": "ok = every assertion true. failed = at least one assertion false. blocked = could not run to completion."
+    },
+
+    "blockReason": {
+      "type": "string",
+      "enum": ["cli-nonzero", "telemetry-unreadable", "timeout", "invariant-violated", "tool-error", "exception"]
+    },
+
+    "assertionResults": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "passed"],
+        "properties": {
+          "id":              { "type": "string", "pattern": "^A-[0-9]{2}$" },
+          "passed":          { "type": "boolean" },
+          "observedValue":   { "description": "Raw observed value from telemetry. Numeric, string, or boolean." },
+          "observedAtGameSeconds": { "type": "number", "minimum": 0 },
+          "note":            { "type": "string", "maxLength": 512 }
+        }
+      }
+    },
+
+    "keyMetrics": {
+      "type": "object",
+      "additionalProperties": { "type": "number" },
+      "description": "Free-form numeric metrics the Haiku thinks the human should see. Aggregated in the final report.",
+      "maxProperties": 32
+    },
+
+    "telemetryDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Compact summary of the full telemetry stream. Never ship raw JSONL back through the API.",
+      "properties": {
+        "totalTicks":       { "type": "integer", "minimum": 0 },
+        "violationCount":   { "type": "integer", "minimum": 0 },
+        "finalTimeDisplay": { "type": "string",  "maxLength": 32 },
+        "entityCount":      { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "tokensUsed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "cachedRead", "output"],
+      "properties": {
+        "input":      { "type": "integer", "minimum": 0 },
+        "cachedRead": { "type": "integer", "minimum": 0 },
+        "cacheWrite": { "type": "integer", "minimum": 0 },
+        "output":     { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "note": { "type": "string", "maxLength": 2000, "description": "Optional one-paragraph observation from the Haiku. Not a retry request, not a plan, just context." }
+  },
+
+  "allOf": [
+    {
+      "if":   { "properties": { "outcome": { "const": "blocked" } }, "required": ["outcome"] },
+      "then": { "required": ["blockReason"] }
+    }
+  ]
+}

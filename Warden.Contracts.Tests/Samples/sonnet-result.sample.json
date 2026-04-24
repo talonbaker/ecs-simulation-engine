@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "0.1.0",
+  "specId": "spec-add-metabolism-drain",
+  "workerId": "sonnet-01",
+  "outcome": "ok",
+  "acceptanceTestResults": [
+    {
+      "id": "AT-01",
+      "passed": true,
+      "evidence": "MetabolismTests.Satiation_Decreases_After_100_Ticks — PASS"
+    },
+    {
+      "id": "AT-02",
+      "passed": true,
+      "evidence": "dotnet build: 0 warning(s)"
+    }
+  ],
+  "worktreePath": "/tmp/worktrees/sonnet-01-spec-add-metabolism-drain",
+  "diffSummary": {
+    "filesAdded": 1,
+    "filesModified": 1,
+    "filesDeleted": 0,
+    "linesAdded": 42,
+    "linesRemoved": 3
+  },
+  "tokensUsed": {
+    "input": 8200,
+    "cachedRead": 3100,
+    "cacheWrite": 500,
+    "output": 1450
+  },
+  "notes": "Drain rate pulled from SimConfig.Metabolism.SatiationDrainPerSecond; defaulted to 0.01."
+}

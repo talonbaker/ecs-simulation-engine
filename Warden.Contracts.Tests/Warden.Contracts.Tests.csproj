@@ -27,4 +27,8 @@
     <ProjectReference Include="..\Warden.Contracts\Warden.Contracts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Samples\*.json" />
+  </ItemGroup>
+
 </Project>
