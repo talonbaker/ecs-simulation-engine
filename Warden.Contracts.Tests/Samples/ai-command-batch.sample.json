@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "0.1.0",
+  "commands": [
+    {
+      "kind": "spawn-food",
+      "foodType": "banana",
+      "x": 5.0,
+      "y": 0.0,
+      "z": 5.0,
+      "count": 3
+    },
+    {
+      "kind": "spawn-liquid",
+      "liquidType": "water",
+      "x": 7.0,
+      "y": 0.0,
+      "z": 2.0,
+      "count": 1
+    },
+    {
+      "kind": "set-position",
+      "entityId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "x": 3.0,
+      "y": 0.0,
+      "z": 3.0
+    },
+    {
+      "kind": "force-dominant",
+      "entityId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "dominant": "Eat",
+      "durationGameSeconds": 30.0
+    },
+    {
+      "kind": "remove-entity",
+      "entityId": "c3d4e5f6-a7b8-9012-cdef-012345678901"
+    },
+    {
+      "kind": "set-config-value",
+      "path": "systems.brain.sleepMaxScore",
+      "value": 100
+    }
+  ]
+}

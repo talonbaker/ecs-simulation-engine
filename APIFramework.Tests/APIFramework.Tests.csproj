@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- CS0649: field never assigned — intentional in private test-only structs -->
+    <NoWarn>CS0649</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
