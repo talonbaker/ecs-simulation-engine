@@ -15,8 +15,9 @@ Encapsulate the orchestrator's prompt-assembly rules so slabs 1–3 always carry
 
 ## Reference files
 
-- `docs/c2-infrastructure/00-SRD.md` §2 Pillar D.1
+- `docs/c2-infrastructure/00-SRD.md` §2 Pillar D.1, §8 (architectural axioms)
 - `docs/c2-infrastructure/02-cost-model.md` §3
+- `docs/c2-infrastructure/SCHEMA-ROADMAP.md` (the corpus will grow as schemas evolve)
 - `Warden.Anthropic/MessageRequest.cs` (from WP-05)
 - `Warden.Anthropic/CacheControl.cs` (from WP-05)
 
@@ -35,7 +36,8 @@ Encapsulate the orchestrator's prompt-assembly rules so slabs 1–3 always carry
 | code | `Warden.Orchestrator/Cache/PromptSlab.cs` | `public sealed record PromptSlab(string Name, string Text, CacheDisposition Cache)`. |
 | code | `Warden.Orchestrator/Cache/CacheDisposition.cs` | `public enum CacheDisposition { Uncached, Ephemeral5m, Ephemeral1h }`. |
 | code | `Warden.Orchestrator/Cache/PromptCacheManager.cs` | See public surface below. |
-| code | `Warden.Orchestrator/Cache/CachedPrefixSource.cs` | Loads the four static files (engine fact sheet, engineering guide, architecture guide, schemas) and assembles slab 1. Caches the string in memory. Invalidates on file mtime change. |
+| code | `Warden.Orchestrator/Cache/CachedPrefixSource.cs` | Loads a *configurable corpus* of static files declared in `Warden.Orchestrator/Cache/cached-corpus.manifest.json` and assembles slab 1. Caches the assembled string in memory. Invalidates on any corpus file's mtime change OR a manifest change. The manifest is checked in to source control; future phases extend it (per `SCHEMA-ROADMAP.md`) without rewriting `CachedPrefixSource`. |
+| code | `Warden.Orchestrator/Cache/cached-corpus.manifest.json` | Initial manifest. One JSON object with a `version` string and an `entries[]` array. Each entry: `path` (relative to repo root), `slab` (always `1` in Phase 0), `purpose` (free-text label, e.g. "engine fact sheet"). Phase-0 entries: engine fact sheet, engineering guide, architecture guide, all `schemas/*.schema.json` files. Phase-1 will append the world-bible and cast-bible entries. |
 | code | `Warden.Orchestrator.Tests/Cache/PromptCacheManagerTests.cs` | See acceptance. |
 | doc | `docs/c2-infrastructure/work-packets/_completed/WP-06.md` | Completion note including observed cache hit-rate on the smoke mission. |
 
@@ -90,3 +92,5 @@ For interactive Sonnet fan-outs the 5-minute TTL is cheaper. For Haiku batch sub
 | AT-05 | Two consecutive `BuildRequest` calls within the same TTL window produce identical slab-1/2 bytes — proves the cache key is stable. | unit-test |
 | AT-06 | `userTurnBody = ""` throws. | unit-test |
 | AT-07 | Slab 1 begins with a clearly labelled role frame and ends with a boundary marker (`\n\n---\n\n`) so concatenation ambiguity is impossible. | manual-review |
+| AT-08 | Adding a new file entry to `cached-corpus.manifest.json` causes its content to appear in slab 1 on the next `BuildRequest` call, in manifest order, separated by boundary markers. | unit-test |
+| AT-09 | A manifest entry whose `path` does not exist on disk causes `CachedPrefixSource` to throw `FileNotFoundException` at construction time, not on first call. Fail-fast over fail-late. | unit-test |

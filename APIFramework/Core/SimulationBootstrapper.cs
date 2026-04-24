@@ -58,6 +58,15 @@ public class SimulationBootstrapper
     public InvariantSystem  Invariants     { get; }
 
     /// <summary>
+    /// Deterministic RNG source for all simulation systems.
+    /// Seeded from the <c>seed</c> constructor parameter; default seed is 0.
+    /// Systems that need randomness (e.g. <see cref="MovementSystem"/>) receive
+    /// this instance so every random call is part of the same seeded sequence,
+    /// making the entire simulation deterministic given the same seed.
+    /// </summary>
+    public SeededRandom Random { get; }
+
+    /// <summary>
     /// Primary constructor — accepts any IConfigProvider.
     /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
     /// </summary>
@@ -68,13 +77,19 @@ public class SimulationBootstrapper
     /// Pass 1 for isolated single-entity tests; pass 0 to spawn no humans
     /// (useful for world-object-only unit tests).
     /// </param>
-    public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount)
+    /// <param name="seed">
+    /// RNG seed for deterministic replay. Two runs with the same seed,
+    /// config, and command log produce byte-identical telemetry streams.
+    /// Defaults to 0 when not supplied.
+    /// </param>
+    public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0)
     {
         Config        = configProvider.GetConfig();
         EntityManager = new EntityManager();
         Clock         = new SimulationClock { TimeScale = Config.World.DefaultTimeScale };
         Engine        = new SimulationEngine(EntityManager, Clock);
         Invariants    = new InvariantSystem(Clock);
+        Random        = new SeededRandom(seed);
 
         RegisterSystems();
         SpawnWorld(humanCount);
@@ -88,8 +103,11 @@ public class SimulationBootstrapper
     /// <param name="humanCount">
     /// How many human entities to spawn.  Defaults to <see cref="DefaultHumanCount"/> (100).
     /// </param>
-    public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount)
-        : this(new FileConfigProvider(configPath), humanCount) { }
+    /// <param name="seed">
+    /// RNG seed. Defaults to 0. Pass a nonzero value for deterministic replay.
+    /// </param>
+    public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount, int seed = 0)
+        : this(new FileConfigProvider(configPath), humanCount, seed) { }
 
     private void RegisterSystems()
     {
@@ -130,7 +148,7 @@ public class SimulationBootstrapper
 
         // World — environmental systems independent of entity biology
         Engine.AddSystem(new RotSystem(sys.Rot),                                  SystemPhase.World);
-        Engine.AddSystem(new MovementSystem(),                                     SystemPhase.World);
+        Engine.AddSystem(new MovementSystem(Random),                               SystemPhase.World);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────

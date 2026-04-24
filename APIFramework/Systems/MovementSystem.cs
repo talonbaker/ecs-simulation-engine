@@ -37,7 +37,17 @@ public class MovementSystem : ISystem
     private readonly Dictionary<Guid, (float X, float Z)> _wanderTargets = new();
 
     // Seeded PRNG so wandering is deterministic / reproducible.
-    private readonly Random _rng = new(42);
+    // Supplied by SimulationBootstrapper so the full simulation shares one seed chain.
+    private readonly SeededRandom _rng;
+
+    /// <summary>
+    /// Initialises the system with the simulation's shared <see cref="SeededRandom"/>.
+    /// Two runs with the same seed produce identical wander sequences.
+    /// </summary>
+    public MovementSystem(SeededRandom rng)
+    {
+        _rng = rng;
+    }
 
     public void Update(EntityManager em, float deltaTime)
     {
@@ -125,8 +135,8 @@ public class MovementSystem : ISystem
 
     private (float X, float Z) PickRandom()
     {
-        float x = WorldMinX + (float)_rng.NextDouble() * (WorldMaxX - WorldMinX);
-        float z = WorldMinZ + (float)_rng.NextDouble() * (WorldMaxZ - WorldMinZ);
+        float x = _rng.NextFloatRange(WorldMinX, WorldMaxX);
+        float z = _rng.NextFloatRange(WorldMinZ, WorldMaxZ);
         return (x, z);
     }
 }

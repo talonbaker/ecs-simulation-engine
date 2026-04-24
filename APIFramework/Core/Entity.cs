@@ -69,4 +69,31 @@ public class Entity
 
     public IEnumerable<object> GetAll()             => _components.Values;
     public IEnumerable<object> GetAllComponents()   => _components.Values;
+
+    // ── Identity ──────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Hash code derived from <see cref="Id"/> (not memory address).
+    ///
+    /// WHY THIS MATTERS FOR DETERMINISM
+    /// ──────────────────────────────────
+    /// <see cref="EntityManager"/> stores entities in <c>HashSet&lt;Entity&gt;</c>
+    /// buckets. If <c>GetHashCode()</c> returns a memory-address-based value
+    /// (the <c>Object</c> default), bucket placement — and therefore
+    /// <c>Query&lt;T&gt;()</c> iteration order — varies between process runs.
+    /// Systems that iterate the query in different orders on each run produce
+    /// different telemetry, breaking the deterministic replay contract.
+    ///
+    /// By deriving the hash from <see cref="Id"/> (which is itself
+    /// deterministic via <see cref="EntityManager"/>'s counter-based GUID),
+    /// the bucket layout is identical across runs for the same entity creation
+    /// sequence, making system iteration order reproducible.
+    ///
+    /// CONTRACT NOTE: <see cref="Equals"/> uses reference equality (the correct
+    /// semantic: one C# object = one simulation entity). The contract
+    ///   "a.Equals(b) ⟹ a.GetHashCode() == b.GetHashCode()"
+    /// is satisfied because two references to the same object share the same
+    /// <see cref="Id"/>, and therefore the same hash code.
+    /// </summary>
+    public override int GetHashCode() => Id.GetHashCode();
 }

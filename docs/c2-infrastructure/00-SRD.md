@@ -341,3 +341,39 @@ See `prompts/opus-sonnet-bootstrap.md` for the exact bootstrap prompt. In summar
 5. You review, clear the block if needed, and cue it again or move on.
 
 That loop is what makes this walk-away-safe.
+
+---
+
+## 8. Architectural axioms beyond Phase 0
+
+These are forward-looking commitments that bind every packet from Phase 1 on. They are recorded here, not in a packet, because they constrain the *shape* of every future packet. See also `SCHEMA-ROADMAP.md` for the versioned plan that operationalises them.
+
+### 8.1 Anthropic API is a design-time tool only
+
+Sonnet and Haiku calls happen during *content generation* — building catalogs, authoring characters, validating balance, generating dialogue templates. They do **not** happen during the player's gameplay session. The runtime engine carries no dependency on `api.anthropic.com`, `Warden.Anthropic`, or any LLM. NPC behaviour at runtime is template-driven and deterministic, with the templates produced by Sonnets at build time.
+
+This is the axiom that makes the game offline-playable, fast, and free at the point of play. It is also the axiom that allows the orchestrator to remain a build-time tool, never a runtime dependency. Any future packet that proposes a runtime LLM call is rejected on architectural grounds.
+
+### 8.2 Save/load reuses WorldStateDto
+
+The player's save game is a serialised `WorldStateDto` at the current tick, plus the persistent-event chronicle (v0.3 and beyond — see `SCHEMA-ROADMAP.md`). There is no second save format. The format introduced by `WP-03` *is* the format the player's save file uses. Every future schema bump automatically extends the save format, with the same versioning rules.
+
+This is **not** the same as `ECSCli ai replay`, which is for deterministic test scenarios on bounded inputs. Replay tests determinism; save/load preserves a player's world. Two concepts, one storage format.
+
+### 8.3 Memory model: per-pair primary, global thin
+
+NPC memory is stored on the *relationship entity* between the two participants ("Donna remembers Frank insulted her" lives on the Donna↔Frank relationship). For events the whole office knows about ("Kevin's chili"), a thin global chronicle (v0.3 in `SCHEMA-ROADMAP.md`) carries the shared memory, and per-NPC memory entries reference it by id rather than duplicating its body. This avoids both per-NPC memory bloat and global-chronicle write-amplification.
+
+### 8.4 Charm is curated, not simulated
+
+The 30-year-office feel is *authored* into the world at game start: dust, stacked boxes, the cubicle of dead monitors, the parking-lot "no fighting" sign. The engine does not simulate dust accumulation over months. It ships with dust already there. A small subset of in-game events do persist (spilled coffee → stain that stays, NPC argument → ongoing relationship rift), and those events flow through the v0.3 chronicle channel.
+
+This axiom keeps the engine cheap to run, the content tractable to author, and the gameplay pacing in the hands of the player rather than an entropy clock.
+
+### 8.5 Social state is a first-class component family
+
+The eventual gameplay is Sims/Rimworld/Prison Architect territory: drives, relationships, memories, schedules, romance, office politics. Social state will be the *largest* live component family in the engine, not an afterthought layered on top of physiology. Phase-0 schemas reserve no fields for it (intentional — v0.1 contracts only what exists today), but the v0.2 minor bump in `SCHEMA-ROADMAP.md` is the first move on this axis.
+
+### 8.6 The visual target is 2.5D top-down management sim
+
+The player is a ghost-camera, not a character. They pan, zoom, and follow workers around an office floor. The headless engine doesn't render, but it must expose enough spatial structure for the AI tier to reason about *places*, not just float coordinates. The v0.5 room-overlay bump is the first move on this axis.

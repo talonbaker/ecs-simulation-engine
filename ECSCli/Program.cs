@@ -2,7 +2,21 @@ using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Diagnostics;
 using ECSCli;
+using ECSCli.Ai;
+using System.CommandLine;   // CommandExtensions.InvokeAsync — used for `ai` verb delegation
 using System.Diagnostics;
+
+// ── AI verb delegation ────────────────────────────────────────────────────────
+//
+// If the first argument is "ai", hand control entirely to the System.CommandLine
+// sub-tree and exit with its return code. The existing bespoke parser below is
+// not invoked, preserving byte-identical behaviour for all other invocations.
+//
+if (args.Length > 0 && args[0] == "ai")
+{
+    int exitCode = await AiCommand.Root.InvokeAsync(args[1..]);
+    Environment.Exit(exitCode);
+}
 
 // ── Parse CLI args ─────────────────────────────────────────────────────────────
 var options = CliOptions.Parse(args);
