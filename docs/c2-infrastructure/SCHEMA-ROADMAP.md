@@ -33,41 +33,67 @@ Schemas already in `schemas/`:
 
 Out of scope at v0.1: anything social, anything persistent-narrative, any rooms.
 
-### v0.2 — Social pillar _(landed in WP-1.0.A)_
+### v0.2.1 — Social pillar _(landed in WP-1.0.A.1; WP-1.0.A was a transient that was never stamped on the wire)_
 
-**Driver:** post-Phase-0 Phase 1 (social systems). Wire-format bump only; engine-side population is a later packet.
+**Driver:** post-Phase-0 Phase 1 (social systems). Wire-format bump only; engine-side population is a later packet. `schemaVersion: "0.2.0"` was added by WP-1.0.A but no producer ever stamped it (the projector still emits `"0.1.0"`), so WP-1.0.A.1 collapsed it into `"0.2.1"`. The accepted enum is now `["0.1.0", "0.2.1"]` — `"0.2.0"` has been dropped.
 
 Schema additions (all new fields optional; v0.1 consumers ignore them):
 
 - `world-state` minor bump: `entities[].social` optional object. Contains:
-  - `selfDrives` — five self-state drives (`belonging`, `status`, `affection`, `irritation`, `loneliness`), each 0–100.
-  - `personalityTraits[]` — Big Five dimensions (`openness`, `conscientiousness`, `extraversion`, `agreeableness`, `neuroticism`), value −2 to +2. `maxItems: 5`.
+  - `drives` — all eight drives consolidated on the entity: `belonging`, `status`, `affection`, `irritation`, `attraction`, `trust`, `suspicion`, `loneliness`. Each drive is `{current, baseline}`, both 0–100 integers. All eight sub-fields are required when `drives` is present.
+  - `willpower` — `{current, baseline}` optional object, both 0–100 integers. Global self-state reservoir; depletes with suppression, regenerates with rest.
+  - `inhibitions[]` — optional array, `maxItems: 8`. Each entry: `{class, strength, awareness}`. `class` is enum (`infidelity | confrontation | bodyImageEating | publicEmotion | physicalIntimacy | interpersonalConflict | riskTaking | vulnerability`); `strength` 0–100; `awareness` enum (`known | hidden`).
+  - `personalityTraits[]` — Big Five dimensions, value −2 to +2. `maxItems: 5`.
   - `currentMood` — free-form short string (`maxLength: 32`). **Not an enum** — premature enumeration locks out emergent moods.
   - `vocabularyRegister` — enum: `formal | casual | crass | clipped | academic | folksy`.
-- `world-state` minor bump: top-level `relationships[]` array (`maxItems: 200`). Each carries `participantA`, `participantB` (both UUID entity refs), `patterns[]` (`maxItems: 2`, see pattern enum below), `pairDrives` (`attraction`, `trust`, `suspicion`, `jealousy` — the three pair-targeted drives from the cast bible, plus `jealousy` as a reserved derived drive), `intensity` 0–100, and `historyEventIds[]`.
-- `world-state` minor bump: top-level `memoryEvents[]` array (`maxItems: 4096`). Each carries `id`, `tick`, `participants[]`, `kind`, `scope` (`pair | global`), `description` (`maxLength: 280`), `persistent`, optional `relationshipId`. At v0.2 only `scope: "pair"` is valid; `scope: "global"` is reserved for v0.3.
-- New `world-config-delta` schema: covers social tuning values (relationship-decay rate, gossip-spread coefficient, mood-volatility). Deferred to its own packet to keep this review focused.
+- `world-state` minor bump: top-level `relationships[]` array (`maxItems: 200`). Each carries `participantA`, `participantB` (both UUID entity refs), `patterns[]` (`maxItems: 2`, see pattern enum), `intensity` 0–100, and `historyEventIds[]`. No `pairDrives` — drives are entity-level only.
+- `world-state` minor bump: top-level `memoryEvents[]` array (`maxItems: 4096`). Each carries `id`, `tick`, `participants[]`, `kind`, `scope` (`pair | global`), `description` (`maxLength: 280`), `persistent`, optional `relationshipId`. At v0.2.1 only `scope: "pair"` is valid; `scope: "global"` is reserved for v0.3.
+- New `world-config-delta` schema: covers social tuning values. Deferred to its own packet.
 
-**Deliberate variances from the original §v0.2 draft:**
+**Deliberate variances from the original §v0.2 draft (as corrected by WP-1.0.A.1):**
 
-1. **Drive split.** The cast bible (authored after this roadmap) distinguishes self-state drives from pair-targeted drives. The five self-drives live on `entities[].social.selfDrives`; the three pair-targeted drives (`attraction`, `trust`, `suspicion`) plus `jealousy` live on `relationships[].pairDrives`. The original draft put all drives on `entities[].social`. The split is architecturally correct per SRD §8.3 and the cast bible.
+1. **Drives consolidated to entity; no pair-drives.** All eight drives (`belonging`, `status`, `affection`, `irritation`, `attraction`, `trust`, `suspicion`, `loneliness`) live on `entities[].social.drives`. The WP-1.0.A split of self-drives vs `relationships[].pairDrives` has been removed — the action-gating bible confirms drives are entity-level self-state values. `jealousy` (a roadmap-era reservation) has been dropped entirely; the cast bible commits to eight drives.
 
-2. **`currentMood` is a free-form string, not an enum.** Enumerating moods at v0.2 would lock out emergent moods the game has not yet produced. `maxLength: 32` provides the only constraint.
+2. **Willpower and inhibitions added.** The action-gating design doc (`DRAFT-action-gating.md`) specifies willpower as a global self-state reservoir and inhibitions as hard action blockers. Both surfaces are reserved on the wire here; engine-side population is the social-engine packet.
 
-3. **`scope: "global"` is reserved, not live.** The array shape is present so the wire format only needs one minor bump when v0.3 turns on global chronicle. Any v0.2 emitter sending `scope: "global"` is rejected by `WorldStateReferentialChecker` with reason `"global-scope-reserved-for-v0.3"`.
+3. **`currentMood` is a free-form string, not an enum.** `maxLength: 32` is the only constraint.
 
-### v0.3 — Persistent narrative chronicle
+4. **`scope: "global"` is reserved, not live.** Any v0.2.1 emitter sending `scope: "global"` is rejected by `WorldStateReferentialChecker` with reason `"global-scope-reserved-for-v0.3"`.
 
-**Driver:** post-Phase-0 Phase 4 (spill-stays-spilled mechanic).
+### v0.3 — Spatial pillar _(landed in WP-1.0.B)_
+
+**Promotion rationale:** The aesthetic bible (`DRAFT-aesthetic-bible.md`) ranks lighting as priority-1 and proximity as priority-2 — both ahead of the persistent narrative chronicle that formerly occupied this slot. Both lighting and proximity are keyed on rooms: light sources live in rooms, apertures admit light into rooms, proximity events fire on room entry/exit, and the AI tier reasons about places by room id. The spatial contract must therefore precede the lighting engine packet (Phase 1.1) and the proximity engine packet (Phase 1.2). Chronicle and character-definition packets shift one version down.
+
+**Driver:** post-Phase-0 Phase 1 (lighting and proximity systems). Wire-format bump only; engine-side population is Phase 1.1 (spatial engine) and Phase 1.2 (lighting engine).
+
+Schema additions (all new arrays optional; v0.1 and v0.2.1 consumers ignore them):
+
+- `world-state` minor bump: top-level `rooms[]` array (`maxItems: 64`). Each room has `id` (UUID), `name` (`maxLength: 64`), `category` (sixteen-value enum), `floor` (four-value enum: `basement | first | top | exterior`), `boundsRect` (required: `{x, y, width, height}` in tile units, integers), `illumination` (required: `{ambientLevel, colorTemperatureK, dominantSourceId?}`). `additionalProperties: false`. Room-membership on the entity (`entities[].position.roomId`) is deliberately deferred — room membership is derivable from `position` + `rooms[].boundsRect` and adding it to the wire now would require the engine to populate it (Phase 1.1 work).
+- `world-state` minor bump: top-level `lightSources[]` array (`maxItems: 256`). Each source has `id`, `kind` (ten-value enum), `state` (`on | off | flickering | dying`), `intensity` (0–100), `colorTemperatureK` (1000–10000), `position` (`{x, y}` tile-unit integers), `roomId`. `additionalProperties: false`.
+- `world-state` minor bump: top-level `lightApertures[]` array (`maxItems: 64`). Each aperture has `id`, `position` (`{x, y}`), `roomId`, `facing` (`north | east | south | west | ceiling`), `areaSqTiles` (0.5–64). `additionalProperties: false`.
+- `world-state` minor bump: `clock` gains optional `sun` sub-object with `azimuthDeg` (0–360), `elevationDeg` (−90–90), `dayPhase` (`night | earlyMorning | midMorning | afternoon | evening | dusk`). `additionalProperties: false`.
+- `schemaVersion` enum becomes `["0.1.0", "0.2.1", "0.3.0"]`.
+
+Referential integrity enforced by `WorldStateReferentialChecker`:
+- `lightSources[].roomId` must resolve to `rooms[].id` → reason `"light-source-room-missing"`.
+- `lightApertures[].roomId` must resolve to `rooms[].id` → reason `"aperture-room-missing"`.
+- `rooms[].illumination.dominantSourceId` (when present) must resolve to `lightSources[].id` → reason `"dominant-source-missing"`.
+- Duplicate `rooms[].id` → reason `"duplicate-room-id"`.
+- Overlapping `boundsRect` is allowed (hallways can pass under balconies).
+
+### v0.4 — Persistent narrative chronicle
+
+**Driver:** post-Phase-0 Phase 4 (spill-stays-spilled mechanic). Shifted from v0.3 to v0.4 when the aesthetic bible promoted spatial to a foundation system.
 
 Schema additions:
 
 - `world-state` minor bump: `chronicle[]` array of authored-or-emergent narrative events with `id`, `kind`, `participants[]`, `location`, `tick`, `description`, `persistent: bool`. Persistent entries also exist as concrete entities (e.g., a `Stain` entity or a `BrokenItem` entity); the chronicle is the *narrative* index, the entity tree is the *spatial* index. Both must agree, enforced by an invariant check.
 - New `narrative-event-emit` command kind on `ai-command-batch`. **Design-time content authoring only — never runtime** (`00-SRD.md` §8.1).
+- Removes the `"global-scope-reserved-for-v0.3"` guard in `WorldStateReferentialChecker`; `scope: "global"` becomes live.
 
-### v0.4 — Character definitions and customization
+### v0.5 — Character definitions and customization
 
-**Driver:** post-Phase-0 Phase 3 (curated cast) and Phase 7+ (player customization).
+**Driver:** post-Phase-0 Phase 3 (curated cast) and Phase 7+ (player customization). Shifted from v0.4 to v0.5 when spatial moved up.
 
 Schema additions:
 
@@ -75,14 +101,9 @@ Schema additions:
 - New `character-catalog` schema — a list of `character-definition` entries plus a deduplication policy and authorship metadata.
 - New `place-character` command kind on `ai-command-batch` for content authoring.
 
-### v0.5 — Spatial / room overlay
+### v0.6 — TBD
 
-**Driver:** post-Phase-0 Phase 1 (narrative telemetry needs room queries — "who is in the breakroom").
-
-Schema additions:
-
-- `world-state` minor bump: top-level `rooms[]` array. Each room has `id`, `name`, `boundsPolygon` (or `boundsRect` if grid-aligned), `category` (breakroom/bathroom/cubicle-grid/parking-lot/hallway/etc).
-- `world-state` minor bump: `entities[].position` gains optional `roomId` for fast room-membership queries without re-running point-in-polygon at telemetry time. Engine-side responsibility.
+Placeholder for the next wire-format milestone. Candidates: polygon room bounds (for L-shaped or curved spaces), `entities[].position.roomId` explicit field (derived index promoted to wire surface once the spatial engine populates it), streaming telemetry delta format.
 
 ---
 

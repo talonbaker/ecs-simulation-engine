@@ -1,9 +1,9 @@
 {
-  "schemaVersion": "0.2.0",
-  "capturedAt": "2026-04-24T10:00:00+00:00",
+  "schemaVersion": "0.2.1",
+  "capturedAt": "2026-04-25T10:00:00+00:00",
   "tick": 200,
   "seed": 99,
-  "simVersion": "0.2.0-dev",
+  "simVersion": "0.2.1-dev",
   "clock": {
     "gameTimeDisplay": "Day 1 10:00",
     "dayNumber": 1,
@@ -40,19 +40,27 @@
         "isSleeping": false
       },
       "social": {
-        "selfDrives": {
-          "belonging": 60,
-          "status": 45,
-          "affection": 30,
-          "irritation": 15,
-          "loneliness": 20
+        "drives": {
+          "belonging":  { "current": 72, "baseline": 55 },
+          "status":     { "current": 45, "baseline": 45 },
+          "affection":  { "current": 30, "baseline": 40 },
+          "irritation": { "current": 65, "baseline": 20 },
+          "attraction": { "current": 20, "baseline": 20 },
+          "trust":      { "current": 50, "baseline": 60 },
+          "suspicion":  { "current": 35, "baseline": 15 },
+          "loneliness": { "current": 40, "baseline": 30 }
         },
+        "willpower": { "current": 45, "baseline": 70 },
+        "inhibitions": [
+          { "class": "confrontation", "strength": 80, "awareness": "known" },
+          { "class": "vulnerability", "strength": 90, "awareness": "hidden" }
+        ],
         "personalityTraits": [
           { "dimension": "openness", "value": 1 },
           { "dimension": "extraversion", "value": 2 },
           { "dimension": "neuroticism", "value": -1 }
         ],
-        "currentMood": "content",
+        "currentMood": "tense",
         "vocabularyRegister": "casual"
       }
     },
@@ -96,12 +104,6 @@
       "participantA": "11111111-1111-1111-1111-111111111111",
       "participantB": "22222222-2222-2222-2222-222222222222",
       "patterns": ["rival", "oldFlame"],
-      "pairDrives": {
-        "attraction": 55,
-        "trust": 30,
-        "suspicion": 70,
-        "jealousy": 40
-      },
       "intensity": 80,
       "historyEventIds": ["bbbb0000-0000-0000-0000-000000000000"]
     }
