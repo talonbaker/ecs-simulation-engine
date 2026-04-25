@@ -326,6 +326,20 @@
     }
   },
 
+  // ── Narrative telemetry channel ───────────────────────────────────────────
+  "narrative": {
+    // Drive delta (one tick to next) required to emit DriveSpike
+    "driveSpikeThreshold":         15,
+    // Willpower drop in a single tick required to emit WillpowerCollapse
+    "willpowerDropThreshold":      10,
+    // Willpower level below which WillpowerLow is emitted (once per descent)
+    "willpowerLowThreshold":       20,
+    // Ticks after a DriveSpike during which a room departure → LeftRoomAbruptly
+    "abruptDepartureWindowTicks":   3,
+    // Maximum character length of the Detail field
+    "candidateDetailMaxLength":   280
+  },
+
   // ── Social engine ──────────────────────────────────────────────────────────
   "social": {
     "driveDecayPerTick": 0.15,

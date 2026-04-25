@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
+using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using System.Reflection;
 
@@ -79,6 +80,11 @@ public class SimulationBootstrapper
     /// <summary>Runtime room-membership map. Queried by social and behavior systems.</summary>
     public EntityRoomMembership RoomMembership  { get; }
 
+    // ── Narrative services ────────────────────────────────────────────────────
+
+    /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
+    public NarrativeEventBus NarrativeBus { get; }
+
     /// <summary>
     /// Primary constructor — accepts any IConfigProvider.
     /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
@@ -109,6 +115,9 @@ public class SimulationBootstrapper
         SpatialIndex   = new GridSpatialIndex(Config.Spatial);
         ProximityBus   = new ProximityEventBus();
         RoomMembership = new EntityRoomMembership();
+
+        // Narrative services
+        NarrativeBus = new NarrativeEventBus();
 
         RegisterSystems();
         SpawnWorld(humanCount);
@@ -181,6 +190,10 @@ public class SimulationBootstrapper
         // World — environmental systems independent of entity biology
         Engine.AddSystem(new RotSystem(sys.Rot),                                  SystemPhase.World);
         Engine.AddSystem(new MovementSystem(Random),                               SystemPhase.World);
+
+        // Narrative — runs last so all state has settled; emits candidates via NarrativeBus
+        Engine.AddSystem(new NarrativeEventDetector(
+            NarrativeBus, ProximityBus, RoomMembership, Config.Narrative),        SystemPhase.Narrative);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────
@@ -310,6 +323,7 @@ public class SimulationBootstrapper
         MergeFlat(newCfg.Systems.Interaction,         Config.Systems.Interaction,         changes);
         MergeFlat(newCfg.Systems.Mood,                Config.Systems.Mood,                changes);
         MergeFlat(newCfg.Systems.Rot,                 Config.Systems.Rot,                 changes);
+        MergeFlat(newCfg.Narrative,                   Config.Narrative,                   changes);
 
         // ── Entity starting configs (only affect future spawns) ───────────────
         MergeFlat(newCfg.Entities.Human.Metabolism,     Config.Entities.Human.Metabolism,     changes);

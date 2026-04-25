@@ -64,6 +64,12 @@ public enum SystemPhase
     Transit     = 50,
     Elimination = 55,  // intestine systems — after transit, before world
     World       = 60,
+    /// <summary>
+    /// Narrative detection — runs last so all engine state has settled.
+    /// NarrativeEventDetector compares this tick's state to the previous tick
+    /// and emits NarrativeEventCandidates via NarrativeEventBus.
+    /// </summary>
+    Narrative   = 70,
     PostUpdate = 100,
 }
 
