@@ -24,6 +24,7 @@ public sealed class SonnetDispatcher
     private readonly Persistence.BudgetGuard             _budget;
     private readonly ResiliencePipeline<MessageResponse> _retry;
     private readonly ILogger<SonnetDispatcher>           _log;
+    private readonly IWorktreeDiffSource                 _diffSource;
 
     public SonnetDispatcher(
         IAnthropicClient                    client,
@@ -32,15 +33,17 @@ public sealed class SonnetDispatcher
         CostLedger                          ledger,
         Persistence.BudgetGuard             budget,
         ResiliencePipeline<MessageResponse> retry,
-        ILogger<SonnetDispatcher>           log)
+        ILogger<SonnetDispatcher>           log,
+        IWorktreeDiffSource                 diffSource)
     {
-        _client = client;
-        _cache  = cache;
-        _cot    = cot;
-        _ledger = ledger;
-        _budget = budget;
-        _retry  = retry;
-        _log    = log;
+        _client     = client;
+        _cache      = cache;
+        _cot        = cot;
+        _ledger     = ledger;
+        _budget     = budget;
+        _retry      = retry;
+        _log        = log;
+        _diffSource = diffSource;
     }
 
     /// <summary>
@@ -123,6 +126,11 @@ public sealed class SonnetDispatcher
                 string.Join("; ", validation.Errors));
         }
 
+        // Retrieve the worktree diff now (before ledger/CoT), then evaluate.
+        // The override is applied after the ledger write so the spend is always recorded.
+        var diff    = await _diffSource.GetDiffAsync(result.WorktreePath, ct).ConfigureAwait(false);
+        var verdict = FailClosedEscalator.Evaluate(result, diff);
+
         var usage = response.Usage;
         var rates = CostRates.Sonnet;
         var usdIn  = usage.InputTokens                / 1_000_000m * rates.InputPerMtok;
@@ -154,6 +162,13 @@ public sealed class SonnetDispatcher
 
         var resultJson = JsonSerializer.Serialize(result, JsonOptions.Wire);
         await _cot.PersistResultAsync(runId, workerId, resultJson, ct).ConfigureAwait(false);
+
+        // Apply banned-pattern override after ledger (the spend was recorded; only the return value changes).
+        if (result.Outcome == OutcomeCode.Ok && verdict.TerminalOutcome == OutcomeCode.Blocked)
+        {
+            _log.LogInformation("{WorkerId}: banned pattern detected in worktree diff; overriding to blocked.", workerId);
+            return MakeBlockedResult(spec.SpecId, workerId, BlockReason.ToolError, verdict.HumanMessage);
+        }
 
         _log.LogInformation("{WorkerId}: completed, outcome={Outcome}.", workerId, result.Outcome);
         return result;

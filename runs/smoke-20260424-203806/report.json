@@ -1,0 +1,57 @@
+﻿{
+  "runId": "smoke-20260424-203806",
+  "missionId": "mission-smoke-01",
+  "startedUtc": "2026-04-25T03:38:07.9657483+00:00",
+  "endedUtc": "2026-04-25T03:39:08.0406807+00:00",
+  "terminalOutcome": "ok",
+  "exitCode": 0,
+  "totalSpendUsd": 0.0373450,
+  "budgetUsd": 79228162514264337593543950335,
+  "isEarlyTermination": false,
+  "sonnets": [
+    {
+      "specId": "spec-smoke-01",
+      "specTitle": "Add XML doc comment to EntityManager.Initialize",
+      "workerId": "sonnet-01",
+      "outcome": "ok",
+      "atsPassed": 1,
+      "atsTotal": 1,
+      "spendUsd": 0.0229200,
+      "atResults": [
+        {
+          "id": "AT-01",
+          "passed": true,
+          "notes": "Mock: diff contains \u0027/// \u003Csummary\u003EInitializes the entity manager.\u003C/summary\u003E\u0027"
+        }
+      ],
+      "haikus": []
+    }
+  ],
+  "cost": {
+    "sonnet": {
+      "calls": 1,
+      "inputTokens": 1240,
+      "cachedReadTokens": 28000,
+      "outputTokens": 720,
+      "spendUsd": 0.0229200
+    },
+    "haiku": {
+      "calls": 5,
+      "inputTokens": 4100,
+      "cachedReadTokens": 97500,
+      "outputTokens": 1050,
+      "spendUsd": 0.0144250
+    }
+  },
+  "events": [
+    {
+      "timestamp": "2026-04-25T03:38:07.9657483+00:00",
+      "kind": "run-started"
+    },
+    {
+      "timestamp": "2026-04-25T03:39:08.0406807+00:00",
+      "kind": "run-completed",
+      "detail": "exit=0"
+    }
+  ]
+}

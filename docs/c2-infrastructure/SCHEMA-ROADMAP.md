@@ -33,16 +33,28 @@ Schemas already in `schemas/`:
 
 Out of scope at v0.1: anything social, anything persistent-narrative, any rooms.
 
-### v0.2 — Social pillar
+### v0.2 — Social pillar _(landed in WP-1.0.A)_
 
-**Driver:** post-Phase-0 Phase 2 (social systems). Lands when the engine adds social drives, relationships, and memories.
+**Driver:** post-Phase-0 Phase 1 (social systems). Wire-format bump only; engine-side population is a later packet.
 
-Schema additions:
+Schema additions (all new fields optional; v0.1 consumers ignore them):
 
-- `world-state` minor bump: `entities[].social` optional object containing `socialDrives` (belonging, status, affection, irritation, attraction, trust, suspicion, jealousy, loneliness), `personalityTraits[]`, `currentMood`. All fields optional under the `social` slot — v0.1 consumers ignore the slot entirely.
-- `world-state` minor bump: top-level `relationships[]` array of relationship entities (per-pair model — see `00-SRD.md` §8.3). Each carries `participantA`, `participantB`, `kind` (rivalry/romance/friendship/professional/etc), `intensity`, `history[]` of references to memory events.
-- `world-state` minor bump: top-level `memoryEvents[]` array. Per-pair memories live on the relationship; office-wide memories (Kevin's chili) live here with `scope: "global"`.
-- New `world-config-delta` schema or extension: covers social tuning values (relationship-decay rate, gossip-spread coefficient, mood-volatility) without polluting the balance-test command list.
+- `world-state` minor bump: `entities[].social` optional object. Contains:
+  - `selfDrives` — five self-state drives (`belonging`, `status`, `affection`, `irritation`, `loneliness`), each 0–100.
+  - `personalityTraits[]` — Big Five dimensions (`openness`, `conscientiousness`, `extraversion`, `agreeableness`, `neuroticism`), value −2 to +2. `maxItems: 5`.
+  - `currentMood` — free-form short string (`maxLength: 32`). **Not an enum** — premature enumeration locks out emergent moods.
+  - `vocabularyRegister` — enum: `formal | casual | crass | clipped | academic | folksy`.
+- `world-state` minor bump: top-level `relationships[]` array (`maxItems: 200`). Each carries `participantA`, `participantB` (both UUID entity refs), `patterns[]` (`maxItems: 2`, see pattern enum below), `pairDrives` (`attraction`, `trust`, `suspicion`, `jealousy` — the three pair-targeted drives from the cast bible, plus `jealousy` as a reserved derived drive), `intensity` 0–100, and `historyEventIds[]`.
+- `world-state` minor bump: top-level `memoryEvents[]` array (`maxItems: 4096`). Each carries `id`, `tick`, `participants[]`, `kind`, `scope` (`pair | global`), `description` (`maxLength: 280`), `persistent`, optional `relationshipId`. At v0.2 only `scope: "pair"` is valid; `scope: "global"` is reserved for v0.3.
+- New `world-config-delta` schema: covers social tuning values (relationship-decay rate, gossip-spread coefficient, mood-volatility). Deferred to its own packet to keep this review focused.
+
+**Deliberate variances from the original §v0.2 draft:**
+
+1. **Drive split.** The cast bible (authored after this roadmap) distinguishes self-state drives from pair-targeted drives. The five self-drives live on `entities[].social.selfDrives`; the three pair-targeted drives (`attraction`, `trust`, `suspicion`) plus `jealousy` live on `relationships[].pairDrives`. The original draft put all drives on `entities[].social`. The split is architecturally correct per SRD §8.3 and the cast bible.
+
+2. **`currentMood` is a free-form string, not an enum.** Enumerating moods at v0.2 would lock out emergent moods the game has not yet produced. `maxLength: 32` provides the only constraint.
+
+3. **`scope: "global"` is reserved, not live.** The array shape is present so the wire format only needs one minor bump when v0.3 turns on global chronicle. Any v0.2 emitter sending `scope: "global"` is rejected by `WorldStateReferentialChecker` with reason `"global-scope-reserved-for-v0.3"`.
 
 ### v0.3 — Persistent narrative chronicle
 
