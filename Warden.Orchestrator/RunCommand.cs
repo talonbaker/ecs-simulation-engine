@@ -178,7 +178,14 @@ public static class RunCommand
         IChainOfThoughtStore cot       = cotStore;
         var                  log       = NullLoggerFactory.Instance.CreateLogger<SonnetDispatcher>();
         var                  retry     = RetryPolicy.Build(dryRun || mockMode ? TimeSpan.Zero : null);
-        var                  dispatcher = new SonnetDispatcher(client, cache, cot, ledger, budget, retry, log);
+
+        // Mock and dry-run paths skip the banned-pattern check (no real worktree produced).
+        IWorktreeDiffSource diffSource = (mockMode || dryRun)
+            ? new NullWorktreeDiffSource(cannedDiff: null)
+            : new GitWorktreeDiffSource(
+                NullLoggerFactory.Instance.CreateLogger<GitWorktreeDiffSource>());
+
+        var                  dispatcher = new SonnetDispatcher(client, cache, cot, ledger, budget, retry, log, diffSource);
         var                  controller = new ConcurrencyController();
 
         // -- 6. Dry-run shortcut ---------------------------------------------------

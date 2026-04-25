@@ -141,7 +141,14 @@ public static class ResumeCommand
 
         var log        = NullLoggerFactory.Instance.CreateLogger<SonnetDispatcher>();
         var retry      = RetryPolicy.Build(mockMode ? TimeSpan.Zero : null);
-        var dispatcher = new SonnetDispatcher(client, cache, cot, ledger, budget, retry, log);
+
+        // Mock path skips the banned-pattern check (no real worktree produced).
+        IWorktreeDiffSource diffSource = mockMode
+            ? new NullWorktreeDiffSource(cannedDiff: null)
+            : new GitWorktreeDiffSource(
+                NullLoggerFactory.Instance.CreateLogger<GitWorktreeDiffSource>());
+
+        var dispatcher = new SonnetDispatcher(client, cache, cot, ledger, budget, retry, log, diffSource);
         var controller = new ConcurrencyController();
 
         var specs    = new List<OpusSpecPacket>(pending.Count);

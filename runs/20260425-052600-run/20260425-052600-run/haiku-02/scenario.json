@@ -1,0 +1,14 @@
+{
+  "scenarioId": "sc-02",
+  "seed": 43,
+  "durationGameSeconds": 10,
+  "assertions": [
+    {
+      "id": "A-01",
+      "kind": "at-end",
+      "target": "entityCount",
+      "op": "\u003E=",
+      "value": 1
+    }
+  ]
+}
