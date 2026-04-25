@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Lighting;
 using Warden.Contracts;
 using Warden.Contracts.SchemaValidation;
 using Warden.Contracts.Telemetry;
@@ -13,20 +14,35 @@ using WcVocabRegister       = Warden.Contracts.Telemetry.VocabularyRegister;
 using WcInhibitionClass     = Warden.Contracts.Telemetry.InhibitionClass;
 using WcInhibitionAwareness = Warden.Contracts.Telemetry.InhibitionAwareness;
 using WcRelationshipPattern = Warden.Contracts.Telemetry.RelationshipPattern;
+using WcDayPhase            = Warden.Contracts.Telemetry.DayPhase;
+using WcRoomCategory        = Warden.Contracts.Telemetry.RoomCategory;
+using WcBuildingFloor       = Warden.Contracts.Telemetry.BuildingFloor;
+using WcLightKind           = Warden.Contracts.Telemetry.LightKind;
+using WcLightState          = Warden.Contracts.Telemetry.LightState;
+using WcApertureFacing      = Warden.Contracts.Telemetry.ApertureFacing;
+using EngRoomCategory       = APIFramework.Components.RoomCategory;
+using EngBuildingFloor      = APIFramework.Components.BuildingFloor;
+using EngLightKind          = APIFramework.Components.LightKind;
+using EngLightState         = APIFramework.Components.LightState;
+using EngApertureFacing     = APIFramework.Components.ApertureFacing;
+using EngDayPhase           = APIFramework.Components.DayPhase;
 
 namespace Warden.Telemetry.Tests;
 
 /// <summary>
 /// Acceptance tests for <see cref="TelemetryProjector"/>:
 ///
-/// AT-01 — Projector emits SchemaVersion = "0.2.1".
-/// AT-02 — NPC with full social state projects all fields correctly.
-/// AT-03 — Non-NPC entity has social absent (null).
-/// AT-04 — RelationshipTag entity produces a relationships[] entry.
-/// AT-05 — Relationships sorted by id ascending.
-/// AT-06 — Projected DTO with social state validates against world-state.schema.json.
-/// AT-07 — Two projections of the same snapshot + same inputs → byte-identical JSON.
-/// AT-08 — All previous projector tests still pass.
+/// AT-01 — Projector emits SchemaVersion = "0.3.0".
+/// AT-02 — Two rooms produce a rooms[] array of length 2 with correct fields.
+/// AT-03 — Three light sources produce a lightSources[] array of length 3 with correct fields.
+/// AT-04 — One light aperture produces a lightApertures[] array of length 1 with correct fields.
+/// AT-05 — Noon sun state projects correct azimuth, elevation, and DayPhase.
+/// AT-06 — Midnight sun state projects negative elevation and DayPhase.Night.
+/// AT-07 — No rooms → rooms is null or absent.
+/// AT-08 — Full spatial snapshot validates against the v0.3 world-state schema.
+/// AT-09 — Two projections of the same snapshot produce byte-identical JSON.
+/// AT-10 — Rooms, light sources, and apertures are emitted sorted by id ascending.
+/// AT-11 — All pre-existing projector tests still pass.
 /// </summary>
 public class TelemetryProjectorTests
 {
@@ -52,10 +68,10 @@ public class TelemetryProjectorTests
     // ── AT-01: SchemaVersion ─────────────────────────────────────────────────
 
     [Fact]
-    public void AT01_SchemaVersion_Is021()
+    public void AT01_SchemaVersion_Is030()
     {
         var dto = Capture(MakeSim());
-        Assert.Equal("0.2.1", dto.SchemaVersion);
+        Assert.Equal("0.3.0", dto.SchemaVersion);
     }
 
     // ── AT-02: NPC social projection ─────────────────────────────────────────
@@ -263,7 +279,269 @@ public class TelemetryProjectorTests
         Assert.Equal(json1, json2);
     }
 
-    // ── AT-08: Existing tests (unchanged below this line) ────────────────────
+    // ── AT-02: Rooms populated ────────────────────────────────────────────────
+
+    [Fact]
+    public void AT02_TwoRoomEntities_ProjectsRoomsArrayOfLength2()
+    {
+        var em = new EntityManager();
+        EntityTemplates.Room(em, "room-a", "Breakroom A",
+            EngRoomCategory.Breakroom, EngBuildingFloor.First,
+            new BoundsRect(0, 0, 10, 8),
+            illumination: new RoomIllumination(75, 4000, "src-1"));
+        EntityTemplates.Room(em, "room-b", "Office B",
+            EngRoomCategory.Office, EngBuildingFloor.First,
+            new BoundsRect(10, 0, 12, 8));
+
+        var snap = MakeSim(humanCount: 0).Capture();
+        var dto  = TelemetryProjector.Project(snap, em, FixedCapture, 0, 42, "test");
+
+        Assert.NotNull(dto.Rooms);
+        Assert.Equal(2, dto.Rooms.Count);
+
+        var breakroom = dto.Rooms.First(r => r.Id == "room-a");
+        Assert.Equal("Breakroom A",          breakroom.Name);
+        Assert.Equal(WcRoomCategory.Breakroom, breakroom.Category);
+        Assert.Equal(WcBuildingFloor.First,    breakroom.Floor);
+        Assert.Equal(0,  breakroom.BoundsRect.X);
+        Assert.Equal(0,  breakroom.BoundsRect.Y);
+        Assert.Equal(10, breakroom.BoundsRect.Width);
+        Assert.Equal(8,  breakroom.BoundsRect.Height);
+        Assert.Equal(75,     breakroom.Illumination.AmbientLevel);
+        Assert.Equal(4000,   breakroom.Illumination.ColorTemperatureK);
+        Assert.Equal("src-1", breakroom.Illumination.DominantSourceId);
+
+        var office = dto.Rooms.First(r => r.Id == "room-b");
+        Assert.Equal("Office B",          office.Name);
+        Assert.Equal(WcRoomCategory.Office, office.Category);
+    }
+
+    // ── AT-03: Light sources populated ───────────────────────────────────────
+
+    [Fact]
+    public void AT03_ThreeLightSourceEntities_ProjectsLightSourcesArrayOfLength3()
+    {
+        var em = new EntityManager();
+        EntityTemplates.LightSource(em, "ls-1",
+            EngLightKind.OverheadFluorescent, EngLightState.On,
+            intensity: 80, colorTemperatureK: 4000,
+            tileX: 5, tileY: 3, roomId: "room-a");
+        EntityTemplates.LightSource(em, "ls-2",
+            EngLightKind.DeskLamp, EngLightState.Flickering,
+            intensity: 40, colorTemperatureK: 3000,
+            tileX: 2, tileY: 7, roomId: "room-a");
+        EntityTemplates.LightSource(em, "ls-3",
+            EngLightKind.ServerLed, EngLightState.Off,
+            intensity: 0, colorTemperatureK: 6500,
+            tileX: 9, tileY: 1, roomId: "room-b");
+
+        var snap = MakeSim(humanCount: 0).Capture();
+        var dto  = TelemetryProjector.Project(snap, em, FixedCapture, 0, 42, "test");
+
+        Assert.NotNull(dto.LightSources);
+        Assert.Equal(3, dto.LightSources.Count);
+
+        var ls1 = dto.LightSources.First(s => s.Id == "ls-1");
+        Assert.Equal(WcLightKind.OverheadFluorescent, ls1.Kind);
+        Assert.Equal(WcLightState.On,                 ls1.State);
+        Assert.Equal(80,   ls1.Intensity);
+        Assert.Equal(4000, ls1.ColorTemperatureK);
+        Assert.Equal(5,    ls1.Position.X);
+        Assert.Equal(3,    ls1.Position.Y);
+        Assert.Equal("room-a", ls1.RoomId);
+
+        var ls2 = dto.LightSources.First(s => s.Id == "ls-2");
+        Assert.Equal(WcLightKind.DeskLamp,    ls2.Kind);
+        Assert.Equal(WcLightState.Flickering, ls2.State);
+        Assert.Equal(3000, ls2.ColorTemperatureK);
+
+        var ls3 = dto.LightSources.First(s => s.Id == "ls-3");
+        Assert.Equal(WcLightState.Off, ls3.State);
+    }
+
+    // ── AT-04: Light apertures populated ─────────────────────────────────────
+
+    [Fact]
+    public void AT04_OneLightApertureEntity_ProjectsLightAperturesArrayOfLength1()
+    {
+        var em = new EntityManager();
+        EntityTemplates.LightAperture(em, "ap-1",
+            tileX: 4, tileY: 0, roomId: "room-a",
+            facing: EngApertureFacing.South, areaSqTiles: 3.5);
+
+        var snap = MakeSim(humanCount: 0).Capture();
+        var dto  = TelemetryProjector.Project(snap, em, FixedCapture, 0, 42, "test");
+
+        Assert.NotNull(dto.LightApertures);
+        Assert.Single(dto.LightApertures);
+
+        var ap = dto.LightApertures[0];
+        Assert.Equal("ap-1",             ap.Id);
+        Assert.Equal(4,                  ap.Position.X);
+        Assert.Equal(0,                  ap.Position.Y);
+        Assert.Equal("room-a",           ap.RoomId);
+        Assert.Equal(WcApertureFacing.South, ap.Facing);
+        Assert.Equal(3.5,                ap.AreaSqTiles, precision: 10);
+    }
+
+    // ── AT-05: Noon sun state ─────────────────────────────────────────────────
+
+    [Fact]
+    public void AT05_NoonSunState_ProjectsCorrectAzimuthElevationDayPhase()
+    {
+        var sunService = new SunStateService();
+        sunService.UpdateSunState(new SunStateRecord(
+            AzimuthDeg:   180.0,
+            ElevationDeg:  89.0,
+            DayPhase:      EngDayPhase.Afternoon));
+
+        var snap = MakeSim(humanCount: 0).Capture();
+        var dto  = TelemetryProjector.Project(
+            snap, null, FixedCapture, 0, 42, "test",
+            sunStateService: sunService);
+
+        Assert.NotNull(dto.Clock.Sun);
+        Assert.Equal(180.0, dto.Clock.Sun.AzimuthDeg,   precision: 6);
+        Assert.True(dto.Clock.Sun.ElevationDeg > 0,
+            $"Expected positive elevation at noon; got {dto.Clock.Sun.ElevationDeg}");
+        Assert.Equal(WcDayPhase.Afternoon, dto.Clock.Sun.DayPhase);
+    }
+
+    // ── AT-06: Midnight sun state ─────────────────────────────────────────────
+
+    [Fact]
+    public void AT06_MidnightSunState_ProjectsNegativeElevationAndNightPhase()
+    {
+        var sunService = new SunStateService();
+        sunService.UpdateSunState(new SunStateRecord(
+            AzimuthDeg:    0.0,
+            ElevationDeg: -30.0,
+            DayPhase:      EngDayPhase.Night));
+
+        var snap = MakeSim(humanCount: 0).Capture();
+        var dto  = TelemetryProjector.Project(
+            snap, null, FixedCapture, 0, 42, "test",
+            sunStateService: sunService);
+
+        Assert.NotNull(dto.Clock.Sun);
+        Assert.True(dto.Clock.Sun.ElevationDeg < 0,
+            $"Expected negative elevation at midnight; got {dto.Clock.Sun.ElevationDeg}");
+        Assert.Equal(WcDayPhase.Night, dto.Clock.Sun.DayPhase);
+    }
+
+    // ── AT-07: No rooms → rooms is null ──────────────────────────────────────
+
+    [Fact]
+    public void AT07_NoRoomEntities_RoomsIsNull()
+    {
+        var em   = new EntityManager();
+        var snap = MakeSim(humanCount: 0).Capture();
+        var dto  = TelemetryProjector.Project(snap, em, FixedCapture, 0, 42, "test");
+
+        Assert.Null(dto.Rooms);
+    }
+
+    // ── AT-08: Full spatial snapshot validates against v0.3 schema ────────────
+
+    [Fact]
+    public void AT08_FullSpatialSnapshot_ValidatesAgainstSchema()
+    {
+        var em = new EntityManager();
+        EntityTemplates.Room(em, "room-x", "CubicleGrid",
+            EngRoomCategory.CubicleGrid, EngBuildingFloor.First,
+            new BoundsRect(0, 0, 20, 15),
+            illumination: new RoomIllumination(60, 4200, null));
+        EntityTemplates.LightSource(em, "ls-x",
+            EngLightKind.OverheadFluorescent, EngLightState.On,
+            intensity: 70, colorTemperatureK: 4200,
+            tileX: 10, tileY: 7, roomId: "room-x");
+        EntityTemplates.LightAperture(em, "ap-x",
+            tileX: 0, tileY: 7, roomId: "room-x",
+            facing: EngApertureFacing.West, areaSqTiles: 2.0);
+
+        var sunService = new SunStateService();
+        sunService.UpdateSunState(new SunStateRecord(
+            AzimuthDeg:   180.0,
+            ElevationDeg:  60.0,
+            DayPhase:      EngDayPhase.Afternoon));
+
+        var snap   = MakeSim(humanCount: 0).Capture();
+        var dto    = TelemetryProjector.Project(snap, em, FixedCapture, 0, 42, "test", sunService);
+        var json   = TelemetrySerializer.SerializeSnapshot(dto);
+        var result = SchemaValidator.Validate(json, Schema.WorldState);
+
+        Assert.True(result.IsValid,
+            $"Schema validation failed: {string.Join("; ", result.Errors)}\n\nJSON:\n{json}");
+    }
+
+    // ── AT-09: Determinism with spatial state ─────────────────────────────────
+
+    [Fact]
+    public void AT09_TwoProjectionsOfSameSnapshot_ProduceBytIdenticalJson()
+    {
+        var em = new EntityManager();
+        EntityTemplates.Room(em, "room-det", "Det Room",
+            EngRoomCategory.Office, EngBuildingFloor.First,
+            new BoundsRect(0, 0, 10, 10));
+        EntityTemplates.LightSource(em, "ls-det",
+            EngLightKind.DeskLamp, EngLightState.On,
+            intensity: 50, colorTemperatureK: 3500,
+            tileX: 5, tileY: 5, roomId: "room-det");
+
+        var sunService = new SunStateService();
+        sunService.UpdateSunState(new SunStateRecord(90.0, 45.0, EngDayPhase.MidMorning));
+
+        var snap  = MakeSim(humanCount: 0).Capture();
+
+        var json1 = TelemetrySerializer.SerializeSnapshot(
+            TelemetryProjector.Project(snap, em, FixedCapture, 3L, 7, "v3", sunService));
+        var json2 = TelemetrySerializer.SerializeSnapshot(
+            TelemetryProjector.Project(snap, em, FixedCapture, 3L, 7, "v3", sunService));
+
+        Assert.Equal(json1, json2);
+    }
+
+    // ── AT-10: Sorted by id ascending ─────────────────────────────────────────
+
+    [Fact]
+    public void AT10_RoomsLightSourcesAndApertures_SortedByIdAscending()
+    {
+        var em = new EntityManager();
+
+        // Rooms — created in order; EntityManager assigns counter-based Guids so
+        // ascending entity-Id sort matches creation order.
+        EntityTemplates.Room(em, "room-sort-a", "Room A",
+            EngRoomCategory.Hallway, EngBuildingFloor.First, new BoundsRect(0, 0, 5, 5));
+        EntityTemplates.Room(em, "room-sort-b", "Room B",
+            EngRoomCategory.Hallway, EngBuildingFloor.First, new BoundsRect(5, 0, 5, 5));
+
+        EntityTemplates.LightSource(em, "ls-sort-a",
+            EngLightKind.DeskLamp, EngLightState.On, 50, 3000, 1, 1, "room-sort-a");
+        EntityTemplates.LightSource(em, "ls-sort-b",
+            EngLightKind.DeskLamp, EngLightState.On, 50, 3000, 2, 2, "room-sort-b");
+
+        EntityTemplates.LightAperture(em, "ap-sort-a",
+            0, 2, "room-sort-a", EngApertureFacing.North, 1.0);
+        EntityTemplates.LightAperture(em, "ap-sort-b",
+            5, 2, "room-sort-b", EngApertureFacing.North, 1.0);
+
+        var snap = MakeSim(humanCount: 0).Capture();
+        var dto  = TelemetryProjector.Project(snap, em, FixedCapture, 0, 42, "test");
+
+        Assert.NotNull(dto.Rooms);
+        var roomIds = dto.Rooms.Select(r => r.Id).ToList();
+        Assert.Equal(roomIds.OrderBy(x => x, StringComparer.Ordinal).ToList(), roomIds);
+
+        Assert.NotNull(dto.LightSources);
+        var lsIds = dto.LightSources.Select(s => s.Id).ToList();
+        Assert.Equal(lsIds.OrderBy(x => x, StringComparer.Ordinal).ToList(), lsIds);
+
+        Assert.NotNull(dto.LightApertures);
+        var apIds = dto.LightApertures.Select(a => a.Id).ToList();
+        Assert.Equal(apIds.OrderBy(x => x, StringComparer.Ordinal).ToList(), apIds);
+    }
+
+    // ── AT-11: Existing tests (unchanged below this line) ────────────────────
 
     [Fact]
     public void AT01_FreshSim_ProjectValidatesAgainstSchema()

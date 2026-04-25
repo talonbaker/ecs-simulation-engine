@@ -135,10 +135,11 @@ public static class AiReplayCommand
                 var dto = TelemetryProjector.Project(
                     snap,
                     sim.EntityManager,
-                    capturedAt:  capturedAt,
-                    tick:        tick,
-                    seed:        seed,
-                    simVersion:  SimVersion.Full);
+                    capturedAt:      capturedAt,
+                    tick:            tick,
+                    seed:            seed,
+                    simVersion:      SimVersion.Full,
+                    sunStateService: sim.SunState);
 
                 writer.WriteLine(JsonSerializer.Serialize(dto, JsonOptions.Wire));
 

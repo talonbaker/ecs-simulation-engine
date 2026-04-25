@@ -73,10 +73,11 @@ public static class AiSnapshotCommand
         var dto  = TelemetryProjector.Project(
             snap,
             sim.EntityManager,
-            capturedAt:  now,
-            tick:        1,
-            seed:        sim.Random.Seed,
-            simVersion:  SimVersion.Full);
+            capturedAt:     now,
+            tick:           1,
+            seed:           sim.Random.Seed,
+            simVersion:     SimVersion.Full,
+            sunStateService: sim.SunState);
 
         var opts = pretty ? JsonOptions.Pretty : JsonOptions.Wire;
 

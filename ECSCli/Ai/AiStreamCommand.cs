@@ -111,10 +111,11 @@ public static class AiStreamCommand
                 var dto  = TelemetryProjector.Project(
                     snap,
                     sim.EntityManager,
-                    capturedAt:  DateTimeOffset.UtcNow,
-                    tick:        tick,
-                    seed:        sim.Random.Seed,
-                    simVersion:  SimVersion.Full);
+                    capturedAt:      DateTimeOffset.UtcNow,
+                    tick:            tick,
+                    seed:            sim.Random.Seed,
+                    simVersion:      SimVersion.Full,
+                    sunStateService: sim.SunState);
 
                 // One JSON object per line — always compact.
                 writer.WriteLine(JsonSerializer.Serialize(dto, JsonOptions.Wire));
