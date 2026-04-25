@@ -25,10 +25,12 @@ Landed v0.3.0 on `world-state.schema.json` — the first move on the spatial axi
 
 `SCHEMA-ROADMAP.md` rewritten: v0.3 is now spatial, v0.4 is chronicle, v0.5 is character definitions, v0.6 is a placeholder.
 
+
 ## Acceptance test results
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
+
 | AT-01 | ✓ | `schemaVersion` enum `["0.1.0", "0.2.1", "0.3.0"]`; all new surfaces optional with `maxItems` and `min`/`max` on every numeric field. Verified by build (0 warnings) and schema inspection. |
 | AT-02 | ✓ | `WorldState_V01SampleRoundTripsUnderV03Schema` and existing `WorldState_V01SampleRoundTripsUnderV021Schema` both pass. |
 | AT-03 | ✓ | `WorldState_V021SampleRoundTripsUnderV03Schema` passes. |
