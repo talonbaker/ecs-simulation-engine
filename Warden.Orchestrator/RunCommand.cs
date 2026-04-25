@@ -257,14 +257,25 @@ public static class RunCommand
             if (haikuResults.Any(r => r.Outcome == OutcomeCode.Failed))  anyFailed  = true;
         }
 
-        // -- 10. Report stub (WP-12 fills this in) --------------------------------
-        Console.WriteLine($"[run] {runId}: complete. Ledger: {ledgerPath}");
-
-        // -- 11. Return exit code -------------------------------------------------
+        // -- 10. Determine exit code and emit run-completed event -----------------
         var exitCode = anyBlocked ? 2 : anyFailed ? 1 : 0;
         await cotStore.AppendEventAsync(runId,
             $"{{\"ts\":\"{DateTimeOffset.UtcNow:O}\",\"kind\":\"run-completed\",\"exitCode\":{exitCode}}}",
             ct).ConfigureAwait(false);
+
+        // -- 11. Aggregate and write report (WP-12) --------------------------------
+        try
+        {
+            var aggregator = new Warden.Orchestrator.Reports.ReportAggregator(root, budgetUsd);
+            var report     = aggregator.Build(runId);
+            aggregator.Emit(report, runDir);
+            Console.WriteLine($"[run] {runId}: complete. Report: {RunLayout.ReportMdFile(root, runId)}");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[warn] Report generation failed: {ex.Message}. Ledger: {ledgerPath}");
+        }
+
         return exitCode;
     }
 

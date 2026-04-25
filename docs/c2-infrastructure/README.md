@@ -10,6 +10,7 @@ This folder is the complete architectural spec for the infrastructure that has t
 
 | File | Purpose | Read when |
 |:---|:---|:---|
+| `RUNBOOK.md` | Operational guide — setup, the two workflows (build-the-factory and operate-the-factory), how to read a report, troubleshooting, known gaps. | Any time you're *running* something, or onboarding someone. |
 | `00-SRD.md` | The master Systems Requirement Document. Four pillars, topology, fail-closed policy. | Start here. |
 | `01-architecture-diagram.md` | Visual of the 1-5-25 topology and all data flows. | After the SRD, to orient yourself before reading code. |
 | `02-cost-model.md` | The ROI math. Caching discounts, batch discounts, per-tier budgets, burn-rate alarms. | When you need to justify an architectural choice in spend terms. |
