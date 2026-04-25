@@ -3,25 +3,10 @@ using Warden.Orchestrator;
 
 var root = new RootCommand("Warden Orchestrator — 1-5-25 Claude Army workflow engine.");
 root.AddCommand(RunCommand.Build());
-root.AddCommand(BuildResumeCommand());
+root.AddCommand(ResumeCommand.Build());
 root.AddCommand(BuildCostModelCommand());
 root.AddCommand(BuildValidateSchemasCommand());
 return await root.InvokeAsync(args);
-
-// ── Stub subcommands (owned by later WPs) ─────────────────────────────────────
-
-static Command BuildResumeCommand()
-{
-    var runIdArg = new Argument<string>("run-id", "Run identifier to resume.");
-    var cmd      = new Command("resume", "Resume a previously interrupted run.");
-    cmd.AddArgument(runIdArg);
-    cmd.SetHandler(ctx =>
-    {
-        Console.Error.WriteLine("[resume] Not yet implemented (WP-11).");
-        ctx.ExitCode = 4;
-    });
-    return cmd;
-}
 
 static Command BuildCostModelCommand()
 {

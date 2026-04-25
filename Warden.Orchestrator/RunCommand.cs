@@ -12,8 +12,8 @@ using Warden.Orchestrator.Cache;
 using Warden.Orchestrator.Dispatcher;
 using Warden.Orchestrator.Mocks;
 using Warden.Orchestrator.Persistence;
-using InfraLedger     = Warden.Orchestrator.Infrastructure.CostLedger;
-using InfraCoT        = Warden.Orchestrator.Infrastructure.ChainOfThoughtStore;
+using InfraLedger = Warden.Orchestrator.Infrastructure.CostLedger;
+using InfraCoT   = Warden.Orchestrator.Infrastructure.ChainOfThoughtStore;
 
 namespace Warden.Orchestrator;
 
@@ -142,8 +142,22 @@ public static class RunCommand
         // -- 5. Wire up infrastructure --------------------------------------------
         var root       = runsRoot ?? "runs";
         var runDir     = Path.Combine(root, runId);
-        var ledgerPath = Path.Combine(runDir, "cost-ledger.jsonl");
-        Directory.CreateDirectory(runDir);
+        var ledgerPath = RunLayout.CostLedgerFile(root, runId);
+
+        var cotStore = new ChainOfThoughtStore(root);
+        if (!dryRun)
+        {
+            try { cotStore.InitRun(runId); }
+            catch (InvalidOperationException ex)
+            {
+                Console.Error.WriteLine($"[error] {ex.Message}");
+                return 4;
+            }
+        }
+        else
+        {
+            Directory.CreateDirectory(runDir);
+        }
 
         var ledger = new InfraLedger(ledgerPath);
         var budget = new BudgetGuard(budgetUsd);
@@ -161,7 +175,7 @@ public static class RunCommand
             client = new AnthropicClient(apiKey);
         }
 
-        IChainOfThoughtStore cot       = new NullChainOfThoughtStore();
+        IChainOfThoughtStore cot       = cotStore;
         var                  log       = NullLoggerFactory.Instance.CreateLogger<SonnetDispatcher>();
         var                  retry     = RetryPolicy.Build(dryRun || mockMode ? TimeSpan.Zero : null);
         var                  dispatcher = new SonnetDispatcher(client, cache, cot, ledger, budget, retry, log);
@@ -176,6 +190,13 @@ public static class RunCommand
                     .ConfigureAwait(false);
             return 0;
         }
+
+        // -- 6b. Persist mission and emit run-started event -----------------------
+        var missionText = await File.ReadAllTextAsync(missionFile.FullName, ct).ConfigureAwait(false);
+        await cotStore.PersistMissionAsync(runId, missionText, ct).ConfigureAwait(false);
+        await cotStore.AppendEventAsync(runId,
+            $"{{\"ts\":\"{DateTimeOffset.UtcNow:O}\",\"kind\":\"run-started\",\"runId\":\"{runId}\"}}",
+            ct).ConfigureAwait(false);
 
         // -- 7. Fan-out Sonnets ----------------------------------------------------
         Console.WriteLine($"[run] {runId}: dispatching {specs.Count} Sonnet(s)…");
@@ -240,18 +261,16 @@ public static class RunCommand
         Console.WriteLine($"[run] {runId}: complete. Ledger: {ledgerPath}");
 
         // -- 11. Return exit code -------------------------------------------------
-        if (anyBlocked) return 2;
-        if (anyFailed)  return 1;
-        return 0;
+        var exitCode = anyBlocked ? 2 : anyFailed ? 1 : 0;
+        await cotStore.AppendEventAsync(runId,
+            $"{{\"ts\":\"{DateTimeOffset.UtcNow:O}\",\"kind\":\"run-completed\",\"exitCode\":{exitCode}}}",
+            ct).ConfigureAwait(false);
+        return exitCode;
     }
 
     // -- Helpers ------------------------------------------------------------------
 
-    private static string GenerateRunId()
-    {
-        var ts = DateTimeOffset.UtcNow;
-        return $"{ts:yyyy-MM-ddTHHmm}-run";
-    }
+    private static string GenerateRunId() => RunId.Generate();
 
     private static string WorkerId(IList<OpusSpecPacket> specs, OpusSpecPacket spec)
     {

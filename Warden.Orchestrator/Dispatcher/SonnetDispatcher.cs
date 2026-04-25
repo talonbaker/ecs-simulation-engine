@@ -76,6 +76,9 @@ public sealed class SonnetDispatcher
 
         await _cot.PersistSpecAsync(runId, workerId, specJson, ct).ConfigureAwait(false);
 
+        var promptText = JsonSerializer.Serialize(request, JsonOptions.Wire);
+        await _cot.PersistPromptAsync(runId, workerId, promptText, ct).ConfigureAwait(false);
+
         MessageResponse response;
         try
         {
