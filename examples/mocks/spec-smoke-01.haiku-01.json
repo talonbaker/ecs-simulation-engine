@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "0.1.0",
+  "scenarioId": "sc-01",
+  "parentBatchId": "batch-smoke-01",
+  "workerId": "haiku-01",
+  "outcome": "ok",
+  "assertionResults": [
+    { "id": "A-01", "passed": true, "observedValue": 3, "note": "Mock: 3 entities present at end." }
+  ],
+  "tokensUsed": {
+    "input": 820,
+    "cachedRead": 19500,
+    "cacheWrite": 0,
+    "output": 210
+  }
+}

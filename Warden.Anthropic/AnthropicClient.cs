@@ -22,7 +22,7 @@ namespace Warden.Anthropic;
 /// </list>
 /// </para>
 /// </summary>
-public sealed class AnthropicClient : IDisposable
+public sealed class AnthropicClient : IAnthropicClient, IDisposable
 {
     private readonly HttpClient _http;
 
