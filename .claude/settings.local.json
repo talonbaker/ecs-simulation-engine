@@ -5,7 +5,10 @@
       "Bash(dotnet test *)",
       "Bash(xargs grep *)",
       "Bash(dotnet run *)",
-      "Bash(xargs wc *)"
+      "Bash(xargs wc *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git fetch *)"
     ]
   }
 }
