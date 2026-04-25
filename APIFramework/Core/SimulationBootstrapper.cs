@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
+using APIFramework.Systems.Spatial;
 using System.Reflection;
 
 namespace APIFramework.Core;
@@ -67,6 +68,17 @@ public class SimulationBootstrapper
     /// </summary>
     public SeededRandom Random { get; }
 
+    // ── Spatial services ──────────────────────────────────────────────────────
+
+    /// <summary>Cell-based spatial index. Singleton; shared by all spatial systems.</summary>
+    public ISpatialIndex        SpatialIndex    { get; }
+
+    /// <summary>Proximity event bus. Subscribe here to receive spatial signals.</summary>
+    public ProximityEventBus    ProximityBus    { get; }
+
+    /// <summary>Runtime room-membership map. Queried by social and behavior systems.</summary>
+    public EntityRoomMembership RoomMembership  { get; }
+
     /// <summary>
     /// Primary constructor — accepts any IConfigProvider.
     /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
@@ -93,6 +105,11 @@ public class SimulationBootstrapper
         Random          = new SeededRandom(seed);
         WillpowerEvents = new WillpowerEventQueue();
 
+        // Spatial services — instantiated before RegisterSystems so systems can receive them
+        SpatialIndex   = new GridSpatialIndex(Config.Spatial);
+        ProximityBus   = new ProximityEventBus();
+        RoomMembership = new EntityRoomMembership();
+
         RegisterSystems();
         SpawnWorld(humanCount);
     }
@@ -114,6 +131,14 @@ public class SimulationBootstrapper
     private void RegisterSystems()
     {
         var sys = Config.Systems;
+
+        // Spatial — sync index, compute room membership, fire proximity events
+        // Phase 5 runs before all biology/cognition so spatial state is current.
+        var syncSys = new SpatialIndexSyncSystem(SpatialIndex);
+        EntityManager.EntityDestroyed += syncSys.OnEntityDestroyed;
+        Engine.AddSystem(syncSys,                                                  SystemPhase.Spatial);
+        Engine.AddSystem(new RoomMembershipSystem(RoomMembership, ProximityBus),   SystemPhase.Spatial);
+        Engine.AddSystem(new ProximityEventSystem(SpatialIndex, ProximityBus, RoomMembership), SystemPhase.Spatial);
 
         // PreUpdate — invariant enforcement; always first
         Engine.AddSystem(Invariants,                                               SystemPhase.PreUpdate);

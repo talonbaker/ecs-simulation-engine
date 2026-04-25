@@ -50,6 +50,8 @@ public struct CatTag { }
 public struct BolusTag { }
 public struct NpcTag { }
 public struct RelationshipTag { }
+/// <summary>Marks an entity as a room. Used by RoomMembershipSystem to skip room entities during membership checks.</summary>
+public struct RoomTag { }
 #endregion
 
 #region Desire Tags

@@ -315,6 +315,17 @@
 
   },
 
+  // ── Spatial engine ─────────────────────────────────────────────────────────
+  "spatial": {
+    "cellSizeTiles": 4,
+    "worldSize": { "width": 512, "height": 512 },
+    "proximityRangeDefaults": {
+      "conversationTiles": 2,
+      "awarenessTiles":    8,
+      "sightTiles":       32
+    }
+  },
+
   // ── Social engine ──────────────────────────────────────────────────────────
   "social": {
     "driveDecayPerTick": 0.15,

@@ -44,6 +44,12 @@ public class EntityManager
     public IReadOnlyList<Entity> Entities => _entities;
 
     /// <summary>
+    /// Fires immediately before an entity is removed from the manager.
+    /// Subscribe to clean up external state (e.g. spatial index entries).
+    /// </summary>
+    public event Action<Entity>? EntityDestroyed;
+
+    /// <summary>
     /// Number of distinct component types currently tracked in the index.
     /// Useful for diagnostics -- shows how many query buckets are live.
     /// </summary>
@@ -85,6 +91,8 @@ public class EntityManager
 
     public void DestroyEntity(Entity entity)
     {
+        EntityDestroyed?.Invoke(entity);
+
         // Flush entity from every index bucket it occupies before removing it.
         foreach (var bucket in _componentIndex.Values)
             bucket.Remove(entity);

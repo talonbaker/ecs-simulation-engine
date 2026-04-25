@@ -1,65 +1,65 @@
 namespace APIFramework.Core;
 
 /// <summary>
-/// Contract for spatial lookup structures used by v0.9+ world systems.
+/// Contract for spatial lookup structures used by the building's spatial layer.
 ///
-/// WHY AN INTERFACE NOW
-/// ─────────────────────
-/// v0.8 introduces a 2-D world grid. Systems that need to know "which entities
-/// are near position X?" should depend on ISpatialIndex, not on any concrete
-/// spatial data structure. This lets us swap implementations freely:
+/// WHY AN INTERFACE
+/// ────────────────
+/// Systems that need to know "which entities are near position X?" depend on
+/// ISpatialIndex, not on any concrete spatial data structure. This lets the
+/// implementation be swapped freely:
 ///
-///   - Simple grid (v0.9 default, O(1) per cell lookup)
-///   - Quadtree (dense worlds, many small entities)
-///   - BVH      (large entities with varying sizes)
-///   - No-op stub for headless tests
+///   - GridSpatialIndex  (default — cell-based grid, WP-1.1.A)
+///   - Quadtree          (dense worlds with many small entities)
+///   - BVH               (large entities with varying sizes)
+///   - No-op stub        (headless tests)
 ///
-/// Systems that receive ISpatialIndex via constructor injection are automatically
-/// decoupled from the choice of data structure. SimulationBootstrapper decides
-/// which implementation to hand out.
+/// COORDINATE SYSTEM
+/// ──────────────────
+/// Positions are (int x, int y) in tile units. The horizontal plane maps to
+/// PositionComponent.X (tileX) and PositionComponent.Z (tileY). Tile integers
+/// match the v0.3 schema's BoundsRect integers and the grid-aligned building.
+/// Sub-tile precision is unnecessary at office-simulation fidelity.
 ///
-/// CURRENT STATUS
-/// ───────────────
-/// This interface is a stub — no production implementation exists yet.
-/// It is defined now so that:
-///   1. v0.8 world component design can reference it from the start.
-///   2. Systems can declare their spatial dependency in their constructors.
-///   3. The contract can be reviewed and refined before any concrete code exists.
-///
-/// COORDINATE SYSTEM (proposed)
-/// ─────────────────────────────
-/// Positions are (float x, float y) in world-space metres.
-/// The exact type (ValueTuple vs a Vector2 record) is TBD in v0.8.
+/// QUERY RESULT CONTRACT
+/// ──────────────────────
+/// Results are materialized eagerly as IReadOnlyList&lt;Entity&gt; so callers can
+/// enumerate multiple times without recomputing. Order is deterministic:
+/// cells visited in row-major order; entities within a cell in insertion order.
+/// QueryNearest returns the n nearest sorted ascending by distance, ties broken
+/// by Entity.Id ascending.
 /// </summary>
 public interface ISpatialIndex
 {
     /// <summary>
-    /// Registers an entity at the given world-space position.
-    /// Called once when an entity spawns or receives a PositionComponent.
+    /// Registers an entity at the given tile position.
+    /// Call once when an entity spawns or receives a PositionComponent.
     /// </summary>
-    void Register(Entity entity, float x, float y);
+    void Register(Entity entity, int x, int y);
 
     /// <summary>
     /// Removes an entity from the index.
-    /// Called when an entity is destroyed or loses its PositionComponent.
+    /// Call when an entity is destroyed or loses its PositionComponent.
     /// </summary>
     void Unregister(Entity entity);
 
     /// <summary>
-    /// Updates the stored position of an entity that has moved.
-    /// Called by movement/transit systems after updating PositionComponent.
+    /// Updates the stored tile position of an entity that has moved.
+    /// No-op if the entity maps to the same cell as before.
     /// </summary>
-    void Update(Entity entity, float newX, float newY);
+    void Update(Entity entity, int newX, int newY);
 
     /// <summary>
-    /// Returns all entities within <paramref name="radius"/> metres of the given point.
-    /// Result set is unordered; callers should not assume any specific order.
+    /// Returns all entities whose tile position is within <paramref name="radius"/> tiles of
+    /// <c>(x, y)</c>. Uses exact integer distance (squared comparison avoids sqrt).
+    /// Result is row-major ordered and deterministic.
     /// </summary>
-    IEnumerable<Entity> QueryRadius(float x, float y, float radius);
+    IReadOnlyList<Entity> QueryRadius(int x, int y, int radius);
 
     /// <summary>
-    /// Returns the <paramref name="maxCount"/> nearest entities to the given point,
-    /// sorted ascending by distance. Returns fewer results if fewer exist.
+    /// Returns the <paramref name="maxCount"/> nearest entities to <c>(x, y)</c>,
+    /// sorted ascending by distance. Ties broken by Entity.Id ascending.
+    /// Returns fewer results if fewer are registered.
     /// </summary>
-    IEnumerable<Entity> QueryNearest(float x, float y, int maxCount);
+    IReadOnlyList<Entity> QueryNearest(int x, int y, int maxCount);
 }
