@@ -7,21 +7,12 @@ namespace Warden.Contracts.Telemetry;
 
 public sealed record RelationshipDto
 {
-    public string                         Id              { get; init; } = string.Empty;
-    public string                         ParticipantA    { get; init; } = string.Empty;
-    public string                         ParticipantB    { get; init; } = string.Empty;
-    public IReadOnlyList<RelationshipPattern> Patterns    { get; init; } = Array.Empty<RelationshipPattern>();
-    public PairDrivesDto                  PairDrives      { get; init; } = default!;
-    public int                            Intensity       { get; init; }
-    public IReadOnlyList<string>          HistoryEventIds { get; init; } = Array.Empty<string>();
-}
-
-public sealed record PairDrivesDto
-{
-    public int Attraction { get; init; }
-    public int Trust      { get; init; }
-    public int Suspicion  { get; init; }
-    public int Jealousy   { get; init; }
+    public string                            Id              { get; init; } = string.Empty;
+    public string                            ParticipantA    { get; init; } = string.Empty;
+    public string                            ParticipantB    { get; init; } = string.Empty;
+    public IReadOnlyList<RelationshipPattern> Patterns       { get; init; } = Array.Empty<RelationshipPattern>();
+    public int                               Intensity       { get; init; }
+    public IReadOnlyList<string>             HistoryEventIds { get; init; } = Array.Empty<string>();
 }
 
 // ── Enum ──────────────────────────────────────────────────────────────────────
