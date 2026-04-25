@@ -313,5 +313,165 @@
       "rotTagThreshold": 30.0
     }
 
+  },
+
+  // ── Movement quality ───────────────────────────────────────────────────────
+  "movement": {
+    "stepAsideRadius": 3,
+    "stepAsideShift": 0.4,
+    "idleJitterTiles": 0.05,
+    "idlePostureShiftProb": 0.005,
+    "speedModifier": {
+      "irritationGainPerPoint": 0.005,
+      "affectionLossPerPoint":  0.0033,
+      "lowEnergyLossPerPoint":  0.005,
+      "minMultiplier":          0.3,
+      "maxMultiplier":          2.0
+    },
+    "pathfinding": {
+      "doorwayDiscount":    1.0,
+      "tieBreakNoiseScale": 0.1
+    }
+  },
+
+  // ── Spatial engine ─────────────────────────────────────────────────────────
+  "spatial": {
+    "cellSizeTiles": 4,
+    "worldSize": { "width": 512, "height": 512 },
+    "proximityRangeDefaults": {
+      "conversationTiles": 2,
+      "awarenessTiles":    8,
+      "sightTiles":       32
+    }
+  },
+
+  // ── Lighting engine ────────────────────────────────────────────────────────
+  "lighting": {
+    "dayPhaseBoundaries": {
+      "earlyMorningStart": 0.20,
+      "midMorningStart":   0.30,
+      "afternoonStart":    0.45,
+      "eveningStart":      0.65,
+      "duskStart":         0.80,
+      "nightStart":        0.85
+    },
+    "flickerOnProb":     0.70,
+    "dyingDecayProb":    0.05,
+    "apertureRangeBase": 5,
+    "sourceRangeBase":   3,
+
+    // ── Lighting → drive coupling table ─────────────────────────────────────
+    // First-match-wins. Conditions are AND of all present clauses.
+    // deltasPerTick are floating-point; fractional parts accumulate across ticks.
+    // Over 60 ticks (1 sim-minute): irritation 0.08 → ~4 pts, suspicion 0.10 → ~6 pts.
+    "driveCouplings": [
+      {
+        // Flickering fluorescent: small irritation bump + slight loneliness rise.
+        // Matches any room type — flickering is unpleasant anywhere.
+        "condition": {
+          "dominantSourceState": "flickering"
+        },
+        "deltasPerTick": {
+          "irritation": 0.08,
+          "loneliness": 0.02
+        }
+      },
+      {
+        // Warm desk lamp in a work area: belonging and affection nudge when ambient is adequate.
+        "condition": {
+          "roomCategoryAny":    ["cubicleGrid", "office"],
+          "dominantSourceKind": "deskLamp",
+          "ambientLevelMin":    30
+        },
+        "deltasPerTick": {
+          "belonging": 0.05,
+          "affection": 0.04
+        }
+      },
+      {
+        // Dark hallway after-hours: suspicion rises, mild irritation.
+        "condition": {
+          "roomCategoryAny": ["hallway", "stairwell"],
+          "ambientLevelMax": 20,
+          "dayPhaseAny":     ["evening", "dusk", "night"]
+        },
+        "deltasPerTick": {
+          "suspicion":  0.10,
+          "irritation": 0.04
+        }
+      },
+      {
+        // Sunlight streaming through a window aperture: mood lift and loneliness recovery.
+        "condition": {
+          "apertureBeamPresent": true
+        },
+        "deltasPerTick": {
+          "loneliness": -0.05,
+          "belonging":   0.03
+        }
+      },
+      {
+        // Pitch dark (dead fluorescent, basement corner): belonging decay and loneliness rise.
+        "condition": {
+          "ambientLevelMax": 5
+        },
+        "deltasPerTick": {
+          "belonging":  -0.03,
+          "loneliness":  0.06
+        }
+      },
+      {
+        // Server-room LED glow: slightly disorienting. Per-archetype tolerance deferred to WP-1.5.B.
+        "condition": {
+          "roomCategoryAny":    ["itCloset"],
+          "dominantSourceKind": "serverLed"
+        },
+        "deltasPerTick": {
+          "irritation": 0.03
+        }
+      }
+    ]
+  },
+
+  // ── Narrative telemetry channel ───────────────────────────────────────────
+  "narrative": {
+    // Drive delta (one tick to next) required to emit DriveSpike
+    "driveSpikeThreshold":         15,
+    // Willpower drop in a single tick required to emit WillpowerCollapse
+    "willpowerDropThreshold":      10,
+    // Willpower level below which WillpowerLow is emitted (once per descent)
+    "willpowerLowThreshold":       20,
+    // Ticks after a DriveSpike during which a room departure → LeftRoomAbruptly
+    "abruptDepartureWindowTicks":   3,
+    // Maximum character length of the Detail field
+    "candidateDetailMaxLength":   280
+  },
+
+  // ── Social engine ──────────────────────────────────────────────────────────
+  "social": {
+    "driveDecayPerTick": 0.15,
+    "driveCircadianAmplitudes": {
+      "belonging":  3.0,
+      "status":     2.5,
+      "affection":  3.0,
+      "irritation": 4.0,
+      "attraction": 2.0,
+      "trust":      1.5,
+      "suspicion":  2.0,
+      "loneliness": 5.0
+    },
+    "driveCircadianPhases": {
+      "belonging":  0.40,
+      "status":     0.30,
+      "affection":  0.65,
+      "irritation": 0.55,
+      "attraction": 0.70,
+      "trust":      0.45,
+      "suspicion":  0.80,
+      "loneliness": 0.85
+    },
+    "driveVolatilityScale": 1.0,
+    "willpowerSleepRegenPerTick": 1,
+    "relationshipIntensityDecayPerTick": 0.05
   }
 }

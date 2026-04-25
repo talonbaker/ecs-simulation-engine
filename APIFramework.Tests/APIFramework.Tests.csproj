@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\APIFramework\APIFramework.csproj" />
+    <ProjectReference Include="..\Warden.Contracts\Warden.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

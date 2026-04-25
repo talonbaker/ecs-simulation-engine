@@ -18,7 +18,7 @@ namespace Warden.Orchestrator.Batch;
 /// </summary>
 public sealed class BatchScheduler
 {
-    private readonly AnthropicClient         _client;
+    private readonly IAnthropicClient         _client;
     private readonly PromptCacheManager      _cache;
     private readonly ChainOfThoughtStore     _cot;
     private readonly CostLedger              _ledger;
@@ -26,7 +26,7 @@ public sealed class BatchScheduler
     private readonly BatchPoller             _poller;
 
     public BatchScheduler(
-        AnthropicClient         client,
+        IAnthropicClient        client,
         PromptCacheManager      cache,
         ChainOfThoughtStore     cot,
         CostLedger              ledger,
@@ -34,7 +34,7 @@ public sealed class BatchScheduler
         : this(client, cache, cot, ledger, log, new BatchPoller()) { }
 
     internal BatchScheduler(
-        AnthropicClient         client,
+        IAnthropicClient        client,
         PromptCacheManager      cache,
         ChainOfThoughtStore     cot,
         CostLedger              ledger,
@@ -89,7 +89,10 @@ public sealed class BatchScheduler
         var entries = uniqueScenarios
             .Select(s => new BatchRequestEntry(
                 s.ScenarioId,
-                _cache.BuildRequest(s, TimeSpan.FromMinutes(30))))
+                _cache.BuildRequest(
+                    ModelId.HaikuV45,
+                    JsonSerializer.Serialize(s, JsonOptions.Wire),
+                    expectedTotalLatency: TimeSpan.FromMinutes(30))))
             .ToList();
 
         // Step 4: Submit

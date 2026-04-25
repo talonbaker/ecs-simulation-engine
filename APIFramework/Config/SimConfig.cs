@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using APIFramework.Components;
+using APIFramework.Systems.Coupling;
 
 namespace APIFramework.Config;
 
@@ -10,9 +12,14 @@ namespace APIFramework.Config;
 /// </summary>
 public class SimConfig
 {
-    public WorldConfig    World    { get; set; } = new();
-    public EntitiesConfig Entities { get; set; } = new();
-    public SystemsConfig  Systems  { get; set; } = new();
+    public WorldConfig        World     { get; set; } = new();
+    public EntitiesConfig     Entities  { get; set; } = new();
+    public SystemsConfig      Systems   { get; set; } = new();
+    public SocialSystemConfig Social    { get; set; } = new();
+    public SpatialConfig      Spatial   { get; set; } = new();
+    public LightingConfig     Lighting  { get; set; } = new();
+    public MovementConfig     Movement  { get; set; } = new();
+    public NarrativeConfig    Narrative { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -641,4 +648,204 @@ public class RotSystemConfig
     /// FeedingSystem checks RotTag before Billy eats; if set, ConsumedRottenFoodTag is applied.
     /// </summary>
     public float RotTagThreshold { get; set; } = 30f;
+}
+
+// ── Social systems ────────────────────────────────────────────────────────────
+
+public class SocialSystemConfig
+{
+    /// <summary>Points per tick a drive's Current moves toward its Baseline (linear approach).</summary>
+    public double DriveDecayPerTick { get; set; } = 0.15;
+
+    /// <summary>
+    /// Peak circadian amplitude (points) for each drive.
+    /// Keys are lowercase drive names: belonging, status, affection, irritation,
+    /// attraction, trust, suspicion, loneliness.
+    /// </summary>
+    public Dictionary<string, double> DriveCircadianAmplitudes { get; set; } = new()
+    {
+        ["belonging"]  = 3.0,
+        ["status"]     = 2.5,
+        ["affection"]  = 3.0,
+        ["irritation"] = 4.0,
+        ["attraction"] = 2.0,
+        ["trust"]      = 1.5,
+        ["suspicion"]  = 2.0,
+        ["loneliness"] = 5.0,
+    };
+
+    /// <summary>
+    /// Fraction of the day (0..1) at which each drive peaks.
+    /// Keys are lowercase drive names.
+    /// </summary>
+    public Dictionary<string, double> DriveCircadianPhases { get; set; } = new()
+    {
+        ["belonging"]  = 0.40,
+        ["status"]     = 0.30,
+        ["affection"]  = 0.65,
+        ["irritation"] = 0.55,
+        ["attraction"] = 0.70,
+        ["trust"]      = 0.45,
+        ["suspicion"]  = 0.80,
+        ["loneliness"] = 0.85,
+    };
+
+    /// <summary>Global multiplier on the neuroticism-driven per-tick noise.</summary>
+    public double DriveVolatilityScale { get; set; } = 1.0;
+
+    /// <summary>Willpower points restored per tick while SleepingTag is present.</summary>
+    public int WillpowerSleepRegenPerTick { get; set; } = 1;
+
+    /// <summary>Intensity points lost per tick in the absence of proximity interaction signals.</summary>
+    public double RelationshipIntensityDecayPerTick { get; set; } = 0.05;
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    public double GetCircadianAmplitude(string driveName)
+        => DriveCircadianAmplitudes.TryGetValue(driveName, out var v) ? v : 0.0;
+
+    public double GetCircadianPhase(string driveName)
+        => DriveCircadianPhases.TryGetValue(driveName, out var v) ? v : 0.0;
+}
+
+// ── Movement systems ──────────────────────────────────────────────────────────
+
+public class MovementConfig
+{
+    /// <summary>Radius (tiles) within which two approaching NPCs trigger step-aside logic.</summary>
+    public float StepAsideRadius { get; set; } = 3f;
+
+    /// <summary>Perpendicular position shift (tiles) applied per step-aside event.</summary>
+    public float StepAsideShift { get; set; } = 0.4f;
+
+    /// <summary>Maximum random position jitter magnitude (tiles) applied to idle NPCs each tick.</summary>
+    public float IdleJitterTiles { get; set; } = 0.05f;
+
+    /// <summary>Per-tick probability [0,1] that an idle NPC performs a posture shift (changes facing).</summary>
+    public float IdlePostureShiftProb { get; set; } = 0.005f;
+
+    public MovementSpeedModifierConfig SpeedModifier { get; set; } = new();
+    public MovementPathfindingConfig   Pathfinding   { get; set; } = new();
+}
+
+public class MovementSpeedModifierConfig
+{
+    public float IrritationGainPerPoint { get; set; } = 0.005f;
+    public float AffectionLossPerPoint  { get; set; } = 0.0033f;
+    public float LowEnergyLossPerPoint  { get; set; } = 0.005f;
+    public float MinMultiplier          { get; set; } = 0.3f;
+    public float MaxMultiplier          { get; set; } = 2.0f;
+}
+
+public class MovementPathfindingConfig
+{
+    /// <summary>F-cost discount applied to tiles that are doorways between rooms.</summary>
+    public float DoorwayDiscount    { get; set; } = 1.0f;
+
+    /// <summary>Scale of seeded hash noise used to break A* f-cost ties (produces path variety).</summary>
+    public float TieBreakNoiseScale { get; set; } = 0.1f;
+}
+
+// ── Spatial systems ───────────────────────────────────────────────────────────
+
+public class SpatialConfig
+{
+    /// <summary>Side length of each spatial-index grid cell, in tiles. Default 4.</summary>
+    public int CellSizeTiles { get; set; } = 4;
+
+    public SpatialWorldSizeConfig       WorldSize              { get; set; } = new();
+    public ProximityRangeDefaultsConfig ProximityRangeDefaults { get; set; } = new();
+}
+
+public class SpatialWorldSizeConfig
+{
+    /// <summary>Horizontal tile extent of the indexed world. Default 512.</summary>
+    public int Width  { get; set; } = 512;
+
+    /// <summary>Vertical tile extent of the indexed world. Default 512.</summary>
+    public int Height { get; set; } = 512;
+}
+
+public class ProximityRangeDefaultsConfig
+{
+    /// <summary>Seed conversation range in tiles. Overridden per NPC at spawn. Default 2.</summary>
+    public int ConversationTiles { get; set; } = 2;
+
+    /// <summary>Seed awareness range in tiles. Default 8.</summary>
+    public int AwarenessTiles    { get; set; } = 8;
+
+    /// <summary>Seed sight range in tiles. Default 32.</summary>
+    public int SightTiles        { get; set; } = 32;
+}
+
+// ── Lighting systems ──────────────────────────────────────────────────────────
+
+public class LightingConfig
+{
+    public DayPhaseBoundariesConfig DayPhaseBoundaries { get; set; } = new();
+
+    /// <summary>Probability (0–1) that a Flickering source emits at full intensity on a given tick.</summary>
+    public double FlickerOnProb     { get; set; } = 0.70;
+
+    /// <summary>Probability (0–1) per tick that a Dying source loses 1 intensity point.</summary>
+    public double DyingDecayProb    { get; set; } = 0.05;
+
+    /// <summary>Tile radius within which a light aperture contributes to a room (for distance falloff).</summary>
+    public int    ApertureRangeBase { get; set; } = 5;
+
+    /// <summary>Tile radius within which a light source contributes to its room (for distance falloff).</summary>
+    public int    SourceRangeBase   { get; set; } = 3;
+
+    /// <summary>
+    /// Ordered list of lighting-to-drive coupling entries. First-match-wins.
+    /// Loaded from SimConfig.json "lighting.driveCouplings" array.
+    /// </summary>
+    public List<LightingCouplingEntry> DriveCouplings { get; set; } = new();
+}
+
+public class DayPhaseBoundariesConfig
+{
+    public double EarlyMorningStart { get; set; } = 0.20;
+    public double MidMorningStart   { get; set; } = 0.30;
+    public double AfternoonStart    { get; set; } = 0.45;
+    public double EveningStart      { get; set; } = 0.65;
+    public double DuskStart         { get; set; } = 0.80;
+    public double NightStart        { get; set; } = 0.85;
+}
+
+// ── Narrative telemetry channel ───────────────────────────────────────────────
+
+/// <summary>
+/// Thresholds and window sizes for NarrativeEventDetector.
+/// Defaults produce signal for human-authored content; tune lower for testing.
+/// </summary>
+public class NarrativeConfig
+{
+    /// <summary>
+    /// Minimum absolute drive delta (Current this tick vs last tick) required to emit DriveSpike.
+    /// Default 15 — a clearly visible movement in a drive value.
+    /// </summary>
+    public int DriveSpikeThreshold { get; set; } = 15;
+
+    /// <summary>
+    /// Minimum willpower drop in a single tick required to emit WillpowerCollapse.
+    /// Default 10 — a sustained suppression releasing all at once.
+    /// </summary>
+    public int WillpowerDropThreshold { get; set; } = 10;
+
+    /// <summary>
+    /// Willpower level below which WillpowerLow is emitted (once per descent).
+    /// Default 20 — the gate is visibly weakening.
+    /// </summary>
+    public int WillpowerLowThreshold { get; set; } = 20;
+
+    /// <summary>
+    /// Number of ticks after a DriveSpike during which a RoomMembershipChanged
+    /// for the same NPC produces a LeftRoomAbruptly candidate.
+    /// Default 3.
+    /// </summary>
+    public int AbruptDepartureWindowTicks { get; set; } = 3;
+
+    /// <summary>Maximum character length of the Detail field on any candidate.</summary>
+    public int CandidateDetailMaxLength { get; set; } = 280;
 }

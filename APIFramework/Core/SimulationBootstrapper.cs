@@ -1,8 +1,14 @@
 using System;
 using System.Collections.Generic;
+using APIFramework.Bootstrap;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
+using APIFramework.Systems.Coupling;
+using APIFramework.Systems.Lighting;
+using APIFramework.Systems.Movement;
+using APIFramework.Systems.Narrative;
+using APIFramework.Systems.Spatial;
 using System.Reflection;
 
 namespace APIFramework.Core;
@@ -51,11 +57,12 @@ namespace APIFramework.Core;
 /// </summary>
 public class SimulationBootstrapper
 {
-    public SimulationEngine Engine         { get; }
-    public EntityManager    EntityManager  { get; }
-    public SimulationClock  Clock          { get; }
-    public SimConfig        Config         { get; }
-    public InvariantSystem  Invariants     { get; }
+    public SimulationEngine    Engine              { get; }
+    public EntityManager       EntityManager       { get; }
+    public SimulationClock     Clock               { get; }
+    public SimConfig           Config              { get; }
+    public InvariantSystem     Invariants          { get; }
+    public WillpowerEventQueue WillpowerEvents     { get; }
 
     /// <summary>
     /// Deterministic RNG source for all simulation systems.
@@ -65,6 +72,35 @@ public class SimulationBootstrapper
     /// making the entire simulation deterministic given the same seed.
     /// </summary>
     public SeededRandom Random { get; }
+
+    // ── Spatial services ──────────────────────────────────────────────────────
+
+    /// <summary>Cell-based spatial index. Singleton; shared by all spatial systems.</summary>
+    public ISpatialIndex        SpatialIndex    { get; }
+
+    /// <summary>Proximity event bus. Subscribe here to receive spatial signals.</summary>
+    public ProximityEventBus    ProximityBus    { get; }
+
+    /// <summary>Runtime room-membership map. Queried by social and behavior systems.</summary>
+    public EntityRoomMembership RoomMembership  { get; }
+
+    // ── Lighting services ─────────────────────────────────────────────────────
+
+    /// <summary>Singleton sun state. Updated by SunSystem each tick; read by aperture and accumulation systems.</summary>
+    public SunStateService SunState { get; }
+
+    // ── Coupling services ─────────────────────────────────────────────────────
+
+    /// <summary>Lighting-to-drive coupling table loaded from SimConfig.lighting.driveCouplings.</summary>
+    public LightingDriveCouplingTable DriveCouplingTable { get; }
+
+    /// <summary>Fractional drive accumulator shared by LightingToDriveCouplingSystem.</summary>
+    public SocialDriveAccumulator DriveAccumulator { get; }
+
+    // ── Narrative services ────────────────────────────────────────────────────
+
+    /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
+    public NarrativeEventBus NarrativeBus { get; }
 
     /// <summary>
     /// Primary constructor — accepts any IConfigProvider.
@@ -82,17 +118,53 @@ public class SimulationBootstrapper
     /// config, and command log produce byte-identical telemetry streams.
     /// Defaults to 0 when not supplied.
     /// </param>
-    public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0)
+    /// <summary>Singleton pathfinding service — computes A* paths on demand.</summary>
+    public PathfindingService Pathfinding { get; }
+
+    /// <summary>
+    /// Set when the bootstrapper was given a <c>worldDefinitionPath</c> and the
+    /// world was loaded via <see cref="WorldDefinitionLoader"/>. Null when the
+    /// default <see cref="SpawnWorld"/> path was used.
+    /// </summary>
+    public LoadResult? WorldLoadResult { get; private set; }
+
+    public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
     {
-        Config        = configProvider.GetConfig();
-        EntityManager = new EntityManager();
-        Clock         = new SimulationClock { TimeScale = Config.World.DefaultTimeScale };
-        Engine        = new SimulationEngine(EntityManager, Clock);
-        Invariants    = new InvariantSystem(Clock);
-        Random        = new SeededRandom(seed);
+        Config          = configProvider.GetConfig();
+        EntityManager   = new EntityManager();
+        Clock           = new SimulationClock { TimeScale = Config.World.DefaultTimeScale };
+        Engine          = new SimulationEngine(EntityManager, Clock);
+        Invariants      = new InvariantSystem(Clock);
+        Random          = new SeededRandom(seed);
+        WillpowerEvents = new WillpowerEventQueue();
+
+        // Spatial services — instantiated before RegisterSystems so systems can receive them
+        SpatialIndex   = new GridSpatialIndex(Config.Spatial);
+        ProximityBus   = new ProximityEventBus();
+        RoomMembership = new EntityRoomMembership();
+
+        // Lighting services
+        SunState = new SunStateService();
+
+        // Coupling services
+        DriveCouplingTable = new LightingDriveCouplingTable(Config.Lighting.DriveCouplings);
+        DriveAccumulator   = new SocialDriveAccumulator();
+
+        // Movement services
+        Pathfinding = new PathfindingService(
+            EntityManager,
+            Config.Spatial.WorldSize.Width,
+            Config.Spatial.WorldSize.Height,
+            Config.Movement);
+
+        // Narrative services
+        NarrativeBus = new NarrativeEventBus();
 
         RegisterSystems();
-        SpawnWorld(humanCount);
+        if (worldDefinitionPath != null)
+            WorldLoadResult = WorldDefinitionLoader.LoadFromFile(worldDefinitionPath, EntityManager, Random);
+        else
+            SpawnWorld(humanCount);
     }
 
     /// <summary>
@@ -106,12 +178,37 @@ public class SimulationBootstrapper
     /// <param name="seed">
     /// RNG seed. Defaults to 0. Pass a nonzero value for deterministic replay.
     /// </param>
-    public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount, int seed = 0)
-        : this(new FileConfigProvider(configPath), humanCount, seed) { }
+    /// <param name="worldDefinitionPath">
+    /// Optional path to a world-definition.json. When supplied, the loader instantiates
+    /// all world entities from the file instead of <see cref="SpawnWorld"/>.
+    /// </param>
+    public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
+        : this(new FileConfigProvider(configPath), humanCount, seed, worldDefinitionPath) { }
 
     private void RegisterSystems()
     {
         var sys = Config.Systems;
+
+        // Spatial — sync index and room membership (Phase 5).
+        // ProximityEvent moves to Lighting (Phase 7) so it fires after illumination is current.
+        var syncSys = new SpatialIndexSyncSystem(SpatialIndex);
+        EntityManager.EntityDestroyed += syncSys.OnEntityDestroyed;
+        Engine.AddSystem(syncSys,                                                SystemPhase.Spatial);
+        Engine.AddSystem(new RoomMembershipSystem(RoomMembership, ProximityBus), SystemPhase.Spatial);
+
+        // Lighting — sun position, source state machines, aperture beams, room illumination,
+        // then proximity events (which now see current illumination).
+        var lightSourceStates = new LightSourceStateSystem(Random, Config.Lighting);
+        var apertureBeams     = new ApertureBeamSystem(SunState, Clock);
+        Engine.AddSystem(new SunSystem(Clock, SunState, Config.Lighting),                           SystemPhase.Lighting);
+        Engine.AddSystem(lightSourceStates,                                                          SystemPhase.Lighting);
+        Engine.AddSystem(apertureBeams,                                                              SystemPhase.Lighting);
+        Engine.AddSystem(new IlluminationAccumulationSystem(lightSourceStates, apertureBeams, Config.Lighting), SystemPhase.Lighting);
+        Engine.AddSystem(new ProximityEventSystem(SpatialIndex, ProximityBus, RoomMembership),      SystemPhase.Lighting);
+
+        // Coupling — lighting-to-drive coupling; after illumination is fresh, before drive dynamics.
+        Engine.AddSystem(new LightingToDriveCouplingSystem(
+            DriveCouplingTable, DriveAccumulator, RoomMembership, apertureBeams, SunState),          SystemPhase.Coupling);
 
         // PreUpdate — invariant enforcement; always first
         Engine.AddSystem(Invariants,                                               SystemPhase.PreUpdate);
@@ -127,6 +224,11 @@ public class SimulationBootstrapper
         // Cognition — process conditions into emotions and drive scores
         Engine.AddSystem(new MoodSystem(sys.Mood),                                SystemPhase.Cognition);
         Engine.AddSystem(new BrainSystem(sys.Brain, Clock),                       SystemPhase.Cognition);
+
+        // Social cognition — drive dynamics, willpower, relationship lifecycle
+        Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random),   SystemPhase.Cognition);
+        Engine.AddSystem(new WillpowerSystem(Config.Social, WillpowerEvents),      SystemPhase.Cognition);
+        Engine.AddSystem(RelationshipLifecycleSystem.LoadFromFile(Config.Social),  SystemPhase.Cognition);
 
         // Behavior — act on the dominant drive
         Engine.AddSystem(new FeedingSystem(sys.Feeding),                          SystemPhase.Behavior);
@@ -148,7 +250,18 @@ public class SimulationBootstrapper
 
         // World — environmental systems independent of entity biology
         Engine.AddSystem(new RotSystem(sys.Rot),                                  SystemPhase.World);
+
+        // Movement quality pipeline (runs in World phase, in registration order)
+        Engine.AddSystem(new PathfindingTriggerSystem(Pathfinding),                SystemPhase.World);
+        Engine.AddSystem(new MovementSpeedModifierSystem(Config.Movement),         SystemPhase.World);
+        Engine.AddSystem(new StepAsideSystem(SpatialIndex, RoomMembership, Config.Movement), SystemPhase.World);
         Engine.AddSystem(new MovementSystem(Random),                               SystemPhase.World);
+        Engine.AddSystem(new FacingSystem(ProximityBus),                           SystemPhase.World);
+        Engine.AddSystem(new IdleMovementSystem(Random, Config.Movement),          SystemPhase.World);
+
+        // Narrative — runs last so all state has settled; emits candidates via NarrativeBus
+        Engine.AddSystem(new NarrativeEventDetector(
+            NarrativeBus, ProximityBus, RoomMembership, Config.Narrative),        SystemPhase.Narrative);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────
@@ -278,6 +391,7 @@ public class SimulationBootstrapper
         MergeFlat(newCfg.Systems.Interaction,         Config.Systems.Interaction,         changes);
         MergeFlat(newCfg.Systems.Mood,                Config.Systems.Mood,                changes);
         MergeFlat(newCfg.Systems.Rot,                 Config.Systems.Rot,                 changes);
+        MergeFlat(newCfg.Narrative,                   Config.Narrative,                   changes);
 
         // ── Entity starting configs (only affect future spawns) ───────────────
         MergeFlat(newCfg.Entities.Human.Metabolism,     Config.Entities.Human.Metabolism,     changes);

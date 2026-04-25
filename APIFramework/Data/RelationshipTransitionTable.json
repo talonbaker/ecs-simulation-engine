@@ -1,0 +1,17 @@
+{
+  "transitions": [
+    { "from": "Rival",              "to": "AlliesOfConvenience" },
+    { "from": "AlliesOfConvenience","to": "Friend"              },
+    { "from": "AlliesOfConvenience","to": "Rival"               },
+    { "from": "Friend",             "to": "Rival"               },
+    { "from": "Friend",             "to": "ActiveAffair"        },
+    { "from": "Friend",             "to": "Confidant"           },
+    { "from": "OldFlame",           "to": "ActiveAffair"        },
+    { "from": "OldFlame",           "to": "TheThingNobodyTalksAbout" },
+    { "from": "ActiveAffair",       "to": "OldFlame"            },
+    { "from": "ActiveAffair",       "to": "SleptWithSpouse"     },
+    { "from": "Confidant",          "to": "Friend"              },
+    { "from": "Mentor",             "to": "Friend"              },
+    { "from": "SecretCrush",        "to": "Friend"              }
+  ]
+}

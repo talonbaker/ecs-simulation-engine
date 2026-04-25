@@ -51,6 +51,26 @@ namespace APIFramework.Core;
 public enum SystemPhase
 {
     PreUpdate  = 0,
+    /// <summary>
+    /// Spatial sync and room membership.
+    /// Runs before Lighting so room occupancy is current when illumination is computed.
+    /// Phase order: SpatialIndexSyncSystem → RoomMembershipSystem.
+    /// </summary>
+    Spatial    = 5,
+    /// <summary>
+    /// Lighting systems, then proximity events.
+    /// Lighting reads room membership (Spatial phase) and writes per-room illumination.
+    /// ProximityEventSystem runs last in this phase so it sees current illumination.
+    /// Phase order: SunSystem → LightSourceStateSystem → ApertureBeamSystem →
+    ///              IlluminationAccumulationSystem → ProximityEventSystem.
+    /// </summary>
+    Lighting   = 7,
+    /// <summary>
+    /// Lighting-to-drive coupling. Runs after Lighting (illumination is fresh) and before
+    /// Cognition/DriveDynamics (so lighting deltas are present before circadian decay).
+    /// Phase order: LightingToDriveCouplingSystem.
+    /// </summary>
+    Coupling   = 8,
     Physiology = 10,
     Condition  = 20,
     Cognition  = 30,
@@ -58,6 +78,12 @@ public enum SystemPhase
     Transit     = 50,
     Elimination = 55,  // intestine systems — after transit, before world
     World       = 60,
+    /// <summary>
+    /// Narrative detection — runs last so all engine state has settled.
+    /// NarrativeEventDetector compares this tick's state to the previous tick
+    /// and emits NarrativeEventCandidates via NarrativeEventBus.
+    /// </summary>
+    Narrative   = 70,
     PostUpdate = 100,
 }
 

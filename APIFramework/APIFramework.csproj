@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Warden.Contracts\Warden.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!--
       Newtonsoft.Json is used for SimConfig JSON loading.
       In Unity, Newtonsoft.Json is provided by the com.unity.nuget.newtonsoft-json

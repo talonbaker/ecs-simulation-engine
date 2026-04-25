@@ -29,6 +29,7 @@ public static class AiCommand
         root.AddCommand(AiDescribeCommand.Build());
         root.AddCommand(AiSnapshotCommand.Build());
         root.AddCommand(AiStreamCommand.Build());
+        root.AddCommand(AiNarrativeStreamCommand.Build());
         root.AddCommand(AiInjectCommand.Build());
         root.AddCommand(AiReplayCommand.Build());
 

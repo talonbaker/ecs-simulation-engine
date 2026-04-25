@@ -162,8 +162,9 @@ public static class SchemaValidator
         Schema.SonnetResult  => "Warden.Contracts.SchemaValidation.sonnet-result.schema.json",
         Schema.SonnetToHaiku => "Warden.Contracts.SchemaValidation.sonnet-to-haiku.schema.json",
         Schema.HaikuResult   => "Warden.Contracts.SchemaValidation.haiku-result.schema.json",
-        Schema.AiCommandBatch=> "Warden.Contracts.SchemaValidation.ai-command-batch.schema.json",
-        _                    => throw new ArgumentOutOfRangeException(nameof(schema))
+        Schema.AiCommandBatch  => "Warden.Contracts.SchemaValidation.ai-command-batch.schema.json",
+        Schema.WorldDefinition => "Warden.Contracts.SchemaValidation.world-definition.schema.json",
+        _                      => throw new ArgumentOutOfRangeException(nameof(schema))
     };
 
     /// <summary>

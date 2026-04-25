@@ -9,11 +9,11 @@ namespace Warden.Contracts.Telemetry;
 /// <summary>
 /// Versioned, AI-consumable projection of <c>SimulationSnapshot</c>.
 /// Produced by <c>Warden.Telemetry.TelemetryProjector</c> (WP-03), consumed by
-/// Tier-3 Haikus. Schema: <c>world-state.schema.json</c> v0.1.0.
+/// Tier-3 Haikus. Schema: <c>world-state.schema.json</c> v0.3.0.
 /// </summary>
 public sealed record WorldStateDto
 {
-    public string                      SchemaVersion { get; init; } = "0.1.0";
+    public string                      SchemaVersion { get; init; } = "0.3.0";
     public DateTimeOffset              CapturedAt    { get; init; }
     public int                         Tick          { get; init; }
     public ClockStateDto               Clock         { get; init; } = default!;
@@ -22,34 +22,49 @@ public sealed record WorldStateDto
     public List<WorldObjectDto>        WorldObjects  { get; init; } = new();
     public InvariantDigestDto          Invariants    { get; init; } = default!;
 
-    // Optional
+    // Optional core fields
     public int?                    Seed         { get; init; }
     public string?                 SimVersion   { get; init; }
     public List<TransitItemDto>?   TransitItems { get; init; }
+
+    // v0.2 — social pillar (optional; projector omits until populated)
+    public List<RelationshipDto>?  Relationships { get; init; }
+    public List<MemoryEventDto>?   MemoryEvents  { get; init; }
+
+    // v0.3 — spatial pillar (optional; projector omits until populated)
+    public IReadOnlyList<RoomDto>?         Rooms          { get; init; }
+    public IReadOnlyList<LightSourceDto>?  LightSources   { get; init; }
+    public IReadOnlyList<LightApertureDto>? LightApertures { get; init; }
 }
 
 // ── Clock ─────────────────────────────────────────────────────────────────────
 
 public sealed record ClockStateDto
 {
-    public string GameTimeDisplay { get; init; } = string.Empty;
-    public int    DayNumber       { get; init; }
-    public bool   IsDaytime       { get; init; }
-    public float  CircadianFactor { get; init; }
-    public float  TimeScale       { get; init; }
+    public string      GameTimeDisplay { get; init; } = string.Empty;
+    public int         DayNumber       { get; init; }
+    public bool        IsDaytime       { get; init; }
+    public float       CircadianFactor { get; init; }
+    public float       TimeScale       { get; init; }
+
+    // v0.3 — optional sun position
+    public SunStateDto? Sun            { get; init; }
 }
 
 // ── Entity ────────────────────────────────────────────────────────────────────
 
 public sealed record EntityStateDto
 {
-    public string          Id        { get; init; } = string.Empty;
-    public string          ShortId   { get; init; } = string.Empty;
-    public string          Name      { get; init; } = string.Empty;
-    public SpeciesType     Species   { get; init; }
-    public PositionStateDto  Position { get; init; } = default!;
-    public DrivesStateDto    Drives   { get; init; } = default!;
+    public string             Id         { get; init; } = string.Empty;
+    public string             ShortId    { get; init; } = string.Empty;
+    public string             Name       { get; init; } = string.Empty;
+    public SpeciesType        Species    { get; init; }
+    public PositionStateDto   Position   { get; init; } = default!;
+    public DrivesStateDto     Drives     { get; init; } = default!;
     public PhysiologyStateDto Physiology { get; init; } = default!;
+
+    // v0.2 — optional social state
+    public SocialStateDto?    Social     { get; init; }
 }
 
 public sealed record PositionStateDto

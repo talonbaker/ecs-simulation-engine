@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using APIFramework.Config;
 
 namespace APIFramework.Core;
@@ -104,6 +105,195 @@ public static class EntityTemplates
             CapacityMl      = bl.CapacityMl
         });
 
+        return entity;
+    }
+
+    /// <summary>
+    /// Adds the four social components plus NpcTag to <paramref name="entity"/>.
+    /// Used by tests and (later) the cast generator. Any field not supplied gets
+    /// a sensible zero/default — overwrite after the call for specific test cases.
+    /// </summary>
+    public static Entity WithSocial(
+        Entity entity,
+        SocialDrivesComponent? drives           = null,
+        WillpowerComponent?    willpower         = null,
+        PersonalityComponent?  personality       = null,
+        InhibitionsComponent?  inhibitions       = null)
+    {
+        entity.Add(new NpcTag());
+        entity.Add(drives      ?? new SocialDrivesComponent());
+        entity.Add(willpower   ?? new WillpowerComponent(50, 50));
+        entity.Add(personality ?? new PersonalityComponent(0, 0, 0, 0, 0));
+        entity.Add(inhibitions ?? new InhibitionsComponent(new List<Inhibition>()));
+        return entity;
+    }
+
+    /// <summary>
+    /// Spawns a room entity with <see cref="RoomTag"/> and <see cref="RoomComponent"/>.
+    /// Also adds a <see cref="PositionComponent"/> at the center of the bounds so the
+    /// spatial index can register the room as a positioned entity.
+    /// Illumination is optional — the lighting engine populates it in WP-1.2.A.
+    /// </summary>
+    public static Entity Room(
+        EntityManager    manager,
+        string           id,
+        string           name,
+        RoomCategory     category,
+        BuildingFloor    floor,
+        BoundsRect       bounds,
+        RoomIllumination illumination = default)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new RoomTag());
+        entity.Add(new RoomComponent
+        {
+            Id           = id,
+            Name         = name,
+            Category     = category,
+            Floor        = floor,
+            Bounds       = bounds,
+            Illumination = illumination,
+        });
+        // Center of bounds for spatial registration (float midpoint)
+        entity.Add(new PositionComponent
+        {
+            X = bounds.X + bounds.Width  * 0.5f,
+            Y = 0f,
+            Z = bounds.Y + bounds.Height * 0.5f,
+        });
+        return entity;
+    }
+
+    /// <summary>
+    /// Adds a <see cref="ProximityComponent"/> to an existing entity.
+    /// Defaults match <see cref="ProximityComponent.Default"/> (2/8/32 tiles).
+    /// </summary>
+    public static Entity WithProximity(
+        Entity entity,
+        int conversationTiles = 2,
+        int awarenessTiles    = 8,
+        int sightTiles        = 32)
+    {
+        entity.Add(new ProximityComponent
+        {
+            ConversationRangeTiles = conversationTiles,
+            AwarenessRangeTiles    = awarenessTiles,
+            SightRangeTiles        = sightTiles,
+        });
+        return entity;
+    }
+
+    /// <summary>
+    /// Spawns a light fixture entity with <see cref="LightSourceTag"/> and <see cref="LightSourceComponent"/>.
+    /// Also adds a <see cref="PositionComponent"/> at (tileX, tileY) for spatial registration.
+    /// </summary>
+    public static Entity LightSource(
+        EntityManager manager,
+        string        id,
+        LightKind     kind,
+        LightState    state,
+        int           intensity,
+        int           colorTemperatureK,
+        int           tileX,
+        int           tileY,
+        string        roomId)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new LightSourceTag());
+        entity.Add(new LightSourceComponent
+        {
+            Id                = id,
+            Kind              = kind,
+            State             = state,
+            Intensity         = intensity,
+            ColorTemperatureK = colorTemperatureK,
+            TileX             = tileX,
+            TileY             = tileY,
+            RoomId            = roomId,
+        });
+        entity.Add(new PositionComponent { X = tileX, Y = 0f, Z = tileY });
+        return entity;
+    }
+
+    /// <summary>
+    /// Spawns a light aperture (window/skylight) entity with <see cref="LightApertureTag"/>
+    /// and <see cref="LightApertureComponent"/>.
+    /// Also adds a <see cref="PositionComponent"/> at (tileX, tileY) for spatial registration.
+    /// </summary>
+    public static Entity LightAperture(
+        EntityManager  manager,
+        string         id,
+        int            tileX,
+        int            tileY,
+        string         roomId,
+        ApertureFacing facing,
+        double         areaSqTiles)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new LightApertureTag());
+        entity.Add(new LightApertureComponent
+        {
+            Id          = id,
+            TileX       = tileX,
+            TileY       = tileY,
+            RoomId      = roomId,
+            Facing      = facing,
+            AreaSqTiles = areaSqTiles,
+        });
+        entity.Add(new PositionComponent { X = tileX, Y = 0f, Z = tileY });
+        return entity;
+    }
+
+    /// <summary>
+    /// Adds movement-quality components to an existing entity:
+    /// <see cref="HandednessComponent"/>, <see cref="FacingComponent"/>, and ensures
+    /// <see cref="MovementComponent"/> has SpeedModifier defaulted to 1.0.
+    /// </summary>
+    public static Entity WithMovementQuality(
+        Entity entity,
+        HandednessSide handedness = HandednessSide.RightSidePass,
+        float initialFacingDeg   = 0f)
+    {
+        entity.Add(new HandednessComponent { Side = handedness });
+        entity.Add(new FacingComponent { DirectionDeg = initialFacingDeg, Source = FacingSource.Idle });
+
+        if (entity.Has<MovementComponent>())
+        {
+            var mc = entity.Get<MovementComponent>();
+            if (mc.SpeedModifier == 0f) mc.SpeedModifier = 1.0f;
+            entity.Add(mc);
+        }
+
+        return entity;
+    }
+
+    /// <summary>
+    /// Spawns an authored world-object entity (anchor object) with
+    /// <see cref="AnchorObjectTag"/>, <see cref="AnchorObjectComponent"/>,
+    /// <see cref="IdentityComponent"/>, and <see cref="PositionComponent"/>.
+    /// Used by <c>WorldDefinitionLoader</c> to populate <c>objectsAtAnchors[]</c>.
+    /// </summary>
+    public static Entity WorldObject(
+        EntityManager            manager,
+        string                   id,
+        string                   roomId,
+        string                   description,
+        AnchorObjectPhysicalState physicalState,
+        int                      tileX,
+        int                      tileY)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new AnchorObjectTag());
+        entity.Add(new AnchorObjectComponent
+        {
+            Id            = id,
+            RoomId        = roomId,
+            Description   = description,
+            PhysicalState = physicalState,
+        });
+        // Truncate identity name to IdentityComponent's conventional length.
+        entity.Add(new IdentityComponent { Name = description.Length > 32 ? description[..32] : description });
+        entity.Add(new PositionComponent { X = tileX, Y = 0f, Z = tileY });
         return entity;
     }
 

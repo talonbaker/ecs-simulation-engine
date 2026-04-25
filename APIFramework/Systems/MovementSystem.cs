@@ -8,23 +8,26 @@ namespace APIFramework.Systems;
 /// <summary>
 /// Moves entities toward their current navigation target.
 ///
-/// TWO MOVEMENT MODES
+/// THREE MOVEMENT MODES
+/// ────────────────────
+/// 1. Path-following: entity has a PathComponent with cached A* waypoints.
+///    Advances along waypoints one at a time; removes PathComponent once the
+///    final waypoint is reached, then falls through to directed / wander mode.
+///
+/// 2. Directed: entity has a MovementTargetComponent pointing at a world-object
+///    entity. Steers directly toward it; removes the component on arrival.
+///
+/// 3. Wander: no active target or path. Picks a random XZ destination and drifts.
+///
+/// SPEED
+/// ─────
+/// Effective speed = Speed × SpeedModifier × deltaTime.
+/// SpeedModifier defaults 1.0; written each tick by MovementSpeedModifierSystem.
+///
+/// VELOCITY RECORDING
 /// ──────────────────
-/// 1. Directed: entity has a MovementTargetComponent pointing at a world-object
-///    entity.  The system resolves that entity's PositionComponent and steers
-///    toward it.  On arrival (within ArrivalDistance) MovementTargetComponent is
-///    removed so the requesting system can detect arrival and act.
-///
-/// 2. Wander: no MovementTargetComponent present.  The system picks a random XZ
-///    destination within WorldBounds and moves toward it.  On arrival a new random
-///    destination is chosen, so entities always drift gently around the scene.
-///
-/// SPEED UNITS
-/// ───────────
-/// MovementComponent.Speed is world-units per GAME-second.
-/// Systems receive game-scaled deltaTime (realDeltaTime * TimeScale), so with
-/// TimeScale=120 and 60fps:  scaledDelta ≈ 1.92 game-s/frame
-///   speed = 0.04 world-units/game-s  →  ~0.08 units/frame  →  ~10 units in ~13 s
+/// LastVelocityX/Z on MovementComponent receive the actual XZ displacement this
+/// tick. FacingSystem reads them to derive facing direction.
 /// </summary>
 public class MovementSystem : ISystem
 {
@@ -33,21 +36,10 @@ public class MovementSystem : ISystem
     public float WorldMinZ { get; set; } = 1f;
     public float WorldMaxZ { get; set; } = 9f;
 
-    // Per-entity wander destinations (Guid → target XZ).
     private readonly Dictionary<Guid, (float X, float Z)> _wanderTargets = new();
+    private readonly SeededRandom                          _rng;
 
-    // Seeded PRNG so wandering is deterministic / reproducible.
-    // Supplied by SimulationBootstrapper so the full simulation shares one seed chain.
-    private readonly SeededRandom _rng;
-
-    /// <summary>
-    /// Initialises the system with the simulation's shared <see cref="SeededRandom"/>.
-    /// Two runs with the same seed produce identical wander sequences.
-    /// </summary>
-    public MovementSystem(SeededRandom rng)
-    {
-        _rng = rng;
-    }
+    public MovementSystem(SeededRandom rng) { _rng = rng; }
 
     public void Update(EntityManager em, float deltaTime)
     {
@@ -70,58 +62,100 @@ public class MovementSystem : ISystem
             var pos  = entity.Get<PositionComponent>();
             var move = entity.Get<MovementComponent>();
 
-            // Resolve destination.
-            float targetX, targetZ;
+            float targetX = 0f;
+            float targetZ = 0f;
             bool  directed = false;
 
-            if (entity.Has<MovementTargetComponent>())
+            // ── Mode 1: Path-following ─────────────────────────────────────────
+            bool followingPath = false;
+            if (entity.Has<PathComponent>())
             {
-                var mt = entity.Get<MovementTargetComponent>();
-                if (worldPositions.TryGetValue(mt.TargetEntityId, out var wp))
+                var path = entity.Get<PathComponent>();
+
+                // Skip waypoints that are already within arrival distance.
+                while (path.Waypoints != null && path.CurrentWaypointIndex < path.Waypoints.Count)
                 {
+                    var wp  = path.Waypoints[path.CurrentWaypointIndex];
+                    float wdx = wp.X - pos.X;
+                    float wdz = wp.Y - pos.Z;
+                    if (MathF.Sqrt(wdx * wdx + wdz * wdz) <= move.ArrivalDistance)
+                        path.CurrentWaypointIndex++;
+                    else
+                        break;
+                }
+
+                if (path.Waypoints != null && path.CurrentWaypointIndex < path.Waypoints.Count)
+                {
+                    entity.Add(path); // persist updated index
+                    var wp   = path.Waypoints[path.CurrentWaypointIndex];
                     targetX  = wp.X;
-                    targetZ  = wp.Z;
+                    targetZ  = wp.Y;
                     directed = true;
+                    followingPath = true;
                 }
                 else
                 {
-                    // Target disappeared — fall back to wander.
-                    entity.Remove<MovementTargetComponent>();
+                    entity.Remove<PathComponent>();
+                }
+            }
+
+            // ── Mode 2: Directed toward target entity ──────────────────────────
+            if (!followingPath)
+            {
+                if (entity.Has<MovementTargetComponent>())
+                {
+                    var mt = entity.Get<MovementTargetComponent>();
+                    if (worldPositions.TryGetValue(mt.TargetEntityId, out var wp))
+                    {
+                        targetX  = wp.X;
+                        targetZ  = wp.Z;
+                        directed = true;
+                    }
+                    else
+                    {
+                        entity.Remove<MovementTargetComponent>();
+                        (targetX, targetZ) = GetOrPickWander(entity.Id);
+                    }
+                }
+                else
+                {
+                    // ── Mode 3: Wander ─────────────────────────────────────────
                     (targetX, targetZ) = GetOrPickWander(entity.Id);
                 }
             }
-            else
-            {
-                (targetX, targetZ) = GetOrPickWander(entity.Id);
-            }
 
-            // Steer toward destination.
+            // ── Steer toward resolved destination ─────────────────────────────
             float dx   = targetX - pos.X;
             float dz   = targetZ - pos.Z;
             float dist = MathF.Sqrt(dx * dx + dz * dz);
 
+            float speedMod       = move.SpeedModifier > 0f ? move.SpeedModifier : 1.0f;
+            float effectiveSpeed = move.Speed * speedMod;
+
             if (dist <= move.ArrivalDistance)
             {
-                if (directed)
-                    entity.Remove<MovementTargetComponent>();
+                if (directed) entity.Remove<MovementTargetComponent>();
 
-                // Pick a fresh wander target whether directed or wandering.
                 _wanderTargets[entity.Id] = PickRandom();
+
+                move.LastVelocityX = 0f;
+                move.LastVelocityZ = 0f;
+                entity.Add(move);
             }
             else
             {
-                float step = Math.Min(move.Speed * deltaTime, dist);
+                float step = Math.Min(effectiveSpeed * deltaTime, dist);
                 float inv  = 1f / dist;
 
-                // entity.Add overwrites the existing PositionComponent in-place.
-                entity.Add(new PositionComponent
-                {
-                    X = pos.X + dx * inv * step,
-                    Y = pos.Y,
-                    Z = pos.Z + dz * inv * step
-                });
+                float newX = pos.X + dx * inv * step;
+                float newZ = pos.Z + dz * inv * step;
 
+                entity.Add(new PositionComponent { X = newX, Y = pos.Y, Z = newZ });
                 _wanderTargets[entity.Id] = (targetX, targetZ);
+
+                move.LastVelocityX = newX - pos.X;
+                move.LastVelocityZ = newZ - pos.Z;
+                entity.Add(move);
             }
         }
     }

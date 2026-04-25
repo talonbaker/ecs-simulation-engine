@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "0.1.0",
+  "capturedAt": "2026-04-25T03:33:29.1395353+00:00",
+  "tick": 1,
+  "clock": {
+    "gameTimeDisplay": "6:00 AM",
+    "dayNumber": 1,
+    "isDaytime": true,
+    "circadianFactor": 0.1,
+    "timeScale": 120
+  },
+  "entities": [
+    {
+      "id": "00000001-0000-0000-0000-000000000000",
+      "shortId": "00000001",
+      "name": "Billy",
+      "species": "human",
+      "position": {
+        "x": 5.046442,
+        "y": 0,
+        "z": 5.0651393,
+        "hasPosition": true,
+        "isMoving": false
+      },
+      "drives": {
+        "dominant": "Drink",
+        "eatUrgency": 0.10003998,
+        "drinkUrgency": 0.100080036,
+        "sleepUrgency": 0.00450216,
+        "defecateUrgency": 0,
+        "peeUrgency": 0.00016
+      },
+      "physiology": {
+        "satiation": 89.996,
+        "hydration": 90.062,
+        "bodyTemp": 37,
+        "energy": 89.998,
+        "sleepiness": 5.0024,
+        "isSleeping": false,
+        "siFill": 0,
+        "liFill": 0,
+        "colonFill": 8.160001E-06,
+        "bladderFill": 0.0002
+      }
+    }
+  ],
+  "worldItems": [],
+  "worldObjects": [
+    {
+      "id": "00000002-0000-0000-0000-000000000000",
+      "name": "Fridge",
+      "kind": "fridge",
+      "x": 2,
+      "y": 0,
+      "z": 2,
+      "stockCount": 5
+    },
+    {
+      "id": "00000003-0000-0000-0000-000000000000",
+      "name": "Sink",
+      "kind": "sink",
+      "x": 7,
+      "y": 0,
+      "z": 2
+    },
+    {
+      "id": "00000004-0000-0000-0000-000000000000",
+      "name": "Bed",
+      "kind": "bed",
+      "x": 2,
+      "y": 0,
+      "z": 8
+    },
+    {
+      "id": "00000005-0000-0000-0000-000000000000",
+      "name": "Toilet",
+      "kind": "toilet",
+      "x": 7,
+      "y": 0,
+      "z": 8
+    }
+  ],
+  "invariants": {
+    "violationCount": 0
+  },
+  "seed": 0,
+  "simVersion": "ECS Simulation Engine  v0.7.2"
+}

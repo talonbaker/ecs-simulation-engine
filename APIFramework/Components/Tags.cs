@@ -48,6 +48,20 @@ public struct SleepingTag { }  // Entity is actively sleeping
 public struct HumanTag { }
 public struct CatTag { }
 public struct BolusTag { }
+public struct NpcTag { }
+public struct RelationshipTag { }
+/// <summary>Marks an entity as a room. Used by RoomMembershipSystem to skip room entities during membership checks.</summary>
+public struct RoomTag { }
+/// <summary>Marks an entity as a light fixture. Used by lighting systems for iteration.</summary>
+public struct LightSourceTag { }
+/// <summary>Marks an entity as a light aperture (window/skylight). Used by lighting systems for iteration.</summary>
+public struct LightApertureTag { }
+/// <summary>Marks an immovable entity as a pathfinding obstacle (furniture, walls). PathfindingService skips tiles occupied by obstacle entities.</summary>
+public struct ObstacleTag { }
+/// <summary>Marks an entity as an NPC spawn slot. Cast generator (WP-1.8.A) reads these and replaces them with full NPC entities.</summary>
+public struct NpcSlotTag { }
+/// <summary>Marks an entity as an authored world object placed at a named anchor (e.g. box of floppy disks, parking-lot sign).</summary>
+public struct AnchorObjectTag { }
 #endregion
 
 #region Desire Tags
