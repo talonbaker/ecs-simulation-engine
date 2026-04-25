@@ -11,12 +11,13 @@ namespace APIFramework.Config;
 /// </summary>
 public class SimConfig
 {
-    public WorldConfig       World    { get; set; } = new();
-    public EntitiesConfig    Entities { get; set; } = new();
-    public SystemsConfig     Systems  { get; set; } = new();
-    public SocialSystemConfig Social  { get; set; } = new();
-    public SpatialConfig      Spatial { get; set; } = new();
-    public MovementConfig     Movement { get; set; } = new();
+    public WorldConfig        World     { get; set; } = new();
+    public EntitiesConfig     Entities  { get; set; } = new();
+    public SystemsConfig      Systems   { get; set; } = new();
+    public SocialSystemConfig Social    { get; set; } = new();
+    public SpatialConfig      Spatial   { get; set; } = new();
+    public MovementConfig     Movement  { get; set; } = new();
+    public NarrativeConfig    Narrative { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -773,4 +774,41 @@ public class ProximityRangeDefaultsConfig
 
     /// <summary>Seed sight range in tiles. Default 32.</summary>
     public int SightTiles        { get; set; } = 32;
+}
+
+// ── Narrative telemetry channel ───────────────────────────────────────────────
+
+/// <summary>
+/// Thresholds and window sizes for NarrativeEventDetector.
+/// Defaults produce signal for human-authored content; tune lower for testing.
+/// </summary>
+public class NarrativeConfig
+{
+    /// <summary>
+    /// Minimum absolute drive delta (Current this tick vs last tick) required to emit DriveSpike.
+    /// Default 15 — a clearly visible movement in a drive value.
+    /// </summary>
+    public int DriveSpikeThreshold { get; set; } = 15;
+
+    /// <summary>
+    /// Minimum willpower drop in a single tick required to emit WillpowerCollapse.
+    /// Default 10 — a sustained suppression releasing all at once.
+    /// </summary>
+    public int WillpowerDropThreshold { get; set; } = 10;
+
+    /// <summary>
+    /// Willpower level below which WillpowerLow is emitted (once per descent).
+    /// Default 20 — the gate is visibly weakening.
+    /// </summary>
+    public int WillpowerLowThreshold { get; set; } = 20;
+
+    /// <summary>
+    /// Number of ticks after a DriveSpike during which a RoomMembershipChanged
+    /// for the same NPC produces a LeftRoomAbruptly candidate.
+    /// Default 3.
+    /// </summary>
+    public int AbruptDepartureWindowTicks { get; set; } = 3;
+
+    /// <summary>Maximum character length of the Detail field on any candidate.</summary>
+    public int CandidateDetailMaxLength { get; set; } = 280;
 }
