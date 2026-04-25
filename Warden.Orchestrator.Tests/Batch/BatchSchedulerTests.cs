@@ -98,14 +98,16 @@ internal static class Fixtures
             var haikuResultJson = HaikuResultJson(e.ScenarioId, batchId, e.HaikuId);
             // Serialize the string to produce a properly JSON-escaped string literal
             var textValue = JsonSerializer.Serialize(haikuResultJson);
-            var msgJson = $$"""
-                {"id":"msg_test","type":"message","role":"assistant",
-                 "content":[{"type":"text","text":{{textValue}}}],
-                 "model":"claude-haiku-4-5-20251001",
-                 "stop_reason":"end_turn","stop_sequence":null,
-                 "usage":{"input_tokens":100,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":50}}
-                """;
-            return $$"""{"custom_id":"{{e.ScenarioId}}","result":{"type":"succeeded","message":{{msgJson}}}}""";
+            // Avoid consecutive-brace CS9007 by building via string.Concat
+            var msgJson =
+                @"{""id"":""msg_test"",""type"":""message"",""role"":""assistant""," +
+                @"""content"":[{""type"":""text"",""text"":" + textValue + @"}]," +
+                @"""model"":""claude-haiku-4-5-20251001""," +
+                @"""stop_reason"":""end_turn"",""stop_sequence"":null," +
+                @"""usage"":{""input_tokens"":100,""cache_creation_input_tokens"":0,""cache_read_input_tokens"":0,""output_tokens"":50}}";
+            return
+                @"{""custom_id"":""" + e.ScenarioId +
+                @""",""result"":{""type"":""succeeded"",""message"":" + msgJson + @"}}";
         });
         return string.Join("\n", lines);
     }
@@ -414,7 +416,10 @@ public sealed class BatchSchedulerTests : IDisposable
                 cts.Token);
 
             cts.CancelAfter(TimeSpan.FromMilliseconds(200));
-            await Assert.ThrowsAsync<OperationCanceledException>(() => task);
+            // TaskCanceledException derives from OperationCanceledException
+            var ex = await Record.ExceptionAsync(() => task);
+            Assert.True(ex is OperationCanceledException,
+                $"Expected OperationCanceledException (or subclass), got: {ex?.GetType().Name ?? "null"}");
             sw.Stop();
 
             Assert.True(sw.ElapsedMilliseconds < 2000,

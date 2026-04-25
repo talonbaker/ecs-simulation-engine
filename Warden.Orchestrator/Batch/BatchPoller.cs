@@ -25,8 +25,8 @@ public sealed class BatchPoller
     /// Sleeps before each poll so the first check is after one interval.
     /// </summary>
     public async Task PollUntilEndedAsync(
-        AnthropicClient client,
-        string          batchId,
+        IAnthropicClient client,
+        string           batchId,
         CancellationToken ct)
     {
         int consecutiveNoChange        = 0;
