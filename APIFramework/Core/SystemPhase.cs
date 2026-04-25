@@ -65,6 +65,12 @@ public enum SystemPhase
     ///              IlluminationAccumulationSystem → ProximityEventSystem.
     /// </summary>
     Lighting   = 7,
+    /// <summary>
+    /// Lighting-to-drive coupling. Runs after Lighting (illumination is fresh) and before
+    /// Cognition/DriveDynamics (so lighting deltas are present before circadian decay).
+    /// Phase order: LightingToDriveCouplingSystem.
+    /// </summary>
+    Coupling   = 8,
     Physiology = 10,
     Condition  = 20,
     Cognition  = 30,

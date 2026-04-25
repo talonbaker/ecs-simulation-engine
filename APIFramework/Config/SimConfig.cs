@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using APIFramework.Components;
+using APIFramework.Systems.Coupling;
 
 namespace APIFramework.Config;
 
@@ -794,6 +795,12 @@ public class LightingConfig
 
     /// <summary>Tile radius within which a light source contributes to its room (for distance falloff).</summary>
     public int    SourceRangeBase   { get; set; } = 3;
+
+    /// <summary>
+    /// Ordered list of lighting-to-drive coupling entries. First-match-wins.
+    /// Loaded from SimConfig.json "lighting.driveCouplings" array.
+    /// </summary>
+    public List<LightingCouplingEntry> DriveCouplings { get; set; } = new();
 }
 
 public class DayPhaseBoundariesConfig

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
+using APIFramework.Systems.Coupling;
 using APIFramework.Systems.Lighting;
 using APIFramework.Systems.Movement;
 using APIFramework.Systems.Narrative;
@@ -87,6 +88,14 @@ public class SimulationBootstrapper
     /// <summary>Singleton sun state. Updated by SunSystem each tick; read by aperture and accumulation systems.</summary>
     public SunStateService SunState { get; }
 
+    // ── Coupling services ─────────────────────────────────────────────────────
+
+    /// <summary>Lighting-to-drive coupling table loaded from SimConfig.lighting.driveCouplings.</summary>
+    public LightingDriveCouplingTable DriveCouplingTable { get; }
+
+    /// <summary>Fractional drive accumulator shared by LightingToDriveCouplingSystem.</summary>
+    public SocialDriveAccumulator DriveAccumulator { get; }
+
     // ── Narrative services ────────────────────────────────────────────────────
 
     /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
@@ -128,6 +137,10 @@ public class SimulationBootstrapper
 
         // Lighting services
         SunState = new SunStateService();
+
+        // Coupling services
+        DriveCouplingTable = new LightingDriveCouplingTable(Config.Lighting.DriveCouplings);
+        DriveAccumulator   = new SocialDriveAccumulator();
 
         // Movement services
         Pathfinding = new PathfindingService(
@@ -177,6 +190,10 @@ public class SimulationBootstrapper
         Engine.AddSystem(apertureBeams,                                                              SystemPhase.Lighting);
         Engine.AddSystem(new IlluminationAccumulationSystem(lightSourceStates, apertureBeams, Config.Lighting), SystemPhase.Lighting);
         Engine.AddSystem(new ProximityEventSystem(SpatialIndex, ProximityBus, RoomMembership),      SystemPhase.Lighting);
+
+        // Coupling — lighting-to-drive coupling; after illumination is fresh, before drive dynamics.
+        Engine.AddSystem(new LightingToDriveCouplingSystem(
+            DriveCouplingTable, DriveAccumulator, RoomMembership, apertureBeams, SunState),          SystemPhase.Coupling);
 
         // PreUpdate — invariant enforcement; always first
         Engine.AddSystem(Invariants,                                               SystemPhase.PreUpdate);

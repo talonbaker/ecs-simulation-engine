@@ -157,7 +157,7 @@ public static class AiDescribeCommand
 
         foreach (var prop in config.GetType()
                                    .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                                   .Where(p => p.CanRead))
+                                   .Where(p => p.CanRead && p.GetIndexParameters().Length == 0))
         {
             var path = prefix.Length == 0 ? prop.Name : $"{prefix}.{prop.Name}";
             var val  = prop.GetValue(config);
@@ -177,6 +177,12 @@ public static class AiDescribeCommand
                     entries.Add($"{entry.Key}={entry.Value}");
                 sb.AppendLine(
                     $"| `{path}` | `Dictionary` | `{{{string.Join(", ", entries)}}}` |");
+            }
+            else if (val is System.Collections.IList list)
+            {
+                // List config values — emit count inline rather than recursing into items
+                sb.AppendLine(
+                    $"| `{path}` | `List` | `[{list.Count} entries]` |");
             }
             else if (!prop.PropertyType.IsArray && prop.PropertyType.IsClass)
             {
