@@ -9,11 +9,11 @@ namespace Warden.Contracts.Telemetry;
 /// <summary>
 /// Versioned, AI-consumable projection of <c>SimulationSnapshot</c>.
 /// Produced by <c>Warden.Telemetry.TelemetryProjector</c> (WP-03), consumed by
-/// Tier-3 Haikus. Schema: <c>world-state.schema.json</c> v0.2.1.
+/// Tier-3 Haikus. Schema: <c>world-state.schema.json</c> v0.3.0.
 /// </summary>
 public sealed record WorldStateDto
 {
-    public string                      SchemaVersion { get; init; } = "0.2.1";
+    public string                      SchemaVersion { get; init; } = "0.3.0";
     public DateTimeOffset              CapturedAt    { get; init; }
     public int                         Tick          { get; init; }
     public ClockStateDto               Clock         { get; init; } = default!;
@@ -30,17 +30,25 @@ public sealed record WorldStateDto
     // v0.2 — social pillar (optional; projector omits until populated)
     public List<RelationshipDto>?  Relationships { get; init; }
     public List<MemoryEventDto>?   MemoryEvents  { get; init; }
+
+    // v0.3 — spatial pillar (optional; projector omits until populated)
+    public IReadOnlyList<RoomDto>?         Rooms          { get; init; }
+    public IReadOnlyList<LightSourceDto>?  LightSources   { get; init; }
+    public IReadOnlyList<LightApertureDto>? LightApertures { get; init; }
 }
 
 // ── Clock ─────────────────────────────────────────────────────────────────────
 
 public sealed record ClockStateDto
 {
-    public string GameTimeDisplay { get; init; } = string.Empty;
-    public int    DayNumber       { get; init; }
-    public bool   IsDaytime       { get; init; }
-    public float  CircadianFactor { get; init; }
-    public float  TimeScale       { get; init; }
+    public string      GameTimeDisplay { get; init; } = string.Empty;
+    public int         DayNumber       { get; init; }
+    public bool        IsDaytime       { get; init; }
+    public float       CircadianFactor { get; init; }
+    public float       TimeScale       { get; init; }
+
+    // v0.3 — optional sun position
+    public SunStateDto? Sun            { get; init; }
 }
 
 // ── Entity ────────────────────────────────────────────────────────────────────

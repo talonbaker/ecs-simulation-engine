@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "capturedAt", "tick", "clock", "entities", "worldItems", "worldObjects", "invariants"],
   "properties": {
-    "schemaVersion": { "type": "string", "enum": ["0.1.0", "0.2.1"] },
+    "schemaVersion": { "type": "string", "enum": ["0.1.0", "0.2.1", "0.3.0"] },
     "capturedAt":    { "type": "string", "format": "date-time" },
     "tick":          { "type": "integer", "minimum": 0 },
     "seed":          { "type": "integer", "minimum": 0, "description": "The RNG seed the sim was booted with. Required for determinism." },
@@ -22,7 +22,8 @@
         "dayNumber":        { "type": "integer", "minimum": 0 },
         "isDaytime":        { "type": "boolean" },
         "circadianFactor":  { "type": "number", "minimum": 0, "maximum": 1 },
-        "timeScale":        { "type": "number", "minimum": 0, "maximum": 10000 }
+        "timeScale":        { "type": "number", "minimum": 0, "maximum": 10000 },
+        "sun":              { "$ref": "#/$defs/sunState" }
       }
     },
 
@@ -60,6 +61,24 @@
       "type": "array",
       "maxItems": 4096,
       "items": { "$ref": "#/$defs/memoryEvent" }
+    },
+
+    "rooms": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/room" }
+    },
+
+    "lightSources": {
+      "type": "array",
+      "maxItems": 256,
+      "items": { "$ref": "#/$defs/lightSource" }
+    },
+
+    "lightApertures": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/lightAperture" }
     },
 
     "invariants": {
@@ -321,6 +340,118 @@
         "targetEntityId": { "type": "string", "format": "uuid" },
         "contentLabel":   { "type": "string", "maxLength": 32 },
         "progress":       { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+
+    "sunState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["azimuthDeg", "elevationDeg", "dayPhase"],
+      "properties": {
+        "azimuthDeg":   { "type": "number", "minimum": 0, "maximum": 360 },
+        "elevationDeg": { "type": "number", "minimum": -90, "maximum": 90 },
+        "dayPhase": {
+          "type": "string",
+          "enum": ["night", "earlyMorning", "midMorning", "afternoon", "evening", "dusk"]
+        }
+      }
+    },
+
+    "room": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "category", "floor", "boundsRect", "illumination"],
+      "properties": {
+        "id":   { "type": "string", "format": "uuid" },
+        "name": { "type": "string", "maxLength": 64 },
+        "category": {
+          "type": "string",
+          "enum": [
+            "breakroom", "bathroom", "cubicleGrid", "office", "conferenceRoom",
+            "supplyCloset", "itCloset", "hallway", "stairwell", "elevator",
+            "parkingLot", "smokingArea", "loadingDock", "productionFloor", "lobby", "outdoor"
+          ]
+        },
+        "floor": {
+          "type": "string",
+          "enum": ["basement", "first", "top", "exterior"]
+        },
+        "boundsRect":   { "$ref": "#/$defs/boundsRect" },
+        "illumination": { "$ref": "#/$defs/illumination" }
+      }
+    },
+
+    "boundsRect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x":      { "type": "integer", "minimum": 0,   "maximum": 512 },
+        "y":      { "type": "integer", "minimum": 0,   "maximum": 512 },
+        "width":  { "type": "integer", "minimum": 1,   "maximum": 512 },
+        "height": { "type": "integer", "minimum": 1,   "maximum": 512 }
+      }
+    },
+
+    "illumination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ambientLevel", "colorTemperatureK"],
+      "properties": {
+        "ambientLevel":      { "type": "integer", "minimum": 0,    "maximum": 100 },
+        "colorTemperatureK": { "type": "integer", "minimum": 1000, "maximum": 10000 },
+        "dominantSourceId":  { "type": "string",  "format": "uuid" }
+      }
+    },
+
+    "lightSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "state", "intensity", "colorTemperatureK", "position", "roomId"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "overheadFluorescent", "deskLamp", "serverLed", "breakroomStrip",
+            "conferenceTrack", "exteriorWall", "signageGlow", "neon",
+            "monitorGlow", "otherInterior"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": ["on", "off", "flickering", "dying"]
+        },
+        "intensity":         { "type": "integer", "minimum": 0,    "maximum": 100 },
+        "colorTemperatureK": { "type": "integer", "minimum": 1000, "maximum": 10000 },
+        "position":          { "$ref": "#/$defs/tilePoint" },
+        "roomId":            { "type": "string",  "format": "uuid" }
+      }
+    },
+
+    "lightAperture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "position", "roomId", "facing", "areaSqTiles"],
+      "properties": {
+        "id":       { "type": "string", "format": "uuid" },
+        "position": { "$ref": "#/$defs/tilePoint" },
+        "roomId":   { "type": "string", "format": "uuid" },
+        "facing": {
+          "type": "string",
+          "enum": ["north", "east", "south", "west", "ceiling"]
+        },
+        "areaSqTiles": { "type": "number", "minimum": 0.5, "maximum": 64 }
+      }
+    },
+
+    "tilePoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0, "maximum": 512 },
+        "y": { "type": "integer", "minimum": 0, "maximum": 512 }
       }
     }
   }
