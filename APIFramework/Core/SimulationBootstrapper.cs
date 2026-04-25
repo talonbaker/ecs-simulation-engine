@@ -4,6 +4,8 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
 using APIFramework.Systems.Lighting;
+using APIFramework.Systems.Movement;
+using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using System.Reflection;
 
@@ -85,6 +87,11 @@ public class SimulationBootstrapper
     /// <summary>Singleton sun state. Updated by SunSystem each tick; read by aperture and accumulation systems.</summary>
     public SunStateService SunState { get; }
 
+    // ── Narrative services ────────────────────────────────────────────────────
+
+    /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
+    public NarrativeEventBus NarrativeBus { get; }
+
     /// <summary>
     /// Primary constructor — accepts any IConfigProvider.
     /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
@@ -101,6 +108,9 @@ public class SimulationBootstrapper
     /// config, and command log produce byte-identical telemetry streams.
     /// Defaults to 0 when not supplied.
     /// </param>
+    /// <summary>Singleton pathfinding service — computes A* paths on demand.</summary>
+    public PathfindingService Pathfinding { get; }
+
     public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0)
     {
         Config          = configProvider.GetConfig();
@@ -118,6 +128,16 @@ public class SimulationBootstrapper
 
         // Lighting services
         SunState = new SunStateService();
+
+        // Movement services
+        Pathfinding = new PathfindingService(
+            EntityManager,
+            Config.Spatial.WorldSize.Width,
+            Config.Spatial.WorldSize.Height,
+            Config.Movement);
+
+        // Narrative services
+        NarrativeBus = new NarrativeEventBus();
 
         RegisterSystems();
         SpawnWorld(humanCount);
@@ -198,7 +218,18 @@ public class SimulationBootstrapper
 
         // World — environmental systems independent of entity biology
         Engine.AddSystem(new RotSystem(sys.Rot),                                  SystemPhase.World);
+
+        // Movement quality pipeline (runs in World phase, in registration order)
+        Engine.AddSystem(new PathfindingTriggerSystem(Pathfinding),                SystemPhase.World);
+        Engine.AddSystem(new MovementSpeedModifierSystem(Config.Movement),         SystemPhase.World);
+        Engine.AddSystem(new StepAsideSystem(SpatialIndex, RoomMembership, Config.Movement), SystemPhase.World);
         Engine.AddSystem(new MovementSystem(Random),                               SystemPhase.World);
+        Engine.AddSystem(new FacingSystem(ProximityBus),                           SystemPhase.World);
+        Engine.AddSystem(new IdleMovementSystem(Random, Config.Movement),          SystemPhase.World);
+
+        // Narrative — runs last so all state has settled; emits candidates via NarrativeBus
+        Engine.AddSystem(new NarrativeEventDetector(
+            NarrativeBus, ProximityBus, RoomMembership, Config.Narrative),        SystemPhase.Narrative);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────
@@ -328,6 +359,7 @@ public class SimulationBootstrapper
         MergeFlat(newCfg.Systems.Interaction,         Config.Systems.Interaction,         changes);
         MergeFlat(newCfg.Systems.Mood,                Config.Systems.Mood,                changes);
         MergeFlat(newCfg.Systems.Rot,                 Config.Systems.Rot,                 changes);
+        MergeFlat(newCfg.Narrative,                   Config.Narrative,                   changes);
 
         // ── Entity starting configs (only affect future spawns) ───────────────
         MergeFlat(newCfg.Entities.Human.Metabolism,     Config.Entities.Human.Metabolism,     changes);

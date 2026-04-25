@@ -56,6 +56,8 @@ public struct RoomTag { }
 public struct LightSourceTag { }
 /// <summary>Marks an entity as a light aperture (window/skylight). Used by lighting systems for iteration.</summary>
 public struct LightApertureTag { }
+/// <summary>Marks an immovable entity as a pathfinding obstacle (furniture, walls). PathfindingService skips tiles occupied by obstacle entities.</summary>
+public struct ObstacleTag { }
 #endregion
 
 #region Desire Tags

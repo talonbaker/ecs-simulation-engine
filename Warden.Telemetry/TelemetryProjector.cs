@@ -1,8 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using APIFramework.Components;
 using APIFramework.Core;
 using Warden.Contracts.Telemetry;
+using ContractVocabRegister       = Warden.Contracts.Telemetry.VocabularyRegister;
+using ContractInhibitionClass     = Warden.Contracts.Telemetry.InhibitionClass;
+using ContractInhibitionAwareness = Warden.Contracts.Telemetry.InhibitionAwareness;
+using ContractBigFiveDimension    = Warden.Contracts.Telemetry.BigFiveDimension;
+using ContractRelationshipPattern = Warden.Contracts.Telemetry.RelationshipPattern;
 
 namespace Warden.Telemetry;
 
@@ -46,7 +52,7 @@ public static class TelemetryProjector
     {
         return new WorldStateDto
         {
-            SchemaVersion = "0.1.0",
+            SchemaVersion = "0.2.1",
             CapturedAt    = capturedAt,
             Tick          = (int)tick,
             Seed          = seed,
@@ -61,6 +67,7 @@ public static class TelemetryProjector
                 ViolationCount   = snap.ViolationCount,
                 RecentViolations = null,   // SimulationSnapshot carries only the count
             },
+            Relationships = entityManager is not null ? ProjectRelationships(entityManager) : null,
         };
     }
 
@@ -107,8 +114,12 @@ public static class TelemetryProjector
         foreach (var s in snapshots)
         {
             SpeciesType species = SpeciesType.Unknown;
-            if (byId is not null && byId.TryGetValue(s.Id, out var raw))
-                species = SpeciesClassifier.Classify(raw);
+            Entity?     raw     = null;
+            if (byId is not null && byId.TryGetValue(s.Id, out var found))
+            {
+                raw     = found;
+                species = SpeciesClassifier.Classify(found);
+            }
 
             result.Add(new EntityStateDto
             {
@@ -147,9 +158,139 @@ public static class TelemetryProjector
                     ColonFill   = s.ColonFill,
                     BladderFill = s.BladderFill,
                 },
+                Social = (raw is not null && raw.Has<NpcTag>()) ? ProjectSocial(raw) : null,
             });
         }
         return result;
+    }
+
+    // ── Social state ─────────────────────────────────────────────────────────
+
+    private static SocialStateDto ProjectSocial(Entity e)
+    {
+        DrivesDto? drivesDto = null;
+        if (e.Has<SocialDrivesComponent>())
+        {
+            var d = e.Get<SocialDrivesComponent>();
+            drivesDto = new DrivesDto
+            {
+                Belonging  = MapDrive(d.Belonging),
+                Status     = MapDrive(d.Status),
+                Affection  = MapDrive(d.Affection),
+                Irritation = MapDrive(d.Irritation),
+                Attraction = MapDrive(d.Attraction),
+                Trust      = MapDrive(d.Trust),
+                Suspicion  = MapDrive(d.Suspicion),
+                Loneliness = MapDrive(d.Loneliness),
+            };
+        }
+
+        WillpowerDto? willpowerDto = null;
+        if (e.Has<WillpowerComponent>())
+        {
+            var w = e.Get<WillpowerComponent>();
+            willpowerDto = new WillpowerDto
+            {
+                Current  = SocialDrivesComponent.Clamp0100(w.Current),
+                Baseline = SocialDrivesComponent.Clamp0100(w.Baseline),
+            };
+        }
+
+        List<PersonalityTraitDto>? traitsDto    = null;
+        string?                    currentMood  = null;
+        ContractVocabRegister?     vocabReg     = null;
+        if (e.Has<PersonalityComponent>())
+        {
+            var p = e.Get<PersonalityComponent>();
+            traitsDto = new List<PersonalityTraitDto>
+            {
+                new() { Dimension = ContractBigFiveDimension.Openness,          Value = p.Openness },
+                new() { Dimension = ContractBigFiveDimension.Conscientiousness,  Value = p.Conscientiousness },
+                new() { Dimension = ContractBigFiveDimension.Extraversion,       Value = p.Extraversion },
+                new() { Dimension = ContractBigFiveDimension.Agreeableness,      Value = p.Agreeableness },
+                new() { Dimension = ContractBigFiveDimension.Neuroticism,        Value = p.Neuroticism },
+            };
+            currentMood = string.IsNullOrEmpty(p.CurrentMood) ? null : p.CurrentMood;
+            vocabReg    = (ContractVocabRegister)(int)p.VocabularyRegister;
+        }
+
+        IReadOnlyList<InhibitionDto>? inhibitionsDto = null;
+        if (e.Has<InhibitionsComponent>())
+        {
+            var inh  = e.Get<InhibitionsComponent>();
+            var list = new List<InhibitionDto>(inh.Inhibitions.Count);
+            foreach (var i in inh.Inhibitions)
+            {
+                list.Add(new InhibitionDto
+                {
+                    Class     = (ContractInhibitionClass)(int)i.Class,
+                    Strength  = i.Strength,
+                    Awareness = (ContractInhibitionAwareness)(int)i.Awareness,
+                });
+            }
+            inhibitionsDto = list.Count > 0 ? list : null;
+        }
+
+        return new SocialStateDto
+        {
+            Drives             = drivesDto,
+            Willpower          = willpowerDto,
+            PersonalityTraits  = traitsDto,
+            CurrentMood        = currentMood,
+            VocabularyRegister = vocabReg,
+            Inhibitions        = inhibitionsDto,
+        };
+    }
+
+    private static DriveValueDto MapDrive(DriveValue d) => new()
+    {
+        Current  = SocialDrivesComponent.Clamp0100(d.Current),
+        Baseline = SocialDrivesComponent.Clamp0100(d.Baseline),
+    };
+
+    // ── Relationships ─────────────────────────────────────────────────────────
+
+    private static List<RelationshipDto>? ProjectRelationships(EntityManager em)
+    {
+        var relEntities = em.Query<RelationshipTag>()
+            .Where(e => e.Has<RelationshipComponent>())
+            .OrderBy(e => e.Id)
+            .ToList();
+
+        if (relEntities.Count == 0) return null;
+
+        var result = new List<RelationshipDto>(relEntities.Count);
+        foreach (var e in relEntities)
+        {
+            var r = e.Get<RelationshipComponent>();
+
+            var patterns = new List<ContractRelationshipPattern>(r.Patterns.Count);
+            foreach (var p in r.Patterns)
+                patterns.Add((ContractRelationshipPattern)(int)p);
+
+            result.Add(new RelationshipDto
+            {
+                Id              = e.Id.ToString(),
+                ParticipantA    = ParticipantIntIdToGuidString(r.ParticipantA),
+                ParticipantB    = ParticipantIntIdToGuidString(r.ParticipantB),
+                Patterns        = patterns,
+                Intensity       = r.Intensity,
+                HistoryEventIds = Array.Empty<string>(),
+            });
+        }
+        return result;
+    }
+
+    // EntityManager encodes entity counter N as a Guid: bytes[0..3] = N little-endian,
+    // bytes[4..15] = 0. RelationshipComponent.ParticipantA/B stores that counter as int.
+    private static string ParticipantIntIdToGuidString(int id)
+    {
+        var bytes = new byte[16];
+        bytes[0] = (byte)( id        & 0xFF);
+        bytes[1] = (byte)((id >>  8) & 0xFF);
+        bytes[2] = (byte)((id >> 16) & 0xFF);
+        bytes[3] = (byte)((id >> 24) & 0xFF);
+        return new Guid(bytes).ToString();
     }
 
     // ── World items ───────────────────────────────────────────────────────────

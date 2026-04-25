@@ -244,6 +244,29 @@ public static class EntityTemplates
         return entity;
     }
 
+    /// <summary>
+    /// Adds movement-quality components to an existing entity:
+    /// <see cref="HandednessComponent"/>, <see cref="FacingComponent"/>, and ensures
+    /// <see cref="MovementComponent"/> has SpeedModifier defaulted to 1.0.
+    /// </summary>
+    public static Entity WithMovementQuality(
+        Entity entity,
+        HandednessSide handedness = HandednessSide.RightSidePass,
+        float initialFacingDeg   = 0f)
+    {
+        entity.Add(new HandednessComponent { Side = handedness });
+        entity.Add(new FacingComponent { DirectionDeg = initialFacingDeg, Source = FacingSource.Idle });
+
+        if (entity.Has<MovementComponent>())
+        {
+            var mc = entity.Get<MovementComponent>();
+            if (mc.SpeedModifier == 0f) mc.SpeedModifier = 1.0f;
+            entity.Add(mc);
+        }
+
+        return entity;
+    }
+
     public static Entity SpawnCat(EntityManager manager, EntityConfig? cfg = null)
     {
         cfg ??= EntityConfig.DefaultCat;

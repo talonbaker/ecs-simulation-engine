@@ -315,6 +315,25 @@
 
   },
 
+  // ── Movement quality ───────────────────────────────────────────────────────
+  "movement": {
+    "stepAsideRadius": 3,
+    "stepAsideShift": 0.4,
+    "idleJitterTiles": 0.05,
+    "idlePostureShiftProb": 0.005,
+    "speedModifier": {
+      "irritationGainPerPoint": 0.005,
+      "affectionLossPerPoint":  0.0033,
+      "lowEnergyLossPerPoint":  0.005,
+      "minMultiplier":          0.3,
+      "maxMultiplier":          2.0
+    },
+    "pathfinding": {
+      "doorwayDiscount":    1.0,
+      "tieBreakNoiseScale": 0.1
+    }
+  },
+
   // ── Spatial engine ─────────────────────────────────────────────────────────
   "spatial": {
     "cellSizeTiles": 4,
@@ -340,6 +359,20 @@
     "dyingDecayProb":    0.05,
     "apertureRangeBase": 5,
     "sourceRangeBase":   3
+  },
+
+  // ── Narrative telemetry channel ───────────────────────────────────────────
+  "narrative": {
+    // Drive delta (one tick to next) required to emit DriveSpike
+    "driveSpikeThreshold":         15,
+    // Willpower drop in a single tick required to emit WillpowerCollapse
+    "willpowerDropThreshold":      10,
+    // Willpower level below which WillpowerLow is emitted (once per descent)
+    "willpowerLowThreshold":       20,
+    // Ticks after a DriveSpike during which a room departure → LeftRoomAbruptly
+    "abruptDepartureWindowTicks":   3,
+    // Maximum character length of the Detail field
+    "candidateDetailMaxLength":   280
   },
 
   // ── Social engine ──────────────────────────────────────────────────────────

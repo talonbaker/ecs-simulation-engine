@@ -11,12 +11,14 @@ namespace APIFramework.Config;
 /// </summary>
 public class SimConfig
 {
-    public WorldConfig        World    { get; set; } = new();
-    public EntitiesConfig     Entities { get; set; } = new();
-    public SystemsConfig      Systems  { get; set; } = new();
-    public SocialSystemConfig Social   { get; set; } = new();
-    public SpatialConfig      Spatial  { get; set; } = new();
-    public LightingConfig     Lighting { get; set; } = new();
+    public WorldConfig        World     { get; set; } = new();
+    public EntitiesConfig     Entities  { get; set; } = new();
+    public SystemsConfig      Systems   { get; set; } = new();
+    public SocialSystemConfig Social    { get; set; } = new();
+    public SpatialConfig      Spatial   { get; set; } = new();
+    public LightingConfig     Lighting  { get; set; } = new();
+    public MovementConfig     Movement  { get; set; } = new();
+    public NarrativeConfig    Narrative { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -705,6 +707,44 @@ public class SocialSystemConfig
         => DriveCircadianPhases.TryGetValue(driveName, out var v) ? v : 0.0;
 }
 
+// ── Movement systems ──────────────────────────────────────────────────────────
+
+public class MovementConfig
+{
+    /// <summary>Radius (tiles) within which two approaching NPCs trigger step-aside logic.</summary>
+    public float StepAsideRadius { get; set; } = 3f;
+
+    /// <summary>Perpendicular position shift (tiles) applied per step-aside event.</summary>
+    public float StepAsideShift { get; set; } = 0.4f;
+
+    /// <summary>Maximum random position jitter magnitude (tiles) applied to idle NPCs each tick.</summary>
+    public float IdleJitterTiles { get; set; } = 0.05f;
+
+    /// <summary>Per-tick probability [0,1] that an idle NPC performs a posture shift (changes facing).</summary>
+    public float IdlePostureShiftProb { get; set; } = 0.005f;
+
+    public MovementSpeedModifierConfig SpeedModifier { get; set; } = new();
+    public MovementPathfindingConfig   Pathfinding   { get; set; } = new();
+}
+
+public class MovementSpeedModifierConfig
+{
+    public float IrritationGainPerPoint { get; set; } = 0.005f;
+    public float AffectionLossPerPoint  { get; set; } = 0.0033f;
+    public float LowEnergyLossPerPoint  { get; set; } = 0.005f;
+    public float MinMultiplier          { get; set; } = 0.3f;
+    public float MaxMultiplier          { get; set; } = 2.0f;
+}
+
+public class MovementPathfindingConfig
+{
+    /// <summary>F-cost discount applied to tiles that are doorways between rooms.</summary>
+    public float DoorwayDiscount    { get; set; } = 1.0f;
+
+    /// <summary>Scale of seeded hash noise used to break A* f-cost ties (produces path variety).</summary>
+    public float TieBreakNoiseScale { get; set; } = 0.1f;
+}
+
 // ── Spatial systems ───────────────────────────────────────────────────────────
 
 public class SpatialConfig
@@ -764,4 +804,41 @@ public class DayPhaseBoundariesConfig
     public double EveningStart      { get; set; } = 0.65;
     public double DuskStart         { get; set; } = 0.80;
     public double NightStart        { get; set; } = 0.85;
+}
+
+// ── Narrative telemetry channel ───────────────────────────────────────────────
+
+/// <summary>
+/// Thresholds and window sizes for NarrativeEventDetector.
+/// Defaults produce signal for human-authored content; tune lower for testing.
+/// </summary>
+public class NarrativeConfig
+{
+    /// <summary>
+    /// Minimum absolute drive delta (Current this tick vs last tick) required to emit DriveSpike.
+    /// Default 15 — a clearly visible movement in a drive value.
+    /// </summary>
+    public int DriveSpikeThreshold { get; set; } = 15;
+
+    /// <summary>
+    /// Minimum willpower drop in a single tick required to emit WillpowerCollapse.
+    /// Default 10 — a sustained suppression releasing all at once.
+    /// </summary>
+    public int WillpowerDropThreshold { get; set; } = 10;
+
+    /// <summary>
+    /// Willpower level below which WillpowerLow is emitted (once per descent).
+    /// Default 20 — the gate is visibly weakening.
+    /// </summary>
+    public int WillpowerLowThreshold { get; set; } = 20;
+
+    /// <summary>
+    /// Number of ticks after a DriveSpike during which a RoomMembershipChanged
+    /// for the same NPC produces a LeftRoomAbruptly candidate.
+    /// Default 3.
+    /// </summary>
+    public int AbruptDepartureWindowTicks { get; set; } = 3;
+
+    /// <summary>Maximum character length of the Detail field on any candidate.</summary>
+    public int CandidateDetailMaxLength { get; set; } = 280;
 }
