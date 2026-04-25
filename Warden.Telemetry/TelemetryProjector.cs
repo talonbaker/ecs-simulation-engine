@@ -3,12 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.Lighting;
 using Warden.Contracts.Telemetry;
 using ContractVocabRegister       = Warden.Contracts.Telemetry.VocabularyRegister;
 using ContractInhibitionClass     = Warden.Contracts.Telemetry.InhibitionClass;
 using ContractInhibitionAwareness = Warden.Contracts.Telemetry.InhibitionAwareness;
 using ContractBigFiveDimension    = Warden.Contracts.Telemetry.BigFiveDimension;
 using ContractRelationshipPattern = Warden.Contracts.Telemetry.RelationshipPattern;
+using ContractRoomCategory        = Warden.Contracts.Telemetry.RoomCategory;
+using ContractBuildingFloor       = Warden.Contracts.Telemetry.BuildingFloor;
+using ContractLightKind           = Warden.Contracts.Telemetry.LightKind;
+using ContractLightState          = Warden.Contracts.Telemetry.LightState;
+using ContractApertureFacing      = Warden.Contracts.Telemetry.ApertureFacing;
+using ContractDayPhase            = Warden.Contracts.Telemetry.DayPhase;
 
 namespace Warden.Telemetry;
 
@@ -36,38 +43,47 @@ public static class TelemetryProjector
     /// <param name="snap">Immutable engine snapshot.</param>
     /// <param name="entityManager">
     /// Optional — the same <see cref="EntityManager"/> that produced <paramref name="snap"/>.
-    /// When supplied, <see cref="SpeciesClassifier"/> uses tag-based classification.
+    /// When supplied, <see cref="SpeciesClassifier"/> uses tag-based classification and
+    /// spatial entities (rooms, light sources, apertures, relationships) are projected.
     /// </param>
     /// <param name="capturedAt">Wall-clock moment this snapshot was taken (caller-owned).</param>
     /// <param name="tick">Simulation tick counter at capture time.</param>
     /// <param name="seed">RNG seed the simulation was booted with.</param>
     /// <param name="simVersion">Value of <c>SimVersion.Full</c> at capture time.</param>
+    /// <param name="sunStateService">
+    /// Optional — the <see cref="SunStateService"/> singleton from the same bootstrpper.
+    /// When supplied, <c>clock.sun</c> is populated from <see cref="SunStateService.CurrentSunState"/>.
+    /// </param>
     public static WorldStateDto Project(
         SimulationSnapshot snap,
         EntityManager?     entityManager,
         DateTimeOffset     capturedAt,
         long               tick,
         int                seed,
-        string             simVersion)
+        string             simVersion,
+        SunStateService?   sunStateService = null)
     {
         return new WorldStateDto
         {
-            SchemaVersion = "0.2.1",
-            CapturedAt    = capturedAt,
-            Tick          = (int)tick,
-            Seed          = seed,
-            SimVersion    = simVersion,
-            Clock         = ProjectClock(snap.Clock),
-            Entities      = ProjectEntities(snap.LivingEntities, entityManager),
-            WorldItems    = ProjectWorldItems(snap.WorldItems),
-            WorldObjects  = ProjectWorldObjects(snap.WorldObjects),
-            TransitItems  = ProjectTransitItems(snap.TransitItems),
-            Invariants    = new InvariantDigestDto
+            SchemaVersion  = "0.3.0",
+            CapturedAt     = capturedAt,
+            Tick           = (int)tick,
+            Seed           = seed,
+            SimVersion     = simVersion,
+            Clock          = ProjectClock(snap.Clock, sunStateService),
+            Entities       = ProjectEntities(snap.LivingEntities, entityManager),
+            WorldItems     = ProjectWorldItems(snap.WorldItems),
+            WorldObjects   = ProjectWorldObjects(snap.WorldObjects),
+            TransitItems   = ProjectTransitItems(snap.TransitItems),
+            Invariants     = new InvariantDigestDto
             {
                 ViolationCount   = snap.ViolationCount,
                 RecentViolations = null,   // SimulationSnapshot carries only the count
             },
-            Relationships = entityManager is not null ? ProjectRelationships(entityManager) : null,
+            Relationships  = entityManager is not null ? ProjectRelationships(entityManager) : null,
+            Rooms          = entityManager is not null ? ProjectRooms(entityManager)          : null,
+            LightSources   = entityManager is not null ? ProjectLightSources(entityManager)   : null,
+            LightApertures = entityManager is not null ? ProjectLightApertures(entityManager) : null,
         };
     }
 
@@ -86,14 +102,117 @@ public static class TelemetryProjector
 
     // ── Clock ─────────────────────────────────────────────────────────────────
 
-    private static ClockStateDto ProjectClock(ClockSnapshot c) => new()
+    private static ClockStateDto ProjectClock(ClockSnapshot c, SunStateService? sunService) => new()
     {
         GameTimeDisplay = c.TimeDisplay,
         DayNumber       = c.DayNumber,
         IsDaytime       = c.IsDaytime,
         CircadianFactor = c.CircadianFactor,
         TimeScale       = c.TimeScale,
+        Sun             = sunService is not null ? ProjectSunState(sunService.CurrentSunState) : null,
     };
+
+    private static SunStateDto ProjectSunState(SunStateRecord s) => new()
+    {
+        AzimuthDeg   = s.AzimuthDeg,
+        ElevationDeg = s.ElevationDeg,
+        DayPhase     = (ContractDayPhase)(int)s.DayPhase,
+    };
+
+    // ── Rooms ─────────────────────────────────────────────────────────────────
+
+    private static IReadOnlyList<RoomDto>? ProjectRooms(EntityManager em)
+    {
+        var roomEntities = em.Query<RoomTag>()
+            .Where(e => e.Has<RoomComponent>())
+            .OrderBy(e => e.Id)
+            .ToList();
+
+        if (roomEntities.Count == 0) return null;
+
+        var result = new List<RoomDto>(roomEntities.Count);
+        foreach (var e in roomEntities)
+        {
+            var r = e.Get<RoomComponent>();
+            result.Add(new RoomDto
+            {
+                Id           = r.Id,
+                Name         = r.Name,
+                Category     = (ContractRoomCategory)(int)r.Category,
+                Floor        = (ContractBuildingFloor)(int)r.Floor,
+                BoundsRect   = new BoundsRectDto
+                {
+                    X      = r.Bounds.X,
+                    Y      = r.Bounds.Y,
+                    Width  = r.Bounds.Width,
+                    Height = r.Bounds.Height,
+                },
+                Illumination = new IlluminationDto
+                {
+                    AmbientLevel      = r.Illumination.AmbientLevel,
+                    ColorTemperatureK = r.Illumination.ColorTemperatureK,
+                    DominantSourceId  = r.Illumination.DominantSourceId,
+                },
+            });
+        }
+        return result;
+    }
+
+    // ── Light sources ─────────────────────────────────────────────────────────
+
+    private static IReadOnlyList<LightSourceDto>? ProjectLightSources(EntityManager em)
+    {
+        var sourceEntities = em.Query<LightSourceTag>()
+            .Where(e => e.Has<LightSourceComponent>())
+            .OrderBy(e => e.Id)
+            .ToList();
+
+        if (sourceEntities.Count == 0) return null;
+
+        var result = new List<LightSourceDto>(sourceEntities.Count);
+        foreach (var e in sourceEntities)
+        {
+            var s = e.Get<LightSourceComponent>();
+            result.Add(new LightSourceDto
+            {
+                Id                = s.Id,
+                Kind              = (ContractLightKind)(int)s.Kind,
+                State             = (ContractLightState)(int)s.State,
+                Intensity         = s.Intensity,
+                ColorTemperatureK = s.ColorTemperatureK,
+                Position          = new TilePointDto { X = s.TileX, Y = s.TileY },
+                RoomId            = s.RoomId,
+            });
+        }
+        return result;
+    }
+
+    // ── Light apertures ───────────────────────────────────────────────────────
+
+    private static IReadOnlyList<LightApertureDto>? ProjectLightApertures(EntityManager em)
+    {
+        var apertureEntities = em.Query<LightApertureTag>()
+            .Where(e => e.Has<LightApertureComponent>())
+            .OrderBy(e => e.Id)
+            .ToList();
+
+        if (apertureEntities.Count == 0) return null;
+
+        var result = new List<LightApertureDto>(apertureEntities.Count);
+        foreach (var e in apertureEntities)
+        {
+            var a = e.Get<LightApertureComponent>();
+            result.Add(new LightApertureDto
+            {
+                Id          = a.Id,
+                Position    = new TilePointDto { X = a.TileX, Y = a.TileY },
+                RoomId      = a.RoomId,
+                Facing      = (ContractApertureFacing)(int)a.Facing,
+                AreaSqTiles = a.AreaSqTiles,
+            });
+        }
+        return result;
+    }
 
     // ── Entities ──────────────────────────────────────────────────────────────
 

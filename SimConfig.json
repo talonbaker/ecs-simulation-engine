@@ -358,7 +358,79 @@
     "flickerOnProb":     0.70,
     "dyingDecayProb":    0.05,
     "apertureRangeBase": 5,
-    "sourceRangeBase":   3
+    "sourceRangeBase":   3,
+
+    // ── Lighting → drive coupling table ─────────────────────────────────────
+    // First-match-wins. Conditions are AND of all present clauses.
+    // deltasPerTick are floating-point; fractional parts accumulate across ticks.
+    // Over 60 ticks (1 sim-minute): irritation 0.08 → ~4 pts, suspicion 0.10 → ~6 pts.
+    "driveCouplings": [
+      {
+        // Flickering fluorescent: small irritation bump + slight loneliness rise.
+        // Matches any room type — flickering is unpleasant anywhere.
+        "condition": {
+          "dominantSourceState": "flickering"
+        },
+        "deltasPerTick": {
+          "irritation": 0.08,
+          "loneliness": 0.02
+        }
+      },
+      {
+        // Warm desk lamp in a work area: belonging and affection nudge when ambient is adequate.
+        "condition": {
+          "roomCategoryAny":    ["cubicleGrid", "office"],
+          "dominantSourceKind": "deskLamp",
+          "ambientLevelMin":    30
+        },
+        "deltasPerTick": {
+          "belonging": 0.05,
+          "affection": 0.04
+        }
+      },
+      {
+        // Dark hallway after-hours: suspicion rises, mild irritation.
+        "condition": {
+          "roomCategoryAny": ["hallway", "stairwell"],
+          "ambientLevelMax": 20,
+          "dayPhaseAny":     ["evening", "dusk", "night"]
+        },
+        "deltasPerTick": {
+          "suspicion":  0.10,
+          "irritation": 0.04
+        }
+      },
+      {
+        // Sunlight streaming through a window aperture: mood lift and loneliness recovery.
+        "condition": {
+          "apertureBeamPresent": true
+        },
+        "deltasPerTick": {
+          "loneliness": -0.05,
+          "belonging":   0.03
+        }
+      },
+      {
+        // Pitch dark (dead fluorescent, basement corner): belonging decay and loneliness rise.
+        "condition": {
+          "ambientLevelMax": 5
+        },
+        "deltasPerTick": {
+          "belonging":  -0.03,
+          "loneliness":  0.06
+        }
+      },
+      {
+        // Server-room LED glow: slightly disorienting. Per-archetype tolerance deferred to WP-1.5.B.
+        "condition": {
+          "roomCategoryAny":    ["itCloset"],
+          "dominantSourceKind": "serverLed"
+        },
+        "deltasPerTick": {
+          "irritation": 0.03
+        }
+      }
+    ]
   },
 
   // ── Narrative telemetry channel ───────────────────────────────────────────
