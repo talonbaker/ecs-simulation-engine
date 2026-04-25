@@ -326,6 +326,22 @@
     }
   },
 
+  // ── Lighting engine ────────────────────────────────────────────────────────
+  "lighting": {
+    "dayPhaseBoundaries": {
+      "earlyMorningStart": 0.20,
+      "midMorningStart":   0.30,
+      "afternoonStart":    0.45,
+      "eveningStart":      0.65,
+      "duskStart":         0.80,
+      "nightStart":        0.85
+    },
+    "flickerOnProb":     0.70,
+    "dyingDecayProb":    0.05,
+    "apertureRangeBase": 5,
+    "sourceRangeBase":   3
+  },
+
   // ── Social engine ──────────────────────────────────────────────────────────
   "social": {
     "driveDecayPerTick": 0.15,

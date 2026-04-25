@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
+using APIFramework.Systems.Lighting;
 using APIFramework.Systems.Spatial;
 using System.Reflection;
 
@@ -79,6 +80,11 @@ public class SimulationBootstrapper
     /// <summary>Runtime room-membership map. Queried by social and behavior systems.</summary>
     public EntityRoomMembership RoomMembership  { get; }
 
+    // ── Lighting services ─────────────────────────────────────────────────────
+
+    /// <summary>Singleton sun state. Updated by SunSystem each tick; read by aperture and accumulation systems.</summary>
+    public SunStateService SunState { get; }
+
     /// <summary>
     /// Primary constructor — accepts any IConfigProvider.
     /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
@@ -110,6 +116,9 @@ public class SimulationBootstrapper
         ProximityBus   = new ProximityEventBus();
         RoomMembership = new EntityRoomMembership();
 
+        // Lighting services
+        SunState = new SunStateService();
+
         RegisterSystems();
         SpawnWorld(humanCount);
     }
@@ -132,13 +141,22 @@ public class SimulationBootstrapper
     {
         var sys = Config.Systems;
 
-        // Spatial — sync index, compute room membership, fire proximity events
-        // Phase 5 runs before all biology/cognition so spatial state is current.
+        // Spatial — sync index and room membership (Phase 5).
+        // ProximityEvent moves to Lighting (Phase 7) so it fires after illumination is current.
         var syncSys = new SpatialIndexSyncSystem(SpatialIndex);
         EntityManager.EntityDestroyed += syncSys.OnEntityDestroyed;
-        Engine.AddSystem(syncSys,                                                  SystemPhase.Spatial);
-        Engine.AddSystem(new RoomMembershipSystem(RoomMembership, ProximityBus),   SystemPhase.Spatial);
-        Engine.AddSystem(new ProximityEventSystem(SpatialIndex, ProximityBus, RoomMembership), SystemPhase.Spatial);
+        Engine.AddSystem(syncSys,                                                SystemPhase.Spatial);
+        Engine.AddSystem(new RoomMembershipSystem(RoomMembership, ProximityBus), SystemPhase.Spatial);
+
+        // Lighting — sun position, source state machines, aperture beams, room illumination,
+        // then proximity events (which now see current illumination).
+        var lightSourceStates = new LightSourceStateSystem(Random, Config.Lighting);
+        var apertureBeams     = new ApertureBeamSystem(SunState, Clock);
+        Engine.AddSystem(new SunSystem(Clock, SunState, Config.Lighting),                           SystemPhase.Lighting);
+        Engine.AddSystem(lightSourceStates,                                                          SystemPhase.Lighting);
+        Engine.AddSystem(apertureBeams,                                                              SystemPhase.Lighting);
+        Engine.AddSystem(new IlluminationAccumulationSystem(lightSourceStates, apertureBeams, Config.Lighting), SystemPhase.Lighting);
+        Engine.AddSystem(new ProximityEventSystem(SpatialIndex, ProximityBus, RoomMembership),      SystemPhase.Lighting);
 
         // PreUpdate — invariant enforcement; always first
         Engine.AddSystem(Invariants,                                               SystemPhase.PreUpdate);

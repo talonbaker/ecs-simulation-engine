@@ -183,6 +183,67 @@ public static class EntityTemplates
         return entity;
     }
 
+    /// <summary>
+    /// Spawns a light fixture entity with <see cref="LightSourceTag"/> and <see cref="LightSourceComponent"/>.
+    /// Also adds a <see cref="PositionComponent"/> at (tileX, tileY) for spatial registration.
+    /// </summary>
+    public static Entity LightSource(
+        EntityManager manager,
+        string        id,
+        LightKind     kind,
+        LightState    state,
+        int           intensity,
+        int           colorTemperatureK,
+        int           tileX,
+        int           tileY,
+        string        roomId)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new LightSourceTag());
+        entity.Add(new LightSourceComponent
+        {
+            Id                = id,
+            Kind              = kind,
+            State             = state,
+            Intensity         = intensity,
+            ColorTemperatureK = colorTemperatureK,
+            TileX             = tileX,
+            TileY             = tileY,
+            RoomId            = roomId,
+        });
+        entity.Add(new PositionComponent { X = tileX, Y = 0f, Z = tileY });
+        return entity;
+    }
+
+    /// <summary>
+    /// Spawns a light aperture (window/skylight) entity with <see cref="LightApertureTag"/>
+    /// and <see cref="LightApertureComponent"/>.
+    /// Also adds a <see cref="PositionComponent"/> at (tileX, tileY) for spatial registration.
+    /// </summary>
+    public static Entity LightAperture(
+        EntityManager  manager,
+        string         id,
+        int            tileX,
+        int            tileY,
+        string         roomId,
+        ApertureFacing facing,
+        double         areaSqTiles)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new LightApertureTag());
+        entity.Add(new LightApertureComponent
+        {
+            Id          = id,
+            TileX       = tileX,
+            TileY       = tileY,
+            RoomId      = roomId,
+            Facing      = facing,
+            AreaSqTiles = areaSqTiles,
+        });
+        entity.Add(new PositionComponent { X = tileX, Y = 0f, Z = tileY });
+        return entity;
+    }
+
     public static Entity SpawnCat(EntityManager manager, EntityConfig? cfg = null)
     {
         cfg ??= EntityConfig.DefaultCat;

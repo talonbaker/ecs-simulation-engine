@@ -11,11 +11,12 @@ namespace APIFramework.Config;
 /// </summary>
 public class SimConfig
 {
-    public WorldConfig       World    { get; set; } = new();
-    public EntitiesConfig    Entities { get; set; } = new();
-    public SystemsConfig     Systems  { get; set; } = new();
-    public SocialSystemConfig Social  { get; set; } = new();
-    public SpatialConfig      Spatial { get; set; } = new();
+    public WorldConfig        World    { get; set; } = new();
+    public EntitiesConfig     Entities { get; set; } = new();
+    public SystemsConfig      Systems  { get; set; } = new();
+    public SocialSystemConfig Social   { get; set; } = new();
+    public SpatialConfig      Spatial  { get; set; } = new();
+    public LightingConfig     Lighting { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -734,4 +735,33 @@ public class ProximityRangeDefaultsConfig
 
     /// <summary>Seed sight range in tiles. Default 32.</summary>
     public int SightTiles        { get; set; } = 32;
+}
+
+// ── Lighting systems ──────────────────────────────────────────────────────────
+
+public class LightingConfig
+{
+    public DayPhaseBoundariesConfig DayPhaseBoundaries { get; set; } = new();
+
+    /// <summary>Probability (0–1) that a Flickering source emits at full intensity on a given tick.</summary>
+    public double FlickerOnProb     { get; set; } = 0.70;
+
+    /// <summary>Probability (0–1) per tick that a Dying source loses 1 intensity point.</summary>
+    public double DyingDecayProb    { get; set; } = 0.05;
+
+    /// <summary>Tile radius within which a light aperture contributes to a room (for distance falloff).</summary>
+    public int    ApertureRangeBase { get; set; } = 5;
+
+    /// <summary>Tile radius within which a light source contributes to its room (for distance falloff).</summary>
+    public int    SourceRangeBase   { get; set; } = 3;
+}
+
+public class DayPhaseBoundariesConfig
+{
+    public double EarlyMorningStart { get; set; } = 0.20;
+    public double MidMorningStart   { get; set; } = 0.30;
+    public double AfternoonStart    { get; set; } = 0.45;
+    public double EveningStart      { get; set; } = 0.65;
+    public double DuskStart         { get; set; } = 0.80;
+    public double NightStart        { get; set; } = 0.85;
 }

@@ -52,11 +52,19 @@ public enum SystemPhase
 {
     PreUpdate  = 0,
     /// <summary>
-    /// Spatial sync, room membership, and proximity events.
-    /// Runs before Physiology so all spatial state is current when social/cognition systems execute.
-    /// Phase order: SpatialIndexSyncSystem → RoomMembershipSystem → ProximityEventSystem.
+    /// Spatial sync and room membership.
+    /// Runs before Lighting so room occupancy is current when illumination is computed.
+    /// Phase order: SpatialIndexSyncSystem → RoomMembershipSystem.
     /// </summary>
     Spatial    = 5,
+    /// <summary>
+    /// Lighting systems, then proximity events.
+    /// Lighting reads room membership (Spatial phase) and writes per-room illumination.
+    /// ProximityEventSystem runs last in this phase so it sees current illumination.
+    /// Phase order: SunSystem → LightSourceStateSystem → ApertureBeamSystem →
+    ///              IlluminationAccumulationSystem → ProximityEventSystem.
+    /// </summary>
+    Lighting   = 7,
     Physiology = 10,
     Condition  = 20,
     Cognition  = 30,

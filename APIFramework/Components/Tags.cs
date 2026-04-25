@@ -52,6 +52,10 @@ public struct NpcTag { }
 public struct RelationshipTag { }
 /// <summary>Marks an entity as a room. Used by RoomMembershipSystem to skip room entities during membership checks.</summary>
 public struct RoomTag { }
+/// <summary>Marks an entity as a light fixture. Used by lighting systems for iteration.</summary>
+public struct LightSourceTag { }
+/// <summary>Marks an entity as a light aperture (window/skylight). Used by lighting systems for iteration.</summary>
+public struct LightApertureTag { }
 #endregion
 
 #region Desire Tags
