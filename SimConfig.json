@@ -1,71 +1,316 @@
 {
+  // ── World clock ────────────────────────────────────────────────────────────
+  // 1 real second = 120 game seconds = 2 game minutes.
+  // The in-game time slider multiplies on top of this.
+  "world": {
+    "defaultTimeScale": 120.0
+  },
+
+  // ── Entities ───────────────────────────────────────────────────────────────
   "entities": {
     "human": {
       "metabolism": {
-        "satiationStart":     100.0,
-        "hydrationStart":     100.0,
-        "bodyTemp":            37.0,
-        "satiationDrainRate":   0.3,
-        "hydrationDrainRate":   0.5
+        // Starts at 90% (not 100%) so EatUrgency/DrinkUrgency > SleepUrgency at 6 AM
+        // — prevents Billy from falling asleep on the very first tick.
+        "satiationStart":            90.0,
+        "hydrationStart":            90.0,
+        "bodyTemp":                  37.0,
+
+        // Hunger in ~5.6 game hours → ~3 meals/day (breakfast ~10AM, lunch ~1PM, dinner ~6PM)
+        "satiationDrainRate":         0.002,
+
+        // Thirst in ~2.1 game hours awake → ~7 drinks/day while awake
+        "hydrationDrainRate":         0.004,
+
+        // During sleep, metabolism drops to 10% of awake rate.
+        // An 8-hour sleep costs only ~11.5% hydration instead of crashing to zero.
+        "sleepMetabolismMultiplier":  0.10
       },
       "stomach": {
-        "digestionRate": 2.0
+        // ~100 ml digested per game-hour
+        "digestionRate": 0.017
+      },
+      "energy": {
+        "energyStart":         90.0,   // well rested — just woke at 6 AM
+        "sleepinessStart":      5.0,   // nearly zero after a proper night's sleep
+
+        // Awake: energy drains ~58 pts over 16 game hours
+        "energyDrainRate":     0.001,
+
+        // Awake: sleepiness builds ~69 pts over 16 game hours (5% → ~74% by 10 PM)
+        "sleepinessGainRate":  0.0012,
+
+        // Sleep: energy restores to 100% within ~8 game hours
+        "energyRestoreRate":   0.003,
+
+        // Sleep: sleepiness drains from ~74% → 5% in ~8.3 game hours (full night's sleep)
+        "sleepinessDrainRate": 0.002
+      },
+      "mood": {
+        // Emotionally neutral at start — no initial joy, no initial boredom
+        "joyStart":          0.0,
+        "trustStart":        0.0,
+        "fearStart":         0.0,
+        "surpriseStart":     0.0,
+        "sadnessStart":      0.0,
+        "disgustStart":      0.0,
+        "angerStart":        0.0,
+        "anticipationStart": 0.0
+      },
+      "smallIntestine": {
+        // 25 ml of chyme clears in ~52 game-minutes — realistic SI transit
+        "absorptionRate":         0.008,
+        // 40% of processed SI volume becomes LI waste
+        "residueToLargeFraction": 0.4
+      },
+      "largeIntestine": {
+        // Slow, persistent water recovery from waste content
+        "waterReabsorptionRate": 0.001,
+        // ~10.8 ml/game-hour toward the colon
+        "mobilityRate":          0.003,
+        // 60% of LI content solidifies into stool; remainder dissipates
+        "stoolFraction":         0.6
+      },
+      "colon": {
+        // Urge kicks in at 100 ml (50% fill) — entity is aware but not desperate
+        "urgeThresholdMl": 100.0,
+        // At 200 ml the colon is full; BowelCriticalTag forces Defecate as dominant
+        "capacityMl":      200.0
+      },
+      "bladder": {
+        // FillRate 0.010 ml/game-second → urge threshold (70 ml) in ~2 game-hours.
+        // At TimeScale 120 this gives ~6–8 urination events per awake game-day.
+        "fillRate":        0.010,
+        "urgeThresholdMl": 70.0,
+        "capacityMl":      100.0
       }
     },
+
     "cat": {
       "metabolism": {
-        "satiationStart":     100.0,
-        "hydrationStart":     100.0,
-        "bodyTemp":            38.5,
-        "satiationDrainRate":  0.15,
-        "hydrationDrainRate":  0.25
+        "satiationStart":            100.0,
+        "hydrationStart":            100.0,
+        "bodyTemp":                   38.5,
+        "satiationDrainRate":          0.004,
+        "hydrationDrainRate":          0.006,
+        "sleepMetabolismMultiplier":   0.05  // cats barely lose resources during their many naps
       },
       "stomach": {
-        "digestionRate": 1.0
+        "digestionRate": 0.010
+      },
+      "energy": {
+        "energyStart":         75.0,
+        "sleepinessStart":     30.0,
+        "energyDrainRate":     0.0006,
+        "sleepinessGainRate":  0.0008,
+        "energyRestoreRate":   0.003,
+        "sleepinessDrainRate": 0.004
+      },
+      "mood": {
+        "joyStart":          0.0,
+        "trustStart":        0.0,
+        "fearStart":         0.0,
+        "surpriseStart":     0.0,
+        "sadnessStart":      0.0,
+        "disgustStart":      0.0,
+        "angerStart":        0.0,
+        "anticipationStart": 0.0
+      },
+      "smallIntestine": {
+        "absorptionRate":         0.010,
+        "residueToLargeFraction": 0.35
+      },
+      "largeIntestine": {
+        "waterReabsorptionRate": 0.0008,
+        "mobilityRate":          0.004,
+        "stoolFraction":         0.55
+      },
+      "colon": {
+        "urgeThresholdMl": 80.0,
+        "capacityMl":      160.0
+      },
+      "bladder": {
+        // Cats urinate less frequently — roughly every 4–6 game-hours.
+        "fillRate":        0.004,
+        "urgeThresholdMl": 40.0,
+        "capacityMl":      60.0
       }
     }
   },
 
+  // ── Systems ────────────────────────────────────────────────────────────────
   "systems": {
 
     "biologicalCondition": {
+      // THIRSTY when hydration < 70% (thirst = 30)
       "thirstTagThreshold":     30.0,
+      // DEHYDRATED when hydration < 30% (thirst = 70) — severe
       "dehydratedTagThreshold": 70.0,
+      // HUNGRY when satiation < 70% (hunger = 30)
       "hungerTagThreshold":     30.0,
+      // STARVING when satiation < 20% (hunger = 80) — severe
       "starvingTagThreshold":   80.0,
+      // IRRITABLE when either hunger or thirst exceeds 60
       "irritableThreshold":     60.0
+    },
+
+    "energy": {
+      // Energy (0–100) below which TiredTag is applied
+      "tiredThreshold":     60.0,
+      // Energy below which ExhaustedTag is applied (supersedes Tired)
+      "exhaustedThreshold": 25.0
     },
 
     "brain": {
       "eatMaxScore":   1.0,
       "drinkMaxScore": 1.0,
-      "sleepMaxScore": 0.9
+      // sleepMaxScore < 1.0 so life-threatening hunger/thirst can always override sleep
+      "sleepMaxScore": 0.9,
+
+      // Idle state (Dominant==None) triggers boredom accumulation in MoodSystem.
+      // When BoredTag is present, a flat bonus is added to all drives to make even
+      // small drives feel more pressing — avoiding permanent idle lock.
+      "boredUrgencyBonus": 0.04,
+
+      // If all drive scores remain below this after mood modifiers, zero them
+      // all → Dominant = None (the mulling/zoned-out state).
+      "minUrgencyThreshold": 0.05,
+
+      // Mood suppression multipliers — applied after base scores
+      "sadnessUrgencyMult": 0.80,  // mild suppression (SadTag)
+      "griefUrgencyMult":   0.50,  // strong suppression (GriefTag)
+
+      // Defecate drive ceiling. Scaled by ColonComponent.Fill (0–1).
+      // At Fill=1.0 with this score = 0.85, defecation beats sleep (0.9 × ~0.75) but
+      // yields to critical hunger/thirst. BowelCriticalTag overrides to 1.0 regardless.
+      "defecateMaxScore":   0.85,
+
+      // Pee drive ceiling. Scaled by BladderComponent.Fill (0–1).
+      // Slightly below defecate (0.85) — a full bladder is uncomfortable but less
+      // dangerous than a full colon. BladderCriticalTag overrides to 1.0 regardless.
+      "peeMaxScore":        0.80
     },
 
     "feeding": {
+      // FeedingSystem only acts when hunger > this (satiation < 60%)
       "hungerThreshold":   40.0,
-      "nutritionQueueCap": 70.0,
+      // Stop spawning food once this many kcal are already queued in stomach.
+      // v0.7.0+: measured in calories. 240 kcal × 0.3 satiationPerCalorie ≈ 72
+      // satiation, matching the pre-v0.7 cap of 70 "nutrition points".
+      "nutritionQueueCap": 240.0,
       "banana": {
         "volumeMl":       50.0,
-        "nutritionValue": 35.0,
+        // Real-world averages for a medium banana (~118 g edible).
+        // DigestionSystem converts Calories → Satiation and Water → Hydration
+        // using the factors in "digestion" below. Banana: 27g carb + 1.3g prot
+        // + 0.4g fat = ~117 kcal × 0.3 = ~35 satiation (matches pre-v0.7 feel).
+        "nutrients": {
+          "carbohydrates": 27.0,
+          "proteins":       1.3,
+          "fats":           0.4,
+          "fiber":          3.1,
+          "water":         89.0,   // ml
+          "vitaminB":       0.4,   // mg (mostly B6)
+          "vitaminC":      10.0,   // mg
+          "potassium":    422.0,   // mg
+          "magnesium":     32.0    // mg
+        },
         "toughness":       0.2,
         "esophagusSpeed":  0.3
-      }
+      },
+
+      // Rot parameters for freshly conjured food entities
+      // At TimeScale 120: 86400 game-seconds = 1 full game-day of freshness
+      "foodFreshnessSeconds": 86400.0,
+      // RotLevel per game-second after freshness window expires
+      // 0.001 → fully rotten (100%) after ~27.8 additional game-hours
+      "foodRotRate": 0.001
     },
 
     "drinking": {
-      "hydrationQueueCap":           30.0,
-      "hydrationQueueCapDehydrated": 60.0,
+      // v0.7.0+: caps now measured in ml of water already queued in stomach.
+      // 15 ml = one gulp in flight at a time (matches pre-v0.7 feel of cap 30).
+      "hydrationQueueCap":           15.0,
+      "hydrationQueueCapDehydrated": 30.0,
       "water": {
         "volumeMl":       15.0,
-        "hydrationValue": 30.0,
+        // Pure water — 15 ml per gulp, nothing else.
+        // Via "digestion" factors below: 15ml × 2.0 hydrationPerMl = 30 hydration
+        // (matches pre-v0.7 feel of a single gulp restoring ~30% hydration).
+        "nutrients": {
+          "water": 15.0
+        },
         "esophagusSpeed":  0.8
       }
+    },
+
+    // ── Digestion ──────────────────────────────────────────────────────────────
+    // Converts real-biology nutrients (grams, ml, kcal) into gameplay 0-100
+    // metrics. Tuned so the new system matches the pre-v0.7 flat values:
+    //   banana 117 kcal × 0.3 = ~35 satiation
+    //   water  15 ml  × 2.0 = 30 hydration
+    "digestion": {
+      "satiationPerCalorie": 0.3,
+      "hydrationPerMl":      2.0,
+      // 20% of digested stomach volume passes as chyme to the small intestine.
+      // The remainder is considered directly absorbed by the stomach.
+      "residueFraction":     0.2
+    },
+
+    "sleep": {
+      // Sleepiness must drop below this before the entity can wake naturally.
+      // 15 allows a full 8-game-hour night before waking.
+      "wakeThreshold": 15.0
     },
 
     "interaction": {
       "biteVolumeMl":   50.0,
       "esophagusSpeed":  0.3
+    },
+
+    "mood": {
+      // ── Tag intensity thresholds (Plutchik three-tier model) ───────────────
+      // Below lowThreshold  → no tag (emotion is negligible)
+      // >= lowThreshold     → low-intensity tag  (serenity, boredom, annoyance…)
+      // >= midThreshold     → primary tag         (joy, disgust, anger…)
+      // >= highThreshold    → high-intensity tag  (ecstasy, loathing, rage…)
+      "lowThreshold":  10.0,
+      "midThreshold":  34.0,
+      "highThreshold": 67.0,
+
+      // ── Decay rates (per game-second) ─────────────────────────────────────
+      "positiveDecayRate": 0.005,   // joy, trust, anticipation fade slowly
+      "negativeDecayRate": 0.003,   // fear, sadness, disgust, anger linger longer
+      "surpriseDecayRate": 0.05,    // surprise is brief — fades fastest
+
+      // ── Gain rates (per game-second unless noted) ─────────────────────────
+      // JOY: all needs comfortably met
+      "joyGainRate":          0.010,
+      "joyComfortThreshold":  60.0,   // satiation/hydration/energy all > 60% required
+
+      // ANGER: irritability unresolved
+      "angerGainRate":        0.015,
+
+      // SADNESS: hunger or thirst sustained
+      "sadnessGainRate":      0.008,
+
+      // DISGUST (BOREDOM): idle state (Dominant==None)
+      "boredGainRate":        0.005,
+
+      // DISGUST SPIKE: consuming rotten food (instant, not per-second)
+      "rottenFoodDisgustSpike": 40.0,
+
+      // ANTICIPATION: hunger/thirst building (between min and max thresholds)
+      "anticipationGainRate":  0.006,
+      "anticipationHungerMin": 15.0,
+      "anticipationHungerMax": 50.0
+    },
+
+    "rot": {
+      // RotLevel (0–100) at which RotTag is applied to a food entity.
+      // FeedingSystem checks RotTag; a rotten meal triggers ConsumedRottenFoodTag
+      // which MoodSystem converts into a Disgust spike.
+      "rotTagThreshold": 30.0
     }
 
   }

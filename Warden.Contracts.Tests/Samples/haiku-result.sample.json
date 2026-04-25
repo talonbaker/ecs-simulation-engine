@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "0.1.0",
+  "scenarioId": "sc-01",
+  "parentBatchId": "batch-metabolism-drain-v1",
+  "workerId": "haiku-01",
+  "outcome": "ok",
+  "assertionResults": [
+    {
+      "id": "A-01",
+      "passed": true,
+      "observedAtGameSeconds": 300.0,
+      "note": "Satiation fell from 100 to 97 over 300 game-seconds"
+    }
+  ],
+  "keyMetrics": {
+    "finalSatiation": 97.0,
+    "satiationDropRate": 0.01
+  },
+  "telemetryDigest": {
+    "totalTicks": 3000,
+    "violationCount": 0,
+    "finalTimeDisplay": "Day 1 05:05",
+    "entityCount": 1
+  },
+  "tokensUsed": {
+    "input": 2400,
+    "cachedRead": 1800,
+    "cacheWrite": 0,
+    "output": 320
+  },
+  "note": "Drain is consistent across ticks. No invariant violations observed."
+}

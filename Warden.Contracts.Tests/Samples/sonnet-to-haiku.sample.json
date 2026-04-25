@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "0.1.0",
+  "batchId": "batch-metabolism-drain-v1",
+  "parentSpecId": "spec-add-metabolism-drain",
+  "sharedContext": {
+    "narrative": "Each scenario boots a single human with full satiation and runs for a fixed duration. We expect satiation to decrease as the drain system fires.",
+    "successMetric": "satiation drops by >= 1 point over the run duration"
+  },
+  "scenarios": [
+    {
+      "scenarioId": "sc-01",
+      "seed": 1001,
+      "durationGameSeconds": 300,
+      "assertions": [
+        {
+          "id": "A-01",
+          "kind": "at-end",
+          "target": "entities[0].physiology.satiation",
+          "op": "<",
+          "value": 100
+        }
+      ]
+    },
+    {
+      "scenarioId": "sc-02",
+      "seed": 1002,
+      "durationGameSeconds": 3600,
+      "commands": [
+        {
+          "atGameSeconds": 60.0,
+          "kind": "spawn-food",
+          "payload": {}
+        }
+      ],
+      "assertions": [
+        {
+          "id": "A-01",
+          "kind": "eventual",
+          "target": "entities[0].physiology.satiation",
+          "op": ">=",
+          "value": 50,
+          "withinGameSeconds": 600
+        },
+        {
+          "id": "A-02",
+          "kind": "never",
+          "target": "entities[0].physiology.satiation",
+          "op": "<",
+          "value": 0
+        }
+      ]
+    }
+  ]
+}

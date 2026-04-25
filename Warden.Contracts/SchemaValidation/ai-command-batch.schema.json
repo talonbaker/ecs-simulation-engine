@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ecs-sim-engine.local/schemas/ai-command-batch.schema.json",
+  "title": "AICommandBatch",
+  "description": "Whitelisted mutations an AI can inject into a running ECSCli via `ai inject`. Deliberately narrow. Anything outside this list is rejected with exit code 3.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "commands"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "0.1.0" },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/spawnFood" },
+          { "$ref": "#/$defs/spawnLiquid" },
+          { "$ref": "#/$defs/removeEntity" },
+          { "$ref": "#/$defs/setPosition" },
+          { "$ref": "#/$defs/forceDominant" },
+          { "$ref": "#/$defs/setConfigValue" }
+        ]
+      }
+    }
+  },
+
+  "$defs": {
+    "spawnFood": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "foodType", "x", "y", "z"],
+      "properties": {
+        "kind":     { "const": "spawn-food" },
+        "foodType": { "type": "string", "enum": ["banana"] },
+        "x":        { "type": "number", "minimum": 0, "maximum": 100 },
+        "y":        { "type": "number", "minimum": 0, "maximum": 100 },
+        "z":        { "type": "number", "minimum": 0, "maximum": 100 },
+        "count":    { "type": "integer", "minimum": 1, "maximum": 1000, "default": 1 }
+      }
+    },
+
+    "spawnLiquid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "liquidType", "x", "y", "z"],
+      "properties": {
+        "kind":       { "const": "spawn-liquid" },
+        "liquidType": { "type": "string", "enum": ["water"] },
+        "x":          { "type": "number", "minimum": 0, "maximum": 100 },
+        "y":          { "type": "number", "minimum": 0, "maximum": 100 },
+        "z":          { "type": "number", "minimum": 0, "maximum": 100 },
+        "count":      { "type": "integer", "minimum": 1, "maximum": 1000, "default": 1 }
+      }
+    },
+
+    "removeEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "entityId"],
+      "properties": {
+        "kind":     { "const": "remove-entity" },
+        "entityId": { "type": "string", "format": "uuid" }
+      }
+    },
+
+    "setPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "entityId", "x", "y", "z"],
+      "properties": {
+        "kind":     { "const": "set-position" },
+        "entityId": { "type": "string", "format": "uuid" },
+        "x":        { "type": "number" },
+        "y":        { "type": "number" },
+        "z":        { "type": "number" }
+      }
+    },
+
+    "forceDominant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "entityId", "dominant", "durationGameSeconds"],
+      "properties": {
+        "kind":                { "const": "force-dominant" },
+        "entityId":            { "type": "string", "format": "uuid" },
+        "dominant":            { "type": "string", "enum": ["None", "Eat", "Drink", "Sleep", "Defecate", "Pee"] },
+        "durationGameSeconds": { "type": "number", "minimum": 0, "maximum": 86400 }
+      }
+    },
+
+    "setConfigValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "value"],
+      "properties": {
+        "kind":  { "const": "set-config-value" },
+        "path":  { "type": "string", "maxLength": 256 },
+        "value": {}
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+# ── Unity generated / cached folders ─────────────────────────────────────────
+# These are all recreated by the editor on first open — never commit them.
+/[Ll]ibrary/
+/[Tt]emp/
+/[Ll]ogs/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Uu]ser[Ss]ettings/
+/[Mm]emory[Cc]aptures/
+
+# ── Generated DLL + symbols ───────────────────────────────────────────────────
+# build-unity-dll.bat (dotnet publish) copies these — never commit the DLLs.
+# The *.meta files ARE committed so Unity keeps validateReferences: 0 on first
+# import (PluginImportFixer.cs enforces this on every subsequent reimport).
+Assets/Plugins/APIFramework.dll
+Assets/Plugins/APIFramework.pdb
+Assets/Plugins/Newtonsoft.Json.dll
+Assets/Plugins/Newtonsoft.Json.pdb
+
+# ── Unity crash / analytics artefacts ────────────────────────────────────────
+sysinfo.txt
+crashlytics-build.properties
+
+# ── Unity Addressables (generated per-platform caches) ───────────────────────
+Assets/AddressableAssetsData/**/Any Platform/
+Assets/StreamingAssets/aa.meta
+Assets/StreamingAssets/aa/
+
+# ── TextMesh Pro generated settings (auto-created on first use) ──────────────
+Assets/TextMesh Pro/
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

@@ -46,10 +46,10 @@ public class InteractionSystem : ISystem
         bolus.Add(new IdentityComponent("Bolus", "Bolus"));
         bolus.Add(new BolusComponent
         {
-            NutritionValue = food.NutritionPerBite,
-            FoodType       = food.Name,
-            Volume         = _cfg.BiteVolumeMl,
-            Toughness      = food.Toughness
+            Nutrients = food.NutrientsPerBite,       // full real-biology breakdown
+            FoodType  = food.Name,
+            Volume    = _cfg.BiteVolumeMl,
+            Toughness = food.Toughness
         });
         bolus.Add(new EsophagusTransitComponent
         {

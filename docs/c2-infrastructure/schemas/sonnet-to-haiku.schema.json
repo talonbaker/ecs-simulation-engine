@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ecs-sim-engine.local/schemas/sonnet-to-haiku.schema.json",
+  "title": "ScenarioBatch",
+  "description": "A collection of up to 25 deterministic simulation scenarios produced by one Sonnet for Tier-3 validation. Submitted as a single Message Batches API call.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "batchId", "parentSpecId", "scenarios"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "0.1.0" },
+    "batchId":       { "type": "string", "pattern": "^batch-[a-z0-9-]{1,48}$" },
+    "parentSpecId":  { "type": "string", "pattern": "^spec-[a-z0-9-]{1,48}$" },
+
+    "sharedContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Context shared across every scenario in the batch. The orchestrator attaches this as a cached prefix so the 25 Haikus share one cache-write.",
+      "properties": {
+        "narrative":    { "type": "string", "maxLength": 4000, "description": "One-paragraph framing the Sonnet wants every Haiku to internalise." },
+        "successMetric":{ "type": "string", "maxLength": 512, "description": "The single number or boolean every scenario is ultimately scored against." }
+      }
+    },
+
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 25,
+      "items": { "$ref": "#/$defs/scenario" }
+    }
+  },
+
+  "$defs": {
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenarioId", "seed", "durationGameSeconds", "assertions"],
+      "properties": {
+        "scenarioId":           { "type": "string", "pattern": "^sc-[0-9]{2,3}$" },
+        "seed":                 { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+        "durationGameSeconds":  { "type": "number",  "minimum": 1,  "maximum": 2592000, "description": "Max ~30 game-days." },
+
+        "configDelta": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Sparse overlay applied on top of SimConfig.json. Only keys that differ are listed.",
+          "properties": {
+            "path":  { "type": "string", "maxLength": 256, "description": "Dotted path, e.g. 'systems.brain.sleepMaxScore'." },
+            "value": {}
+          }
+        },
+
+        "commands": {
+          "type": "array",
+          "maxItems": 256,
+          "description": "Optional deterministic command log injected during the run.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["atGameSeconds", "kind"],
+            "properties": {
+              "atGameSeconds": { "type": "number", "minimum": 0 },
+              "kind":          { "type": "string", "enum": ["spawn-food", "spawn-liquid", "remove-entity", "set-position", "force-dominant"] },
+              "payload":       { "type": "object" }
+            }
+          }
+        },
+
+        "assertions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind", "target"],
+            "properties": {
+              "id":      { "type": "string", "pattern": "^A-[0-9]{2}$" },
+              "kind":    { "type": "string", "enum": ["eventual", "never", "at-end", "count"] },
+              "target":  { "type": "string", "maxLength": 512, "description": "Dotted telemetry path, e.g. 'entities[name=Billy].physiology.satiation'." },
+              "op":      { "type": "string", "enum": ["<", "<=", "=", "!=", ">=", ">", "between"] },
+              "value":   {},
+              "value2":  {},
+              "withinGameSeconds": { "type": "number", "minimum": 0, "description": "For 'eventual' assertions." }
+            }
+          }
+        }
+      }
+    }
+  }
+}

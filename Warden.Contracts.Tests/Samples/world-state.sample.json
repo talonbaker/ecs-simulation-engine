@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "0.1.0",
+  "capturedAt": "2024-01-15T12:00:00+00:00",
+  "tick": 100,
+  "seed": 42,
+  "simVersion": "0.1.0-dev",
+  "clock": {
+    "gameTimeDisplay": "Day 1 12:00",
+    "dayNumber": 1,
+    "isDaytime": true,
+    "circadianFactor": 0.85,
+    "timeScale": 1.0
+  },
+  "entities": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "shortId": "H-001",
+      "name": "Human 1",
+      "species": "human",
+      "position": {
+        "x": 5.0,
+        "y": 0.0,
+        "z": 5.0,
+        "hasPosition": true,
+        "isMoving": false
+      },
+      "drives": {
+        "dominant": "None",
+        "eatUrgency": 0.2,
+        "drinkUrgency": 0.1,
+        "sleepUrgency": 0.05,
+        "defecateUrgency": 0.0,
+        "peeUrgency": 0.05
+      },
+      "physiology": {
+        "satiation": 80.0,
+        "hydration": 90.0,
+        "bodyTemp": 36.5,
+        "energy": 85.0,
+        "sleepiness": 10.0,
+        "isSleeping": false,
+        "siFill": 0.5,
+        "liFill": 0.3,
+        "colonFill": 0.1,
+        "bladderFill": 0.2
+      }
+    }
+  ],
+  "worldItems": [
+    {
+      "id": "c3d4e5f6-a7b8-9012-cdef-012345678901",
+      "label": "Banana",
+      "rotLevel": 0.0,
+      "isRotten": false
+    }
+  ],
+  "worldObjects": [
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Fridge",
+      "kind": "fridge",
+      "x": 2.0,
+      "y": 0.0,
+      "z": 2.0,
+      "stockCount": 5
+    }
+  ],
+  "invariants": {
+    "violationCount": 0
+  }
+}

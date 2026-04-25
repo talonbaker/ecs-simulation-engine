@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ecs-sim-engine.local/schemas/world-state.schema.json",
+  "title": "WorldStateDto",
+  "description": "Versioned, AI-consumable projection of SimulationSnapshot. Produced by Warden.Telemetry, consumed by Tier-3 Haikus.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "capturedAt", "tick", "clock", "entities", "worldItems", "worldObjects", "invariants"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "0.1.0" },
+    "capturedAt":    { "type": "string", "format": "date-time" },
+    "tick":          { "type": "integer", "minimum": 0 },
+    "seed":          { "type": "integer", "minimum": 0, "description": "The RNG seed the sim was booted with. Required for determinism." },
+    "simVersion":    { "type": "string", "description": "SimVersion.Full at capture time." },
+
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gameTimeDisplay", "dayNumber", "isDaytime", "circadianFactor", "timeScale"],
+      "properties": {
+        "gameTimeDisplay":  { "type": "string", "maxLength": 32 },
+        "dayNumber":        { "type": "integer", "minimum": 0 },
+        "isDaytime":        { "type": "boolean" },
+        "circadianFactor":  { "type": "number", "minimum": 0, "maximum": 1 },
+        "timeScale":        { "type": "number", "minimum": 0, "maximum": 10000 }
+      }
+    },
+
+    "entities": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": { "$ref": "#/$defs/entityState" }
+    },
+
+    "worldItems": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "$ref": "#/$defs/worldItem" }
+    },
+
+    "worldObjects": {
+      "type": "array",
+      "maxItems": 256,
+      "items": { "$ref": "#/$defs/worldObject" }
+    },
+
+    "transitItems": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": { "$ref": "#/$defs/transitItem" }
+    },
+
+    "invariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["violationCount"],
+      "properties": {
+        "violationCount": { "type": "integer", "minimum": 0 },
+        "recentViolations": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tick", "kind", "message"],
+            "properties": {
+              "tick":    { "type": "integer", "minimum": 0 },
+              "kind":    { "type": "string", "maxLength": 64 },
+              "message": { "type": "string", "maxLength": 512 }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "entityState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "shortId", "name", "species", "position", "drives", "physiology"],
+      "properties": {
+        "id":      { "type": "string", "format": "uuid" },
+        "shortId": { "type": "string", "minLength": 1, "maxLength": 16 },
+        "name":    { "type": "string", "maxLength": 64 },
+        "species": { "type": "string", "enum": ["human", "cat", "unknown"] },
+
+        "position": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y", "z", "hasPosition"],
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "z": { "type": "number" },
+            "hasPosition": { "type": "boolean" },
+            "isMoving":    { "type": "boolean" },
+            "moveTarget":  { "type": "string", "maxLength": 32 }
+          }
+        },
+
+        "drives": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["dominant", "eatUrgency", "drinkUrgency", "sleepUrgency", "defecateUrgency", "peeUrgency"],
+          "properties": {
+            "dominant":        { "type": "string", "enum": ["None", "Eat", "Drink", "Sleep", "Defecate", "Pee"] },
+            "eatUrgency":      { "type": "number", "minimum": 0, "maximum": 1 },
+            "drinkUrgency":    { "type": "number", "minimum": 0, "maximum": 1 },
+            "sleepUrgency":    { "type": "number", "minimum": 0, "maximum": 1 },
+            "defecateUrgency": { "type": "number", "minimum": 0, "maximum": 1 },
+            "peeUrgency":      { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+
+        "physiology": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["satiation", "hydration", "bodyTemp", "energy", "sleepiness", "isSleeping"],
+          "properties": {
+            "satiation":   { "type": "number", "minimum": 0, "maximum": 100 },
+            "hydration":   { "type": "number", "minimum": 0, "maximum": 100 },
+            "bodyTemp":    { "type": "number", "minimum": 20, "maximum": 45 },
+            "energy":      { "type": "number", "minimum": 0, "maximum": 100 },
+            "sleepiness":  { "type": "number", "minimum": 0, "maximum": 100 },
+            "isSleeping":  { "type": "boolean" },
+            "siFill":      { "type": "number", "minimum": 0, "maximum": 1 },
+            "liFill":      { "type": "number", "minimum": 0, "maximum": 1 },
+            "colonFill":   { "type": "number", "minimum": 0, "maximum": 1 },
+            "bladderFill": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      }
+    },
+
+    "worldItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label"],
+      "properties": {
+        "id":       { "type": "string", "format": "uuid" },
+        "label":    { "type": "string", "maxLength": 32 },
+        "rotLevel": { "type": "number", "minimum": 0, "maximum": 100 },
+        "isRotten": { "type": "boolean" }
+      }
+    },
+
+    "worldObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "x", "y", "z"],
+      "properties": {
+        "id":         { "type": "string", "format": "uuid" },
+        "name":       { "type": "string", "maxLength": 32 },
+        "kind":       { "type": "string", "enum": ["fridge", "sink", "toilet", "bed", "other"] },
+        "x":          { "type": "number" },
+        "y":          { "type": "number" },
+        "z":          { "type": "number" },
+        "stockCount": { "type": "integer", "minimum": -1 }
+      }
+    },
+
+    "transitItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "targetEntityId", "contentLabel", "progress"],
+      "properties": {
+        "id":             { "type": "string", "format": "uuid" },
+        "targetEntityId": { "type": "string", "format": "uuid" },
+        "contentLabel":   { "type": "string", "maxLength": 32 },
+        "progress":       { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

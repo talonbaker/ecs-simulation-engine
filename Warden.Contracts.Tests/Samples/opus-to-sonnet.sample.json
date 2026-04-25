@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "0.1.0",
+  "specId": "spec-add-metabolism-drain",
+  "missionId": "mission-phase-1-core-systems",
+  "title": "Implement metabolism drain over time",
+  "rationale": "Without caloric drain, the simulation has no urgency. This spec wires satiation decay into the BrainSystem so entities seek food autonomously.",
+  "inputs": {
+    "referenceFiles": [
+      "APIFramework/Core/Systems/BrainSystem.cs",
+      "APIFramework/Components/MetabolismComponent.cs",
+      "docs/SimConfig.json"
+    ],
+    "preconditions": [
+      "BrainSystem must already be registered in SimulationBootstrapper"
+    ]
+  },
+  "deliverables": [
+    {
+      "kind": "code",
+      "path": "APIFramework/Core/Systems/BrainSystem.cs",
+      "description": "Add satiation drain tick, clamp to [0,100]"
+    },
+    {
+      "kind": "test",
+      "path": "APIFramework.Tests/Integration/MetabolismTests.cs",
+      "description": "Assert satiation decreases after N ticks"
+    }
+  ],
+  "acceptanceTests": [
+    {
+      "id": "AT-01",
+      "assertion": "Satiation decreases by at least 1 point after 100 ticks at default time scale",
+      "verification": "unit-test"
+    },
+    {
+      "id": "AT-02",
+      "assertion": "dotnet build produces zero warnings",
+      "verification": "build"
+    }
+  ],
+  "nonGoals": [
+    "Do not implement hydration drain — that is WP-05",
+    "Do not modify the UI layer"
+  ],
+  "needsHaikuValidation": true,
+  "timeboxMinutes": 30,
+  "workerBudgetUsd": 1.00
+}

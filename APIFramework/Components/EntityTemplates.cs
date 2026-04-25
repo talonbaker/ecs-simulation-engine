@@ -11,28 +11,97 @@ using APIFramework.Components;
 /// </summary>
 public static class EntityTemplates
 {
-    public static Entity SpawnHuman(EntityManager manager, EntityConfig? cfg = null)
+    /// <summary>
+    /// Spawns a human entity.  The optional <paramref name="spawnX"/> /
+    /// <paramref name="spawnZ"/> parameters let the caller place it anywhere in
+    /// the world — useful when spawning many humans at distinct grid positions.
+    /// Defaults to (5, 5) — the centre of the 10×10 world.
+    /// </summary>
+    public static Entity SpawnHuman(EntityManager manager, EntityConfig? cfg = null,
+                                    float spawnX = 5f, float spawnZ = 5f,
+                                    string? name = null)
     {
         cfg ??= EntityConfig.DefaultHuman;
-        var m = cfg.Metabolism;
-        var s = cfg.Stomach;
+        var m  = cfg.Metabolism;
+        var s  = cfg.Stomach;
+        var e  = cfg.Energy;
+        var si = cfg.SmallIntestine;
+        var li = cfg.LargeIntestine;
+        var co = cfg.Colon;
+        var bl = cfg.Bladder;
 
         var entity = manager.CreateEntity();
-        entity.Add(new IdentityComponent { Name = "Human" });
+        entity.Add(new IdentityComponent { Name = name ?? "Human" });
+        entity.Add(new HumanTag());
+        entity.Add(new PositionComponent  { X = spawnX, Y = 0f, Z = spawnZ });
+        entity.Add(new MovementComponent  { Speed = 0.04f, ArrivalDistance = 0.4f });
         entity.Add(new MetabolismComponent
         {
-            Satiation          = m.SatiationStart,
-            Hydration          = m.HydrationStart,
-            BodyTemp           = m.BodyTemp,
-            SatiationDrainRate = m.SatiationDrainRate,
-            HydrationDrainRate = m.HydrationDrainRate
+            Satiation                 = m.SatiationStart,
+            Hydration                 = m.HydrationStart,
+            BodyTemp                  = m.BodyTemp,
+            SatiationDrainRate        = m.SatiationDrainRate,
+            HydrationDrainRate        = m.HydrationDrainRate,
+            SleepMetabolismMultiplier = m.SleepMetabolismMultiplier,
+            NutrientStores            = new NutrientProfile()   // body starts with empty stores
         });
         entity.Add(new StomachComponent
         {
             CurrentVolumeMl = 0f,
             DigestionRate   = s.DigestionRate,
-            NutritionQueued = 0f,
-            HydrationQueued = 0f
+            NutrientsQueued = new NutrientProfile()   // empty stomach — zeroed profile
+        });
+        entity.Add(new EnergyComponent
+        {
+            Energy              = e.EnergyStart,
+            Sleepiness          = e.SleepinessStart,
+            IsSleeping          = false,
+            EnergyDrainRate     = e.EnergyDrainRate,
+            SleepinessGainRate  = e.SleepinessGainRate,
+            EnergyRestoreRate   = e.EnergyRestoreRate,
+            SleepinessDrainRate = e.SleepinessDrainRate
+        });
+
+        var mo = cfg.Mood;
+        entity.Add(new MoodComponent
+        {
+            Joy          = mo.JoyStart,
+            Trust        = mo.TrustStart,
+            Fear         = mo.FearStart,
+            Surprise     = mo.SurpriseStart,
+            Sadness      = mo.SadnessStart,
+            Disgust      = mo.DisgustStart,
+            Anger        = mo.AngerStart,
+            Anticipation = mo.AnticipationStart
+        });
+
+        // ── Digestive pipeline (small intestine → large intestine → colon) ────
+        entity.Add(new SmallIntestineComponent
+        {
+            ChymeVolumeMl          = 0f,
+            AbsorptionRate         = si.AbsorptionRate,
+            Chyme                  = new NutrientProfile(),
+            ResidueToLargeFraction = si.ResidueToLargeFraction
+        });
+        entity.Add(new LargeIntestineComponent
+        {
+            ContentVolumeMl       = 0f,
+            WaterReabsorptionRate = li.WaterReabsorptionRate,
+            MobilityRate          = li.MobilityRate,
+            StoolFraction         = li.StoolFraction
+        });
+        entity.Add(new ColonComponent
+        {
+            StoolVolumeMl   = 0f,
+            UrgeThresholdMl = co.UrgeThresholdMl,
+            CapacityMl      = co.CapacityMl
+        });
+        entity.Add(new BladderComponent
+        {
+            VolumeML        = 0f,
+            FillRate        = bl.FillRate,
+            UrgeThresholdMl = bl.UrgeThresholdMl,
+            CapacityMl      = bl.CapacityMl
         });
 
         return entity;
@@ -41,25 +110,86 @@ public static class EntityTemplates
     public static Entity SpawnCat(EntityManager manager, EntityConfig? cfg = null)
     {
         cfg ??= EntityConfig.DefaultCat;
-        var m = cfg.Metabolism;
-        var s = cfg.Stomach;
+        var m  = cfg.Metabolism;
+        var s  = cfg.Stomach;
+        var e  = cfg.Energy;
+        var si = cfg.SmallIntestine;
+        var li = cfg.LargeIntestine;
+        var co = cfg.Colon;
+        var bl = cfg.Bladder;
 
         var entity = manager.CreateEntity();
         entity.Add(new IdentityComponent { Name = "Cat" });
+        entity.Add(new CatTag());
+        entity.Add(new PositionComponent  { X = 3f, Y = 0f, Z = 4f });
+        entity.Add(new MovementComponent  { Speed = 0.06f, ArrivalDistance = 0.4f });
         entity.Add(new MetabolismComponent
         {
-            Satiation          = m.SatiationStart,
-            Hydration          = m.HydrationStart,
-            BodyTemp           = m.BodyTemp,
-            SatiationDrainRate = m.SatiationDrainRate,
-            HydrationDrainRate = m.HydrationDrainRate
+            Satiation                 = m.SatiationStart,
+            Hydration                 = m.HydrationStart,
+            BodyTemp                  = m.BodyTemp,
+            SatiationDrainRate        = m.SatiationDrainRate,
+            HydrationDrainRate        = m.HydrationDrainRate,
+            SleepMetabolismMultiplier = m.SleepMetabolismMultiplier,
+            NutrientStores            = new NutrientProfile()   // body starts with empty stores
         });
         entity.Add(new StomachComponent
         {
             CurrentVolumeMl = 0f,
             DigestionRate   = s.DigestionRate,
-            NutritionQueued = 0f,
-            HydrationQueued = 0f
+            NutrientsQueued = new NutrientProfile()   // empty stomach — zeroed profile
+        });
+        entity.Add(new EnergyComponent
+        {
+            Energy              = e.EnergyStart,
+            Sleepiness          = e.SleepinessStart,
+            IsSleeping          = false,
+            EnergyDrainRate     = e.EnergyDrainRate,
+            SleepinessGainRate  = e.SleepinessGainRate,
+            EnergyRestoreRate   = e.EnergyRestoreRate,
+            SleepinessDrainRate = e.SleepinessDrainRate
+        });
+
+        var mo = cfg.Mood;
+        entity.Add(new MoodComponent
+        {
+            Joy          = mo.JoyStart,
+            Trust        = mo.TrustStart,
+            Fear         = mo.FearStart,
+            Surprise     = mo.SurpriseStart,
+            Sadness      = mo.SadnessStart,
+            Disgust      = mo.DisgustStart,
+            Anger        = mo.AngerStart,
+            Anticipation = mo.AnticipationStart
+        });
+
+        // ── Digestive pipeline ────────────────────────────────────────────────
+        entity.Add(new SmallIntestineComponent
+        {
+            ChymeVolumeMl          = 0f,
+            AbsorptionRate         = si.AbsorptionRate,
+            Chyme                  = new NutrientProfile(),
+            ResidueToLargeFraction = si.ResidueToLargeFraction
+        });
+        entity.Add(new LargeIntestineComponent
+        {
+            ContentVolumeMl       = 0f,
+            WaterReabsorptionRate = li.WaterReabsorptionRate,
+            MobilityRate          = li.MobilityRate,
+            StoolFraction         = li.StoolFraction
+        });
+        entity.Add(new ColonComponent
+        {
+            StoolVolumeMl   = 0f,
+            UrgeThresholdMl = co.UrgeThresholdMl,
+            CapacityMl      = co.CapacityMl
+        });
+        entity.Add(new BladderComponent
+        {
+            VolumeML        = 0f,
+            FillRate        = bl.FillRate,
+            UrgeThresholdMl = bl.UrgeThresholdMl,
+            CapacityMl      = bl.CapacityMl
         });
 
         return entity;
