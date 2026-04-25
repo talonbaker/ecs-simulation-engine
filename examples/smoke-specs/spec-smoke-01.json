@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "0.1.0",
+  "specId": "spec-smoke-01",
+  "missionId": "mission-smoke-01",
+  "title": "Add XML doc comment to EntityManager.Initialize",
+  "rationale": "Validates the orchestrator end-to-end smoke path without real API calls.",
+  "inputs": {
+    "referenceFiles": []
+  },
+  "deliverables": [
+    {
+      "kind": "code",
+      "path": "APIFramework/EntityManager.cs",
+      "description": "Add one XML doc comment to the Initialize method."
+    }
+  ],
+  "acceptanceTests": [
+    {
+      "id": "AT-01",
+      "assertion": "EntityManager.cs diff contains exactly one added line starting with ///",
+      "verification": "manual-review"
+    }
+  ],
+  "nonGoals": [
+    "Do not modify any other files."
+  ],
+  "needsHaikuValidation": true,
+  "timeboxMinutes": 30,
+  "workerBudgetUsd": 0.5
+}

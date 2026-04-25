@@ -4,20 +4,20 @@ namespace Warden.Orchestrator.Cache;
 
 /// <summary>
 /// Assembles a <see cref="MessageRequest"/> using the four-slab prompt model.
-/// Slabs 1–3 always carry <c>cache_control</c>; slab 4 (the user turn) never does.
+/// Slabs 1ï¿½3 always carry <c>cache_control</c>; slab 4 (the user turn) never does.
 /// </summary>
 /// <remarks>
 /// Slab layout:
 /// <list type="number">
-///   <item>Role frame — hard-coded, from <see cref="CachedPrefixSource"/>.</item>
-///   <item>Corpus — engine docs from manifest, from <see cref="CachedPrefixSource"/>.</item>
-///   <item>Mission slabs — caller-supplied; must all be cached.</item>
-///   <item>User turn — per-request variable content; placed in <c>Messages[0]</c>, never cached.</item>
+///   <item>Role frame ï¿½ hard-coded, from <see cref="CachedPrefixSource"/>.</item>
+///   <item>Corpus ï¿½ engine docs from manifest, from <see cref="CachedPrefixSource"/>.</item>
+///   <item>Mission slabs ï¿½ caller-supplied; must all be cached.</item>
+///   <item>User turn ï¿½ per-request variable content; placed in <c>Messages[0]</c>, never cached.</item>
 /// </list>
 /// </remarks>
 public sealed class PromptCacheManager
 {
-    private readonly CachedPrefixSource _source;
+    private readonly CachedPrefixSource? _source;
 
     public PromptCacheManager(CachedPrefixSource source)
     {
@@ -25,13 +25,22 @@ public sealed class PromptCacheManager
     }
 
     /// <summary>
-    /// Builds a <see cref="MessageRequest"/> with cache markers applied to slabs 1–3.
+    /// No-corpus constructor for tests and mock mode.
+    /// All cached slabs use empty strings; prompt content is irrelevant in those contexts.
+    /// </summary>
+    public PromptCacheManager()
+    {
+        _source = null;
+    }
+
+    /// <summary>
+    /// Builds a <see cref="MessageRequest"/> with cache markers applied to slabs 1ï¿½3.
     /// </summary>
     /// <param name="model">Model to invoke.</param>
     /// <param name="userTurnBody">
     /// The per-request task text. Goes in <c>Messages[0]</c> with no cache marker.
     /// Must not be null or empty. If it exceeds ~4 000 tokens (heuristic: 16 000 chars),
-    /// a warning is emitted to stderr — that is usually shared context misplaced here.
+    /// a warning is emitted to stderr ï¿½ that is usually shared context misplaced here.
     /// </param>
     /// <param name="missionSlabs">
     /// Optional slab-3 content blocks (e.g. Opus mission framing). Every entry must
@@ -82,18 +91,18 @@ public sealed class PromptCacheManager
 
         var system = new List<ContentBlock>();
 
-        // Slab 1 — role frame
-        system.Add(new TextBlock(_source.GetRoleFrameText(), cacheControl));
+        // Slab 1 ï¿½ role frame
+        system.Add(new TextBlock(_source?.GetRoleFrameText() ?? string.Empty, cacheControl));
 
-        // Slab 2 — corpus (engine docs + schemas)
-        system.Add(new TextBlock(_source.GetCorpusText(), cacheControl));
+        // Slab 2ï¿½ corpus (engine docs + schemas)
+        system.Add(new TextBlock(_source?.GetCorpusText() ?? string.Empty, cacheControl));
 
-        // Slab 3 — mission slabs (optional, each with the same TTL)
+        // Slab 3 ï¿½ mission slabs (optional, each with the same TTL)
         if (missionSlabs is not null)
             foreach (var slab in missionSlabs)
                 system.Add(new TextBlock(slab.Text, cacheControl));
 
-        // Slab 4 — user turn; no cache_control, placed in Messages not System
+        // Slab 4 ï¿½ user turn; no cache_control, placed in Messages not System
         var messages = new List<MessageTurn>
         {
             new("user", [new TextBlock(userTurnBody)])

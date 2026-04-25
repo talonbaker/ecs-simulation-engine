@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "0.1.0",
+  "specId": "spec-smoke-01",
+  "workerId": "sonnet-01",
+  "outcome": "ok",
+  "acceptanceTestResults": [
+    {
+      "id": "AT-01",
+      "passed": true,
+      "evidence": "Mock: diff contains '/// <summary>Initializes the entity manager.</summary>'"
+    }
+  ],
+  "tokensUsed": {
+    "input": 1240,
+    "cachedRead": 28000,
+    "cacheWrite": 0,
+    "output": 720
+  },
+  "scenarioBatch": {
+    "schemaVersion": "0.1.0",
+    "batchId": "batch-smoke-01",
+    "parentSpecId": "spec-smoke-01",
+    "scenarios": [
+      {
+        "scenarioId": "sc-01",
+        "seed": 42,
+        "durationGameSeconds": 10.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "entityCount", "op": ">=", "value": 1 }
+        ]
+      },
+      {
+        "scenarioId": "sc-02",
+        "seed": 43,
+        "durationGameSeconds": 10.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "entityCount", "op": ">=", "value": 1 }
+        ]
+      },
+      {
+        "scenarioId": "sc-03",
+        "seed": 44,
+        "durationGameSeconds": 10.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "entityCount", "op": ">=", "value": 1 }
+        ]
+      },
+      {
+        "scenarioId": "sc-04",
+        "seed": 45,
+        "durationGameSeconds": 10.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "entityCount", "op": ">=", "value": 1 }
+        ]
+      },
+      {
+        "scenarioId": "sc-05",
+        "seed": 46,
+        "durationGameSeconds": 10.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "entityCount", "op": ">=", "value": 1 }
+        ]
+      }
+    ]
+  }
+}
