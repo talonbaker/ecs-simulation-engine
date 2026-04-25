@@ -15,6 +15,7 @@ public class SimConfig
     public EntitiesConfig    Entities { get; set; } = new();
     public SystemsConfig     Systems  { get; set; } = new();
     public SocialSystemConfig Social  { get; set; } = new();
+    public SpatialConfig      Spatial { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -701,4 +702,36 @@ public class SocialSystemConfig
 
     public double GetCircadianPhase(string driveName)
         => DriveCircadianPhases.TryGetValue(driveName, out var v) ? v : 0.0;
+}
+
+// ── Spatial systems ───────────────────────────────────────────────────────────
+
+public class SpatialConfig
+{
+    /// <summary>Side length of each spatial-index grid cell, in tiles. Default 4.</summary>
+    public int CellSizeTiles { get; set; } = 4;
+
+    public SpatialWorldSizeConfig       WorldSize              { get; set; } = new();
+    public ProximityRangeDefaultsConfig ProximityRangeDefaults { get; set; } = new();
+}
+
+public class SpatialWorldSizeConfig
+{
+    /// <summary>Horizontal tile extent of the indexed world. Default 512.</summary>
+    public int Width  { get; set; } = 512;
+
+    /// <summary>Vertical tile extent of the indexed world. Default 512.</summary>
+    public int Height { get; set; } = 512;
+}
+
+public class ProximityRangeDefaultsConfig
+{
+    /// <summary>Seed conversation range in tiles. Overridden per NPC at spawn. Default 2.</summary>
+    public int ConversationTiles { get; set; } = 2;
+
+    /// <summary>Seed awareness range in tiles. Default 8.</summary>
+    public int AwarenessTiles    { get; set; } = 8;
+
+    /// <summary>Seed sight range in tiles. Default 32.</summary>
+    public int SightTiles        { get; set; } = 32;
 }

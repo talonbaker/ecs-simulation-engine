@@ -128,6 +128,61 @@ public static class EntityTemplates
         return entity;
     }
 
+    /// <summary>
+    /// Spawns a room entity with <see cref="RoomTag"/> and <see cref="RoomComponent"/>.
+    /// Also adds a <see cref="PositionComponent"/> at the center of the bounds so the
+    /// spatial index can register the room as a positioned entity.
+    /// Illumination is optional — the lighting engine populates it in WP-1.2.A.
+    /// </summary>
+    public static Entity Room(
+        EntityManager    manager,
+        string           id,
+        string           name,
+        RoomCategory     category,
+        BuildingFloor    floor,
+        BoundsRect       bounds,
+        RoomIllumination illumination = default)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new RoomTag());
+        entity.Add(new RoomComponent
+        {
+            Id           = id,
+            Name         = name,
+            Category     = category,
+            Floor        = floor,
+            Bounds       = bounds,
+            Illumination = illumination,
+        });
+        // Center of bounds for spatial registration (float midpoint)
+        entity.Add(new PositionComponent
+        {
+            X = bounds.X + bounds.Width  * 0.5f,
+            Y = 0f,
+            Z = bounds.Y + bounds.Height * 0.5f,
+        });
+        return entity;
+    }
+
+    /// <summary>
+    /// Adds a <see cref="ProximityComponent"/> to an existing entity.
+    /// Defaults match <see cref="ProximityComponent.Default"/> (2/8/32 tiles).
+    /// </summary>
+    public static Entity WithProximity(
+        Entity entity,
+        int conversationTiles = 2,
+        int awarenessTiles    = 8,
+        int sightTiles        = 32)
+    {
+        entity.Add(new ProximityComponent
+        {
+            ConversationRangeTiles = conversationTiles,
+            AwarenessRangeTiles    = awarenessTiles,
+            SightRangeTiles        = sightTiles,
+        });
+        return entity;
+    }
+
     public static Entity SpawnCat(EntityManager manager, EntityConfig? cfg = null)
     {
         cfg ??= EntityConfig.DefaultCat;

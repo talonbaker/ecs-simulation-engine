@@ -51,6 +51,12 @@ namespace APIFramework.Core;
 public enum SystemPhase
 {
     PreUpdate  = 0,
+    /// <summary>
+    /// Spatial sync, room membership, and proximity events.
+    /// Runs before Physiology so all spatial state is current when social/cognition systems execute.
+    /// Phase order: SpatialIndexSyncSystem → RoomMembershipSystem → ProximityEventSystem.
+    /// </summary>
+    Spatial    = 5,
     Physiology = 10,
     Condition  = 20,
     Cognition  = 30,
