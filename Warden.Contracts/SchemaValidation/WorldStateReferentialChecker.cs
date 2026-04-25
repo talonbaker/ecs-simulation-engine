@@ -73,6 +73,50 @@ public static class WorldStateReferentialChecker
             }
         }
 
+        // v0.3 — spatial referential integrity
+
+        var roomIds        = new HashSet<string>(StringComparer.Ordinal);
+        var lightSourceIds = new HashSet<string>(StringComparer.Ordinal);
+
+        if (dto.Rooms is { } rooms)
+        {
+            foreach (var room in rooms)
+            {
+                if (!roomIds.Add(room.Id))
+                    errors.Add("duplicate-room-id");
+            }
+        }
+
+        if (dto.LightSources is { } sources)
+        {
+            foreach (var src in sources)
+            {
+                lightSourceIds.Add(src.Id);
+
+                if (!roomIds.Contains(src.RoomId))
+                    errors.Add("light-source-room-missing");
+            }
+        }
+
+        if (dto.LightApertures is { } apertures)
+        {
+            foreach (var ap in apertures)
+            {
+                if (!roomIds.Contains(ap.RoomId))
+                    errors.Add("aperture-room-missing");
+            }
+        }
+
+        if (dto.Rooms is { } rooms2)
+        {
+            foreach (var room in rooms2)
+            {
+                var domId = room.Illumination?.DominantSourceId;
+                if (domId is not null && !lightSourceIds.Contains(domId))
+                    errors.Add("dominant-source-missing");
+            }
+        }
+
         return errors.Count == 0
             ? ValidationResult.Ok
             : new ValidationResult(false, errors.AsReadOnly());

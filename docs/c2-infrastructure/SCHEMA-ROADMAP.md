@@ -60,18 +60,40 @@ Schema additions (all new fields optional; v0.1 consumers ignore them):
 
 4. **`scope: "global"` is reserved, not live.** Any v0.2.1 emitter sending `scope: "global"` is rejected by `WorldStateReferentialChecker` with reason `"global-scope-reserved-for-v0.3"`.
 
-### v0.3 — Persistent narrative chronicle
+### v0.3 — Spatial pillar _(landed in WP-1.0.B)_
 
-**Driver:** post-Phase-0 Phase 4 (spill-stays-spilled mechanic).
+**Promotion rationale:** The aesthetic bible (`DRAFT-aesthetic-bible.md`) ranks lighting as priority-1 and proximity as priority-2 — both ahead of the persistent narrative chronicle that formerly occupied this slot. Both lighting and proximity are keyed on rooms: light sources live in rooms, apertures admit light into rooms, proximity events fire on room entry/exit, and the AI tier reasons about places by room id. The spatial contract must therefore precede the lighting engine packet (Phase 1.1) and the proximity engine packet (Phase 1.2). Chronicle and character-definition packets shift one version down.
+
+**Driver:** post-Phase-0 Phase 1 (lighting and proximity systems). Wire-format bump only; engine-side population is Phase 1.1 (spatial engine) and Phase 1.2 (lighting engine).
+
+Schema additions (all new arrays optional; v0.1 and v0.2.1 consumers ignore them):
+
+- `world-state` minor bump: top-level `rooms[]` array (`maxItems: 64`). Each room has `id` (UUID), `name` (`maxLength: 64`), `category` (sixteen-value enum), `floor` (four-value enum: `basement | first | top | exterior`), `boundsRect` (required: `{x, y, width, height}` in tile units, integers), `illumination` (required: `{ambientLevel, colorTemperatureK, dominantSourceId?}`). `additionalProperties: false`. Room-membership on the entity (`entities[].position.roomId`) is deliberately deferred — room membership is derivable from `position` + `rooms[].boundsRect` and adding it to the wire now would require the engine to populate it (Phase 1.1 work).
+- `world-state` minor bump: top-level `lightSources[]` array (`maxItems: 256`). Each source has `id`, `kind` (ten-value enum), `state` (`on | off | flickering | dying`), `intensity` (0–100), `colorTemperatureK` (1000–10000), `position` (`{x, y}` tile-unit integers), `roomId`. `additionalProperties: false`.
+- `world-state` minor bump: top-level `lightApertures[]` array (`maxItems: 64`). Each aperture has `id`, `position` (`{x, y}`), `roomId`, `facing` (`north | east | south | west | ceiling`), `areaSqTiles` (0.5–64). `additionalProperties: false`.
+- `world-state` minor bump: `clock` gains optional `sun` sub-object with `azimuthDeg` (0–360), `elevationDeg` (−90–90), `dayPhase` (`night | earlyMorning | midMorning | afternoon | evening | dusk`). `additionalProperties: false`.
+- `schemaVersion` enum becomes `["0.1.0", "0.2.1", "0.3.0"]`.
+
+Referential integrity enforced by `WorldStateReferentialChecker`:
+- `lightSources[].roomId` must resolve to `rooms[].id` → reason `"light-source-room-missing"`.
+- `lightApertures[].roomId` must resolve to `rooms[].id` → reason `"aperture-room-missing"`.
+- `rooms[].illumination.dominantSourceId` (when present) must resolve to `lightSources[].id` → reason `"dominant-source-missing"`.
+- Duplicate `rooms[].id` → reason `"duplicate-room-id"`.
+- Overlapping `boundsRect` is allowed (hallways can pass under balconies).
+
+### v0.4 — Persistent narrative chronicle
+
+**Driver:** post-Phase-0 Phase 4 (spill-stays-spilled mechanic). Shifted from v0.3 to v0.4 when the aesthetic bible promoted spatial to a foundation system.
 
 Schema additions:
 
 - `world-state` minor bump: `chronicle[]` array of authored-or-emergent narrative events with `id`, `kind`, `participants[]`, `location`, `tick`, `description`, `persistent: bool`. Persistent entries also exist as concrete entities (e.g., a `Stain` entity or a `BrokenItem` entity); the chronicle is the *narrative* index, the entity tree is the *spatial* index. Both must agree, enforced by an invariant check.
 - New `narrative-event-emit` command kind on `ai-command-batch`. **Design-time content authoring only — never runtime** (`00-SRD.md` §8.1).
+- Removes the `"global-scope-reserved-for-v0.3"` guard in `WorldStateReferentialChecker`; `scope: "global"` becomes live.
 
-### v0.4 — Character definitions and customization
+### v0.5 — Character definitions and customization
 
-**Driver:** post-Phase-0 Phase 3 (curated cast) and Phase 7+ (player customization).
+**Driver:** post-Phase-0 Phase 3 (curated cast) and Phase 7+ (player customization). Shifted from v0.4 to v0.5 when spatial moved up.
 
 Schema additions:
 
@@ -79,14 +101,9 @@ Schema additions:
 - New `character-catalog` schema — a list of `character-definition` entries plus a deduplication policy and authorship metadata.
 - New `place-character` command kind on `ai-command-batch` for content authoring.
 
-### v0.5 — Spatial / room overlay
+### v0.6 — TBD
 
-**Driver:** post-Phase-0 Phase 1 (narrative telemetry needs room queries — "who is in the breakroom").
-
-Schema additions:
-
-- `world-state` minor bump: top-level `rooms[]` array. Each room has `id`, `name`, `boundsPolygon` (or `boundsRect` if grid-aligned), `category` (breakroom/bathroom/cubicle-grid/parking-lot/hallway/etc).
-- `world-state` minor bump: `entities[].position` gains optional `roomId` for fast room-membership queries without re-running point-in-polygon at telemetry time. Engine-side responsibility.
+Placeholder for the next wire-format milestone. Candidates: polygon room bounds (for L-shaped or curved spaces), `entities[].position.roomId` explicit field (derived index promoted to wire surface once the spatial engine populates it), streaming telemetry delta format.
 
 ---
 
