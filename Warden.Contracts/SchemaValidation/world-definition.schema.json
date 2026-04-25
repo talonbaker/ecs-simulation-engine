@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ecs-sim-engine.local/schemas/world-definition.schema.json",
+  "title": "WorldDefinitionDto",
+  "description": "Authoring-time world definition. Read by WorldDefinitionLoader at engine boot to instantiate the initial world entities. Versions independently of world-state.schema.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "worldId", "name", "seed", "floors", "rooms", "lightSources", "lightApertures", "npcSlots", "objectsAtAnchors"],
+  "properties": {
+    "schemaVersion":      { "type": "string", "enum": ["0.1.0"] },
+    "worldId":            { "type": "string", "maxLength": 64 },
+    "name":               { "type": "string", "maxLength": 128 },
+    "seed":               { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+    "floors": {
+      "type": "array",
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/floor" }
+    },
+    "rooms": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/roomDefinition" }
+    },
+    "lightSources": {
+      "type": "array",
+      "maxItems": 256,
+      "items": { "$ref": "#/$defs/lightSourceDefinition" }
+    },
+    "lightApertures": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/lightApertureDefinition" }
+    },
+    "npcSlots": {
+      "type": "array",
+      "maxItems": 30,
+      "items": { "$ref": "#/$defs/npcSlot" }
+    },
+    "objectsAtAnchors": {
+      "type": "array",
+      "maxItems": 256,
+      "items": { "$ref": "#/$defs/anchorObject" }
+    }
+  },
+
+  "$defs": {
+    "floor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "floorEnum"],
+      "properties": {
+        "id":        { "type": "string", "maxLength": 64 },
+        "name":      { "type": "string", "maxLength": 64 },
+        "floorEnum": { "type": "string", "enum": ["basement", "first", "top", "exterior"] }
+      }
+    },
+
+    "roomDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "category", "floorId", "bounds", "initialIllumination"],
+      "properties": {
+        "id":       { "type": "string", "maxLength": 64 },
+        "name":     { "type": "string", "maxLength": 64 },
+        "category": {
+          "type": "string",
+          "enum": [
+            "breakroom", "bathroom", "cubicleGrid", "office", "conferenceRoom",
+            "supplyCloset", "itCloset", "hallway", "stairwell", "elevator",
+            "parkingLot", "smokingArea", "loadingDock", "productionFloor", "lobby", "outdoor"
+          ]
+        },
+        "floorId":             { "type": "string", "maxLength": 64 },
+        "bounds":              { "$ref": "#/$defs/boundsRect" },
+        "initialIllumination": { "$ref": "#/$defs/initialIllumination" },
+        "namedAnchorTag":      { "type": "string", "maxLength": 64 },
+        "description":         { "type": "string", "maxLength": 280 },
+        "smellTag":            { "type": "string", "maxLength": 64 },
+        "notesAttached": {
+          "type": "array",
+          "maxItems": 3,
+          "items": { "type": "string", "maxLength": 280 }
+        }
+      }
+    },
+
+    "lightSourceDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "state", "intensity", "colorTemperatureK", "position", "roomId"],
+      "properties": {
+        "id":   { "type": "string", "maxLength": 64 },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "overheadFluorescent", "deskLamp", "serverLed", "breakroomStrip",
+            "conferenceTrack", "exteriorWall", "signageGlow", "neon",
+            "monitorGlow", "otherInterior"
+          ]
+        },
+        "state": {
+          "type": "string",
+          "enum": ["on", "off", "flickering", "dying"]
+        },
+        "intensity":         { "type": "integer", "minimum": 0,    "maximum": 100 },
+        "colorTemperatureK": { "type": "integer", "minimum": 1000, "maximum": 10000 },
+        "position":          { "$ref": "#/$defs/tilePoint" },
+        "roomId":            { "type": "string", "maxLength": 64 }
+      }
+    },
+
+    "lightApertureDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "position", "roomId", "facing", "areaSqTiles"],
+      "properties": {
+        "id":       { "type": "string", "maxLength": 64 },
+        "position": { "$ref": "#/$defs/tilePoint" },
+        "roomId":   { "type": "string", "maxLength": 64 },
+        "facing": {
+          "type": "string",
+          "enum": ["north", "east", "south", "west", "ceiling"]
+        },
+        "areaSqTiles": { "type": "number", "minimum": 0.5, "maximum": 64 }
+      }
+    },
+
+    "npcSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id":            { "type": "string", "maxLength": 64 },
+        "roomId":        { "type": "string", "maxLength": 64 },
+        "x":             { "type": "integer", "minimum": 0, "maximum": 512 },
+        "y":             { "type": "integer", "minimum": 0, "maximum": 512 },
+        "archetypeHint": { "type": "string", "maxLength": 64 }
+      }
+    },
+
+    "anchorObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "roomId", "description", "physicalState"],
+      "properties": {
+        "id":           { "type": "string", "maxLength": 64 },
+        "roomId":       { "type": "string", "maxLength": 64 },
+        "description":  { "type": "string", "maxLength": 280 },
+        "physicalState": {
+          "type": "string",
+          "enum": ["present", "present-degraded", "present-greatly-degraded", "absent"]
+        }
+      }
+    },
+
+    "boundsRect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x":      { "type": "integer", "minimum": 0, "maximum": 512 },
+        "y":      { "type": "integer", "minimum": 0, "maximum": 512 },
+        "width":  { "type": "integer", "minimum": 1, "maximum": 512 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 512 }
+      }
+    },
+
+    "initialIllumination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ambientLevel", "colorTemperatureK"],
+      "properties": {
+        "ambientLevel":      { "type": "integer", "minimum": 0,    "maximum": 100 },
+        "colorTemperatureK": { "type": "integer", "minimum": 1000, "maximum": 10000 }
+      }
+    },
+
+    "tilePoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "integer", "minimum": 0, "maximum": 512 },
+        "y": { "type": "integer", "minimum": 0, "maximum": 512 }
+      }
+    }
+  }
+}

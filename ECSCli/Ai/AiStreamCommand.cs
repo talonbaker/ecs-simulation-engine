@@ -44,20 +44,27 @@ public static class AiStreamCommand
             description: "Stop after N game-seconds (omit to run until Ctrl+C).",
             getDefaultValue: () => null);
 
+        var worldDefOpt = new Option<FileInfo?>(
+            name: "--world-definition",
+            description: "Optional path to a world-definition.json. When supplied, the loader spawns the world; otherwise defaults are used.",
+            getDefaultValue: () => null);
+
         var cmd = new Command("stream",
             "Run simulation and emit JSONL telemetry frames at fixed game-second intervals.");
         cmd.AddOption(outOpt);
         cmd.AddOption(intervalOpt);
         cmd.AddOption(durationOpt);
+        cmd.AddOption(worldDefOpt);
 
         cmd.SetHandler((InvocationContext ctx) =>
         {
-            var outFile  = ctx.ParseResult.GetValueForOption(outOpt);
-            var interval = ctx.ParseResult.GetValueForOption(intervalOpt);
-            var duration = ctx.ParseResult.GetValueForOption(durationOpt);
+            var outFile   = ctx.ParseResult.GetValueForOption(outOpt);
+            var interval  = ctx.ParseResult.GetValueForOption(intervalOpt);
+            var duration  = ctx.ParseResult.GetValueForOption(durationOpt);
+            var worldDef  = ctx.ParseResult.GetValueForOption(worldDefOpt);
             try
             {
-                Run(outFile!, interval, duration);
+                Run(outFile!, interval, duration, worldDef?.FullName);
                 ctx.ExitCode = 0;
             }
             catch (Exception ex)
@@ -72,12 +79,12 @@ public static class AiStreamCommand
 
     // ── Implementation ────────────────────────────────────────────────────────
 
-    internal static void Run(FileInfo outFile, double interval, double? duration)
+    internal static void Run(FileInfo outFile, double interval, double? duration, string? worldDefinitionPath = null)
     {
         if (interval <= 0)
             throw new ArgumentException("--interval must be > 0.");
 
-        var sim      = new SimulationBootstrapper("SimConfig.json", humanCount: 1);
+        var sim      = new SimulationBootstrapper("SimConfig.json", humanCount: 1, worldDefinitionPath: worldDefinitionPath);
         long tick    = 0;
         double nextSnapshot = interval;
         bool running = true;

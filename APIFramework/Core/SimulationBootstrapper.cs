@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using APIFramework.Bootstrap;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
@@ -111,7 +112,14 @@ public class SimulationBootstrapper
     /// <summary>Singleton pathfinding service — computes A* paths on demand.</summary>
     public PathfindingService Pathfinding { get; }
 
-    public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0)
+    /// <summary>
+    /// Set when the bootstrapper was given a <c>worldDefinitionPath</c> and the
+    /// world was loaded via <see cref="WorldDefinitionLoader"/>. Null when the
+    /// default <see cref="SpawnWorld"/> path was used.
+    /// </summary>
+    public LoadResult? WorldLoadResult { get; private set; }
+
+    public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
     {
         Config          = configProvider.GetConfig();
         EntityManager   = new EntityManager();
@@ -140,7 +148,10 @@ public class SimulationBootstrapper
         NarrativeBus = new NarrativeEventBus();
 
         RegisterSystems();
-        SpawnWorld(humanCount);
+        if (worldDefinitionPath != null)
+            WorldLoadResult = WorldDefinitionLoader.LoadFromFile(worldDefinitionPath, EntityManager, Random);
+        else
+            SpawnWorld(humanCount);
     }
 
     /// <summary>
@@ -154,8 +165,12 @@ public class SimulationBootstrapper
     /// <param name="seed">
     /// RNG seed. Defaults to 0. Pass a nonzero value for deterministic replay.
     /// </param>
-    public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount, int seed = 0)
-        : this(new FileConfigProvider(configPath), humanCount, seed) { }
+    /// <param name="worldDefinitionPath">
+    /// Optional path to a world-definition.json. When supplied, the loader instantiates
+    /// all world entities from the file instead of <see cref="SpawnWorld"/>.
+    /// </param>
+    public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
+        : this(new FileConfigProvider(configPath), humanCount, seed, worldDefinitionPath) { }
 
     private void RegisterSystems()
     {

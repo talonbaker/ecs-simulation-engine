@@ -62,12 +62,18 @@ public static class AiReplayCommand
             description: "Path to write the JSONL telemetry stream to.")
         { IsRequired = true };
 
+        var worldDefOpt = new Option<FileInfo?>(
+            name: "--world-definition",
+            description: "Optional path to a world-definition.json. When supplied, the loader spawns the world; otherwise defaults are used.",
+            getDefaultValue: () => null);
+
         var cmd = new Command("replay",
             "Deterministic replay: same seed + config + commands → byte-identical JSONL.");
         cmd.AddOption(seedOpt);
         cmd.AddOption(commandsOpt);
         cmd.AddOption(durationOpt);
         cmd.AddOption(outOpt);
+        cmd.AddOption(worldDefOpt);
 
         cmd.SetHandler((InvocationContext ctx) =>
         {
@@ -75,9 +81,10 @@ public static class AiReplayCommand
             var commands = ctx.ParseResult.GetValueForOption(commandsOpt);
             var duration = ctx.ParseResult.GetValueForOption(durationOpt);
             var outFile  = ctx.ParseResult.GetValueForOption(outOpt);
+            var worldDef = ctx.ParseResult.GetValueForOption(worldDefOpt);
             try
             {
-                Run(seed, commands, duration, outFile!);
+                Run(seed, commands, duration, outFile!, worldDef?.FullName);
                 ctx.ExitCode = 0;
             }
             catch (Exception ex)
@@ -92,13 +99,13 @@ public static class AiReplayCommand
 
     // ── Implementation ────────────────────────────────────────────────────────
 
-    internal static void Run(int seed, FileInfo? commandsFile, double duration, FileInfo outFile)
+    internal static void Run(int seed, FileInfo? commandsFile, double duration, FileInfo outFile, string? worldDefinitionPath = null)
     {
         if (duration <= 0)
             throw new ArgumentException("--duration must be > 0.");
 
         // Boot with seed — all randomness (MovementSystem wander, etc.) is seeded.
-        var sim  = new SimulationBootstrapper("SimConfig.json", humanCount: 1, seed: seed);
+        var sim  = new SimulationBootstrapper("SimConfig.json", humanCount: 1, seed: seed, worldDefinitionPath: worldDefinitionPath);
         long tick = 0;
 
         // Snapshot once per game-second — captures all meaningful state transitions

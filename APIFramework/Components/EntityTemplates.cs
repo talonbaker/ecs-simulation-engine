@@ -267,6 +267,36 @@ public static class EntityTemplates
         return entity;
     }
 
+    /// <summary>
+    /// Spawns an authored world-object entity (anchor object) with
+    /// <see cref="AnchorObjectTag"/>, <see cref="AnchorObjectComponent"/>,
+    /// <see cref="IdentityComponent"/>, and <see cref="PositionComponent"/>.
+    /// Used by <c>WorldDefinitionLoader</c> to populate <c>objectsAtAnchors[]</c>.
+    /// </summary>
+    public static Entity WorldObject(
+        EntityManager            manager,
+        string                   id,
+        string                   roomId,
+        string                   description,
+        AnchorObjectPhysicalState physicalState,
+        int                      tileX,
+        int                      tileY)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new AnchorObjectTag());
+        entity.Add(new AnchorObjectComponent
+        {
+            Id            = id,
+            RoomId        = roomId,
+            Description   = description,
+            PhysicalState = physicalState,
+        });
+        // Truncate identity name to IdentityComponent's conventional length.
+        entity.Add(new IdentityComponent { Name = description.Length > 32 ? description[..32] : description });
+        entity.Add(new PositionComponent { X = tileX, Y = 0f, Z = tileY });
+        return entity;
+    }
+
     public static Entity SpawnCat(EntityManager manager, EntityConfig? cfg = null)
     {
         cfg ??= EntityConfig.DefaultCat;
