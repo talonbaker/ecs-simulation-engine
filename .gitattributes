@@ -1,0 +1,11 @@
+# Normalize line endings for all files by default
+* text=auto
+
+# Explicitly set line endings for code files
+*.cs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Binary files
+*.dll binary
+*.exe binary
