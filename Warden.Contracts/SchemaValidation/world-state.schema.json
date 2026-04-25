@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "capturedAt", "tick", "clock", "entities", "worldItems", "worldObjects", "invariants"],
   "properties": {
-    "schemaVersion": { "type": "string", "enum": ["0.1.0", "0.2.0"] },
+    "schemaVersion": { "type": "string", "enum": ["0.1.0", "0.2.1"] },
     "capturedAt":    { "type": "string", "format": "date-time" },
     "tick":          { "type": "integer", "minimum": 0 },
     "seed":          { "type": "integer", "minimum": 0, "description": "The RNG seed the sim was booted with. Required for determinism." },
@@ -151,7 +151,13 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "selfDrives":         { "$ref": "#/$defs/selfDrives" },
+        "drives":    { "$ref": "#/$defs/drives" },
+        "willpower": { "$ref": "#/$defs/willpower" },
+        "inhibitions": {
+          "type": "array",
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/inhibition" }
+        },
         "personalityTraits": {
           "type": "array",
           "maxItems": 5,
@@ -165,16 +171,53 @@
       }
     },
 
-    "selfDrives": {
+    "drives": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["belonging", "status", "affection", "irritation", "loneliness"],
+      "required": ["belonging", "status", "affection", "irritation", "attraction", "trust", "suspicion", "loneliness"],
       "properties": {
-        "belonging":  { "type": "integer", "minimum": 0, "maximum": 100 },
-        "status":     { "type": "integer", "minimum": 0, "maximum": 100 },
-        "affection":  { "type": "integer", "minimum": 0, "maximum": 100 },
-        "irritation": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "loneliness": { "type": "integer", "minimum": 0, "maximum": 100 }
+        "belonging":  { "$ref": "#/$defs/driveValue" },
+        "status":     { "$ref": "#/$defs/driveValue" },
+        "affection":  { "$ref": "#/$defs/driveValue" },
+        "irritation": { "$ref": "#/$defs/driveValue" },
+        "attraction": { "$ref": "#/$defs/driveValue" },
+        "trust":      { "$ref": "#/$defs/driveValue" },
+        "suspicion":  { "$ref": "#/$defs/driveValue" },
+        "loneliness": { "$ref": "#/$defs/driveValue" }
+      }
+    },
+
+    "driveValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["current", "baseline"],
+      "properties": {
+        "current":  { "type": "integer", "minimum": 0, "maximum": 100 },
+        "baseline": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    },
+
+    "willpower": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["current", "baseline"],
+      "properties": {
+        "current":  { "type": "integer", "minimum": 0, "maximum": 100 },
+        "baseline": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    },
+
+    "inhibition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "strength", "awareness"],
+      "properties": {
+        "class": {
+          "type": "string",
+          "enum": ["infidelity", "confrontation", "bodyImageEating", "publicEmotion", "physicalIntimacy", "interpersonalConflict", "riskTaking", "vulnerability"]
+        },
+        "strength":  { "type": "integer", "minimum": 0, "maximum": 100 },
+        "awareness": { "type": "string", "enum": ["known", "hidden"] }
       }
     },
 
@@ -194,7 +237,7 @@
     "relationship": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "participantA", "participantB", "patterns", "pairDrives", "intensity", "historyEventIds"],
+      "required": ["id", "participantA", "participantB", "patterns", "intensity", "historyEventIds"],
       "properties": {
         "id":           { "type": "string", "format": "uuid" },
         "participantA": { "type": "string", "format": "uuid" },
@@ -212,25 +255,12 @@
             ]
           }
         },
-        "pairDrives":      { "$ref": "#/$defs/pairDrives" },
         "intensity":       { "type": "integer", "minimum": 0, "maximum": 100 },
         "historyEventIds": {
           "type": "array",
           "maxItems": 1000,
           "items": { "type": "string", "format": "uuid" }
         }
-      }
-    },
-
-    "pairDrives": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["attraction", "trust", "suspicion", "jealousy"],
-      "properties": {
-        "attraction": { "type": "integer", "minimum": 0, "maximum": 100 },
-        "trust":      { "type": "integer", "minimum": 0, "maximum": 100 },
-        "suspicion":  { "type": "integer", "minimum": 0, "maximum": 100 },
-        "jealousy":   { "type": "integer", "minimum": 0, "maximum": 100 }
       }
     },
 
