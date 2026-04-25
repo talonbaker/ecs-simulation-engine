@@ -52,6 +52,8 @@ public struct NpcTag { }
 public struct RelationshipTag { }
 /// <summary>Marks an entity as a room. Used by RoomMembershipSystem to skip room entities during membership checks.</summary>
 public struct RoomTag { }
+/// <summary>Marks an immovable entity as a pathfinding obstacle (furniture, walls). PathfindingService skips tiles occupied by obstacle entities.</summary>
+public struct ObstacleTag { }
 #endregion
 
 #region Desire Tags

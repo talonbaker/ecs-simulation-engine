@@ -315,6 +315,25 @@
 
   },
 
+  // ── Movement quality ───────────────────────────────────────────────────────
+  "movement": {
+    "stepAsideRadius": 3,
+    "stepAsideShift": 0.4,
+    "idleJitterTiles": 0.05,
+    "idlePostureShiftProb": 0.005,
+    "speedModifier": {
+      "irritationGainPerPoint": 0.005,
+      "affectionLossPerPoint":  0.0033,
+      "lowEnergyLossPerPoint":  0.005,
+      "minMultiplier":          0.3,
+      "maxMultiplier":          2.0
+    },
+    "pathfinding": {
+      "doorwayDiscount":    1.0,
+      "tieBreakNoiseScale": 0.1
+    }
+  },
+
   // ── Spatial engine ─────────────────────────────────────────────────────────
   "spatial": {
     "cellSizeTiles": 4,

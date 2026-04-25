@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
+using APIFramework.Systems.Movement;
 using APIFramework.Systems.Spatial;
 using System.Reflection;
 
@@ -95,6 +96,9 @@ public class SimulationBootstrapper
     /// config, and command log produce byte-identical telemetry streams.
     /// Defaults to 0 when not supplied.
     /// </param>
+    /// <summary>Singleton pathfinding service — computes A* paths on demand.</summary>
+    public PathfindingService Pathfinding { get; }
+
     public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0)
     {
         Config          = configProvider.GetConfig();
@@ -109,6 +113,13 @@ public class SimulationBootstrapper
         SpatialIndex   = new GridSpatialIndex(Config.Spatial);
         ProximityBus   = new ProximityEventBus();
         RoomMembership = new EntityRoomMembership();
+
+        // Movement services
+        Pathfinding = new PathfindingService(
+            EntityManager,
+            Config.Spatial.WorldSize.Width,
+            Config.Spatial.WorldSize.Height,
+            Config.Movement);
 
         RegisterSystems();
         SpawnWorld(humanCount);
@@ -180,7 +191,14 @@ public class SimulationBootstrapper
 
         // World — environmental systems independent of entity biology
         Engine.AddSystem(new RotSystem(sys.Rot),                                  SystemPhase.World);
+
+        // Movement quality pipeline (runs in World phase, in registration order)
+        Engine.AddSystem(new PathfindingTriggerSystem(Pathfinding),                SystemPhase.World);
+        Engine.AddSystem(new MovementSpeedModifierSystem(Config.Movement),         SystemPhase.World);
+        Engine.AddSystem(new StepAsideSystem(SpatialIndex, RoomMembership, Config.Movement), SystemPhase.World);
         Engine.AddSystem(new MovementSystem(Random),                               SystemPhase.World);
+        Engine.AddSystem(new FacingSystem(ProximityBus),                           SystemPhase.World);
+        Engine.AddSystem(new IdleMovementSystem(Random, Config.Movement),          SystemPhase.World);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────

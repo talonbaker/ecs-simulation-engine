@@ -16,6 +16,7 @@ public class SimConfig
     public SystemsConfig     Systems  { get; set; } = new();
     public SocialSystemConfig Social  { get; set; } = new();
     public SpatialConfig      Spatial { get; set; } = new();
+    public MovementConfig     Movement { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -702,6 +703,44 @@ public class SocialSystemConfig
 
     public double GetCircadianPhase(string driveName)
         => DriveCircadianPhases.TryGetValue(driveName, out var v) ? v : 0.0;
+}
+
+// ── Movement systems ──────────────────────────────────────────────────────────
+
+public class MovementConfig
+{
+    /// <summary>Radius (tiles) within which two approaching NPCs trigger step-aside logic.</summary>
+    public float StepAsideRadius { get; set; } = 3f;
+
+    /// <summary>Perpendicular position shift (tiles) applied per step-aside event.</summary>
+    public float StepAsideShift { get; set; } = 0.4f;
+
+    /// <summary>Maximum random position jitter magnitude (tiles) applied to idle NPCs each tick.</summary>
+    public float IdleJitterTiles { get; set; } = 0.05f;
+
+    /// <summary>Per-tick probability [0,1] that an idle NPC performs a posture shift (changes facing).</summary>
+    public float IdlePostureShiftProb { get; set; } = 0.005f;
+
+    public MovementSpeedModifierConfig SpeedModifier { get; set; } = new();
+    public MovementPathfindingConfig   Pathfinding   { get; set; } = new();
+}
+
+public class MovementSpeedModifierConfig
+{
+    public float IrritationGainPerPoint { get; set; } = 0.005f;
+    public float AffectionLossPerPoint  { get; set; } = 0.0033f;
+    public float LowEnergyLossPerPoint  { get; set; } = 0.005f;
+    public float MinMultiplier          { get; set; } = 0.3f;
+    public float MaxMultiplier          { get; set; } = 2.0f;
+}
+
+public class MovementPathfindingConfig
+{
+    /// <summary>F-cost discount applied to tiles that are doorways between rooms.</summary>
+    public float DoorwayDiscount    { get; set; } = 1.0f;
+
+    /// <summary>Scale of seeded hash noise used to break A* f-cost ties (produces path variety).</summary>
+    public float TieBreakNoiseScale { get; set; } = 0.1f;
 }
 
 // ── Spatial systems ───────────────────────────────────────────────────────────
