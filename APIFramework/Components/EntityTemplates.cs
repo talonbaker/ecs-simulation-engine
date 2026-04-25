@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using APIFramework.Config;
 
 namespace APIFramework.Core;
@@ -104,6 +105,26 @@ public static class EntityTemplates
             CapacityMl      = bl.CapacityMl
         });
 
+        return entity;
+    }
+
+    /// <summary>
+    /// Adds the four social components plus NpcTag to <paramref name="entity"/>.
+    /// Used by tests and (later) the cast generator. Any field not supplied gets
+    /// a sensible zero/default — overwrite after the call for specific test cases.
+    /// </summary>
+    public static Entity WithSocial(
+        Entity entity,
+        SocialDrivesComponent? drives           = null,
+        WillpowerComponent?    willpower         = null,
+        PersonalityComponent?  personality       = null,
+        InhibitionsComponent?  inhibitions       = null)
+    {
+        entity.Add(new NpcTag());
+        entity.Add(drives      ?? new SocialDrivesComponent());
+        entity.Add(willpower   ?? new WillpowerComponent(50, 50));
+        entity.Add(personality ?? new PersonalityComponent(0, 0, 0, 0, 0));
+        entity.Add(inhibitions ?? new InhibitionsComponent(new List<Inhibition>()));
         return entity;
     }
 

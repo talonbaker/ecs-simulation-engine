@@ -48,6 +48,8 @@ public struct SleepingTag { }  // Entity is actively sleeping
 public struct HumanTag { }
 public struct CatTag { }
 public struct BolusTag { }
+public struct NpcTag { }
+public struct RelationshipTag { }
 #endregion
 
 #region Desire Tags

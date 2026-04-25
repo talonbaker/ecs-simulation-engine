@@ -313,5 +313,33 @@
       "rotTagThreshold": 30.0
     }
 
+  },
+
+  // ── Social engine ──────────────────────────────────────────────────────────
+  "social": {
+    "driveDecayPerTick": 0.15,
+    "driveCircadianAmplitudes": {
+      "belonging":  3.0,
+      "status":     2.5,
+      "affection":  3.0,
+      "irritation": 4.0,
+      "attraction": 2.0,
+      "trust":      1.5,
+      "suspicion":  2.0,
+      "loneliness": 5.0
+    },
+    "driveCircadianPhases": {
+      "belonging":  0.40,
+      "status":     0.30,
+      "affection":  0.65,
+      "irritation": 0.55,
+      "attraction": 0.70,
+      "trust":      0.45,
+      "suspicion":  0.80,
+      "loneliness": 0.85
+    },
+    "driveVolatilityScale": 1.0,
+    "willpowerSleepRegenPerTick": 1,
+    "relationshipIntensityDecayPerTick": 0.05
   }
 }

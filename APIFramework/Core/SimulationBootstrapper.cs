@@ -51,11 +51,12 @@ namespace APIFramework.Core;
 /// </summary>
 public class SimulationBootstrapper
 {
-    public SimulationEngine Engine         { get; }
-    public EntityManager    EntityManager  { get; }
-    public SimulationClock  Clock          { get; }
-    public SimConfig        Config         { get; }
-    public InvariantSystem  Invariants     { get; }
+    public SimulationEngine    Engine              { get; }
+    public EntityManager       EntityManager       { get; }
+    public SimulationClock     Clock               { get; }
+    public SimConfig           Config              { get; }
+    public InvariantSystem     Invariants          { get; }
+    public WillpowerEventQueue WillpowerEvents     { get; }
 
     /// <summary>
     /// Deterministic RNG source for all simulation systems.
@@ -84,12 +85,13 @@ public class SimulationBootstrapper
     /// </param>
     public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0)
     {
-        Config        = configProvider.GetConfig();
-        EntityManager = new EntityManager();
-        Clock         = new SimulationClock { TimeScale = Config.World.DefaultTimeScale };
-        Engine        = new SimulationEngine(EntityManager, Clock);
-        Invariants    = new InvariantSystem(Clock);
-        Random        = new SeededRandom(seed);
+        Config          = configProvider.GetConfig();
+        EntityManager   = new EntityManager();
+        Clock           = new SimulationClock { TimeScale = Config.World.DefaultTimeScale };
+        Engine          = new SimulationEngine(EntityManager, Clock);
+        Invariants      = new InvariantSystem(Clock);
+        Random          = new SeededRandom(seed);
+        WillpowerEvents = new WillpowerEventQueue();
 
         RegisterSystems();
         SpawnWorld(humanCount);
@@ -127,6 +129,11 @@ public class SimulationBootstrapper
         // Cognition — process conditions into emotions and drive scores
         Engine.AddSystem(new MoodSystem(sys.Mood),                                SystemPhase.Cognition);
         Engine.AddSystem(new BrainSystem(sys.Brain, Clock),                       SystemPhase.Cognition);
+
+        // Social cognition — drive dynamics, willpower, relationship lifecycle
+        Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random),   SystemPhase.Cognition);
+        Engine.AddSystem(new WillpowerSystem(Config.Social, WillpowerEvents),      SystemPhase.Cognition);
+        Engine.AddSystem(RelationshipLifecycleSystem.LoadFromFile(Config.Social),  SystemPhase.Cognition);
 
         // Behavior — act on the dominant drive
         Engine.AddSystem(new FeedingSystem(sys.Feeding),                          SystemPhase.Behavior);

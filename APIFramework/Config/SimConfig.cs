@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using APIFramework.Components;
 
@@ -10,9 +11,10 @@ namespace APIFramework.Config;
 /// </summary>
 public class SimConfig
 {
-    public WorldConfig    World    { get; set; } = new();
-    public EntitiesConfig Entities { get; set; } = new();
-    public SystemsConfig  Systems  { get; set; } = new();
+    public WorldConfig       World    { get; set; } = new();
+    public EntitiesConfig    Entities { get; set; } = new();
+    public SystemsConfig     Systems  { get; set; } = new();
+    public SocialSystemConfig Social  { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -641,4 +643,62 @@ public class RotSystemConfig
     /// FeedingSystem checks RotTag before Billy eats; if set, ConsumedRottenFoodTag is applied.
     /// </summary>
     public float RotTagThreshold { get; set; } = 30f;
+}
+
+// ── Social systems ────────────────────────────────────────────────────────────
+
+public class SocialSystemConfig
+{
+    /// <summary>Points per tick a drive's Current moves toward its Baseline (linear approach).</summary>
+    public double DriveDecayPerTick { get; set; } = 0.15;
+
+    /// <summary>
+    /// Peak circadian amplitude (points) for each drive.
+    /// Keys are lowercase drive names: belonging, status, affection, irritation,
+    /// attraction, trust, suspicion, loneliness.
+    /// </summary>
+    public Dictionary<string, double> DriveCircadianAmplitudes { get; set; } = new()
+    {
+        ["belonging"]  = 3.0,
+        ["status"]     = 2.5,
+        ["affection"]  = 3.0,
+        ["irritation"] = 4.0,
+        ["attraction"] = 2.0,
+        ["trust"]      = 1.5,
+        ["suspicion"]  = 2.0,
+        ["loneliness"] = 5.0,
+    };
+
+    /// <summary>
+    /// Fraction of the day (0..1) at which each drive peaks.
+    /// Keys are lowercase drive names.
+    /// </summary>
+    public Dictionary<string, double> DriveCircadianPhases { get; set; } = new()
+    {
+        ["belonging"]  = 0.40,
+        ["status"]     = 0.30,
+        ["affection"]  = 0.65,
+        ["irritation"] = 0.55,
+        ["attraction"] = 0.70,
+        ["trust"]      = 0.45,
+        ["suspicion"]  = 0.80,
+        ["loneliness"] = 0.85,
+    };
+
+    /// <summary>Global multiplier on the neuroticism-driven per-tick noise.</summary>
+    public double DriveVolatilityScale { get; set; } = 1.0;
+
+    /// <summary>Willpower points restored per tick while SleepingTag is present.</summary>
+    public int WillpowerSleepRegenPerTick { get; set; } = 1;
+
+    /// <summary>Intensity points lost per tick in the absence of proximity interaction signals.</summary>
+    public double RelationshipIntensityDecayPerTick { get; set; } = 0.05;
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    public double GetCircadianAmplitude(string driveName)
+        => DriveCircadianAmplitudes.TryGetValue(driveName, out var v) ? v : 0.0;
+
+    public double GetCircadianPhase(string driveName)
+        => DriveCircadianPhases.TryGetValue(driveName, out var v) ? v : 0.0;
 }

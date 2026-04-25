@@ -169,6 +169,15 @@ public static class AiDescribeCommand
                 sb.AppendLine(
                     $"| `{path}` | `{FormatTypeName(prop.PropertyType)}` | `{val}` |");
             }
+            else if (val is System.Collections.IDictionary dict)
+            {
+                // Dictionary config values — emit entries inline rather than recursing
+                var entries = new System.Collections.Generic.List<string>();
+                foreach (System.Collections.DictionaryEntry entry in dict)
+                    entries.Add($"{entry.Key}={entry.Value}");
+                sb.AppendLine(
+                    $"| `{path}` | `Dictionary` | `{{{string.Join(", ", entries)}}}` |");
+            }
             else if (!prop.PropertyType.IsArray && prop.PropertyType.IsClass)
             {
                 // Recurse into nested config objects.
