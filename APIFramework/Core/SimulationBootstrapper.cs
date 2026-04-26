@@ -286,8 +286,11 @@ public class SimulationBootstrapper
         Engine.AddSystem(new MoodSystem(sys.Mood),                                SystemPhase.Cognition);
         Engine.AddSystem(new BrainSystem(sys.Brain, Clock),                       SystemPhase.Cognition);
 
-        // Social cognition — drive dynamics, willpower, relationship lifecycle
+        // Social cognition — drive dynamics, action selection, willpower, relationship lifecycle
         Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random),   SystemPhase.Cognition);
+        Engine.AddSystem(new ActionSelectionSystem(
+            SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, EntityManager),
+                                                                                   SystemPhase.Cognition);
         Engine.AddSystem(new WillpowerSystem(Config.Social, WillpowerEvents),      SystemPhase.Cognition);
         Engine.AddSystem(RelationshipLifecycleSystem.LoadFromFile(Config.Social),  SystemPhase.Cognition);
 

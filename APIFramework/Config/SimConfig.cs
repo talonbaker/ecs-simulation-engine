@@ -23,6 +23,7 @@ public class SimConfig
     public CastGeneratorConfig    CastGenerator  { get; set; } = new();
     public ChronicleConfig        Chronicle      { get; set; } = new();
     public DialogConfig           Dialog         { get; set; } = new();
+    public ActionSelectionConfig  ActionSelection { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -971,4 +972,39 @@ public class ChronicleThresholdRulesConfig
 
     /// <summary>Minimum number of different NPCs referencing the same event kind in a tick to trigger the talk-about rule.</summary>
     public int TalkAboutMinReferenceCount { get; set; } = 2;
+}
+
+// ── Action-selection system ───────────────────────────────────────────────────
+
+public class ActionSelectionConfig
+{
+    /// <summary>Drive.Current must exceed this to enumerate candidates. Default 60.</summary>
+    public int    DriveCandidateThreshold       { get; set; } = 60;
+
+    /// <summary>Idle wins when nothing else exceeds this floor. Default 0.20.</summary>
+    public double IdleScoreFloor                { get; set; } = 0.20;
+
+    /// <summary>stake above this enables approach-avoidance flip check. Default 0.55.</summary>
+    public double InversionStakeThreshold       { get; set; } = 0.55;
+
+    /// <summary>Matched inhibition above this (combined with stake) completes the flip. Default 0.50.</summary>
+    public double InversionInhibitionThreshold  { get; set; } = 0.50;
+
+    /// <summary>How much low-willpower leaks suppressed drive push through the gate. Default 0.30.</summary>
+    public double SuppressionGiveUpFactor       { get; set; } = 0.30;
+
+    /// <summary>Closeness (raw push vs winner weight) that marks a candidate as actively suppressed. Default 0.10.</summary>
+    public double SuppressionEpsilon            { get; set; } = 0.10;
+
+    /// <summary>Willpower cost scaling for suppression events. Default 5.</summary>
+    public int    SuppressionEventMagnitudeScale { get; set; } = 5;
+
+    /// <summary>Per-point personality nudge (Conscientiousness/Openness). Default 0.05.</summary>
+    public double PersonalityTieBreakWeight     { get; set; } = 0.05;
+
+    /// <summary>Hard cap on enumerated candidates per NPC per tick. Default 32.</summary>
+    public int    MaxCandidatesPerTick          { get; set; } = 32;
+
+    /// <summary>Tiles the avoidance flee target is pushed away from the threat. Default 4.</summary>
+    public int    AvoidStandoffDistance         { get; set; } = 4;
 }
