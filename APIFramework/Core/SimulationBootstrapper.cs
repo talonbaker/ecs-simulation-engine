@@ -339,6 +339,9 @@ public class SimulationBootstrapper
         Engine.AddSystem(new PersistenceThresholdDetector(
             Chronicle, NarrativeBus, EntityManager, Clock, Random, Config.Chronicle), SystemPhase.Narrative);
 
+        // Memory recording — subscribes to the bus and routes candidates to per-pair/personal buffers.
+        Engine.AddSystem(new MemoryRecordingSystem(NarrativeBus, EntityManager, Config.Memory), SystemPhase.Narrative);
+
         // Dialog — after Narrative so final drive state is visible
         if (CorpusService != null)
         {

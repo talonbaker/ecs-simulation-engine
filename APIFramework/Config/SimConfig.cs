@@ -26,6 +26,7 @@ public class SimConfig
     public ActionSelectionConfig  ActionSelection { get; set; } = new();
     public StressConfig           Stress          { get; set; } = new();
     public ScheduleConfig         Schedule        { get; set; } = new();
+    public MemoryConfig           Memory          { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1067,4 +1068,15 @@ public class ScheduleConfig
 
     /// <summary>Distance (tiles) below which AtDesk/Sleeping activity emits Linger instead of Approach. Default 2.0.</summary>
     public float  ScheduleLingerThresholdCells { get; set; } = 2.0f;
+}
+
+// ── Memory system ─────────────────────────────────────────────────────────────
+
+public class MemoryConfig
+{
+    /// <summary>Maximum entries in RelationshipMemoryComponent.Recent before oldest is dropped.</summary>
+    public int MaxRelationshipMemoryCount { get; set; } = 32;
+
+    /// <summary>Maximum entries in PersonalMemoryComponent.Recent before oldest is dropped.</summary>
+    public int MaxPersonalMemoryCount { get; set; } = 16;
 }
