@@ -88,10 +88,16 @@ internal static class Fixtures
         }
         """;
 
-    /// <summary>Builds a JSONL results stream where every entry is a valid succeeded HaikuResult.</summary>
+    /// <summary>
+    /// Builds a JSONL results stream where every entry is a valid succeeded HaikuResult.
+    /// <paramref name="scenarioBatchId"/> is used as the batch-id half of the composite
+    /// <c>custom_id</c> ("<c>scenarioBatchId::scenarioId</c>") that <see cref="BatchScheduler"/>
+    /// submits to Anthropic and expects back verbatim in the results stream.
+    /// </summary>
     internal static string BuildResultsJsonl(
         IEnumerable<(string ScenarioId, string HaikuId)> entries,
-        string batchId = "batch-test-001")
+        string batchId         = "batch-test-001",
+        string scenarioBatchId = "fixture-batch")
     {
         var lines = entries.Select(e =>
         {
@@ -105,8 +111,10 @@ internal static class Fixtures
                 @"""model"":""claude-haiku-4-5-20251001""," +
                 @"""stop_reason"":""end_turn"",""stop_sequence"":null," +
                 @"""usage"":{""input_tokens"":100,""cache_creation_input_tokens"":0,""cache_read_input_tokens"":0,""output_tokens"":50}}";
+            // composite custom_id: "<scenarioBatchId>::<scenarioId>"
+            var customId = scenarioBatchId + "::" + e.ScenarioId;
             return
-                @"{""custom_id"":""" + e.ScenarioId +
+                @"{""custom_id"":""" + customId +
                 @""",""result"":{""type"":""succeeded"",""message"":" + msgJson + @"}}";
         });
         return string.Join("\n", lines);
@@ -433,9 +441,10 @@ public sealed class BatchSchedulerTests : IDisposable
     public async Task AT06_Malformed_HaikuResult_JSON_Becomes_Blocked_Result_Not_Exception()
     {
         const string batchId = "batch-test-001";
-        // Text content is not valid JSON — ParseSucceeded should produce a blocked stub
+        // Text content is not valid JSON — ParseSucceeded should produce a blocked stub.
+        // custom_id uses the composite format that BatchScheduler submits and expects back.
         const string jsonlLine =
-            """{"custom_id":"sc-01","result":{"type":"succeeded","message":{"id":"m","type":"message","role":"assistant","content":[{"type":"text","text":"not valid json at all"}],"model":"claude-haiku-4-5-20251001","stop_reason":"end_turn","stop_sequence":null,"usage":{"input_tokens":5,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":3}}}}""";
+            """{"custom_id":"fixture-batch::sc-01","result":{"type":"succeeded","message":{"id":"m","type":"message","role":"assistant","content":[{"type":"text","text":"not valid json at all"}],"model":"claude-haiku-4-5-20251001","stop_reason":"end_turn","stop_sequence":null,"usage":{"input_tokens":5,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":3}}}}""";
 
         var handler = new StubHandler(req =>
         {
@@ -570,6 +579,220 @@ public sealed class BatchSchedulerTests : IDisposable
                 $"{haikuId}/scenario.json should exist.");
             Assert.True(File.Exists(Path.Combine(dir, "result.json")),
                 $"{haikuId}/result.json should exist.");
+        }
+    }
+
+    // ── AT_BS_X_TwoBatches ────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Two ScenarioBatches with overlapping scenario IDs (sc-01..sc-03 in each) must
+    /// both dispatch and return without throwing ArgumentException. The composite-key
+    /// design ensures each (batchId, scenarioId) pair is unique in all lookup tables.
+    /// </summary>
+    [Fact]
+    public async Task AT_BS_X_TwoBatches_SameScenarioIds_BothDispatchAndReturn()
+    {
+        const string anthropicBatchId = "batch-test-001";
+
+        // Two batches with overlapping sc-01..sc-03, but different seeds → different
+        // content hashes → neither batch's scenarios are deduped against the other's.
+        var batchA = new ScenarioBatch
+        {
+            BatchId      = "batch-a",
+            ParentSpecId = "spec-a",
+            Scenarios    = new List<ScenarioDto>
+            {
+                Fixtures.MakeScenario("sc-01", seed: 1),
+                Fixtures.MakeScenario("sc-02", seed: 2),
+                Fixtures.MakeScenario("sc-03", seed: 3),
+            }
+        };
+        var batchB = new ScenarioBatch
+        {
+            BatchId      = "batch-b",
+            ParentSpecId = "spec-b",
+            Scenarios    = new List<ScenarioDto>
+            {
+                Fixtures.MakeScenario("sc-01", seed: 10),
+                Fixtures.MakeScenario("sc-02", seed: 20),
+                Fixtures.MakeScenario("sc-03", seed: 30),
+            }
+        };
+
+        int entriesSubmitted = 0;
+
+        // Results for all 6 unique scenarios (3 per batch), with composite custom_ids.
+        var resultsA = Fixtures.BuildResultsJsonl(
+            new[] { ("sc-01", "haiku-01"), ("sc-02", "haiku-02"), ("sc-03", "haiku-03") },
+            anthropicBatchId,
+            scenarioBatchId: "batch-a");
+
+        var resultsB = Fixtures.BuildResultsJsonl(
+            new[] { ("sc-01", "haiku-04"), ("sc-02", "haiku-05"), ("sc-03", "haiku-06") },
+            anthropicBatchId,
+            scenarioBatchId: "batch-b");
+
+        var resultsJsonl = resultsA + "\n" + resultsB;
+
+        var handler = new StubHandler(req =>
+        {
+            var path = req.RequestUri!.AbsolutePath;
+
+            if (req.Method == HttpMethod.Post && path.Contains("batches"))
+            {
+                var body = req.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+                using var doc = JsonDocument.Parse(body);
+                entriesSubmitted = doc.RootElement.GetProperty("requests").GetArrayLength();
+                return Fixtures.JsonOk(Fixtures.BatchSubmissionJson(anthropicBatchId));
+            }
+
+            if (req.Method == HttpMethod.Get && path.EndsWith("/results"))
+                return Fixtures.JsonOk(resultsJsonl);
+
+            if (req.Method == HttpMethod.Get && path.Contains("batches"))
+                return Fixtures.JsonOk(Fixtures.EndedStatusJson(anthropicBatchId));
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+
+        var (scheduler, client) = Wire(handler, FastPoller());
+        using (client)
+        {
+            var results = await scheduler.RunAsync(
+                "run-two-batches",
+                new[] { batchA, batchB },
+                CancellationToken.None);
+
+            // (a) No exception thrown — reaching here proves it.
+            // (b) All 6 input scenarios produce results.
+            Assert.Equal(6, results.Count);
+
+            // (c) 6 unique scenarios → 6 entries submitted to Anthropic.
+            Assert.Equal(6, entriesSubmitted);
+
+            // (d) haikuId is uniquely assigned across both batches.
+            var haikuIds = results.Select(r => r.WorkerId).ToHashSet();
+            Assert.Equal(6, haikuIds.Count);
+
+            // (e) parentBatchId correctly distinguishes the two batches.
+            var batchAResults = results.Take(3).ToList();
+            var batchBResults = results.Skip(3).Take(3).ToList();
+            Assert.All(batchAResults, r => Assert.Equal("batch-a", r.ParentBatchId));
+            Assert.All(batchBResults, r => Assert.Equal("batch-b", r.ParentBatchId));
+        }
+    }
+
+    // ── AT_BS_X_CustomIdRoundTrip ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Verifies the composite custom_id encode/decode round-trip: the scheduler submits
+    /// "<batchId>::<scenarioId>", Anthropic echoes it back, the parser recovers both parts,
+    /// and the final result carries the correct ParentBatchId. Also covers AT-09: a batchId
+    /// that makes the composite exceed 64 characters throws a clean InvalidOperationException.
+    /// </summary>
+    [Fact]
+    public async Task AT_BS_X_CustomIdRoundTrip_RecoversBatchAndScenarioIds()
+    {
+        const string anthropicBatchId = "batch-test-001";
+        const string scenarioBatchId  = "batch-foo";
+        const string scenarioId       = "sc-01";
+
+        string? submittedCustomId = null;
+
+        var resultsJsonl = Fixtures.BuildResultsJsonl(
+            new[] { (scenarioId, "haiku-01") },
+            anthropicBatchId,
+            scenarioBatchId: scenarioBatchId);
+
+        var handler = new StubHandler(req =>
+        {
+            var path = req.RequestUri!.AbsolutePath;
+
+            if (req.Method == HttpMethod.Post && path.Contains("batches"))
+            {
+                var body = req.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+                using var doc = JsonDocument.Parse(body);
+                submittedCustomId = doc.RootElement
+                    .GetProperty("requests")[0]
+                    .GetProperty("custom_id")
+                    .GetString();
+                return Fixtures.JsonOk(Fixtures.BatchSubmissionJson(anthropicBatchId));
+            }
+
+            if (req.Method == HttpMethod.Get && path.EndsWith("/results"))
+                return Fixtures.JsonOk(resultsJsonl);
+
+            if (req.Method == HttpMethod.Get && path.Contains("batches"))
+                return Fixtures.JsonOk(Fixtures.EndedStatusJson(anthropicBatchId));
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+
+        var batch = new ScenarioBatch
+        {
+            BatchId      = scenarioBatchId,
+            ParentSpecId = "spec-foo",
+            Scenarios    = new List<ScenarioDto> { Fixtures.MakeScenario(scenarioId) }
+        };
+
+        var (scheduler, client) = Wire(handler, FastPoller());
+        using (client)
+        {
+            var results = await scheduler.RunAsync(
+                "run-roundtrip",
+                new[] { batch },
+                CancellationToken.None);
+
+            // Composite custom_id submitted verbatim.
+            Assert.Equal($"{scenarioBatchId}::{scenarioId}", submittedCustomId);
+
+            // Round-trip: result carries the correct batch and scenario ids.
+            Assert.Single(results);
+            Assert.Equal(scenarioId,      results[0].ScenarioId);
+            Assert.Equal(scenarioBatchId, results[0].ParentBatchId);
+        }
+
+        // AT-09: batchId of 60 chars + "::" + "sc-01" = 67 > 64 → InvalidOperationException.
+        var longBatchId = new string('x', 60);
+        var longBatch = new ScenarioBatch
+        {
+            BatchId      = longBatchId,
+            ParentSpecId = "spec-long",
+            Scenarios    = new List<ScenarioDto> { Fixtures.MakeScenario("sc-01") }
+        };
+
+        var handler2 = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var (scheduler2, client2) = Wire(handler2, FastPoller());
+        using (client2)
+        {
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => scheduler2.RunAsync("run-too-long", new[] { longBatch }, CancellationToken.None));
+
+            Assert.Contains("64", ex.Message);
+            Assert.Contains(longBatchId, ex.Message);
+        }
+
+        // Malformed custom_id without "::" causes InvalidOperationException during result streaming.
+        const string malformedJsonl =
+            """{"custom_id":"no-separator","result":{"type":"succeeded","message":{"id":"m","type":"message","role":"assistant","content":[{"type":"text","text":"{}"}],"model":"claude-haiku-4-5-20251001","stop_reason":"end_turn","stop_sequence":null,"usage":{"input_tokens":5,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":3}}}}""";
+
+        var handler3 = new StubHandler(req =>
+        {
+            var path = req.RequestUri!.AbsolutePath;
+            if (req.Method == HttpMethod.Post && path.Contains("batches"))
+                return Fixtures.JsonOk(Fixtures.BatchSubmissionJson(anthropicBatchId));
+            if (req.Method == HttpMethod.Get && path.EndsWith("/results"))
+                return Fixtures.JsonOk(malformedJsonl);
+            if (req.Method == HttpMethod.Get && path.Contains("batches"))
+                return Fixtures.JsonOk(Fixtures.EndedStatusJson(anthropicBatchId));
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+
+        var (scheduler3, client3) = Wire(handler3, FastPoller());
+        using (client3)
+        {
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => scheduler3.RunAsync("run-malformed", new[] { batch }, CancellationToken.None));
         }
     }
 }
