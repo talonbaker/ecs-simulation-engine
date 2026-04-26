@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "0.1.0",
+  "scenarioId": "sc-03",
+  "parentBatchId": "batch-cast-validate",
+  "workerId": "haiku-03",
+  "outcome": "ok",
+  "assertionResults": [
+    { "id": "A-01", "passed": true, "observedValue": 15, "note": "Mock: 15 NPC entities present." }
+  ],
+  "keyMetrics": {
+    "internallyConsistentPersonality": 93,
+    "driveDistributionFeelsRight": 78,
+    "couldBeRealOfficeWorker": 89
+  },
+  "note": "Mock: NPC sampled is the-affair archetype. Low infidelity inhibition (17) and high vulnerability inhibition (81) feels right — they're failing the inhibition, not fighting it. Register casual/formal code-switch noted.",
+  "tokensUsed": {
+    "input": 940,
+    "cachedRead": 22000,
+    "cacheWrite": 0,
+    "output": 298
+  }
+}

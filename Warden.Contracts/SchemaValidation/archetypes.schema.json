@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ecs-sim-engine.local/schemas/archetypes.schema.json",
+  "title": "ArchetypeCatalog",
+  "description": "Catalog of NPC archetypes used by the cast generator at engine boot.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "archetypes"],
+  "properties": {
+    "schemaVersion": { "type": "string", "enum": ["0.1.0"] },
+    "archetypes": {
+      "type": "array",
+      "maxItems": 30,
+      "items": { "$ref": "#/$defs/archetype" }
+    }
+  },
+
+  "$defs": {
+    "archetype": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "displayName",
+        "chronicallyElevatedDrives", "chronicallyDepressedDrives",
+        "personalityRanges", "vocabularyRegister",
+        "willpowerBaselineRange", "dealOptions",
+        "silhouetteFamily", "starterInhibitions"
+      ],
+      "properties": {
+        "id":          { "type": "string", "maxLength": 64 },
+        "displayName": { "type": "string", "maxLength": 64 },
+        "chronicallyElevatedDrives": {
+          "type": "array", "maxItems": 8,
+          "items": { "$ref": "#/$defs/driveName" }
+        },
+        "chronicallyDepressedDrives": {
+          "type": "array", "maxItems": 8,
+          "items": { "$ref": "#/$defs/driveName" }
+        },
+        "personalityRanges":    { "$ref": "#/$defs/personalityRanges" },
+        "vocabularyRegister": {
+          "oneOf": [
+            { "$ref": "#/$defs/registerName" },
+            {
+              "type": "array",
+              "maxItems": 6,
+              "items": { "$ref": "#/$defs/registerName" }
+            }
+          ]
+        },
+        "willpowerBaselineRange": { "$ref": "#/$defs/intRange0to100" },
+        "dealOptions": {
+          "type": "array", "maxItems": 20,
+          "items": { "type": "string", "maxLength": 128 }
+        },
+        "silhouetteFamily":     { "$ref": "#/$defs/silhouetteFamily" },
+        "starterInhibitions": {
+          "type": "array", "maxItems": 8,
+          "items": { "$ref": "#/$defs/starterInhibition" }
+        },
+        "relationshipSpawnHints": { "$ref": "#/$defs/relationshipSpawnHints" },
+        "dialogHints":            { "$ref": "#/$defs/dialogHints" }
+      }
+    },
+
+    "driveName": {
+      "type": "string",
+      "enum": ["belonging","status","affection","irritation","attraction","trust","suspicion","loneliness"]
+    },
+
+    "registerName": {
+      "type": "string",
+      "enum": ["formal","casual","crass","clipped","academic","folksy"]
+    },
+
+    "intRange0to100": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "integer", "minimum": 0, "maximum": 100 }
+    },
+
+    "intRangeNeg2to2": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "integer", "minimum": -2, "maximum": 2 }
+    },
+
+    "personalityRanges": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "openness":          { "$ref": "#/$defs/intRangeNeg2to2" },
+        "conscientiousness": { "$ref": "#/$defs/intRangeNeg2to2" },
+        "extraversion":      { "$ref": "#/$defs/intRangeNeg2to2" },
+        "agreeableness":     { "$ref": "#/$defs/intRangeNeg2to2" },
+        "neuroticism":       { "$ref": "#/$defs/intRangeNeg2to2" }
+      }
+    },
+
+    "silhouetteFamily": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["heights","builds","hair","headwear","dominantColors","distinctiveItems"],
+      "properties": {
+        "heights":         { "type": "array", "maxItems": 3, "items": { "type": "string", "maxLength": 32 } },
+        "builds":          { "type": "array", "maxItems": 3, "items": { "type": "string", "maxLength": 32 } },
+        "hair":            { "type": "array", "maxItems": 6, "items": { "type": "string", "maxLength": 32 } },
+        "headwear":        { "type": "array", "maxItems": 5, "items": { "type": "string", "maxLength": 32 } },
+        "dominantColors":  { "type": "array", "maxItems": 6, "items": { "type": "string", "maxLength": 32 } },
+        "distinctiveItems":{ "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 64 } }
+      }
+    },
+
+    "starterInhibition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class","strengthRange","awareness"],
+      "properties": {
+        "class": {
+          "type": "string",
+          "enum": ["infidelity","confrontation","bodyImageEating","publicEmotion","physicalIntimacy","interpersonalConflict","riskTaking","vulnerability"]
+        },
+        "strengthRange": { "$ref": "#/$defs/intRange0to100" },
+        "awareness": {
+          "type": "string",
+          "enum": ["known","hidden"]
+        }
+      }
+    },
+
+    "relationshipSpawnHints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pattern","isTarget"],
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "enum": ["rival","oldFlame","activeAffair","secretCrush","mentor","mentee","bossOf","reportTo","friend","alliesOfConvenience","sleptWithSpouse","confidant","theThingNobodyTalksAbout"]
+        },
+        "targetArchetypePreferences": {
+          "type": "array", "maxItems": 10,
+          "items": { "type": "string", "maxLength": 64 }
+        },
+        "isTarget": { "type": "boolean" }
+      }
+    },
+
+    "dialogHints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "calcifyPriorityTags": {
+          "type": "array", "maxItems": 10,
+          "items": { "type": "string", "maxLength": 64 }
+        }
+      }
+    }
+  }
+}

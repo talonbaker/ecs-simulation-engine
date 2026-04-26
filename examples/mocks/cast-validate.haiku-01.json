@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "0.1.0",
+  "scenarioId": "sc-01",
+  "parentBatchId": "batch-cast-validate",
+  "workerId": "haiku-01",
+  "outcome": "ok",
+  "assertionResults": [
+    { "id": "A-01", "passed": true, "observedValue": 15, "note": "Mock: 15 NPC entities present." }
+  ],
+  "keyMetrics": {
+    "internallyConsistentPersonality": 88,
+    "driveDistributionFeelsRight": 82,
+    "couldBeRealOfficeWorker": 91
+  },
+  "note": "Mock: NPC sampled is the-vent archetype. High belonging + irritation with low trust reads as classic office complainer who secretly needs the team. Vocabulary register clipped aligns well.",
+  "tokensUsed": {
+    "input": 940,
+    "cachedRead": 22000,
+    "cacheWrite": 0,
+    "output": 280
+  }
+}

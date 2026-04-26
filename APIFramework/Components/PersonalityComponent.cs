@@ -51,4 +51,19 @@ public struct PersonalityComponent
             ? currentMood.Substring(0, 32)
             : currentMood;
     }
+
+    /// <summary>
+    /// Parses a register name string (from the archetype catalog) to the enum value.
+    /// Returns <see cref="VocabularyRegister.Casual"/> for unknown values.
+    /// </summary>
+    public static VocabularyRegister ParseRegister(string name) => name switch
+    {
+        "formal"   => VocabularyRegister.Formal,
+        "casual"   => VocabularyRegister.Casual,
+        "crass"    => VocabularyRegister.Crass,
+        "clipped"  => VocabularyRegister.Clipped,
+        "academic" => VocabularyRegister.Academic,
+        "folksy"   => VocabularyRegister.Folksy,
+        _          => VocabularyRegister.Casual
+    };
 }

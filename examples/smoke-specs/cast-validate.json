@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "0.1.0",
+  "specId": "spec-cast-validate",
+  "missionId": "mission-cast-validate",
+  "title": "Cast generator population validation",
+  "rationale": "Validates that the v0.1 cast generator produces a believable office population per the cast bible.",
+  "inputs": {
+    "referenceFiles": [
+      "docs/c2-content/world-definitions/office-starter.json",
+      "docs/c2-content/archetypes/archetypes.json"
+    ]
+  },
+  "deliverables": [
+    {
+      "kind": "doc",
+      "path": "runs/cast-validate/report.md",
+      "description": "Per-NPC validation report: drive ranges, personality ranges, inhibition counts, relationship sketch counts."
+    }
+  ],
+  "acceptanceTests": [
+    {
+      "id": "AT-01",
+      "assertion": "All NPCs have drive baselines within archetype-expected ranges (elevated 55-75, depressed 25-45, neutral 40-60).",
+      "verification": "manual-review"
+    },
+    {
+      "id": "AT-02",
+      "assertion": "Seeded relationships include at least 2 rivalries, 1 old flame, 1 mentor pair.",
+      "verification": "manual-review"
+    },
+    {
+      "id": "AT-03",
+      "assertion": "Each NPC's inhibitions match its archetype's starter set count and classes.",
+      "verification": "manual-review"
+    }
+  ],
+  "nonGoals": [
+    "Do not modify any source files.",
+    "Do not generate dialog corpus content.",
+    "Do not add new archetypes."
+  ],
+  "needsHaikuValidation": true,
+  "timeboxMinutes": 30,
+  "workerBudgetUsd": 1.20
+}

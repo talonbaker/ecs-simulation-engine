@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "0.1.0",
+  "scenarioId": "sc-02",
+  "parentBatchId": "batch-cast-validate",
+  "workerId": "haiku-02",
+  "outcome": "ok",
+  "assertionResults": [
+    { "id": "A-01", "passed": true, "observedValue": 15, "note": "Mock: 15 NPC entities present." }
+  ],
+  "keyMetrics": {
+    "internallyConsistentPersonality": 79,
+    "driveDistributionFeelsRight": 85,
+    "couldBeRealOfficeWorker": 87
+  },
+  "note": "Mock: NPC sampled is the-climber archetype. High status + attraction with moderate belonging. Conscientiousness +2, agreeableness -1. Deal is 'checks LinkedIn twice a day'. Internally consistent.",
+  "tokensUsed": {
+    "input": 940,
+    "cachedRead": 22000,
+    "cacheWrite": 0,
+    "output": 265
+  }
+}

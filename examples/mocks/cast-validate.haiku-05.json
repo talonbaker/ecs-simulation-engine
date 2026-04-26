@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "0.1.0",
+  "scenarioId": "sc-05",
+  "parentBatchId": "batch-cast-validate",
+  "workerId": "haiku-05",
+  "outcome": "ok",
+  "assertionResults": [
+    { "id": "A-01", "passed": true, "observedValue": 15, "note": "Mock: 15 NPC entities present." }
+  ],
+  "keyMetrics": {
+    "internallyConsistentPersonality": 85,
+    "driveDistributionFeelsRight": 88,
+    "couldBeRealOfficeWorker": 92
+  },
+  "note": "Mock: NPC sampled is the-newbie archetype. High belonging + affection, moderate status. Neuroticism +1, extraversion +1. Deal is 'still learning everyone's name'. Reads as genuine early-tenure eagerness.",
+  "tokensUsed": {
+    "input": 940,
+    "cachedRead": 22000,
+    "cacheWrite": 0,
+    "output": 255
+  }
+}

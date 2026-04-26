@@ -447,6 +447,21 @@
     "candidateDetailMaxLength":   280
   },
 
+  // ── Cast generator ─────────────────────────────────────────────────────────
+  "castGenerator": {
+    "elevatedDriveRange":          [55, 75],
+    "depressedDriveRange":         [25, 45],
+    "neutralDriveRange":           [40, 60],
+    "currentJitterRange":          [-5, 5],
+    "rivalryCount":                2,
+    "oldFlameCount":               1,
+    "mentorPairCount":             1,
+    "sleptWithSpouseCount":        1,
+    "friendPairCount":             2,
+    "thingNobodyTalksAboutCount":  2,
+    "relationshipIntensityRange":  [30, 70]
+  },
+
   // ── Social engine ──────────────────────────────────────────────────────────
   "social": {
     "driveDecayPerTick": 0.15,

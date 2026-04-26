@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "0.1.0",
+  "scenarioId": "sc-04",
+  "parentBatchId": "batch-cast-validate",
+  "workerId": "haiku-04",
+  "outcome": "ok",
+  "assertionResults": [
+    { "id": "A-01", "passed": true, "observedValue": 15, "note": "Mock: 15 NPC entities present." }
+  ],
+  "keyMetrics": {
+    "internallyConsistentPersonality": 71,
+    "driveDistributionFeelsRight": 90,
+    "couldBeRealOfficeWorker": 84
+  },
+  "note": "Mock: NPC sampled is the-hermit archetype. Low trust + low belonging + low affection with high loneliness is a believable isolation pattern. Openness -1 reinforces the profile. Silhouette: glasses, no distinctive item.",
+  "tokensUsed": {
+    "input": 940,
+    "cachedRead": 22000,
+    "cacheWrite": 0,
+    "output": 271
+  }
+}

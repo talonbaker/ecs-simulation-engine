@@ -12,14 +12,15 @@ namespace APIFramework.Config;
 /// </summary>
 public class SimConfig
 {
-    public WorldConfig        World     { get; set; } = new();
-    public EntitiesConfig     Entities  { get; set; } = new();
-    public SystemsConfig      Systems   { get; set; } = new();
-    public SocialSystemConfig Social    { get; set; } = new();
-    public SpatialConfig      Spatial   { get; set; } = new();
-    public LightingConfig     Lighting  { get; set; } = new();
-    public MovementConfig     Movement  { get; set; } = new();
-    public NarrativeConfig    Narrative { get; set; } = new();
+    public WorldConfig            World          { get; set; } = new();
+    public EntitiesConfig         Entities       { get; set; } = new();
+    public SystemsConfig          Systems        { get; set; } = new();
+    public SocialSystemConfig     Social         { get; set; } = new();
+    public SpatialConfig          Spatial        { get; set; } = new();
+    public LightingConfig         Lighting       { get; set; } = new();
+    public MovementConfig         Movement       { get; set; } = new();
+    public NarrativeConfig        Narrative      { get; set; } = new();
+    public CastGeneratorConfig    CastGenerator  { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -848,4 +849,42 @@ public class NarrativeConfig
 
     /// <summary>Maximum character length of the Detail field on any candidate.</summary>
     public int CandidateDetailMaxLength { get; set; } = 280;
+}
+
+// ── Cast generator ─────────────────────────────────────────────────────────────
+
+public class CastGeneratorConfig
+{
+    /// <summary>Baseline range [min,max] for chronically-elevated drives.</summary>
+    public int[] ElevatedDriveRange   { get; set; } = new[] { 55, 75 };
+
+    /// <summary>Baseline range [min,max] for chronically-depressed drives.</summary>
+    public int[] DepressedDriveRange  { get; set; } = new[] { 25, 45 };
+
+    /// <summary>Baseline range [min,max] for drives with no archetype elevation.</summary>
+    public int[] NeutralDriveRange    { get; set; } = new[] { 40, 60 };
+
+    /// <summary>Per-drive jitter applied to Current at spawn (additive, clamped 0–100).</summary>
+    public int[] CurrentJitterRange   { get; set; } = new[] { -5, 5 };
+
+    /// <summary>Number of rivalry relationships to seed across the cast.</summary>
+    public int RivalryCount            { get; set; } = 2;
+
+    /// <summary>Number of old-flame relationships to seed.</summary>
+    public int OldFlameCount           { get; set; } = 1;
+
+    /// <summary>Number of mentor/mentee pairs to seed.</summary>
+    public int MentorPairCount         { get; set; } = 1;
+
+    /// <summary>Number of slept-with-their-spouse relationships to seed.</summary>
+    public int SleptWithSpouseCount    { get; set; } = 1;
+
+    /// <summary>Number of friend pairs to seed.</summary>
+    public int FriendPairCount         { get; set; } = 2;
+
+    /// <summary>Number of "the thing nobody talks about" relationships to seed.</summary>
+    public int ThingNobodyTalksAboutCount { get; set; } = 2;
+
+    /// <summary>Intensity range [min,max] for seeded relationships.</summary>
+    public int[] RelationshipIntensityRange { get; set; } = new[] { 30, 70 };
 }

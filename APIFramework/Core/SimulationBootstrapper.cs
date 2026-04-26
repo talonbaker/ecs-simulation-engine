@@ -128,6 +128,19 @@ public class SimulationBootstrapper
     /// </summary>
     public LoadResult? WorldLoadResult { get; private set; }
 
+    /// <summary>
+    /// NPC entities produced by <see cref="CastGenerator.SpawnAll"/> after the world
+    /// definition is loaded. Null when no world definition path was supplied or when
+    /// the archetype catalog could not be located.
+    /// </summary>
+    public IReadOnlyList<Entity>? SpawnedNpcs { get; private set; }
+
+    /// <summary>
+    /// Relationship entities seeded by <see cref="CastGenerator.SeedRelationships"/>.
+    /// Null when cast generation did not run.
+    /// </summary>
+    public IReadOnlyList<Entity>? SeededRelationships { get; private set; }
+
     public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
     {
         Config          = configProvider.GetConfig();
@@ -162,7 +175,18 @@ public class SimulationBootstrapper
 
         RegisterSystems();
         if (worldDefinitionPath != null)
+        {
             WorldLoadResult = WorldDefinitionLoader.LoadFromFile(worldDefinitionPath, EntityManager, Random);
+            if (WorldLoadResult.NpcSlotCount > 0)
+            {
+                var catalog = ArchetypeCatalog.LoadDefault();
+                if (catalog != null)
+                {
+                    SpawnedNpcs       = CastGenerator.SpawnAll(catalog, EntityManager, Random, Config.CastGenerator);
+                    SeededRelationships = CastGenerator.SeedRelationships(SpawnedNpcs, catalog, EntityManager, Random, Config.CastGenerator);
+                }
+            }
+        }
         else
             SpawnWorld(humanCount);
     }

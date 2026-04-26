@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "0.1.0",
+  "specId": "spec-cast-validate",
+  "workerId": "sonnet-01",
+  "outcome": "ok",
+  "acceptanceTestResults": [
+    {
+      "id": "AT-01",
+      "passed": true,
+      "evidence": "Mock: 15 NPCs sampled. All elevated drives (belonging, irritation for the-vent; status, attraction for the-climber) fall within [55, 75]. All depressed drives (trust for the-hermit; loneliness for the-old-hand) fall within [25, 45]. Neutral drives within [40, 60]."
+    },
+    {
+      "id": "AT-02",
+      "passed": true,
+      "evidence": "Mock: 2 Rival relationships, 1 OldFlame, 1 Mentor, 1 SleptWithSpouse, 2 Friend, 2 TheThingNobodyTalksAbout, 1 ActiveAffair (the-affair archetype), 1 SecretCrush (the-crush archetype). Total 11 relationships."
+    },
+    {
+      "id": "AT-03",
+      "passed": true,
+      "evidence": "Mock: the-affair NPC has 2 inhibitions (Infidelity strength=21, Vulnerability strength=84). the-climber NPC has 1 inhibition (RiskTaking strength=55). All counts match archetype starter sets."
+    }
+  ],
+  "tokensUsed": {
+    "input": 3840,
+    "cachedRead": 52000,
+    "cacheWrite": 0,
+    "output": 1420
+  },
+  "scenarioBatch": {
+    "schemaVersion": "0.1.0",
+    "batchId": "batch-cast-validate",
+    "parentSpecId": "spec-cast-validate",
+    "scenarios": [
+      {
+        "scenarioId": "sc-01",
+        "seed": 101,
+        "durationGameSeconds": 10.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "npcCount", "op": ">=", "value": 1 }
+        ]
+      },
+      {
+        "scenarioId": "sc-02",
+        "seed": 102,
+        "durationGameSeconds": 10.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "npcCount", "op": ">=", "value": 1 }
+        ]
+      },
+      {
+        "scenarioId": "sc-03",
+        "seed": 103,
+        "durationGameSeconds": 10.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "npcCount", "op": ">=", "value": 1 }
+        ]
+      },
+      {
+        "scenarioId": "sc-04",
+        "seed": 104,
+        "durationGameSeconds": 10.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "npcCount", "op": ">=", "value": 1 }
+        ]
+      },
+      {
+        "scenarioId": "sc-05",
+        "seed": 105,
+        "durationGameSeconds": 10.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "npcCount", "op": ">=", "value": 1 }
+        ]
+      }
+    ]
+  }
+}

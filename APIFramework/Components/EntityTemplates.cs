@@ -297,6 +297,33 @@ public static class EntityTemplates
         return entity;
     }
 
+    /// <summary>
+    /// Applies all cast-spawn components to <paramref name="entity"/> in one call:
+    /// <see cref="NpcTag"/>, all four social components, silhouette, archetype record, and deal.
+    /// Use this instead of <see cref="WithSocial"/> when spawning from the cast generator,
+    /// since the generator adds the extra NPC-identity components that social tests alone don't cover.
+    /// </summary>
+    public static Entity WithCastSpawn(
+        Entity               entity,
+        SocialDrivesComponent  drives,
+        WillpowerComponent     willpower,
+        PersonalityComponent   personality,
+        InhibitionsComponent   inhibitions,
+        SilhouetteComponent    silhouette,
+        NpcArchetypeComponent  archetypeRef,
+        NpcDealComponent       deal)
+    {
+        entity.Add(new NpcTag());
+        entity.Add(drives);
+        entity.Add(willpower);
+        entity.Add(personality);
+        entity.Add(inhibitions);
+        entity.Add(silhouette);
+        entity.Add(archetypeRef);
+        entity.Add(deal);
+        return entity;
+    }
+
     public static Entity SpawnCat(EntityManager manager, EntityConfig? cfg = null)
     {
         cfg ??= EntityConfig.DefaultCat;
