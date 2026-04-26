@@ -540,6 +540,14 @@
     "dialogAttemptProbability":   0.05
   },
 
+  // ── Schedule layer ─────────────────────────────────────────────────────────
+  "schedule": {
+    // Weight of schedule-driven Approach/Linger candidates vs drive-driven ones.
+    "scheduleAnchorBaseWeight":     0.30,
+    // Distance (tiles) below which AtDesk/Sleeping emits Linger instead of Approach.
+    "scheduleLingerThresholdCells": 2.0
+  },
+
   // ── Action selection ───────────────────────────────────────────────────────
   "actionSelection": {
     // Drive.Current must exceed this to enumerate candidates

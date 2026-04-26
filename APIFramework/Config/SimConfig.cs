@@ -24,6 +24,7 @@ public class SimConfig
     public ChronicleConfig        Chronicle      { get; set; } = new();
     public DialogConfig           Dialog         { get; set; } = new();
     public ActionSelectionConfig  ActionSelection { get; set; } = new();
+    public ScheduleConfig         Schedule        { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1007,4 +1008,15 @@ public class ActionSelectionConfig
 
     /// <summary>Tiles the avoidance flee target is pushed away from the threat. Default 4.</summary>
     public int    AvoidStandoffDistance         { get; set; } = 4;
+}
+
+// ── Schedule system ───────────────────────────────────────────────────────────
+
+public class ScheduleConfig
+{
+    /// <summary>Weight assigned to a schedule-driven Approach/Linger candidate. Default 0.30.</summary>
+    public double ScheduleAnchorBaseWeight     { get; set; } = 0.30;
+
+    /// <summary>Distance (tiles) below which AtDesk/Sleeping activity emits Linger instead of Approach. Default 2.0.</summary>
+    public float  ScheduleLingerThresholdCells { get; set; } = 2.0f;
 }

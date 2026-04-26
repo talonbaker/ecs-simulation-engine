@@ -18,6 +18,9 @@ namespace APIFramework.Systems;
 /// </summary>
 public sealed class ActionSelectionSystem : ISystem
 {
+    // ── Candidate source tags (for diagnostics) ───────────────────────────────
+    private enum CandidateSource { Drive = 0, Schedule = 1, Idle = 2 }
+
     // ── Drive ordinals (deterministic sort key) ───────────────────────────────
     private enum DriveOrdinal { Belonging = 0, Status = 1, Affection = 2, Irritation = 3, Attraction = 4, Trust = 5, Suspicion = 6, Loneliness = 7 }
 
@@ -50,12 +53,13 @@ public sealed class ActionSelectionSystem : ISystem
     {
         public IntendedActionKind Kind;
         public DialogContextValue Context;
-        public int     TargetEntityId;   // WillpowerSystem.EntityIntId
-        public Guid    TargetEntityGuid;
-        public int     DriveOrdinal;
-        public int     SourceDriveCurrent;
-        public double  Inhibition;       // max matching inhibition strength / 100
-        public double  Weight;
+        public int             TargetEntityId;   // WillpowerSystem.EntityIntId
+        public Guid            TargetEntityGuid;
+        public int             DriveOrdinal;
+        public int             SourceDriveCurrent;
+        public double          Inhibition;       // max matching inhibition strength / 100
+        public double          Weight;
+        public CandidateSource Source;
     }
 
     // ── Services ──────────────────────────────────────────────────────────────
@@ -64,6 +68,7 @@ public sealed class ActionSelectionSystem : ISystem
     private readonly WillpowerEventQueue  _willpowerQueue;
     private readonly SeededRandom         _rng;
     private readonly ActionSelectionConfig _cfg;
+    private readonly ScheduleConfig        _scheduleCfg;
     private readonly EntityManager        _em;
 
     // Flee-target entities: NPC → ephemeral entity positioned at flee point.
@@ -75,6 +80,7 @@ public sealed class ActionSelectionSystem : ISystem
         WillpowerEventQueue  willpowerQueue,
         SeededRandom         rng,
         ActionSelectionConfig cfg,
+        ScheduleConfig        scheduleCfg,
         EntityManager        em)
     {
         _spatial        = spatial;
@@ -82,6 +88,7 @@ public sealed class ActionSelectionSystem : ISystem
         _willpowerQueue = willpowerQueue;
         _rng            = rng;
         _cfg            = cfg;
+        _scheduleCfg    = scheduleCfg;
         _em             = em;
     }
 
@@ -126,6 +133,44 @@ public sealed class ActionSelectionSystem : ISystem
             // Enumerate and score candidates.
             var candidates = new List<Candidate>(_cfg.MaxCandidatesPerTick + 1);
             EnumerateCandidates(drives, wp, inhibs, nearby, observabilityFactor, candidates);
+
+            // Schedule hint — one extra candidate from ScheduleSystem output.
+            if (npc.Has<CurrentScheduleBlockComponent>())
+            {
+                var sched = npc.Get<CurrentScheduleBlockComponent>();
+                if (sched.AnchorEntityId != Guid.Empty)
+                {
+                    var anchorEntity = FindEntityByGuid(sched.AnchorEntityId);
+                    if (anchorEntity != null)
+                    {
+                        float dist = anchorEntity.Has<PositionComponent>()
+                            ? pos.DistanceTo(anchorEntity.Get<PositionComponent>())
+                            : float.MaxValue;
+
+                        bool atAnchor = dist < _scheduleCfg.ScheduleLingerThresholdCells;
+                        IntendedActionKind schedKind;
+                        if (sched.Activity == ScheduleActivityKind.Sleeping)
+                            schedKind = IntendedActionKind.Linger;
+                        else if (sched.Activity == ScheduleActivityKind.AtDesk && atAnchor)
+                            schedKind = IntendedActionKind.Linger;
+                        else
+                            schedKind = IntendedActionKind.Approach;
+
+                        candidates.Add(new Candidate
+                        {
+                            Kind               = schedKind,
+                            Context            = DialogContextValue.None,
+                            TargetEntityId     = WillpowerSystem.EntityIntId(anchorEntity),
+                            TargetEntityGuid   = sched.AnchorEntityId,
+                            DriveOrdinal       = 98,
+                            SourceDriveCurrent = 0,
+                            Inhibition         = 0.0,
+                            Weight             = _scheduleCfg.ScheduleAnchorBaseWeight,
+                            Source             = CandidateSource.Schedule
+                        });
+                    }
+                }
+            }
 
             // Idle is always present.
             candidates.Add(new Candidate
