@@ -152,3 +152,9 @@ public struct InterestedTag { }     // Anticipation  0–33   mild attention tow
 public struct AnticipatingTag { }   // Anticipation 34–66   goal-directed attention locked on
 public struct VigilantTag { }       // Anticipation 67–100  hyperaware; primed to act immediately
 #endregion
+
+#region Stress Tags
+public struct StressedTag { }     // AcuteLevel ≥ stressedTagThreshold (default 60)
+public struct OverwhelmedTag { }  // AcuteLevel ≥ overwhelmedTagThreshold (default 85)
+public struct BurningOutTag { }   // ChronicLevel ≥ burningOutTagThreshold; sticky for cooldown days
+#endregion
