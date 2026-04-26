@@ -540,6 +540,14 @@
     "dialogAttemptProbability":   0.05
   },
 
+  // ── Memory system ─────────────────────────────────────────────────────────
+  "memory": {
+    // Maximum entries per relationship pair before oldest is dropped
+    "maxRelationshipMemoryCount": 32,
+    // Maximum personal entries per NPC before oldest is dropped
+    "maxPersonalMemoryCount": 16
+  },
+
   // ── Action selection ───────────────────────────────────────────────────────
   "actionSelection": {
     // Drive.Current must exceed this to enumerate candidates

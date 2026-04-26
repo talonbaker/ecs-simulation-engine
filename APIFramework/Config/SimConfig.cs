@@ -24,6 +24,7 @@ public class SimConfig
     public ChronicleConfig        Chronicle      { get; set; } = new();
     public DialogConfig           Dialog         { get; set; } = new();
     public ActionSelectionConfig  ActionSelection { get; set; } = new();
+    public MemoryConfig           Memory          { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1007,4 +1008,15 @@ public class ActionSelectionConfig
 
     /// <summary>Tiles the avoidance flee target is pushed away from the threat. Default 4.</summary>
     public int    AvoidStandoffDistance         { get; set; } = 4;
+}
+
+// ── Memory system ─────────────────────────────────────────────────────────────
+
+public class MemoryConfig
+{
+    /// <summary>Maximum entries in RelationshipMemoryComponent.Recent before oldest is dropped.</summary>
+    public int MaxRelationshipMemoryCount { get; set; } = 32;
+
+    /// <summary>Maximum entries in PersonalMemoryComponent.Recent before oldest is dropped.</summary>
+    public int MaxPersonalMemoryCount { get; set; } = 16;
 }

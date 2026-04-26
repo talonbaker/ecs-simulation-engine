@@ -6,6 +6,7 @@ using APIFramework.Core;
 using System.Linq;
 using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Lighting;
+using APIFramework.Systems.Narrative;
 using Warden.Contracts.Telemetry;
 using ContractVocabRegister       = Warden.Contracts.Telemetry.VocabularyRegister;
 using ContractInhibitionClass     = Warden.Contracts.Telemetry.InhibitionClass;
@@ -86,6 +87,7 @@ public static class TelemetryProjector
                 RecentViolations = null,   // SimulationSnapshot carries only the count
             },
             Relationships  = entityManager  is not null ? ProjectRelationships(entityManager)       : null,
+            MemoryEvents   = entityManager  is not null ? ProjectMemoryEvents(entityManager)        : null,
             Rooms          = entityManager  is not null ? ProjectRooms(entityManager)                : null,
             LightSources   = entityManager  is not null ? ProjectLightSources(entityManager)         : null,
             LightApertures = entityManager  is not null ? ProjectLightApertures(entityManager)       : null,
@@ -400,11 +402,68 @@ public static class TelemetryProjector
                 ParticipantB    = ParticipantIntIdToGuidString(r.ParticipantB),
                 Patterns        = patterns,
                 Intensity       = r.Intensity,
-                HistoryEventIds = Array.Empty<string>(),
+                HistoryEventIds = e.Has<RelationshipMemoryComponent>()
+                    ? e.Get<RelationshipMemoryComponent>().Recent
+                        .Where(m => m.Persistent)
+                        .Select(m => m.Id)
+                        .ToList()
+                    : Array.Empty<string>(),
             });
         }
         return result;
     }
+
+    // ── Memory events ─────────────────────────────────────────────────────────
+
+    private static List<MemoryEventDto>? ProjectMemoryEvents(EntityManager em)
+    {
+        var result = new List<MemoryEventDto>();
+        var seen   = new HashSet<string>();
+
+        foreach (var e in em.Query<RelationshipMemoryComponent>())
+        {
+            var relId = e.Id.ToString();
+            foreach (var m in e.Get<RelationshipMemoryComponent>().Recent)
+            {
+                if (!seen.Add(m.Id)) continue;
+                result.Add(ToMemoryEventDto(m, MemoryScope.Pair, relId));
+            }
+        }
+
+        foreach (var e in em.Query<PersonalMemoryComponent>())
+        {
+            foreach (var m in e.Get<PersonalMemoryComponent>().Recent)
+            {
+                if (!seen.Add(m.Id)) continue;
+                result.Add(ToMemoryEventDto(m, MemoryScope.Pair, null));
+            }
+        }
+
+        return result.Count > 0 ? result : null;
+    }
+
+    private static MemoryEventDto ToMemoryEventDto(MemoryEntry m, MemoryScope scope, string? relId)
+        => new()
+        {
+            Id             = m.Id,
+            Tick           = m.Tick,
+            Kind           = NarrativeKindToString(m.Kind),
+            Scope          = scope,
+            Participants   = m.ParticipantIds.Select(ParticipantIntIdToGuidString).ToList(),
+            Description    = m.Detail,
+            Persistent     = m.Persistent,
+            RelationshipId = relId,
+        };
+
+    private static string NarrativeKindToString(NarrativeEventKind kind) => kind switch
+    {
+        NarrativeEventKind.DriveSpike          => "driveSpike",
+        NarrativeEventKind.WillpowerCollapse   => "willpowerCollapse",
+        NarrativeEventKind.WillpowerLow        => "willpowerLow",
+        NarrativeEventKind.ConversationStarted => "conversationStarted",
+        NarrativeEventKind.LeftRoomAbruptly    => "leftRoomAbruptly",
+        _                                      => kind.ToString(),
+    };
 
     // EntityManager encodes entity counter N as a Guid: bytes[0..3] = N little-endian,
     // bytes[4..15] = 0. RelationshipComponent.ParticipantA/B stores that counter as int.
