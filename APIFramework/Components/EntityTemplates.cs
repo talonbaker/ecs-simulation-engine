@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using APIFramework.Config;
+using APIFramework.Components;
 
 namespace APIFramework.Core;
-
-using APIFramework.Components;
 
 /// <summary>
 /// Factory for spawning pre-configured entities into the world.
@@ -294,6 +293,19 @@ public static class EntityTemplates
         // Truncate identity name to IdentityComponent's conventional length.
         entity.Add(new IdentityComponent { Name = description.Length > 32 ? description[..32] : description });
         entity.Add(new PositionComponent { X = tileX, Y = 0f, Z = tileY });
+        return entity;
+    }
+
+    /// <summary>
+    /// Adds <see cref="DialogHistoryComponent"/> and optionally
+    /// <see cref="RecognizedTicComponent"/> to <paramref name="entity"/>.
+    /// Call after <see cref="WithSocial"/> so the entity already has an NpcTag.
+    /// </summary>
+    public static Entity WithDialogHistory(Entity entity, bool addTicRecognition = true)
+    {
+        entity.Add(new DialogHistoryComponent());
+        if (addTicRecognition)
+            entity.Add(new RecognizedTicComponent());
         return entity;
     }
 

@@ -20,6 +20,7 @@ public class SimConfig
     public LightingConfig     Lighting  { get; set; } = new();
     public MovementConfig     Movement  { get; set; } = new();
     public NarrativeConfig    Narrative { get; set; } = new();
+    public DialogConfig       Dialog    { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -648,6 +649,54 @@ public class RotSystemConfig
     /// FeedingSystem checks RotTag before Billy eats; if set, ConsumedRottenFoodTag is applied.
     /// </summary>
     public float RotTagThreshold { get; set; } = 30f;
+}
+
+// ── Dialog system ─────────────────────────────────────────────────────────────
+
+/// <summary>
+/// Tuning knobs for the dialog phrase-selection and calcification pipeline.
+/// All thresholds are on a 0–100 drive scale unless noted otherwise.
+/// </summary>
+public class DialogConfig
+{
+    /// <summary>Number of times a fragment must be selected before calcification is eligible.</summary>
+    public int    CalcifyThreshold              { get; set; } = 8;
+
+    /// <summary>Fraction of uses that must share the dominant context before calcification fires (0.0–1.0).</summary>
+    public double CalcifyContextDominanceMin    { get; set; } = 0.70;
+
+    /// <summary>Number of times a listener must hear a fragment from one speaker for tic recognition.</summary>
+    public int    TicRecognitionThreshold       { get; set; } = 5;
+
+    /// <summary>Game-seconds within which a prior use of the same fragment incurs RecencyPenalty.</summary>
+    public int    RecencyWindowSeconds          { get; set; } = 300;
+
+    /// <summary>Score added per drive key whose valence ordinal matches the speaker's current drive level.</summary>
+    public int    ValenceMatchScore             { get; set; } = 5;
+
+    /// <summary>Score penalty applied when the fragment was used within RecencyWindowSeconds.</summary>
+    public int    RecencyPenalty                { get; set; } = -10;
+
+    /// <summary>Bonus score added when a fragment is calcified for the speaker.</summary>
+    public int    CalcifyBiasScore              { get; set; } = 3;
+
+    /// <summary>Upper bound of the "low" valence ordinal bucket (drive value 0–ValenceLowMaxValue maps to "low").</summary>
+    public int    ValenceLowMaxValue            { get; set; } = 33;
+
+    /// <summary>Upper bound of the "mid" valence ordinal bucket (ValenceLowMaxValue+1–ValenceMidMaxValue maps to "mid").</summary>
+    public int    ValenceMidMaxValue            { get; set; } = 66;
+
+    /// <summary>Game-days of disuse before a calcified fragment loses its calcified status.</summary>
+    public int    DecalcifyTimeoutDays          { get; set; } = 30;
+
+    /// <summary>Relative path to the corpus JSON file, searched from CWD upward.</summary>
+    public string CorpusPath                    { get; set; } = "docs/c2-content/dialog/corpus-starter.json";
+
+    /// <summary>Drive level (0–100) at which a drive is considered elevated for context selection.</summary>
+    public int    DriveContextThreshold         { get; set; } = 60;
+
+    /// <summary>Per-tick probability (0–1) that an in-range NPC pair attempts dialog.</summary>
+    public double DialogAttemptProbability      { get; set; } = 0.05;
 }
 
 // ── Social systems ────────────────────────────────────────────────────────────

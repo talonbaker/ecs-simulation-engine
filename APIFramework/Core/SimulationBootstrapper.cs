@@ -5,6 +5,7 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
 using APIFramework.Systems.Coupling;
+using APIFramework.Systems.Dialog;
 using APIFramework.Systems.Lighting;
 using APIFramework.Systems.Movement;
 using APIFramework.Systems.Narrative;
@@ -102,6 +103,17 @@ public class SimulationBootstrapper
     /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
     public NarrativeEventBus NarrativeBus { get; }
 
+    // ── Dialog services ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Loaded phrase corpus. Null when the corpus file could not be located at boot.
+    /// Dialog systems are skipped when null.
+    /// </summary>
+    public DialogCorpusService? CorpusService { get; private set; }
+
+    /// <summary>Queue shared between DialogContextDecisionSystem and DialogFragmentRetrievalSystem.</summary>
+    public PendingDialogQueue PendingDialogQueue { get; }
+
     /// <summary>
     /// Primary constructor — accepts any IConfigProvider.
     /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
@@ -159,6 +171,20 @@ public class SimulationBootstrapper
 
         // Narrative services
         NarrativeBus = new NarrativeEventBus();
+
+        // Dialog services
+        PendingDialogQueue = new PendingDialogQueue();
+        var corpusPath = DialogCorpusService.FindCorpusFile(Config.Dialog.CorpusPath);
+        if (corpusPath != null)
+        {
+            try   { CorpusService = DialogCorpusService.LoadFromFile(corpusPath); }
+            catch (Exception ex)
+            { Console.WriteLine($"[Dialog] Corpus load failed: {ex.Message} — dialog systems disabled."); }
+        }
+        else
+        {
+            Console.WriteLine($"[Dialog] Corpus file '{Config.Dialog.CorpusPath}' not found — dialog systems disabled.");
+        }
 
         RegisterSystems();
         if (worldDefinitionPath != null)
@@ -262,6 +288,17 @@ public class SimulationBootstrapper
         // Narrative — runs last so all state has settled; emits candidates via NarrativeBus
         Engine.AddSystem(new NarrativeEventDetector(
             NarrativeBus, ProximityBus, RoomMembership, Config.Narrative),        SystemPhase.Narrative);
+
+        // Dialog — after Narrative so final drive state is visible
+        if (CorpusService != null)
+        {
+            var decisionSys   = new DialogContextDecisionSystem(PendingDialogQueue, ProximityBus, Config.Dialog, Random);
+            var retrievalSys  = new DialogFragmentRetrievalSystem(PendingDialogQueue, CorpusService, ProximityBus, Config.Dialog);
+            var calcifySys    = new DialogCalcifySystem(Config.Dialog);
+            Engine.AddSystem(decisionSys,  SystemPhase.Dialog);
+            Engine.AddSystem(retrievalSys, SystemPhase.Dialog);
+            Engine.AddSystem(calcifySys,   SystemPhase.Dialog);
+        }
     }
 
     // ── Human count ───────────────────────────────────────────────────────────
