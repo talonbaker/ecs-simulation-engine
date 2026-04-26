@@ -24,6 +24,7 @@ public class SimConfig
     public ChronicleConfig        Chronicle      { get; set; } = new();
     public DialogConfig           Dialog         { get; set; } = new();
     public ActionSelectionConfig  ActionSelection { get; set; } = new();
+    public StressConfig           Stress          { get; set; } = new();
     public ScheduleConfig         Schedule        { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
@@ -1008,6 +1009,53 @@ public class ActionSelectionConfig
 
     /// <summary>Tiles the avoidance flee target is pushed away from the threat. Default 4.</summary>
     public int    AvoidStandoffDistance         { get; set; } = 4;
+}
+
+// ── Stress system ─────────────────────────────────────────────────────────────
+
+public class StressConfig
+{
+    /// <summary>AcuteLevel gain per SuppressionTick event (before neuroticism scaling). Default 1.5.</summary>
+    public double SuppressionStressGain         { get; set; } = 1.5;
+
+    /// <summary>Drive.Current must exceed Drive.Baseline by this much to count as a spike. Default 25.</summary>
+    public int    DriveSpikeStressDelta         { get; set; } = 25;
+
+    /// <summary>AcuteLevel gain per drive spike per tick (before neuroticism scaling). Default 2.0.</summary>
+    public double DriveSpikeStressGain          { get; set; } = 2.0;
+
+    /// <summary>AcuteLevel gain per social conflict event (before neuroticism scaling). Default 3.0.</summary>
+    public double SocialConflictStressGain      { get; set; } = 3.0;
+
+    /// <summary>AcuteLevel lost per tick to natural decay. Fractional; accumulated internally. Default 0.05.</summary>
+    public double AcuteDecayPerTick             { get; set; } = 0.05;
+
+    /// <summary>AcuteLevel threshold above which StressedTag is applied. Default 60.</summary>
+    public int    StressedTagThreshold          { get; set; } = 60;
+
+    /// <summary>AcuteLevel threshold above which OverwhelmedTag is applied. Default 85.</summary>
+    public int    OverwhelmedTagThreshold       { get; set; } = 85;
+
+    /// <summary>ChronicLevel threshold above which BurningOutTag is applied. Default 70.</summary>
+    public int    BurningOutTagThreshold        { get; set; } = 70;
+
+    /// <summary>Days BurningOutTag remains after ChronicLevel drops below threshold. Default 3.</summary>
+    public int    BurningOutCooldownDays        { get; set; } = 3;
+
+    /// <summary>Base magnitude of the extra SuppressionTick pushed when AcuteLevel ≥ StressedTagThreshold. Default 1.0.</summary>
+    public double StressAmplificationMagnitude  { get; set; } = 1.0;
+
+    /// <summary>
+    /// Fraction of AcuteLevel added to the volatility multiplier in DriveDynamicsSystem.
+    /// 0.5 means max stress (100) doubles drive volatility. Default 0.5.
+    /// </summary>
+    public double StressVolatilityScale         { get; set; } = 0.5;
+
+    /// <summary>
+    /// Per point of Neuroticism, stress gain is multiplied by (1 + N × factor).
+    /// Range: Neuroticism –2..+2 → factor 0.6..1.4 at default 0.2.
+    /// </summary>
+    public double NeuroticismStressFactor       { get; set; } = 0.2;
 }
 
 // ── Schedule system ───────────────────────────────────────────────────────────

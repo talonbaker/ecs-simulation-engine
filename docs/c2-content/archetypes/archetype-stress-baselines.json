@@ -1,0 +1,14 @@
+{
+  "archetypes": [
+    { "archetypeId": "the-cynic",            "chronicLevel": 20 },
+    { "archetypeId": "the-vent",             "chronicLevel": 50 },
+    { "archetypeId": "the-recovering",       "chronicLevel": 60 },
+    { "archetypeId": "the-hermit",           "chronicLevel": 30 },
+    { "archetypeId": "the-climber",          "chronicLevel": 50 },
+    { "archetypeId": "the-newbie",           "chronicLevel": 40 },
+    { "archetypeId": "the-old-hand",         "chronicLevel": 30 },
+    { "archetypeId": "the-affair",           "chronicLevel": 60 },
+    { "archetypeId": "the-founders-nephew",  "chronicLevel": 25 },
+    { "archetypeId": "the-crush",            "chronicLevel": 35 }
+  ]
+}

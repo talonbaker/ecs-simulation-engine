@@ -25,6 +25,7 @@ public class DriveDynamicsSystem : ISystem
     private readonly SocialSystemConfig _cfg;
     private readonly SimulationClock    _clock;
     private readonly SeededRandom       _rng;
+    private readonly StressConfig?      _stressCfg;
 
     // Per-entity fractional accumulators for each of the 8 drives.
     // Key = entity Guid; value = double[8] one slot per canonical drive index.
@@ -32,11 +33,13 @@ public class DriveDynamicsSystem : ISystem
 
     private const int DriveCount = 8;
 
-    public DriveDynamicsSystem(SocialSystemConfig cfg, SimulationClock clock, SeededRandom rng)
+    public DriveDynamicsSystem(SocialSystemConfig cfg, SimulationClock clock, SeededRandom rng,
+        StressConfig? stressCfg = null)
     {
-        _cfg   = cfg;
-        _clock = clock;
-        _rng   = rng;
+        _cfg       = cfg;
+        _clock     = clock;
+        _rng       = rng;
+        _stressCfg = stressCfg;
     }
 
     public void Update(EntityManager em, float deltaTime)
@@ -60,6 +63,14 @@ public class DriveDynamicsSystem : ISystem
             // Neuroticism –2..+2 → volatility multiplier 0..2
             double neuroMult     = Math.Clamp(1.0 + 0.5 * personality.Neuroticism, 0.0, 2.0);
             double volatilityMax = _cfg.DriveVolatilityScale * neuroMult;
+
+            // Stress amplification: high acute stress increases drive volatility
+            if (_stressCfg != null && entity.Has<StressComponent>())
+            {
+                double stressMult = 1.0 + entity.Get<StressComponent>().AcuteLevel
+                                         / 100.0 * _stressCfg.StressVolatilityScale;
+                volatilityMax *= stressMult;
+            }
 
             drives.Belonging.Current  = Apply(0, acc, drives.Belonging,  "belonging",  dayFraction, volatilityMax);
             drives.Status.Current     = Apply(1, acc, drives.Status,     "status",     dayFraction, volatilityMax);
