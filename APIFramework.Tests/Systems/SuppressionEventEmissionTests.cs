@@ -188,7 +188,7 @@ public class SuppressionEventEmissionTests
         spatial.Register(npc, 5, 5);
 
         var sys = new ActionSelectionSystem(spatial, new EntityRoomMembership(), queue,
-            new SeededRandom(42), cfg, em);
+            new SeededRandom(42), cfg, new ScheduleConfig(), em);
         sys.Update(em, 1f);
 
         // Verify: the system ran and NPC has an intent
@@ -246,7 +246,7 @@ public class SuppressionEventEmissionTests
         spatial.Register(npc, 5, 5);
 
         var sys = new ActionSelectionSystem(spatial, new EntityRoomMembership(), queue,
-            new SeededRandom(42), cfg, em);
+            new SeededRandom(42), cfg, new ScheduleConfig(), em);
         sys.Update(em, 1f);
 
         var signals = queue.DrainAll();

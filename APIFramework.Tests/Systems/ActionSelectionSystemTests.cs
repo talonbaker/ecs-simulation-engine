@@ -41,7 +41,7 @@ public class ActionSelectionSystemTests
         ActionSelectionConfig? cfg = null,
         int seed = 42) =>
         new(spatial, new EntityRoomMembership(), queue, new SeededRandom(seed),
-            cfg ?? DefaultCfg(), em);
+            cfg ?? DefaultCfg(), new ScheduleConfig(), em);
 
     /// <summary>Creates an NPC with SocialDrivesComponent and places it at (5, 5).</summary>
     private static Entity SpawnNpc(EntityManager em, ISpatialIndex spatial,

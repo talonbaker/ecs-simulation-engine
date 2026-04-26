@@ -273,6 +273,8 @@ public class SimulationBootstrapper
 
         // PreUpdate — invariant enforcement; always first
         Engine.AddSystem(Invariants,                                               SystemPhase.PreUpdate);
+        // Schedule spawner: attach routines to NPCs that lack one (runs every tick, idempotent).
+        Engine.AddSystem(new ScheduleSpawnerSystem(),                              SystemPhase.PreUpdate);
 
         // Stress initialization — attaches StressComponent to newly-spawned NPCs that lack one.
         Engine.AddSystem(
@@ -285,6 +287,8 @@ public class SimulationBootstrapper
 
         // Condition — derive sensation tags from physiology values
         Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition),  SystemPhase.Condition);
+        // Schedule: resolve active block before ActionSelectionSystem reads it.
+        Engine.AddSystem(new ScheduleSystem(Clock),                                SystemPhase.Condition);
 
         // Cognition — process conditions into emotions and drive scores
         Engine.AddSystem(new MoodSystem(sys.Mood),                                SystemPhase.Cognition);
@@ -293,7 +297,7 @@ public class SimulationBootstrapper
         // Social cognition — drive dynamics, action selection, willpower, relationship lifecycle
         Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random, Config.Stress), SystemPhase.Cognition);
         Engine.AddSystem(new ActionSelectionSystem(
-            SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, EntityManager),
+            SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, Config.Schedule, EntityManager),
                                                                                    SystemPhase.Cognition);
         Engine.AddSystem(new WillpowerSystem(Config.Social, WillpowerEvents),      SystemPhase.Cognition);
         Engine.AddSystem(RelationshipLifecycleSystem.LoadFromFile(Config.Social),  SystemPhase.Cognition);

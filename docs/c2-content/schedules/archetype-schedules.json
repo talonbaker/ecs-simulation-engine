@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypeSchedules": [
+    {
+      "archetypeId": "the-vent",
+      "blocks": [
+        { "startHour":  6.0,  "endHour":  8.0,  "anchorId": "the-parking-lot",    "activity": "outside"  },
+        { "startHour":  8.0,  "endHour": 10.5,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 10.5,  "endHour": 10.75, "anchorId": "the-microwave",      "activity": "break"    },
+        { "startHour": 10.75, "endHour": 12.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 12.0,  "endHour": 12.75, "anchorId": "the-microwave",      "activity": "lunch"    },
+        { "startHour": 12.75, "endHour": 17.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 17.0,  "endHour":  6.0,  "anchorId": "the-parking-lot",    "activity": "sleeping" }
+      ]
+    },
+    {
+      "archetypeId": "the-hermit",
+      "blocks": [
+        { "startHour":  6.0,  "endHour":  7.5,  "anchorId": "the-parking-lot",    "activity": "outside"  },
+        { "startHour":  7.5,  "endHour": 12.0,  "anchorId": "the-it-closet",      "activity": "atDesk"   },
+        { "startHour": 12.0,  "endHour": 12.5,  "anchorId": "the-it-closet",      "activity": "lunch"    },
+        { "startHour": 12.5,  "endHour": 18.0,  "anchorId": "the-it-closet",      "activity": "atDesk"   },
+        { "startHour": 18.0,  "endHour":  6.0,  "anchorId": "the-parking-lot",    "activity": "sleeping" }
+      ]
+    },
+    {
+      "archetypeId": "the-climber",
+      "blocks": [
+        { "startHour":  6.0,  "endHour":  7.75, "anchorId": "the-parking-lot",    "activity": "outside"  },
+        { "startHour":  7.75, "endHour": 10.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 10.0,  "endHour": 11.0,  "anchorId": "the-conference-room","activity": "meeting"  },
+        { "startHour": 11.0,  "endHour": 13.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 13.0,  "endHour": 14.0,  "anchorId": "the-conference-room","activity": "meeting"  },
+        { "startHour": 14.0,  "endHour": 17.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 17.0,  "endHour":  6.0,  "anchorId": "the-parking-lot",    "activity": "sleeping" }
+      ]
+    },
+    {
+      "archetypeId": "the-cynic",
+      "blocks": [
+        { "startHour":  6.0,  "endHour":  8.0,  "anchorId": "the-parking-lot",    "activity": "outside"  },
+        { "startHour":  8.0,  "endHour": 10.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 10.0,  "endHour": 10.5,  "anchorId": "the-parking-lot",    "activity": "break"    },
+        { "startHour": 10.5,  "endHour": 13.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 13.0,  "endHour": 14.0,  "anchorId": "the-parking-lot",    "activity": "lunch"    },
+        { "startHour": 14.0,  "endHour": 17.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 17.0,  "endHour":  6.0,  "anchorId": "the-parking-lot",    "activity": "sleeping" }
+      ]
+    },
+    {
+      "archetypeId": "the-newbie",
+      "blocks": [
+        { "startHour":  6.0,  "endHour":  7.5,  "anchorId": "the-parking-lot",    "activity": "outside"  },
+        { "startHour":  7.5,  "endHour": 10.5,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 10.5,  "endHour": 10.75, "anchorId": "the-microwave",      "activity": "break"    },
+        { "startHour": 10.75, "endHour": 12.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 12.0,  "endHour": 13.0,  "anchorId": "the-microwave",      "activity": "lunch"    },
+        { "startHour": 13.0,  "endHour": 17.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 17.0,  "endHour":  6.0,  "anchorId": "the-parking-lot",    "activity": "sleeping" }
+      ]
+    },
+    {
+      "archetypeId": "the-old-hand",
+      "blocks": [
+        { "startHour":  6.0,  "endHour":  8.0,  "anchorId": "the-parking-lot",    "activity": "outside"  },
+        { "startHour":  8.0,  "endHour": 10.5,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 10.5,  "endHour": 11.0,  "anchorId": "the-microwave",      "activity": "break"    },
+        { "startHour": 11.0,  "endHour": 13.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 13.0,  "endHour": 14.0,  "anchorId": "the-parking-lot",    "activity": "lunch"    },
+        { "startHour": 14.0,  "endHour": 17.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 17.0,  "endHour":  6.0,  "anchorId": "the-parking-lot",    "activity": "sleeping" }
+      ]
+    },
+    {
+      "archetypeId": "the-affair",
+      "blocks": [
+        { "startHour":  6.0,  "endHour":  8.0,  "anchorId": "the-parking-lot",    "activity": "outside"  },
+        { "startHour":  8.0,  "endHour": 11.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 11.0,  "endHour": 11.5,  "anchorId": "the-supply-closet",  "activity": "break"    },
+        { "startHour": 11.5,  "endHour": 13.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 13.0,  "endHour": 14.0,  "anchorId": "the-supply-closet",  "activity": "lunch"    },
+        { "startHour": 14.0,  "endHour": 17.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 17.0,  "endHour":  6.0,  "anchorId": "the-parking-lot",    "activity": "sleeping" }
+      ]
+    },
+    {
+      "archetypeId": "the-recovering",
+      "blocks": [
+        { "startHour":  6.0,  "endHour":  8.0,  "anchorId": "the-parking-lot",    "activity": "outside"  },
+        { "startHour":  8.0,  "endHour": 10.5,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 10.5,  "endHour": 11.0,  "anchorId": "the-parking-lot",    "activity": "break"    },
+        { "startHour": 11.0,  "endHour": 12.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 12.0,  "endHour": 13.0,  "anchorId": "the-parking-lot",    "activity": "lunch"    },
+        { "startHour": 13.0,  "endHour": 17.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 17.0,  "endHour":  6.0,  "anchorId": "the-parking-lot",    "activity": "sleeping" }
+      ]
+    },
+    {
+      "archetypeId": "the-founders-nephew",
+      "blocks": [
+        { "startHour":  6.0,  "endHour":  9.0,  "anchorId": "the-parking-lot",    "activity": "outside"  },
+        { "startHour":  9.0,  "endHour": 12.0,  "anchorId": "the-conference-room","activity": "atDesk"   },
+        { "startHour": 12.0,  "endHour": 14.0,  "anchorId": "the-parking-lot",    "activity": "lunch"    },
+        { "startHour": 14.0,  "endHour": 15.0,  "anchorId": "the-conference-room","activity": "atDesk"   },
+        { "startHour": 15.0,  "endHour":  6.0,  "anchorId": "the-parking-lot",    "activity": "sleeping" }
+      ]
+    },
+    {
+      "archetypeId": "the-crush",
+      "blocks": [
+        { "startHour":  6.0,  "endHour":  8.0,  "anchorId": "the-parking-lot",    "activity": "outside"  },
+        { "startHour":  8.0,  "endHour": 10.5,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 10.5,  "endHour": 11.0,  "anchorId": "the-microwave",      "activity": "break"    },
+        { "startHour": 11.0,  "endHour": 12.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 12.0,  "endHour": 13.0,  "anchorId": "the-microwave",      "activity": "lunch"    },
+        { "startHour": 13.0,  "endHour": 17.0,  "anchorId": "the-window",         "activity": "atDesk"   },
+        { "startHour": 17.0,  "endHour":  6.0,  "anchorId": "the-parking-lot",    "activity": "sleeping" }
+      ]
+    }
+  ]
+}

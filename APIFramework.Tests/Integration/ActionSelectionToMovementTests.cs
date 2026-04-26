@@ -71,7 +71,7 @@ public class ActionSelectionToMovementTests
 
         var actionSys = new ActionSelectionSystem(
             spatial, new EntityRoomMembership(), wq,
-            new SeededRandom(42), DefaultActionCfg(), em);
+            new SeededRandom(42), DefaultActionCfg(), new ScheduleConfig(), em);
         var pathSys = MakePathfinder(em);
 
         actionSys.Update(em, 1f);
@@ -130,7 +130,7 @@ public class ActionSelectionToMovementTests
 
         var actionSys = new ActionSelectionSystem(
             spatial, new EntityRoomMembership(), wq,
-            new SeededRandom(42), DefaultActionCfg(), em);
+            new SeededRandom(42), DefaultActionCfg(), new ScheduleConfig(), em);
         var pathSys = MakePathfinder(em);
 
         actionSys.Update(em, 1f);
