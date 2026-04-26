@@ -12,8 +12,16 @@ namespace APIFramework.Systems;
 public class WillpowerEventQueue
 {
     private readonly ConcurrentQueue<WillpowerEventSignal> _queue = new();
+    private IReadOnlyList<WillpowerEventSignal> _lastDrainedBatch = System.Array.Empty<WillpowerEventSignal>();
 
     public void Enqueue(WillpowerEventSignal signal) => _queue.Enqueue(signal);
+
+    /// <summary>
+    /// The batch of signals returned by the most recent <see cref="DrainAll"/> call.
+    /// StressSystem (running at Cleanup phase, after WillpowerSystem) reads this to count
+    /// suppression events processed this tick. Empty until WillpowerSystem runs.
+    /// </summary>
+    public IReadOnlyList<WillpowerEventSignal> LastDrainedBatch => _lastDrainedBatch;
 
     /// <summary>Removes and returns all pending signals. Called once per tick by WillpowerSystem.</summary>
     public List<WillpowerEventSignal> DrainAll()
@@ -21,6 +29,7 @@ public class WillpowerEventQueue
         var result = new List<WillpowerEventSignal>();
         while (_queue.TryDequeue(out var sig))
             result.Add(sig);
+        _lastDrainedBatch = result;
         return result;
     }
 }

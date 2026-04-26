@@ -274,6 +274,10 @@ public class SimulationBootstrapper
         // PreUpdate — invariant enforcement; always first
         Engine.AddSystem(Invariants,                                               SystemPhase.PreUpdate);
 
+        // Stress initialization — attaches StressComponent to newly-spawned NPCs that lack one.
+        Engine.AddSystem(
+            new StressInitializerSystem(StressInitializerSystem.LoadBaselines()),  SystemPhase.PreUpdate);
+
         // Physiology — raw biological resource drain/restore
         Engine.AddSystem(new MetabolismSystem(),                                   SystemPhase.Physiology);
         Engine.AddSystem(new EnergySystem(sys.Energy),                            SystemPhase.Physiology);
@@ -287,7 +291,7 @@ public class SimulationBootstrapper
         Engine.AddSystem(new BrainSystem(sys.Brain, Clock),                       SystemPhase.Cognition);
 
         // Social cognition — drive dynamics, action selection, willpower, relationship lifecycle
-        Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random),   SystemPhase.Cognition);
+        Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random, Config.Stress), SystemPhase.Cognition);
         Engine.AddSystem(new ActionSelectionSystem(
             SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, EntityManager),
                                                                                    SystemPhase.Cognition);
@@ -344,6 +348,11 @@ public class SimulationBootstrapper
             Engine.AddSystem(retrievalSys, SystemPhase.Dialog);
             Engine.AddSystem(calcifySys,   SystemPhase.Dialog);
         }
+
+        // Cleanup — stress accumulation; runs after WillpowerSystem (Cognition) and
+        // NarrativeEventDetector (Narrative) so all tick state has settled.
+        Engine.AddSystem(
+            new StressSystem(Config.Stress, Clock, WillpowerEvents, NarrativeBus), SystemPhase.Cleanup);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────

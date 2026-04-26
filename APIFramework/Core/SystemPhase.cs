@@ -89,6 +89,12 @@ public enum SystemPhase
     /// Phase order: DialogContextDecisionSystem → DialogFragmentRetrievalSystem → DialogCalcifySystem.
     /// </summary>
     Dialog      = 75,
+    /// <summary>
+    /// Post-cognition cleanup. Runs after Dialog so all state (drives, willpower, narrative,
+    /// dialog) has settled for the tick. StressSystem runs here: it reads WillpowerSystem's
+    /// LastDrainedBatch (populated at Cognition) and NarrativeBus events (populated at Narrative).
+    /// </summary>
+    Cleanup     = 80,
     PostUpdate = 100,
 }
 
