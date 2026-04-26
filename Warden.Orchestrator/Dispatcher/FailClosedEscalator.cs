@@ -105,6 +105,25 @@ public static class FailClosedEscalator
                                        "Reconsider scope before any follow-up.",
                     TerminalOutcome:   OutcomeCode.Blocked),
 
+            (OutcomeCode.Blocked, BlockReason.MissingReferenceFile) =>
+                new EscalationVerdict(
+                    ProceedDownstream: false,
+                    HumanMessage:      $"{workerId}: a reference file the spec named was not " +
+                                       "available in the prompt context. Sonnets dispatched via " +
+                                       "the orchestrator's API path cannot read filesystem files; " +
+                                       "either inline the file content into the spec or run this " +
+                                       "packet via Claude Code instead.",
+                    TerminalOutcome:   OutcomeCode.Blocked),
+
+            // Catch-all for any other Blocked combination — keep behaviour fail-closed but
+            // do not crash. Surfaces the unknown reason verbatim so the operator can act on it.
+            (OutcomeCode.Blocked, _) =>
+                new EscalationVerdict(
+                    ProceedDownstream: false,
+                    HumanMessage:      $"{workerId}: blocked with reason={reason}. " +
+                                       "No state-machine branch defined; treating as terminal blocked.",
+                    TerminalOutcome:   OutcomeCode.Blocked),
+
             _ => throw new InvalidOperationException(
                 $"Unhandled outcome/reason combination: outcome={outcome}, reason={reason}")
         };

@@ -91,13 +91,23 @@ public sealed class PromptCacheManager
 
         var system = new List<ContentBlock>();
 
-        // Slab 1 � role frame
-        system.Add(new TextBlock(_source?.GetRoleFrameText() ?? string.Empty, cacheControl));
+        // Slab 1 — role frame (Sonnet vs Haiku); skip if empty (cache_control on empty text is invalid).
+        // The model parameter selects the tier-appropriate role frame: Sonnet engineers consume
+        // SpecPackets and produce SonnetResults; Haiku validators consume Scenarios and produce
+        // HaikuResults. Sharing one role frame caused Haikus to respond as Sonnets.
+        var isHaiku   = model.Name.Contains("haiku", StringComparison.OrdinalIgnoreCase);
+        var roleFrame = (isHaiku
+            ? _source?.GetHaikuRoleFrameText()
+            : _source?.GetRoleFrameText()) ?? string.Empty;
+        if (!string.IsNullOrEmpty(roleFrame))
+            system.Add(new TextBlock(roleFrame, cacheControl));
 
-        // Slab 2� corpus (engine docs + schemas)
-        system.Add(new TextBlock(_source?.GetCorpusText() ?? string.Empty, cacheControl));
+        // Slab 2 — corpus
+        var corpus = _source?.GetCorpusText() ?? string.Empty;
+        if (!string.IsNullOrEmpty(corpus))
+            system.Add(new TextBlock(corpus, cacheControl));
 
-        // Slab 3 � mission slabs (optional, each with the same TTL)
+        // Slab 3 — mission slabs (caller-supplied; cannot be empty per existing validation)
         if (missionSlabs is not null)
             foreach (var slab in missionSlabs)
                 system.Add(new TextBlock(slab.Text, cacheControl));

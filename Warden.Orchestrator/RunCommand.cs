@@ -161,7 +161,30 @@ public static class RunCommand
 
         var ledger = new InfraLedger(ledgerPath);
         var budget = new BudgetGuard(budgetUsd);
-        var cache  = new PromptCacheManager();
+
+        // Real-API runs need the cached prefix source (role frame + engine corpus + schemas)
+        // so the Sonnet's system prompt actually contains the SonnetResult schema and instructions.
+        // Mock and dry-run paths use the empty-slab constructor since their canned responses
+        // don't depend on the prompt content.
+        PromptCacheManager cache;
+        if (mockMode || dryRun)
+        {
+            cache = new PromptCacheManager();
+        }
+        else
+        {
+            var manifestPath = Path.Combine(
+                AppContext.BaseDirectory, "Cache", "cached-corpus.manifest.json");
+            // Fall back to the in-repo manifest if the deployed copy isn't alongside the binary
+            // (typical when running via `dotnet run --project Warden.Orchestrator`).
+            if (!File.Exists(manifestPath))
+                manifestPath = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "Warden.Orchestrator", "Cache", "cached-corpus.manifest.json");
+            var baseDir      = Directory.GetCurrentDirectory();
+            var prefixSource = new CachedPrefixSource(manifestPath, baseDir);
+            cache = new PromptCacheManager(prefixSource);
+        }
 
         IAnthropicClient client;
         if (mockMode)
@@ -245,7 +268,10 @@ public static class RunCommand
             Console.WriteLine($"[run] Dispatching {pendingBatches.Sum(b => b.Scenarios.Count)} Haiku scenario(s)…");
 
             var batchLog  = NullLoggerFactory.Instance.CreateLogger<BatchScheduler>();
-            var cot2      = new InfraCoT(runDir);
+            // InfraCoT is initialized with the runs root (not runDir), so it composes
+            // <root>/<runId>/<workerId>/... internally. Passing runDir would produce a
+            // doubled runId in the path (runs/<runId>/<runId>/haiku-NN/...).
+            var cot2      = new InfraCoT(root);
             var scheduler = new BatchScheduler(client, cache, cot2, ledger, batchLog);
             var haiku     = new HaikuDispatcher(scheduler);
 

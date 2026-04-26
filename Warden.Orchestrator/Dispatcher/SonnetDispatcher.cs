@@ -105,6 +105,11 @@ public sealed class SonnetDispatcher
                 "Response contained no text block.");
         }
 
+        // Defensive: strip any prose/markdown wrapping. The role frame instructs the model
+        // to return raw JSON, but if it wraps in ```json fences or adds preamble, extract
+        // the JSON object between the first '{' and the last '}' before parsing.
+        text = ExtractJsonObject(text);
+
         SonnetResult result;
         try
         {
@@ -175,6 +180,23 @@ public sealed class SonnetDispatcher
     }
 
     // -- Helpers ------------------------------------------------------------------
+
+    /// <summary>
+    /// Strips prose and markdown code fences from a Sonnet response, extracting the
+    /// JSON object between the first '{' and the last '}'. Defensive — the role frame
+    /// instructs the model to return raw JSON, but small models (or rare drift) may
+    /// add preamble or wrap in ```json fences. Returns the original text unchanged if
+    /// no balanced braces are found, letting downstream JSON parsing fail with the
+    /// original error message.
+    /// </summary>
+    private static string ExtractJsonObject(string text)
+    {
+        var start = text.IndexOf('{');
+        if (start < 0) return text;
+        var end = text.LastIndexOf('}');
+        if (end <= start) return text;
+        return text.Substring(start, end - start + 1);
+    }
 
     private static SonnetResult MakeStubResult(string specId, string workerId, OutcomeCode outcome)
         => new()

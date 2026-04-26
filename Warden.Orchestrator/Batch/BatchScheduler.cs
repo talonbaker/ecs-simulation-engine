@@ -196,6 +196,14 @@ public sealed class BatchScheduler
             return BlockedEntry(scenarioId, batchId, haikuId);
         }
 
+        // Defensive: strip prose/markdown wrapping. The role frame instructs the model
+        // to return raw JSON; this extracts the JSON object between the first '{' and
+        // the last '}' to handle any preamble or code-fence drift.
+        var jsonStart = text.IndexOf('{');
+        var jsonEnd   = text.LastIndexOf('}');
+        if (jsonStart >= 0 && jsonEnd > jsonStart)
+            text = text.Substring(jsonStart, jsonEnd - jsonStart + 1);
+
         HaikuResult parsed;
         try
         {

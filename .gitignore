@@ -6,6 +6,7 @@
 # Simulation run outputs — generated locally, never committed
 sim-runs/
 designer-files/
+runs/
 
 # User-specific files
 *.rsuser
