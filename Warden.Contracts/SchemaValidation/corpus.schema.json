@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "corpus.schema.json",
+  "title": "Phrase Corpus",
+  "description": "Schema for the dialog phrase corpus file (v0.1.0).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "fragments"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "0.1.0" },
+    "fragments": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": { "$ref": "#/$defs/fragment" }
+    }
+  },
+  "$defs": {
+    "fragment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text", "register", "context", "valenceProfile", "noteworthiness"],
+      "properties": {
+        "id":       { "type": "string", "maxLength": 64 },
+        "text":     { "type": "string", "maxLength": 200 },
+        "register": { "type": "string",
+                      "enum": ["formal", "casual", "crass", "clipped", "academic", "folksy"] },
+        "context":  { "type": "string",
+                      "enum": ["greeting", "refusal", "agreement", "complaint",
+                               "flirt", "deflect", "lashOut", "share",
+                               "brushOff", "encouragement", "thanks",
+                               "apology", "acknowledge"] },
+        "valenceProfile": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "belonging":  { "type": "string", "enum": ["low", "mid", "high"] },
+            "status":     { "type": "string", "enum": ["low", "mid", "high"] },
+            "affection":  { "type": "string", "enum": ["low", "mid", "high"] },
+            "irritation": { "type": "string", "enum": ["low", "mid", "high"] },
+            "attraction": { "type": "string", "enum": ["low", "mid", "high"] },
+            "trust":      { "type": "string", "enum": ["low", "mid", "high"] },
+            "suspicion":  { "type": "string", "enum": ["low", "mid", "high"] },
+            "loneliness": { "type": "string", "enum": ["low", "mid", "high"] }
+          }
+        },
+        "relationshipFit": {
+          "type": "array",
+          "maxItems": 7,
+          "items": {
+            "type": "string",
+            "enum": ["closeFriend", "colleague", "rival", "stranger",
+                    "romantic", "superior", "subordinate"]
+          }
+        },
+        "noteworthiness": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    }
+  }
+}

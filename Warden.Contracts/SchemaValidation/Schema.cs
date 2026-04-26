@@ -29,7 +29,10 @@ public enum Schema
     AiCommandBatch,
 
     /// <summary><c>world-definition.schema.json</c> — <c>WorldDefinitionDto</c></summary>
-    WorldDefinition
+    WorldDefinition,
+
+    /// <summary><c>corpus.schema.json</c> — dialog phrase corpus</summary>
+    Corpus
 }
 
 /// <summary>
@@ -45,4 +48,5 @@ public static class SchemaVersions
     public const string HaikuResult   = "0.1.0";
     public const string AiCommandBatch  = "0.1.0";
     public const string WorldDefinition = "0.1.0";
+    public const string Corpus          = "0.1.0";
 }

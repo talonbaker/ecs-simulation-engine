@@ -1,4 +1,5 @@
 using System;
+using APIFramework.Systems.Dialog;
 
 namespace APIFramework.Systems.Spatial;
 
@@ -18,10 +19,13 @@ public sealed class ProximityEventBus
     public event Action<ProximityVisibleFromHere>?         OnVisibleFromHere;
     public event Action<RoomMembershipChanged>?            OnRoomMembershipChanged;
 
+    public event Action<SpokenFragmentEvent>? OnSpokenFragment;
+
     public void RaiseEnteredConversationRange(ProximityEnteredConversationRange e) => OnEnteredConversationRange?.Invoke(e);
     public void RaiseLeftConversationRange(ProximityLeftConversationRange e)       => OnLeftConversationRange?.Invoke(e);
     public void RaiseEnteredRoom(ProximityEnteredRoom e)                           => OnEnteredRoom?.Invoke(e);
     public void RaiseLeftRoom(ProximityLeftRoom e)                                 => OnLeftRoom?.Invoke(e);
     public void RaiseVisibleFromHere(ProximityVisibleFromHere e)                   => OnVisibleFromHere?.Invoke(e);
     public void RaiseRoomMembershipChanged(RoomMembershipChanged e)                => OnRoomMembershipChanged?.Invoke(e);
+    public void RaiseSpokenFragment(SpokenFragmentEvent e)                         => OnSpokenFragment?.Invoke(e);
 }

@@ -493,5 +493,35 @@
     "driveVolatilityScale": 1.0,
     "willpowerSleepRegenPerTick": 1,
     "relationshipIntensityDecayPerTick": 0.05
+  },
+
+  // ── Dialog system ──────────────────────────────────────────────────────────
+  "dialog": {
+    // Fragment use count before calcification eligibility check
+    "calcifyThreshold":           8,
+    // Fraction of uses in dominant context required to calcify (0.0–1.0)
+    "calcifyContextDominanceMin": 0.70,
+    // Times listener must hear fragment from same speaker for tic recognition
+    "ticRecognitionThreshold":    5,
+    // Game-seconds within which a prior use incurs recency penalty
+    "recencyWindowSeconds":       300,
+    // Score per matching drive valence key
+    "valenceMatchScore":          5,
+    // Score penalty for recently-used fragment
+    "recencyPenalty":             -10,
+    // Bonus for calcified fragment
+    "calcifyBiasScore":           3,
+    // Drive value at or below this maps to "low" ordinal
+    "valenceLowMaxValue":         33,
+    // Drive value at or below this maps to "mid" ordinal (above: "high")
+    "valenceMidMaxValue":         66,
+    // Game-days of disuse before decalcification
+    "decalcifyTimeoutDays":       30,
+    // Relative path to corpus file (searched upward from CWD)
+    "corpusPath":                 "docs/c2-content/dialog/corpus-starter.json",
+    // Drive level (0–100) at which a drive triggers context selection
+    "driveContextThreshold":      60,
+    // Per-tick probability an in-range NPC pair attempts dialog
+    "dialogAttemptProbability":   0.05
   }
 }
