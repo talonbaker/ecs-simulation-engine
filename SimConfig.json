@@ -540,6 +540,32 @@
     "dialogAttemptProbability":   0.05
   },
 
+  // ── Stress system ──────────────────────────────────────────────────────────
+  "stress": {
+    // AcuteLevel gain per SuppressionTick event (before neuroticism scaling)
+    "suppressionStressGain":          1.5,
+    // Drive.Current must exceed Drive.Baseline by this much to count as a spike
+    "driveSpikeStressDelta":          25,
+    // AcuteLevel gain per drive spike per tick
+    "driveSpikeStressGain":           2.0,
+    // AcuteLevel gain per social conflict event (LeftRoomAbruptly on narrative bus)
+    "socialConflictStressGain":       3.0,
+    // AcuteLevel lost per tick to natural decay (fractional; accumulated internally)
+    "acuteDecayPerTick":              0.05,
+    // AcuteLevel thresholds for stress tags
+    "stressedTagThreshold":           60,
+    "overwhelmedTagThreshold":        85,
+    // ChronicLevel threshold for BurningOutTag (sticky for cooldownDays after drop)
+    "burningOutTagThreshold":         70,
+    "burningOutCooldownDays":         3,
+    // Base magnitude of extra SuppressionTick pushed when AcuteLevel >= StressedTagThreshold
+    "stressAmplificationMagnitude":   1.0,
+    // Fraction of AcuteLevel added to drive volatility multiplier (0.5 = max stress doubles volatility)
+    "stressVolatilityScale":          0.5,
+    // Per point of Neuroticism: stress gain *= (1 + N * factor); -2..+2 → 0.6..1.4 at 0.2
+    "neuroticismStressFactor":        0.2
+  },
+
   // ── Action selection ───────────────────────────────────────────────────────
   "actionSelection": {
     // Drive.Current must exceed this to enumerate candidates
