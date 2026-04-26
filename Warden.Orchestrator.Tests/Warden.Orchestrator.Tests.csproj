@@ -28,4 +28,13 @@
     <ProjectReference Include="..\Warden.Orchestrator\Warden.Orchestrator.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\docs\c2-content\world-definitions\office-starter.json"
+             CopyToOutputDirectory="PreserveNewest"
+             Link="docs\c2-content\world-definitions\office-starter.json" />
+    <Content Include="..\docs\c2-content\archetypes\archetypes.json"
+             CopyToOutputDirectory="PreserveNewest"
+             Link="docs\c2-content\archetypes\archetypes.json" />
+  </ItemGroup>
+
 </Project>

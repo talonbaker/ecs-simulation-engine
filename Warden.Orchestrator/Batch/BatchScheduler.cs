@@ -65,46 +65,43 @@ public sealed class BatchScheduler
         IReadOnlyList<ScenarioBatch> batches,
         CancellationToken ct)
     {
-        // Step 1: Flatten — hard limit of 25 enforced here
-        var allScenarios = batches.SelectMany(b => b.Scenarios).ToList();
+        // Step 1: Flatten — hard limit of 25 enforced here.
+        // Each entry carries its parent BatchId so scenarios from different batches
+        // with the same ScenarioId can coexist without key collisions.
+        var allScenarioPairs = batches
+            .SelectMany(b => b.Scenarios.Select(s => (BatchId: b.BatchId, Scenario: s)))
+            .ToList();
 
-        if (allScenarios.Count > 25)
+        if (allScenarioPairs.Count > 25)
             throw new InvalidOperationException(
-                $"Total scenario count {allScenarios.Count} exceeds the 25-scenario maximum. " +
+                $"Total scenario count {allScenarioPairs.Count} exceeds the 25-scenario maximum. " +
                 "The orchestrator must enforce this limit before calling RunAsync.");
 
-        if (allScenarios.Count == 0)
+        if (allScenarioPairs.Count == 0)
             return Array.Empty<HaikuResult>();
 
-        // Pre-assign haiku-NN IDs to every input scenario in stable input order
-        var haikuIdFor = allScenarios
-            .Select((s, i) => (s.ScenarioId, HaikuId: $"haiku-{i + 1:D2}"))
-            .ToDictionary(x => x.ScenarioId, x => x.HaikuId, StringComparer.Ordinal);
+        // Pre-assign haiku-NN IDs to every input scenario in stable input order.
+        // Keyed by composite (BatchId, ScenarioId) so two batches with overlapping
+        // scenario IDs each get distinct haiku-NN assignments.
+        var haikuIdFor = allScenarioPairs
+            .Select((p, i) => (Key: new ScenarioKey(p.BatchId, p.Scenario.ScenarioId), HaikuId: $"haiku-{i + 1:D2}"))
+            .ToDictionary(x => x.Key, x => x.HaikuId);
 
-        // Map every scenario back to its parent ScenarioBatch.BatchId. This is the
-        // value that gets stamped into HaikuResult.ParentBatchId — it must be the
-        // Sonnet-side scenarioBatch.batchId (e.g. "batch-smoke-01"), not the
-        // Anthropic apiSubmission.Id (e.g. "msgbatch_01..."). Two reasons:
-        //   1) The schema constrains parentBatchId to ^batch-[a-z0-9-]{1,48}$,
-        //      which Anthropic batch ids do not match.
-        //   2) The report aggregator joins Haikus to their parent Sonnet via this
-        //      field; the Sonnet's scenarioBatch.batchId is the correct join key.
-        // The Anthropic submission id is persisted separately to runs/<runId>/batch-id.txt.
-        var parentBatchIdFor = batches
-            .SelectMany(b => b.Scenarios.Select(s => (s.ScenarioId, b.BatchId)))
-            .ToDictionary(x => x.ScenarioId, x => x.BatchId, StringComparer.Ordinal);
-
-        // Step 2: Deduplicate by content hash
+        // Step 2: Deduplicate by content hash.
+        // uniquePairs: one entry per distinct scenario hash.
+        // dupToOrig: ScenarioKey → ScenarioKey for every suppressed duplicate.
         var deduper = new ScenarioDeduper(_log);
-        var (uniqueScenarios, dupToOrig) = deduper.Deduplicate(allScenarios);
+        var (uniquePairs, dupToOrig) = deduper.Deduplicate(allScenarioPairs);
 
-        // Step 3: Build one batch request (one entry per unique scenario)
-        var entries = uniqueScenarios
-            .Select(s => new BatchRequestEntry(
-                s.ScenarioId,
+        // Step 3: Build one batch request (one entry per unique scenario).
+        // custom_id is a composite "<batchId>::<scenarioId>" so Anthropic's result stream
+        // can be parsed back to the correct ScenarioKey without any side-channel lookup.
+        var entries = uniquePairs
+            .Select(p => new BatchRequestEntry(
+                BuildCompositeId(p.BatchId, p.Scenario.ScenarioId),
                 _cache.BuildRequest(
                     ModelId.HaikuV45,
-                    JsonSerializer.Serialize(s, JsonOptions.Wire),
+                    JsonSerializer.Serialize(p.Scenario, JsonOptions.Wire),
                     expectedTotalLatency: TimeSpan.FromMinutes(30))))
             .ToList();
 
@@ -115,7 +112,7 @@ public sealed class BatchScheduler
 
         _log.LogInformation(
             "Batch {BatchId} submitted for run {RunId}: {Unique} unique scenario(s), {Deduped} deduped.",
-            apiSubmission.Id, runId, uniqueScenarios.Count, dupToOrig.Count);
+            apiSubmission.Id, runId, uniquePairs.Count, dupToOrig.Count);
 
         await _cot.WriteBatchIdAsync(runId, apiSubmission.Id, ct).ConfigureAwait(false);
 
@@ -123,40 +120,39 @@ public sealed class BatchScheduler
         await _poller.PollUntilEndedAsync(_client, apiSubmission.Id, ct).ConfigureAwait(false);
 
         // Step 6: Stream, validate, and collect results for unique scenarios
-        var uniqueResults = new Dictionary<string, HaikuResult>(StringComparer.Ordinal);
+        var uniqueResults = new Dictionary<ScenarioKey, HaikuResult>();
 
         await foreach (var entry in _client
             .StreamBatchResultsAsync(apiSubmission.Id, ct)
             .ConfigureAwait(false))
         {
-            var scenarioId = entry.CustomId;
-            var haikuId    = haikuIdFor[scenarioId];
+            var key     = ParseCompositeCustomId(entry.CustomId);
+            var haikuId = haikuIdFor[key];
 
-            var parentBatchId = parentBatchIdFor[scenarioId];
             var result = entry.Result is SucceededResult succeeded
-                ? ParseSucceeded(succeeded, parentBatchId, haikuId, scenarioId)
-                : BlockedEntry(scenarioId, parentBatchId, haikuId);
+                ? ParseSucceeded(succeeded, key.BatchId, haikuId, key.ScenarioId)
+                : BlockedEntry(key.ScenarioId, key.BatchId, haikuId);
 
-            uniqueResults[scenarioId] = result;
+            uniqueResults[key] = result;
         }
 
         // Step 7: Write ledger (unique calls only), write CoT for all scenarios,
         //         reattach duplicates, and assemble the ordered output list
-        var finalResults = new List<HaikuResult>(allScenarios.Count);
+        var finalResults = new List<HaikuResult>(allScenarioPairs.Count);
 
-        foreach (var scenario in allScenarios)
+        foreach (var (batchId, scenario) in allScenarioPairs)
         {
-            var haikuId       = haikuIdFor[scenario.ScenarioId];
-            var parentBatchId = parentBatchIdFor[scenario.ScenarioId];
-            var isDup         = dupToOrig.TryGetValue(scenario.ScenarioId, out var origId);
+            var key     = new ScenarioKey(batchId, scenario.ScenarioId);
+            var haikuId = haikuIdFor[key];
+            var isDup   = dupToOrig.TryGetValue(key, out var origKey);
 
             HaikuResult result;
 
             if (!isDup)
             {
-                result = uniqueResults.TryGetValue(scenario.ScenarioId, out var r)
+                result = uniqueResults.TryGetValue(key, out var r)
                     ? r
-                    : BlockedEntry(scenario.ScenarioId, parentBatchId, haikuId);
+                    : BlockedEntry(scenario.ScenarioId, batchId, haikuId);
 
                 // Ledger: one line per unique Haiku call (AT-07)
                 await _ledger
@@ -169,15 +165,15 @@ public sealed class BatchScheduler
                 // The duplicate may belong to a different parent ScenarioBatch than
                 // the original (cross-Sonnet content dedup), so re-stamp ParentBatchId
                 // from the duplicate scenario's own parent.
-                var origResult = uniqueResults.TryGetValue(origId!, out var o)
+                var origResult = uniqueResults.TryGetValue(origKey, out var o)
                     ? o
-                    : BlockedEntry(origId!, parentBatchId, haikuId);
+                    : BlockedEntry(origKey.ScenarioId, origKey.BatchId, haikuIdFor[origKey]);
 
                 result = origResult with
                 {
                     ScenarioId    = scenario.ScenarioId,
                     WorkerId      = haikuId,
-                    ParentBatchId = parentBatchId
+                    ParentBatchId = batchId
                 };
             }
 
@@ -196,6 +192,33 @@ public sealed class BatchScheduler
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Encodes a composite Anthropic <c>custom_id</c> from the ScenarioBatch id and scenario id.
+    /// Validates against Anthropic's 64-character limit at construction time.
+    /// </summary>
+    private static string BuildCompositeId(string batchId, string scenarioId)
+    {
+        var composite = $"{batchId}::{scenarioId}";
+        if (composite.Length > 64)
+            throw new InvalidOperationException(
+                $"Composite custom_id '{composite}' exceeds Anthropic's 64-char limit. " +
+                $"Shorten the scenarioBatch.batchId in the upstream Sonnet result.");
+        return composite;
+    }
+
+    /// <summary>
+    /// Parses a composite <c>custom_id</c> back to its <see cref="ScenarioKey"/> components.
+    /// Uses <c>LastIndexOf</c> so a batchId containing <c>::</c> is handled correctly.
+    /// </summary>
+    private static ScenarioKey ParseCompositeCustomId(string customId)
+    {
+        var idx = customId.LastIndexOf("::", StringComparison.Ordinal);
+        if (idx < 0)
+            throw new InvalidOperationException(
+                $"Malformed custom_id '{customId}' — expected '<batchId>::<scenarioId>'.");
+        return new ScenarioKey(customId[..idx], customId[(idx + 2)..]);
+    }
 
     private HaikuResult ParseSucceeded(
         SucceededResult succeeded,

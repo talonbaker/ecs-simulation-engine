@@ -112,20 +112,23 @@ public sealed class MockAnthropic : IAnthropicClient
         string batchId,
         [EnumeratorCancellation] CancellationToken ct = default)
     {
-        List<string>? scenarioIds;
+        List<string>? customIds;
         lock (_batchScenarios)
         {
-            _batchScenarios.TryGetValue(batchId, out scenarioIds);
+            _batchScenarios.TryGetValue(batchId, out customIds);
         }
 
-        if (scenarioIds is null) yield break;
+        if (customIds is null) yield break;
 
-        foreach (var scenarioId in scenarioIds)
+        foreach (var customId in customIds)
         {
             ct.ThrowIfCancellationRequested();
 
-            var haiku   = _responses.GetHaikuResult(scenarioId) with { ParentBatchId = batchId };
-            var haiJson = JsonSerializer.Serialize(haiku, JsonOptions.Wire);
+            // custom_id is a composite "<batchId>::<scenarioId>"; strip the prefix so the
+            // canned-response lookup uses the plain scenarioId that the fixture files use.
+            var scenarioId = ExtractScenarioId(customId);
+            var haiku      = _responses.GetHaikuResult(scenarioId) with { ParentBatchId = batchId };
+            var haiJson    = JsonSerializer.Serialize(haiku, JsonOptions.Wire);
 
             var tokens = haiku.TokensUsed;
             var msg = new MessageResponse(
@@ -143,9 +146,15 @@ public sealed class MockAnthropic : IAnthropicClient
                                   OutputTokens:               tokens.Output));
 
             yield return new BatchResultEntry(
-                CustomId: scenarioId,
+                CustomId: customId,   // echo the original composite id back verbatim
                 Result:   new SucceededResult(msg));
         }
+    }
+
+    private static string ExtractScenarioId(string customId)
+    {
+        var idx = customId.LastIndexOf("::", StringComparison.Ordinal);
+        return idx >= 0 ? customId[(idx + 2)..] : customId;
     }
 
     // -- Helpers ------------------------------------------------------------------
