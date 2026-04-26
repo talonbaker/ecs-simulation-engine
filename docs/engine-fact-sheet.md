@@ -1,36 +1,63 @@
 ﻿# ECS Simulation Engine — Fact Sheet
 
 **SimVersion:** ECS Simulation Engine  v0.7.2
-**Generated:** 2026-04-25T03:33:18.6472302+00:00
+**Generated:** 2026-04-26T23:23:17.4922409+00:00
 **TelemetrySchema:** world-state.schema.json v0.1.0
 
 ## Registered Systems
 
 | # | System | Phase | PhaseOrder |
 |:--|:-------|:------|:-----------|
-| 1 | `InvariantSystem` | `PreUpdate` | 0 |
-| 2 | `MetabolismSystem` | `Physiology` | 10 |
-| 3 | `EnergySystem` | `Physiology` | 10 |
-| 4 | `BladderFillSystem` | `Physiology` | 10 |
-| 5 | `BiologicalConditionSystem` | `Condition` | 20 |
-| 6 | `MoodSystem` | `Cognition` | 30 |
-| 7 | `BrainSystem` | `Cognition` | 30 |
-| 8 | `FeedingSystem` | `Behavior` | 40 |
-| 9 | `DrinkingSystem` | `Behavior` | 40 |
-| 10 | `SleepSystem` | `Behavior` | 40 |
-| 11 | `DefecationSystem` | `Behavior` | 40 |
-| 12 | `UrinationSystem` | `Behavior` | 40 |
-| 13 | `InteractionSystem` | `Transit` | 50 |
-| 14 | `EsophagusSystem` | `Transit` | 50 |
-| 15 | `DigestionSystem` | `Transit` | 50 |
-| 16 | `SmallIntestineSystem` | `Elimination` | 55 |
-| 17 | `LargeIntestineSystem` | `Elimination` | 55 |
-| 18 | `ColonSystem` | `Elimination` | 55 |
-| 19 | `BladderSystem` | `Elimination` | 55 |
-| 20 | `RotSystem` | `World` | 60 |
-| 21 | `MovementSystem` | `World` | 60 |
+| 1 | `SpatialIndexSyncSystem` | `Spatial` | 5 |
+| 2 | `RoomMembershipSystem` | `Spatial` | 5 |
+| 3 | `SunSystem` | `Lighting` | 7 |
+| 4 | `LightSourceStateSystem` | `Lighting` | 7 |
+| 5 | `ApertureBeamSystem` | `Lighting` | 7 |
+| 6 | `IlluminationAccumulationSystem` | `Lighting` | 7 |
+| 7 | `ProximityEventSystem` | `Lighting` | 7 |
+| 8 | `LightingToDriveCouplingSystem` | `Coupling` | 8 |
+| 9 | `InvariantSystem` | `PreUpdate` | 0 |
+| 10 | `ScheduleSpawnerSystem` | `PreUpdate` | 0 |
+| 11 | `StressInitializerSystem` | `PreUpdate` | 0 |
+| 12 | `MetabolismSystem` | `Physiology` | 10 |
+| 13 | `EnergySystem` | `Physiology` | 10 |
+| 14 | `BladderFillSystem` | `Physiology` | 10 |
+| 15 | `BiologicalConditionSystem` | `Condition` | 20 |
+| 16 | `ScheduleSystem` | `Condition` | 20 |
+| 17 | `MoodSystem` | `Cognition` | 30 |
+| 18 | `BrainSystem` | `Cognition` | 30 |
+| 19 | `DriveDynamicsSystem` | `Cognition` | 30 |
+| 20 | `ActionSelectionSystem` | `Cognition` | 30 |
+| 21 | `WillpowerSystem` | `Cognition` | 30 |
+| 22 | `RelationshipLifecycleSystem` | `Cognition` | 30 |
+| 23 | `FeedingSystem` | `Behavior` | 40 |
+| 24 | `DrinkingSystem` | `Behavior` | 40 |
+| 25 | `SleepSystem` | `Behavior` | 40 |
+| 26 | `DefecationSystem` | `Behavior` | 40 |
+| 27 | `UrinationSystem` | `Behavior` | 40 |
+| 28 | `InteractionSystem` | `Transit` | 50 |
+| 29 | `EsophagusSystem` | `Transit` | 50 |
+| 30 | `DigestionSystem` | `Transit` | 50 |
+| 31 | `SmallIntestineSystem` | `Elimination` | 55 |
+| 32 | `LargeIntestineSystem` | `Elimination` | 55 |
+| 33 | `ColonSystem` | `Elimination` | 55 |
+| 34 | `BladderSystem` | `Elimination` | 55 |
+| 35 | `RotSystem` | `World` | 60 |
+| 36 | `PathfindingTriggerSystem` | `World` | 60 |
+| 37 | `MovementSpeedModifierSystem` | `World` | 60 |
+| 38 | `StepAsideSystem` | `World` | 60 |
+| 39 | `MovementSystem` | `World` | 60 |
+| 40 | `FacingSystem` | `World` | 60 |
+| 41 | `IdleMovementSystem` | `World` | 60 |
+| 42 | `NarrativeEventDetector` | `Narrative` | 70 |
+| 43 | `PersistenceThresholdDetector` | `Narrative` | 70 |
+| 44 | `MemoryRecordingSystem` | `Narrative` | 70 |
+| 45 | `DialogContextDecisionSystem` | `Dialog` | 75 |
+| 46 | `DialogFragmentRetrievalSystem` | `Dialog` | 75 |
+| 47 | `DialogCalcifySystem` | `Dialog` | 75 |
+| 48 | `StressSystem` | `Cleanup` | 80 |
 
-**Total:** 21 systems
+**Total:** 48 systems
 
 ## Component Types
 
@@ -41,6 +68,8 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `AcceptingTag` | *(tag — no fields)* |
 | `AdmiringTag` | *(tag — no fields)* |
 | `AmazedTag` | *(tag — no fields)* |
+| `AnchorObjectComponent` | `Id: string`, `RoomId: string`, `Description: string`, `PhysicalState: AnchorObjectPhysicalState` |
+| `AnchorObjectTag` | *(tag — no fields)* |
 | `AngryTag` | *(tag — no fields)* |
 | `AnnoyedTag` | *(tag — no fields)* |
 | `AnticipatingTag` | *(tag — no fields)* |
@@ -51,54 +80,100 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `BolusComponent` | `Volume: float`, `Nutrients: NutrientProfile`, `Toughness: float`, `FoodType: string` |
 | `BolusTag` | *(tag — no fields)* |
 | `BoredTag` | *(tag — no fields)* |
+| `BoundsRect` | `X: int`, `Y: int`, `Width: int`, `Height: int`, `Area: int` |
 | `BowelCriticalTag` | *(tag — no fields)* |
+| `BrokenItemComponent` | `OriginalKind: string`, `Breakage: BreakageKind`, `CreatedAtTick: Int64`, `ChronicleEntryId: string` |
+| `BrokenItemTag` | *(tag — no fields)* |
+| `BurningOutTag` | *(tag — no fields)* |
 | `CatTag` | *(tag — no fields)* |
 | `ColonComponent` | `UrgeThresholdMl: float`, `CapacityMl: float`, `StoolVolumeMl: float`, `Fill: float`, `HasUrge: bool`, `IsCritical: bool`, `IsEmpty: bool` |
 | `ConsumedRottenFoodTag` | *(tag — no fields)* |
 | `ContainerComponent` | `Contents: List`1`, `Count: int`, `IsEmpty: bool` |
+| `CurrentScheduleBlockComponent` | `ActiveBlockIndex: int`, `AnchorEntityId: Guid`, `Activity: ScheduleActivityKind` |
 | `DefecationUrgeTag` | *(tag — no fields)* |
 | `DehydratedTag` | *(tag — no fields)* |
+| `DialogHistoryComponent` | `UsesByFragmentId: Dictionary`2` |
 | `DisgustTag` | *(tag — no fields)* |
 | `DistractedTag` | *(tag — no fields)* |
 | `DriveComponent` | `EatUrgency: float`, `DrinkUrgency: float`, `SleepUrgency: float`, `DefecateUrgency: float`, `PeeUrgency: float`, `Dominant: DesireType` |
+| `DriveValue` | `Current: int`, `Baseline: int` |
 | `EcstaticTag` | *(tag — no fields)* |
 | `EnergyComponent` | `Energy: float`, `Sleepiness: float`, `IsSleeping: bool`, `EnergyDrainRate: float`, `SleepinessGainRate: float`, `EnergyRestoreRate: float`, `SleepinessDrainRate: float`, `Tiredness: float` |
 | `EsophagusTransitComponent` | `Progress: float`, `Speed: float`, `TargetEntityId: Guid`, `Position: int` |
 | `ExhaustedTag` | *(tag — no fields)* |
+| `FacingComponent` | `DirectionDeg: float`, `Source: FacingSource` |
 | `FearfulTag` | *(tag — no fields)* |
 | `FoodDesireTag` | *(tag — no fields)* |
 | `FoodObjectComponent` | `Name: string`, `NutrientsPerBite: NutrientProfile`, `BitesRemaining: int`, `Toughness: float` |
 | `FridgeComponent` | `FoodCount: int` |
 | `GriefTag` | *(tag — no fields)* |
+| `HandednessComponent` | `Side: HandednessSide` |
 | `HumanTag` | *(tag — no fields)* |
 | `HungerTag` | *(tag — no fields)* |
 | `HungryTag` | *(tag — no fields)* |
 | `IdentityComponent` | `Name: string`, `Value: string` |
+| `Inhibition` | `Class: InhibitionClass`, `Strength: int`, `Awareness: InhibitionAwareness` |
+| `InhibitionsComponent` | `Inhibitions: IReadOnlyList`1` |
+| `IntendedActionComponent` | `Kind: IntendedActionKind`, `TargetEntityId: int`, `Context: DialogContextValue`, `IntensityHint: int` |
 | `InterestedTag` | *(tag — no fields)* |
 | `IrritableTag` | *(tag — no fields)* |
 | `JoyfulTag` | *(tag — no fields)* |
 | `LargeIntestineComponent` | `ContentVolumeMl: float`, `WaterReabsorptionRate: float`, `MobilityRate: float`, `StoolFraction: float`, `Fill: float`, `IsEmpty: bool` |
+| `LightApertureComponent` | `Id: string`, `TileX: int`, `TileY: int`, `RoomId: string`, `Facing: ApertureFacing`, `AreaSqTiles: double` |
+| `LightApertureTag` | *(tag — no fields)* |
+| `LightSourceComponent` | `Id: string`, `Kind: LightKind`, `State: LightState`, `Intensity: int`, `ColorTemperatureK: int`, `TileX: int`, `TileY: int`, `RoomId: string` |
+| `LightSourceTag` | *(tag — no fields)* |
 | `LiquidComponent` | `VolumeMl: float`, `Nutrients: NutrientProfile`, `LiquidType: string` |
 | `LoathingTag` | *(tag — no fields)* |
+| `MemoryEntry` | `Id: string`, `Tick: Int64`, `Kind: NarrativeEventKind`, `ParticipantIds: IReadOnlyList`1`, `RoomId: string`, `Detail: string`, `Persistent: bool` |
 | `MetabolismComponent` | `Satiation: float`, `Hydration: float`, `BodyTemp: float`, `Energy: float`, `NutrientStores: NutrientProfile`, `SatiationDrainRate: float`, `HydrationDrainRate: float`, `SleepMetabolismMultiplier: float`, `Hunger: float`, `Thirst: float` |
 | `MoodComponent` | `Joy: float`, `Trust: float`, `Fear: float`, `Surprise: float`, `Sadness: float`, `Disgust: float`, `Anger: float`, `Anticipation: float`, `HasAnyEmotion: bool`, `Valence: float` |
-| `MovementComponent` | `Speed: float`, `ArrivalDistance: float` |
+| `MovementComponent` | `Speed: float`, `ArrivalDistance: float`, `SpeedModifier: float`, `LastVelocityX: float`, `LastVelocityZ: float` |
 | `MovementTargetComponent` | `TargetEntityId: Guid`, `Label: string` |
+| `NamedAnchorComponent` | `Tag: string`, `Description: string`, `SmellTag: string` |
+| `NoteComponent` | `Notes: IReadOnlyList`1` |
+| `NpcArchetypeComponent` | `ArchetypeId: string` |
+| `NpcDealComponent` | `Deal: string` |
+| `NpcSlotComponent` | `X: int`, `Y: int`, `ArchetypeHint: string`, `RoomId: string` |
+| `NpcSlotTag` | *(tag — no fields)* |
+| `NpcTag` | *(tag — no fields)* |
 | `NutrientProfile` | `Carbohydrates: float`, `Proteins: float`, `Fats: float`, `Fiber: float`, `Water: float`, `VitaminA: float`, `VitaminB: float`, `VitaminC: float`, `VitaminD: float`, `VitaminE: float`, `VitaminK: float`, `Sodium: float`, `Potassium: float`, `Calcium: float`, `Iron: float`, `Magnesium: float`, `Calories: float`, `IsEmpty: bool` |
+| `ObstacleTag` | *(tag — no fields)* |
+| `OverwhelmedTag` | *(tag — no fields)* |
+| `PathComponent` | `Waypoints: IReadOnlyList`1`, `CurrentWaypointIndex: int` |
 | `PensiveTag` | *(tag — no fields)* |
+| `PersonalityComponent` | `Openness: int`, `Conscientiousness: int`, `Extraversion: int`, `Agreeableness: int`, `Neuroticism: int`, `VocabularyRegister: VocabularyRegister`, `CurrentMood: string` |
+| `PersonalMemoryComponent` | `Recent: IReadOnlyList`1` |
 | `PositionComponent` | `X: float`, `Y: float`, `Z: float` |
+| `ProximityComponent` | `ConversationRangeTiles: int`, `AwarenessRangeTiles: int`, `SightRangeTiles: int` |
 | `RagingTag` | *(tag — no fields)* |
+| `RecognizedTicComponent` | `RecognizedTicsBySpeakerId: Dictionary`2`, `HearingCounts: Dictionary`2` |
 | `RefrigeratorComponent` | `BananaCount: int` |
+| `RelationshipComponent` | `ParticipantA: int`, `ParticipantB: int`, `Intensity: int`, `Patterns: IReadOnlyList`1` |
+| `RelationshipMemoryComponent` | `Recent: IReadOnlyList`1` |
+| `RelationshipTag` | *(tag — no fields)* |
+| `RoomComponent` | `Id: string`, `Name: string`, `Category: RoomCategory`, `Floor: BuildingFloor`, `Bounds: BoundsRect`, `Illumination: RoomIllumination` |
+| `RoomIllumination` | `AmbientLevel: int`, `ColorTemperatureK: int`, `DominantSourceId: string` |
+| `RoomTag` | *(tag — no fields)* |
 | `RotComponent` | `AgeSeconds: float`, `RotLevel: float`, `RotStartAge: float`, `RotRate: float`, `IsDecaying: bool`, `Freshness: float` |
 | `RotTag` | *(tag — no fields)* |
 | `SadTag` | *(tag — no fields)* |
+| `ScheduleBlock` | `StartHour: float`, `EndHour: float`, `AnchorId: string`, `Activity: ScheduleActivityKind` |
+| `ScheduleComponent` | `Blocks: IReadOnlyList`1` |
 | `SereneTag` | *(tag — no fields)* |
+| `SilhouetteComponent` | `Height: string`, `Build: string`, `Hair: string`, `Headwear: string`, `DominantColor: string`, `DistinctiveItem: string` |
 | `SinkComponent` | *(tag — no fields)* |
 | `SleepingTag` | *(tag — no fields)* |
 | `SmallIntestineComponent` | `ChymeVolumeMl: float`, `AbsorptionRate: float`, `Chyme: NutrientProfile`, `ResidueToLargeFraction: float`, `Fill: float`, `IsEmpty: bool` |
+| `SocialDrivesComponent` | `Belonging: DriveValue`, `Status: DriveValue`, `Affection: DriveValue`, `Irritation: DriveValue`, `Attraction: DriveValue`, `Trust: DriveValue`, `Suspicion: DriveValue`, `Loneliness: DriveValue` |
+| `StainComponent` | `Source: string`, `Magnitude: int`, `CreatedAtTick: Int64`, `ChronicleEntryId: string` |
+| `StainTag` | *(tag — no fields)* |
 | `StarvingTag` | *(tag — no fields)* |
 | `StomachComponent` | `CurrentVolumeMl: float`, `DigestionRate: float`, `NutrientsQueued: NutrientProfile`, `Fill: float`, `IsEmpty: bool`, `IsFull: bool` |
 | `StoredTag` | *(tag — no fields)* |
+| `StressComponent` | `AcuteLevel: int`, `ChronicLevel: double`, `LastDayUpdated: int`, `SuppressionEventsToday: int`, `DriveSpikeEventsToday: int`, `SocialConflictEventsToday: int`, `BurnoutLastAppliedDay: int` |
+| `StressedTag` | *(tag — no fields)* |
+| `SunStateRecord` | `AzimuthDeg: double`, `ElevationDeg: double`, `DayPhase: DayPhase` |
 | `SurprisedTag` | *(tag — no fields)* |
 | `TerrorTag` | *(tag — no fields)* |
 | `ThirstTag` | *(tag — no fields)* |
@@ -109,8 +184,9 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `UrinationUrgeTag` | *(tag — no fields)* |
 | `VigilantTag` | *(tag — no fields)* |
 | `WaterDesireTag` | *(tag — no fields)* |
+| `WillpowerComponent` | `Current: int`, `Baseline: int` |
 
-**Total:** 71 component types
+**Total:** 120 component types
 
 ## SimConfig Keys
 
@@ -230,4 +306,100 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Systems.Mood.AnticipationHungerMin` | `float` | `15` |
 | `Systems.Mood.AnticipationHungerMax` | `float` | `50` |
 | `Systems.Rot.RotTagThreshold` | `float` | `30` |
+| `Social.DriveDecayPerTick` | `double` | `0.15` |
+| `Social.DriveCircadianAmplitudes` | `Dictionary` | `{belonging=3, status=2.5, affection=3, irritation=4, attraction=2, trust=1.5, suspicion=2, loneliness=5}` |
+| `Social.DriveCircadianPhases` | `Dictionary` | `{belonging=0.4, status=0.3, affection=0.65, irritation=0.55, attraction=0.7, trust=0.45, suspicion=0.8, loneliness=0.85}` |
+| `Social.DriveVolatilityScale` | `double` | `1` |
+| `Social.WillpowerSleepRegenPerTick` | `int` | `1` |
+| `Social.RelationshipIntensityDecayPerTick` | `double` | `0.05` |
+| `Spatial.CellSizeTiles` | `int` | `4` |
+| `Spatial.WorldSize.Width` | `int` | `512` |
+| `Spatial.WorldSize.Height` | `int` | `512` |
+| `Spatial.ProximityRangeDefaults.ConversationTiles` | `int` | `2` |
+| `Spatial.ProximityRangeDefaults.AwarenessTiles` | `int` | `8` |
+| `Spatial.ProximityRangeDefaults.SightTiles` | `int` | `32` |
+| `Lighting.DayPhaseBoundaries.EarlyMorningStart` | `double` | `0.2` |
+| `Lighting.DayPhaseBoundaries.MidMorningStart` | `double` | `0.3` |
+| `Lighting.DayPhaseBoundaries.AfternoonStart` | `double` | `0.45` |
+| `Lighting.DayPhaseBoundaries.EveningStart` | `double` | `0.65` |
+| `Lighting.DayPhaseBoundaries.DuskStart` | `double` | `0.8` |
+| `Lighting.DayPhaseBoundaries.NightStart` | `double` | `0.85` |
+| `Lighting.FlickerOnProb` | `double` | `0.7` |
+| `Lighting.DyingDecayProb` | `double` | `0.05` |
+| `Lighting.ApertureRangeBase` | `int` | `5` |
+| `Lighting.SourceRangeBase` | `int` | `3` |
+| `Lighting.DriveCouplings` | `List` | `[6 entries]` |
+| `Movement.StepAsideRadius` | `float` | `3` |
+| `Movement.StepAsideShift` | `float` | `0.4` |
+| `Movement.IdleJitterTiles` | `float` | `0.05` |
+| `Movement.IdlePostureShiftProb` | `float` | `0.005` |
+| `Movement.SpeedModifier.IrritationGainPerPoint` | `float` | `0.005` |
+| `Movement.SpeedModifier.AffectionLossPerPoint` | `float` | `0.0033` |
+| `Movement.SpeedModifier.LowEnergyLossPerPoint` | `float` | `0.005` |
+| `Movement.SpeedModifier.MinMultiplier` | `float` | `0.3` |
+| `Movement.SpeedModifier.MaxMultiplier` | `float` | `2` |
+| `Movement.Pathfinding.DoorwayDiscount` | `float` | `1` |
+| `Movement.Pathfinding.TieBreakNoiseScale` | `float` | `0.1` |
+| `Narrative.DriveSpikeThreshold` | `int` | `15` |
+| `Narrative.WillpowerDropThreshold` | `int` | `10` |
+| `Narrative.WillpowerLowThreshold` | `int` | `20` |
+| `Narrative.AbruptDepartureWindowTicks` | `int` | `3` |
+| `Narrative.CandidateDetailMaxLength` | `int` | `280` |
+| `CastGenerator.ElevatedDriveRange` | `List` | `[2 entries]` |
+| `CastGenerator.DepressedDriveRange` | `List` | `[2 entries]` |
+| `CastGenerator.NeutralDriveRange` | `List` | `[2 entries]` |
+| `CastGenerator.CurrentJitterRange` | `List` | `[2 entries]` |
+| `CastGenerator.RivalryCount` | `int` | `2` |
+| `CastGenerator.OldFlameCount` | `int` | `1` |
+| `CastGenerator.MentorPairCount` | `int` | `1` |
+| `CastGenerator.SleptWithSpouseCount` | `int` | `1` |
+| `CastGenerator.FriendPairCount` | `int` | `2` |
+| `CastGenerator.ThingNobodyTalksAboutCount` | `int` | `2` |
+| `CastGenerator.RelationshipIntensityRange` | `List` | `[2 entries]` |
+| `Chronicle.MaxEntries` | `int` | `4096` |
+| `Chronicle.ThresholdRules.IntensityChangeMinForRelationshipStick` | `int` | `15` |
+| `Chronicle.ThresholdRules.IrritationSpikeMinForPhysicalManifest` | `int` | `70` |
+| `Chronicle.ThresholdRules.DriveReturnToBaselineWindowSeconds` | `double` | `60` |
+| `Chronicle.ThresholdRules.TalkAboutMinReferenceCount` | `int` | `2` |
+| `Chronicle.StainMagnitudeRange` | `List` | `[2 entries]` |
+| `Chronicle.BrokenItemMagnitudeRange` | `List` | `[2 entries]` |
+| `Dialog.CalcifyThreshold` | `int` | `8` |
+| `Dialog.CalcifyContextDominanceMin` | `double` | `0.7` |
+| `Dialog.TicRecognitionThreshold` | `int` | `5` |
+| `Dialog.RecencyWindowSeconds` | `int` | `300` |
+| `Dialog.ValenceMatchScore` | `int` | `5` |
+| `Dialog.RecencyPenalty` | `int` | `-10` |
+| `Dialog.CalcifyBiasScore` | `int` | `3` |
+| `Dialog.ValenceLowMaxValue` | `int` | `33` |
+| `Dialog.ValenceMidMaxValue` | `int` | `66` |
+| `Dialog.DecalcifyTimeoutDays` | `int` | `30` |
+| `Dialog.CorpusPath` | `string` | `docs/c2-content/dialog/corpus-starter.json` |
+| `Dialog.DriveContextThreshold` | `int` | `60` |
+| `Dialog.DialogAttemptProbability` | `double` | `0.05` |
+| `ActionSelection.DriveCandidateThreshold` | `int` | `60` |
+| `ActionSelection.IdleScoreFloor` | `double` | `0.2` |
+| `ActionSelection.InversionStakeThreshold` | `double` | `0.55` |
+| `ActionSelection.InversionInhibitionThreshold` | `double` | `0.5` |
+| `ActionSelection.SuppressionGiveUpFactor` | `double` | `0.3` |
+| `ActionSelection.SuppressionEpsilon` | `double` | `0.1` |
+| `ActionSelection.SuppressionEventMagnitudeScale` | `int` | `5` |
+| `ActionSelection.PersonalityTieBreakWeight` | `double` | `0.05` |
+| `ActionSelection.MaxCandidatesPerTick` | `int` | `32` |
+| `ActionSelection.AvoidStandoffDistance` | `int` | `4` |
+| `Stress.SuppressionStressGain` | `double` | `1.5` |
+| `Stress.DriveSpikeStressDelta` | `int` | `25` |
+| `Stress.DriveSpikeStressGain` | `double` | `2` |
+| `Stress.SocialConflictStressGain` | `double` | `3` |
+| `Stress.AcuteDecayPerTick` | `double` | `0.05` |
+| `Stress.StressedTagThreshold` | `int` | `60` |
+| `Stress.OverwhelmedTagThreshold` | `int` | `85` |
+| `Stress.BurningOutTagThreshold` | `int` | `70` |
+| `Stress.BurningOutCooldownDays` | `int` | `3` |
+| `Stress.StressAmplificationMagnitude` | `double` | `1` |
+| `Stress.StressVolatilityScale` | `double` | `0.5` |
+| `Stress.NeuroticismStressFactor` | `double` | `0.2` |
+| `Schedule.ScheduleAnchorBaseWeight` | `double` | `0.3` |
+| `Schedule.ScheduleLingerThresholdCells` | `float` | `2` |
+| `Memory.MaxRelationshipMemoryCount` | `int` | `32` |
+| `Memory.MaxPersonalMemoryCount` | `int` | `16` |
 
