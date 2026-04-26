@@ -69,7 +69,7 @@ These are the load-bearing locations the simulation cares about. Each is a speci
 - **The Smoking Bench** (outside, side of building) — half the staff says they quit. They didn't.
 - **The Women's Bathroom** (first floor) — Donna haunts this. Stories are told.
 - **The Conference Room** (top floor) — has a TV nobody can connect to. The HDMI cable goes somewhere mysterious. Important meetings happen here despite the TV problem.
-- **Cubicle 12** (first floor) — currently empty. Used to be Mark's. Mark is not discussed.
+- **Cubicle 12** (first floor) — currently empty. Used to be Mark's. Mark is not discussed. NPCs who sit adjacent to Cubicle 12 should receive a slow `suspicion` and `loneliness` drift — not from any event, but from proximity to unresolved space. The emotional charge of the cubicle hasn't been cleaned up.
 
 Each anchor carries a small bundle of state at game start: the things stained on it, the notes attached to it, the smell associated with it, the relationships people have to it. New anchors get the same treatment.
 
@@ -142,3 +142,5 @@ These would sharpen the bible further whenever you have an opinion. None blocks 
 - A working title for the game.
 - Additional named anchors you specifically want — the ten above are starting points. If you've imagined a specific corner that has a story, write it in.
 - The seasonal / weekly cadence. Does the game have a calendar that matters? Friday-feeling, end-of-quarter, holiday parties? Or is it abstract office-time?
+- Rooms as emotional territories: should named anchors carry an explicit drive-valence bundle — which drives tend to recover here, which spike, and for which archetypes? The Smoking Bench functions as a decompression space where the mask comes down and unguarded conversations happen; the Conference Room is high-formality/high-exposure territory even when empty. This distinction is currently implied by physical description but not codified. Codifying it would let the proximity system modulate drive effects by *where* a proximity event fires, not just *who* is near.
+- Controlled proximity as a ghost-management lever: the gameplay loop currently describes nudging humans toward work outcomes. Should spatial rearrangement — seating, routing, which hallways get foot traffic — be named explicitly as a player tool? Moving a high-neuroticism NPC away from a high-traffic corridor is a management action the system already supports mechanically. Worth surfacing to the player as an intentional intervention, not just an emergent side effect.

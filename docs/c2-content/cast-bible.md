@@ -90,6 +90,7 @@ The eight social drives (v0.2 schema). Each on 0–100, with a baseline per-arch
 - **Trust** — toward a specific other NPC.
 - **Suspicion** — toward a specific other NPC.
 - **Loneliness** — opposite of belonging-fulfilled.
+- **Exposure** *(proposed ninth drive — open question)* — the cost of being seen while internally raw. Rises when an NPC is in a high-visibility, high-traffic area while running an emotionally elevated internal state. Differs from `loneliness` (too little contact) and `irritation` (directed at a cause) — exposure is about the effort of appearing composed when you aren't. High-neuroticism and low-extraversion archetypes are more sensitive to it; The Hermit, The Recovering, and The Affair archetype would have it as a chronically elevated baseline drive.
 
 An archetype specifies which of these are *chronically elevated* (baseline higher than population mean). This shapes behavior even before any specific events have happened.
 
@@ -198,3 +199,4 @@ The starting state should feel like a real office: most people are pleasantly ne
 - Vocabulary registers above are a starting set. Does anything you imagined for the office not fit one? (Example: a character who *sometimes* swears and sometimes doesn't because they're code-switching — that's a separate axis we haven't modelled. Worth adding?)
 - Deal catalog is short. Add more as you think of office-people you've known.
 - The silhouette catalog dimensions look reasonable for pixel art at distance — but if the eventual visualizer pushes us toward higher fidelity, this list grows.
+- Masking as a system cost: the Recovering and Affair archetypes currently mask internal drive states as a narrative trait. Should masking generalize? Every NPC has some gap between their internal drive state and what they project socially; maintaining that gap draws from willpower (per the action-gating schema). When willpower runs low in a high-exposure space, drives surface visibly in behavior — the mask slips. This is not currently described as a simulation event. A `maskStrength` parameter per NPC (or derived from neuroticism + willpower reserve) could produce it without a new system, and the slip would register as a high-noteworthiness social event.

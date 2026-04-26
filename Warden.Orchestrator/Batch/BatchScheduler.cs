@@ -81,6 +81,19 @@ public sealed class BatchScheduler
             .Select((s, i) => (s.ScenarioId, HaikuId: $"haiku-{i + 1:D2}"))
             .ToDictionary(x => x.ScenarioId, x => x.HaikuId, StringComparer.Ordinal);
 
+        // Map every scenario back to its parent ScenarioBatch.BatchId. This is the
+        // value that gets stamped into HaikuResult.ParentBatchId — it must be the
+        // Sonnet-side scenarioBatch.batchId (e.g. "batch-smoke-01"), not the
+        // Anthropic apiSubmission.Id (e.g. "msgbatch_01..."). Two reasons:
+        //   1) The schema constrains parentBatchId to ^batch-[a-z0-9-]{1,48}$,
+        //      which Anthropic batch ids do not match.
+        //   2) The report aggregator joins Haikus to their parent Sonnet via this
+        //      field; the Sonnet's scenarioBatch.batchId is the correct join key.
+        // The Anthropic submission id is persisted separately to runs/<runId>/batch-id.txt.
+        var parentBatchIdFor = batches
+            .SelectMany(b => b.Scenarios.Select(s => (s.ScenarioId, b.BatchId)))
+            .ToDictionary(x => x.ScenarioId, x => x.BatchId, StringComparer.Ordinal);
+
         // Step 2: Deduplicate by content hash
         var deduper = new ScenarioDeduper(_log);
         var (uniqueScenarios, dupToOrig) = deduper.Deduplicate(allScenarios);
@@ -119,9 +132,10 @@ public sealed class BatchScheduler
             var scenarioId = entry.CustomId;
             var haikuId    = haikuIdFor[scenarioId];
 
+            var parentBatchId = parentBatchIdFor[scenarioId];
             var result = entry.Result is SucceededResult succeeded
-                ? ParseSucceeded(succeeded, apiSubmission.Id, haikuId, scenarioId)
-                : BlockedEntry(scenarioId, apiSubmission.Id, haikuId);
+                ? ParseSucceeded(succeeded, parentBatchId, haikuId, scenarioId)
+                : BlockedEntry(scenarioId, parentBatchId, haikuId);
 
             uniqueResults[scenarioId] = result;
         }
@@ -132,8 +146,9 @@ public sealed class BatchScheduler
 
         foreach (var scenario in allScenarios)
         {
-            var haikuId = haikuIdFor[scenario.ScenarioId];
-            var isDup   = dupToOrig.TryGetValue(scenario.ScenarioId, out var origId);
+            var haikuId       = haikuIdFor[scenario.ScenarioId];
+            var parentBatchId = parentBatchIdFor[scenario.ScenarioId];
+            var isDup         = dupToOrig.TryGetValue(scenario.ScenarioId, out var origId);
 
             HaikuResult result;
 
@@ -141,7 +156,7 @@ public sealed class BatchScheduler
             {
                 result = uniqueResults.TryGetValue(scenario.ScenarioId, out var r)
                     ? r
-                    : BlockedEntry(scenario.ScenarioId, apiSubmission.Id, haikuId);
+                    : BlockedEntry(scenario.ScenarioId, parentBatchId, haikuId);
 
                 // Ledger: one line per unique Haiku call (AT-07)
                 await _ledger
@@ -150,15 +165,19 @@ public sealed class BatchScheduler
             }
             else
             {
-                // Duplicate: clone the original result, update the per-scenario fields
+                // Duplicate: clone the original result, update per-scenario fields.
+                // The duplicate may belong to a different parent ScenarioBatch than
+                // the original (cross-Sonnet content dedup), so re-stamp ParentBatchId
+                // from the duplicate scenario's own parent.
                 var origResult = uniqueResults.TryGetValue(origId!, out var o)
                     ? o
-                    : BlockedEntry(origId!, apiSubmission.Id, haikuId);
+                    : BlockedEntry(origId!, parentBatchId, haikuId);
 
                 result = origResult with
                 {
-                    ScenarioId = scenario.ScenarioId,
-                    WorkerId   = haikuId
+                    ScenarioId    = scenario.ScenarioId,
+                    WorkerId      = haikuId,
+                    ParentBatchId = parentBatchId
                 };
             }
 
@@ -227,7 +246,24 @@ public sealed class BatchScheduler
             return BlockedEntry(scenarioId, batchId, haikuId);
         }
 
-        return parsed;
+        // Stamp the parsed result with authoritative server-side values. The model emits
+        // a role-frame placeholder ("batch-pending", zero token counts); the orchestrator
+        // is the only authority for the real batchId and the real token usage from the
+        // batch API response. Without this overwrite the report aggregator can't join
+        // Haikus to their parent Sonnet (placeholder ParentBatchId never matches the
+        // Sonnet's scenarioBatch.batchId), and the cost ledger reports zero spend.
+        var u = succeeded.Message.Usage;
+        return parsed with
+        {
+            ParentBatchId = batchId,
+            TokensUsed    = new TokenUsage
+            {
+                Input      = u.InputTokens,
+                CachedRead = u.CacheReadInputTokens,
+                CacheWrite = u.CacheCreationInputTokens,
+                Output     = u.OutputTokens
+            }
+        };
     }
 
     private static HaikuResult BlockedEntry(string scenarioId, string batchId, string haikuId)
