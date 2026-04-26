@@ -538,5 +538,29 @@
     "driveContextThreshold":      60,
     // Per-tick probability an in-range NPC pair attempts dialog
     "dialogAttemptProbability":   0.05
+  },
+
+  // ── Action selection ───────────────────────────────────────────────────────
+  "actionSelection": {
+    // Drive.Current must exceed this to enumerate candidates
+    "driveCandidateThreshold":       60,
+    // Idle wins when nothing else exceeds this floor
+    "idleScoreFloor":                0.20,
+    // stake above this enables approach-avoidance flip
+    "inversionStakeThreshold":       0.55,
+    // matched inhibition above this (combined with stake) completes the flip
+    "inversionInhibitionThreshold":  0.50,
+    // how much low-willpower leaks suppressed push through the gate
+    "suppressionGiveUpFactor":       0.30,
+    // closeness that marks a candidate as actively suppressed
+    "suppressionEpsilon":            0.10,
+    // willpower cost scaling for suppression events
+    "suppressionEventMagnitudeScale": 5,
+    // per-point personality nudge (Conscientiousness/Openness)
+    "personalityTieBreakWeight":     0.05,
+    // hard cap on candidates per NPC per tick
+    "maxCandidatesPerTick":          32,
+    // tiles the avoidance flee target is pushed away from the threat
+    "avoidStandoffDistance":         4
   }
 }

@@ -7,10 +7,13 @@ using APIFramework.Systems.Spatial;
 namespace APIFramework.Systems.Dialog;
 
 /// <summary>
-/// Phase 75 — clears PendingDialogQueue then repopulates it based on NPC drive state.
-/// Subscribes to ProximityEventBus to track which NPC pairs are in conversation range.
-/// For each in-range pair, probabilistically attempts dialog and maps the speaker's
-/// dominant elevated drive to a corpus context string.
+/// Phase 75 — clears PendingDialogQueue then repopulates it based on NPC intent / drive state.
+///
+/// Two paths per (speaker, listener) pair:
+/// 1. If the speaker has IntendedActionComponent with Kind == Dialog, use that context directly
+///    and skip the probability gate (ActionSelectionSystem has already decided).
+/// 2. Otherwise, fall back to the existing heuristic: probabilistic gate + drive-to-context map.
+///    This preserves all WP-1.10.A tests for scenarios that don't exercise action-selection.
 /// </summary>
 public sealed class DialogContextDecisionSystem : ISystem
 {
@@ -47,12 +50,36 @@ public sealed class DialogContextDecisionSystem : ISystem
     {
         _queue.Clear();
 
+        // Track which speakers have already been assigned dialog this tick so a
+        // speaker with Dialog intent only emits once (to the first matching listener).
+        var processedSpeakers = new HashSet<Entity>();
+
         foreach (var (speaker, listener) in _inRange)
         {
-            if (!speaker.Has<NpcTag>())               continue;
-            if (!listener.Has<NpcTag>())              continue;
-            if (!speaker.Has<SocialDrivesComponent>()) continue;
+            if (!speaker.Has<NpcTag>())  continue;
+            if (!listener.Has<NpcTag>()) continue;
 
+            // Path 1: IntendedActionComponent with Dialog intent.
+            if (!processedSpeakers.Contains(speaker) &&
+                speaker.Has<IntendedActionComponent>())
+            {
+                var intent = speaker.Get<IntendedActionComponent>();
+                if (intent.Kind == IntendedActionKind.Dialog)
+                {
+                    // Use the intended target if specified; otherwise accept the first in-range pair.
+                    if (intent.TargetEntityId != 0)
+                    {
+                        int listenerId = WillpowerSystem.EntityIntId(listener);
+                        if (listenerId != intent.TargetEntityId) continue;
+                    }
+                    _queue.Enqueue(speaker, listener, MapContextValue(intent.Context));
+                    processedSpeakers.Add(speaker);
+                    continue;
+                }
+            }
+
+            // Path 2: Heuristic fallback (existing WP-1.10.A logic).
+            if (!speaker.Has<SocialDrivesComponent>()) continue;
             if (_rng.NextDouble() >= _cfg.DialogAttemptProbability) continue;
 
             var drives  = speaker.Get<SocialDrivesComponent>();
@@ -73,4 +100,23 @@ public sealed class DialogContextDecisionSystem : ISystem
         if (d.Belonging.Current  >= threshold)                          return "greeting";
         return "greeting";
     }
+
+    /// <summary>Maps DialogContextValue enum to corpus context string.</summary>
+    private static string MapContextValue(DialogContextValue v) => v switch
+    {
+        DialogContextValue.LashOut    => "lashOut",
+        DialogContextValue.Share      => "share",
+        DialogContextValue.Flirt      => "flirt",
+        DialogContextValue.Deflect    => "deflect",
+        DialogContextValue.BrushOff   => "brushOff",
+        DialogContextValue.Acknowledge => "acknowledge",
+        DialogContextValue.Greet      => "greeting",
+        DialogContextValue.Refuse     => "refuse",
+        DialogContextValue.Agree      => "agree",
+        DialogContextValue.Complain   => "complaint",
+        DialogContextValue.Encourage  => "encourage",
+        DialogContextValue.Thanks     => "thanks",
+        DialogContextValue.Apologise  => "apology",
+        _                             => "greeting"
+    };
 }
