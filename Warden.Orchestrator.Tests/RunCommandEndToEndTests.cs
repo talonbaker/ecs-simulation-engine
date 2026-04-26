@@ -51,6 +51,39 @@ public sealed class RunCommandEndToEndTests : IDisposable
         Assert.True(lines.Length > 0, "Ledger must contain at least one entry.");
     }
 
+    // ── AT-01b ────────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task AT01b_MockRun_TenIterations_AllSucceed()
+    {
+        var (missionFile, specsGlob) = LocateSmokeMission();
+
+        for (int i = 0; i < 10; i++)
+        {
+            var runId = $"smoke-e2e-stress-{i:D2}";
+            var runsRoot = Path.Combine(_tempDir, "runs-stress");
+
+            var exitCode = await RunCommand.RunAsync(
+                missionFile: new FileInfo(missionFile),
+                specsGlob:   specsGlob,
+                budgetUsd:   decimal.MaxValue,
+                mockMode:    true,
+                dryRun:      false,
+                runId:       runId,
+                ct:          CancellationToken.None,
+                runsRoot:    runsRoot);
+
+            Assert.Equal(0, exitCode);
+
+            var ledgerPath = Path.Combine(runsRoot, runId, "cost-ledger.jsonl");
+            Assert.True(File.Exists(ledgerPath),
+                $"[iter {i}] Expected ledger at {ledgerPath} but it was not created.");
+
+            var lines = await File.ReadAllLinesAsync(ledgerPath);
+            Assert.True(lines.Length > 0, $"[iter {i}] Ledger must contain at least one entry.");
+        }
+    }
+
     // ── AT-04 ─────────────────────────────────────────────────────────────────────
 
     [Fact]

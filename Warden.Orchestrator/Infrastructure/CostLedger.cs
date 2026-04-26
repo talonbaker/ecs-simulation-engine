@@ -10,6 +10,7 @@ namespace Warden.Orchestrator.Infrastructure;
 public sealed class CostLedger
 {
     private readonly string _ledgerPath;
+    private readonly SemaphoreSlim _writeLock = new(1, 1);
 
     /// <param name="ledgerPath">Absolute path to the <c>.jsonl</c> file. Created if absent.</param>
     public CostLedger(string ledgerPath)
@@ -25,7 +26,15 @@ public sealed class CostLedger
     public async Task AppendAsync(LedgerEntry entry, CancellationToken ct = default)
     {
         var line = JsonSerializer.Serialize(entry, JsonOptions.Wire) + "\n";
-        await File.AppendAllTextAsync(_ledgerPath, line, ct).ConfigureAwait(false);
+        await _writeLock.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            await File.AppendAllTextAsync(_ledgerPath, line, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
     }
 
     /// <summary>Reads all entries written so far. Used by tests and the report aggregator.</summary>
