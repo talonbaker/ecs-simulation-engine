@@ -69,10 +69,11 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
                 ? speaker.Get<DialogHistoryComponent>()
                 : new DialogHistoryComponent();
 
-            var best = SelectFragment(candidates, drives, hist);
+            int listenerIntId = EntityIntId(listener);
+            var best = SelectFragment(candidates, drives, hist, listenerIntId);
             if (best is null) continue;
 
-            // Update history
+            // Update global history
             if (!hist.UsesByFragmentId.TryGetValue(best.Id, out var rec))
             {
                 rec = new FragmentUseRecord
@@ -98,14 +99,21 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
                 .ThenBy(kv => kv.Key, StringComparer.Ordinal)
                 .First().Key;
 
+            // Update per-listener history
+            if (!hist.UsesByListenerAndFragmentId.TryGetValue(listenerIntId, out var perFragment))
+            {
+                perFragment = new Dictionary<string, int>();
+                hist.UsesByListenerAndFragmentId[listenerIntId] = perFragment;
+            }
+            perFragment[best.Id] = perFragment.GetValueOrDefault(best.Id, 0) + 1;
+
             // Persist updated struct back (dictionary reference is shared, but
             // adding a new key to UsesByFragmentId mutated the shared dict — the
             // struct re-Add is only needed for the first insertion path).
             if (!speaker.Has<DialogHistoryComponent>())
                 speaker.Add(hist);
 
-            int speakerIntId  = EntityIntId(speaker);
-            int listenerIntId = EntityIntId(listener);
+            int speakerIntId = EntityIntId(speaker);
 
             _bus.RaiseSpokenFragment(new SpokenFragmentEvent(speaker, listener, best.Id, _tick));
 
@@ -134,7 +142,8 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
     private PhraseFragment? SelectFragment(
         IReadOnlyList<PhraseFragment> candidates,
         SocialDrivesComponent         drives,
-        DialogHistoryComponent        hist)
+        DialogHistoryComponent        hist,
+        int?                          listenerIntId = null)
     {
         PhraseFragment? best      = null;
         int             bestScore = int.MinValue;
@@ -160,6 +169,15 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
 
                 if (_gameTimeSec - rec.LastUseGameTimeSec < _cfg.RecencyWindowSeconds)
                     score += _cfg.RecencyPenalty;
+            }
+
+            // Per-listener bias: this speaker has used this fragment with this listener before
+            if (listenerIntId.HasValue
+                && hist.UsesByListenerAndFragmentId.TryGetValue(listenerIntId.Value, out var perFrag)
+                && perFrag.TryGetValue(frag.Id, out var listenerUseCount)
+                && listenerUseCount > 0)
+            {
+                score += _cfg.PerListenerBiasScore;
             }
 
             if (score > bestScore ||

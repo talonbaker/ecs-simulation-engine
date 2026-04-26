@@ -686,6 +686,9 @@ public class DialogConfig
     /// <summary>Bonus score added when a fragment is calcified for the speaker.</summary>
     public int    CalcifyBiasScore              { get; set; } = 3;
 
+    /// <summary>Score added when the speaker has previously used this fragment with this specific listener.</summary>
+    public int    PerListenerBiasScore          { get; set; } = 2;
+
     /// <summary>Upper bound of the "low" valence ordinal bucket (drive value 0–ValenceLowMaxValue maps to "low").</summary>
     public int    ValenceLowMaxValue            { get; set; } = 33;
 
