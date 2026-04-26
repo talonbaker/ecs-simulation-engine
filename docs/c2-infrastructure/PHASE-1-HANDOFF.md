@@ -8,7 +8,7 @@
 
 ## 1. Phase 1 in one paragraph
 
-Phase 1 took the Phase-0 orchestration factory and wired it to a real engine that simulates social, spatial, and emergent behavior. Schemas grew from v0.1 (physiology only) to v0.4 (social + spatial + chronicle). Sixteen new engine systems shipped covering rooms, lighting, movement quality, social drives, willpower, inhibitions, relationships, narrative event detection, persistent chronicle, and the silent-protagonist dialog mechanism. Five content bibles were authored (world, cast, aesthetic, action-gating, dialog) plus a new-systems-ideas doc that captures stress/social-mask/workload concepts deferred to Phase 2. The orchestrator's real-API path was proven end-to-end after six bugs were discovered and fixed in real-API testing — bugs that the mock-mode test suite had silently passed in Phase 0. The cast generator and a starter `office-starter.json` world definition shipped, enabling the engine to boot a populated office. The cast-validate smoke mission revealed an architectural mismatch between Sonnets-via-API and file-system reads — flagged for Phase 2 redesign. **The alive-feeling foundation is in place; the systems that turn that foundation into observable gameplay are Phase 2's job.**
+Phase 1 took the Phase-0 orchestration factory and wired it to a real engine that simulates social, spatial, and emergent behavior. Schemas grew from v0.1 (physiology only) to v0.4 (social + spatial + chronicle). Sixteen new engine systems shipped covering rooms, lighting, movement quality, social drives, willpower, inhibitions, relationships, narrative event detection, persistent chronicle, and the silent-protagonist dialog mechanism. Five content bibles were authored (world, cast, aesthetic, action-gating, dialog) plus a new-systems-ideas doc that captures stress/social-mask/workload concepts deferred to Phase 2. The orchestrator's real-API path was proven end-to-end after six bugs were discovered and fixed in real-API testing — bugs that the mock-mode test suite had silently passed in Phase 0. The cast generator and a starter `office-starter.json` world definition shipped, enabling the engine to boot a populated office. The cast-validate smoke mission revealed an architectural mismatch between Sonnets-via-API and file-system reads — flagged for Phase 2 redesign. A post-closure pass on 2026-04-26 (see §4.1) resolved the three remaining ledger/report bugs that the original Phase-1 closure had punted to Phase 2; the live-API smoke run now produces a fully-populated report with non-zero Haiku ledger entries, schema-clean `parentBatchId`, and Sonnet/Haiku `tokensUsed` matching Anthropic Console. **The alive-feeling foundation is in place; the systems that turn that foundation into observable gameplay are Phase 2's job.**
 
 ---
 
@@ -133,14 +133,39 @@ Phase 0's orchestrator passed all of its mock-mode tests but had never run a rea
 | 4 | Haiku result files persist to `runs/<runId>/<runId>/haiku-NN/...` (doubled runId) | `RunCommand` passed `runDir` to the Haiku's `InfraCoT` constructor instead of `root`; CoT internally composed `<basePath>/<runId>/...` again. | `RunCommand` passes `root` to `InfraCoT` for Haiku CoT, matching the Sonnet pattern. |
 | 5 | Whole mission run crashes with `InvalidOperationException` when Sonnet returns `BlockReason.MissingReferenceFile` | `FailClosedEscalator.ApplyStateMachine` had no switch branch for that enum value. | Explicit branch added for `MissingReferenceFile`; catch-all `(Blocked, _)` branch added so future enum additions never crash. |
 
-A sixth issue was identified but **not fixed**: the cost ledger Haiku entries always show 0 tokens. Root cause: the Haiku's role frame instructs it to placeholder `tokensUsed` to zeros, expecting the orchestrator to overwrite from the batch API response headers; the orchestrator never does the overwrite. Fix: in `BatchScheduler.ParseSucceeded`, copy `succeeded.Message.Usage` into `parsed.TokensUsed` before persisting. **Phase 2 backlog.**
+Issues 6, 7, and 8 below were left open at the original Phase-1 closure and resolved in the 2026-04-26 post-closure pass; they are documented here for the audit trail. The current state is captured in §4.1.
 
-A seventh issue was identified, fixed cosmetically, and **left as Phase 2 work**: the report aggregator scans for Haiku results under the old expected path under `sonnet-NN/haiku-NN/` rather than the (now-correct) `runs/<runId>/haiku-NN/`. Result files exist and validate clean; the aggregator just doesn't list them in the Tier 3 table. Fix: update `Warden.Orchestrator/Reports/ReportAggregator.cs` scan path.
+The Phase-1-closure handoff diagnosed two of the three as separate bugs ("aggregator scan path is wrong" + "ledger doesn't capture Haiku usage"). The post-closure investigation found they share a single root cause in `BatchScheduler.ParseSucceeded`, which never stamped the model's parsed `HaikuResult` with authoritative server-side values — the model emitted role-frame placeholders (`parentBatchId: "batch-pending"`, `tokensUsed: {0,0,0,0}`) and the orchestrator left them in place. The aggregator's scan path was actually fine (`SearchOption.AllDirectories` matches `haiku-*` at any depth); the join failed because `result.ParentBatchId` was the placeholder rather than the parent ScenarioBatch's `BatchId`. A symmetric bug existed on the Sonnet path (the persisted `result.json` carried a model-self-reported `tokensUsed` that diverged from the cost ledger).
 
 **The cast-validate architectural finding** is the largest item Phase 1 left for Phase 2. The cast-validate spec asks the Sonnet to read `office-starter.json` and `archetypes.json` — but Sonnets dispatched through the orchestrator's API path don't have file-system access. They see only the cached corpus and the spec text in the user turn. The Sonnet correctly emits `outcome=blocked, reason=missing-reference-file`; the orchestrator now handles that gracefully (Patch 9 above), but the validation work doesn't actually happen. Two fix paths for Phase 2:
 
 - **Inline mode** — orchestrator pre-reads files listed in `inputs.referenceFiles` and prepends them to the user turn. Adds ~24KB to the prompt. Cleanest fix.
 - **Snapshot mode** — orchestrator boots the engine, runs cast generator, projects `WorldStateDto`, passes that as the spec input. Sonnet validates the projected world directly. Most ambitious; closest to what the bibles want long-term.
+
+---
+
+## 4.1 Post-closure pass — orchestrator parse-time stamping (2026-04-26)
+
+The three open items from the original §4 closure list — Haiku ledger zero-tokens, report aggregator missing Tier 3, and the symmetric Sonnet `tokensUsed` divergence — were resolved in a single short pass. Three patches landed across two files; all 759 unit tests stay green; live-API smoke verified end-to-end.
+
+| # | Bug (as originally diagnosed) | Actual root cause | Fix |
+|:---|:---|:---|:---|
+| 6 | "Cost ledger Haiku entries always show 0 tokens." | `BatchScheduler.ParseSucceeded` returned the model's parsed `HaikuResult` verbatim. The role frame instructs the model to placeholder `tokensUsed` to zeros, expecting the orchestrator to overwrite from the batch API response headers. The orchestrator never did. | `ParseSucceeded` now stamps `TokensUsed` from `succeeded.Message.Usage` before returning. |
+| 7 | "Report aggregator scans wrong path under `sonnet-NN/haiku-NN/`." | Scan path was already correct (`SearchOption.AllDirectories` finds `haiku-*` at any depth). The actual failure was a **join-key mismatch**: `BatchScheduler.ParseSucceeded` left `parsed.ParentBatchId` at the role-frame placeholder `"batch-pending"`, while the aggregator joins Haikus to their parent Sonnet via `haiku.ParentBatchId == sonnet.scenarioBatch.batchId`. | `BatchScheduler.RunAsync` now builds a `scenarioToParentBatchId` map from the input ScenarioBatch list and stamps `ParentBatchId` with the **Sonnet-side** batch id (e.g., `"batch-smoke-01"`), not the Anthropic submission id (e.g., `"msgbatch_01..."`). The Anthropic id was never the right value — it doesn't match the schema pattern `^batch-[a-z0-9-]{1,48}$` and isn't what the aggregator joins on. The Anthropic id remains persisted separately in `runs/<runId>/batch-id.txt` for traceability. The duplicate-scenario reattachment branch also re-stamps `ParentBatchId` (a duplicate from a different Sonnet's batch must carry its own parent id, not the original's). |
+| 8 | (Discovered during post-closure review.) The persisted `sonnet-NN/result.json` `tokensUsed` carried the model's self-reported placeholder values, diverging from the cost ledger and from Anthropic Console. | `SonnetDispatcher.RunAsync` validated the model's text and persisted the result without overwriting `tokensUsed` from the API response. (Cost ledger was correct because the ledger entry was built directly from `response.Usage`; only the persisted JSON file was stale.) | After schema validation, `result = result with { TokensUsed = ... }` populated from `response.Usage` before CoT persistence. |
+
+**Verification.** Live-API smoke run on 2026-04-26 (run id `20260426-175125-run`) produced:
+
+- Report Tier 3 table populated: scenario `sc-01`, outcome `ok`, 2/2 assertions, $0.0045 spend.
+- Aggregate key metrics rendered (entitiesActive, systemsRun, ticksExecuted, worldObjectsPresent) — a section the aggregator was always able to produce but couldn't reach because the join failed.
+- Cost ledger Haiku entry: input 97, cachedRead 34,605, output 414, $0.00454 — non-zero.
+- Persisted `haiku-01/result.json` `parentBatchId` = `"batch-smoke-01-haiku"`, schema-conforming, joins correctly.
+- Persisted `sonnet-01/result.json` `tokensUsed` = `{194, 0, 635, 34108}` — matches the cost ledger Sonnet entry exactly.
+- Total spend $0.1426; mission outcome `ok`; exit 0.
+
+**Files touched.** `Warden.Orchestrator/Batch/BatchScheduler.cs` (ParseSucceeded plus the `RunAsync` parent-batch-id map), `Warden.Orchestrator/Dispatcher/SonnetDispatcher.cs` (TokensUsed overwrite). No schema changes, no DTO changes, no test changes. Existing fixture-based BatchScheduler unit tests pass unchanged because the test harness happened to use a `parentBatchId` that already equalled the parent ScenarioBatch's `BatchId`.
+
+**One pre-existing flake observed** (not introduced by this pass, unfixed): `Warden.Orchestrator.Tests.RunCommandEndToEndTests.AT01_MockRun_ExitsZeroAndWritesLedger` fails reproducibly with `IOException: file in use` on `cost-ledger.jsonl`. The failure happens during `CostLedger.AppendAsync` (plain `File.AppendAllTextAsync`, no locking) and pre-dates the post-closure pass — confirmed by stashing the patches and re-running the test. Likely cause: a Windows file-handle race in the mock-mode end-to-end harness when the test's `CostLedger` writer overlaps with the `ReportAggregator.ReadLedger` reader. Phase-2 backlog item below.
 
 ---
 
@@ -152,11 +177,11 @@ The Phase 0 cost model (`02-cost-model.md`) projected $0.08–$0.15 for a smoke 
 - **Subsequent calls in the same window (cache read):** $0.02. Cached prefix reads at 0.10× input rate — 90% savings as advertised.
 - **Total smoke mission (1 Sonnet + 1 Haiku):** $0.02 if cache-warm; $0.14 if cache-cold. Console reflects exact spend.
 - **Cast-validate failure case:** $0.02 (Sonnet read corpus, returned blocked, no Haiku batch dispatched).
-- **Phase 1 total real-API spend across all testing:** approximately $0.40 across 6 runs.
+- **Phase 1 total real-API spend across all testing:** approximately $0.40 across 6 runs; +$0.42 across 2 post-closure verification runs (2026-04-26).
 
 The cost model is honest within ±20%. Set `--budget-usd 1.00` for any single smoke mission as a 5–7× safety ceiling. For the eventual cast-validate-fixed run with 5+ Haiku scenarios, $2.00 is appropriate.
 
-The local cost ledger underreports Haiku spend until §4's Phase 2 backlog item is fixed. Cross-check Anthropic Console for ground truth.
+The local cost ledger now matches Anthropic Console for both Sonnet and Haiku entries (resolved in §4.1, 2026-04-26).
 
 ---
 
@@ -168,15 +193,16 @@ Ordered by dependency / value:
 2. **Schedule layer.** Per-NPC daily routine attached at spawn from archetype hints. "Donna at her desk 8am–10:30, breakroom 10:30–10:45, desk again, lunch outside 12–12:45..." Schedule emits movement targets that the action-selection layer can override under sufficient drive pressure. Probably implemented as a `ScheduleComponent` + `ScheduleSystem` that proposes targets which action-selection accepts or rejects.
 3. **Memory recording on relationship entities.** The schema reserves `relationships[].historyEventIds[]`; the narrative event bus emits proximity-mediated candidates; nothing wires them together. A `MemoryRecordingSystem` listens to the narrative bus, decides per-pair memory persistence (lighter threshold than chronicle-global), writes to a per-relationship ring buffer.
 4. **Cast-validate fix.** Pick inline mode or snapshot mode (§4). Snapshot mode is closer to the long-term "Sonnet validates a real projected world" goal and unblocks Phase 2 content-tuning workflows.
-5. **Cost ledger Haiku token capture.** ~30 minutes of Sonnet work. Read `succeeded.Message.Usage` in `BatchScheduler.ParseSucceeded`, copy into `HaikuResult.TokensUsed` before persisting. Add a unit test that exercises the path.
-6. **Report aggregator Haiku scan path.** Update `Warden.Orchestrator/Reports/ReportAggregator.cs` to look for Haiku results at `runs/<runId>/haiku-NN/` rather than `runs/<runId>/sonnet-NN/haiku-NN/`. Add an integration test against a known-good run directory.
-7. **Stress system.** From `DRAFT-new-systems-ideas.md`. Cortisol-like accumulator; pushes events into `WillpowerEventQueue` when sustained; gates burnout at the chronic-stress level. The long-arc breakdown timeline the bibles promise.
-8. **Workload system.** From `DRAFT-new-systems-ideas.md`. Tasks as entities, deadlines, NPC capacity, work-progress-modulated-by-physiology. The "orders come in, nobody told you" loop the world bible commits the gameplay to.
-9. **Social mask system.** From `DRAFT-new-systems-ideas.md`. Difference between performed and felt emotion; mask cracks under willpower depletion. Visible to other NPCs.
-10. **Per-pair memory differentiation in dialog.** The dialog bible flags the Affair archetype's code-switching (different fragments to different listeners) as a v0.1 deferral. Add per-listener fragment-use tracking when playtests show speaker-level differentiation reads as too uniform.
-11. **Visualization layer.** The aesthetic bible's deferred 2.5D pixel-art-from-3D renderer. Substantial — probably its own multi-packet phase.
-12. **Per-NPC name generation.** Cast generator currently produces unnamed NPCs; the world bible implies names like Donna, Frank, Greg. Small content packet.
-13. **Engine fact sheet auto-regeneration.** Add a CI/build step that regenerates `docs/engine-fact-sheet.md` whenever `SimulationBootstrapper.cs` changes, so the cached corpus always reflects current engine state.
+5. **Mock-mode end-to-end test flake.** `RunCommandEndToEndTests.AT01_MockRun_ExitsZeroAndWritesLedger` fails reproducibly with `IOException: file in use` on `cost-ledger.jsonl`. Pre-existing on `staging`, surfaced during the §4.1 verification. Likely a Windows file-handle race in `CostLedger.AppendAsync` (plain `File.AppendAllTextAsync`, no locking). Either add a lightweight mutex around the append, or switch to a single `FileStream` opened once with `FileShare.Read` and held for the run's lifetime. ~45 minutes of Sonnet work + an integration test that runs the mock pipeline 50 times in a loop.
+6. **Stress system.** From `new-systems-ideas.md`. Cortisol-like accumulator; pushes events into `WillpowerEventQueue` when sustained; gates burnout at the chronic-stress level. The long-arc breakdown timeline the bibles promise.
+7. **Workload system.** From `new-systems-ideas.md`. Tasks as entities, deadlines, NPC capacity, work-progress-modulated-by-physiology. The "orders come in, nobody told you" loop the world bible commits the gameplay to.
+8. **Social mask system.** From `new-systems-ideas.md`. Difference between performed and felt emotion; mask cracks under willpower depletion. Visible to other NPCs.
+9. **Per-pair memory differentiation in dialog.** The dialog bible flags the Affair archetype's code-switching (different fragments to different listeners) as a v0.1 deferral. Add per-listener fragment-use tracking when playtests show speaker-level differentiation reads as too uniform.
+10. **Visualization layer.** The aesthetic bible's deferred 2.5D pixel-art-from-3D renderer. Substantial — probably its own multi-packet phase.
+11. **Per-NPC name generation.** Cast generator currently produces unnamed NPCs; the world bible implies names like Donna, Frank, Greg. Small content packet.
+12. **Engine fact sheet auto-regeneration.** Add a CI/build step that regenerates `docs/engine-fact-sheet.md` whenever `SimulationBootstrapper.cs` changes, so the cached corpus always reflects current engine state.
+
+(Items 5 and 6 from the original Phase-1-closure backlog — Haiku token capture and report aggregator path — were resolved in §4.1.)
 
 The PHASE-1-TEST-GUIDE.md §10 has these in operational terms — read both lists together.
 

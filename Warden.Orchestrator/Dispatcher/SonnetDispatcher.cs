@@ -131,12 +131,27 @@ public sealed class SonnetDispatcher
                 string.Join("; ", validation.Errors));
         }
 
+        // Stamp the parsed result with authoritative server-side token usage. The model
+        // self-reports placeholder values that don't match what Anthropic actually billed.
+        // The cost ledger pulls from response.Usage directly; the persisted result.json
+        // would otherwise diverge from the ledger and from Anthropic Console.
+        var usage = response.Usage;
+        result = result with
+        {
+            TokensUsed = new Contracts.Handshake.TokenUsage
+            {
+                Input      = usage.InputTokens,
+                CachedRead = usage.CacheReadInputTokens,
+                CacheWrite = usage.CacheCreationInputTokens,
+                Output     = usage.OutputTokens
+            }
+        };
+
         // Retrieve the worktree diff now (before ledger/CoT), then evaluate.
         // The override is applied after the ledger write so the spend is always recorded.
         var diff    = await _diffSource.GetDiffAsync(result.WorktreePath, ct).ConfigureAwait(false);
         var verdict = FailClosedEscalator.Evaluate(result, diff);
 
-        var usage = response.Usage;
         var rates = CostRates.Sonnet;
         var usdIn  = usage.InputTokens                / 1_000_000m * rates.InputPerMtok;
         var usdCR  = usage.CacheReadInputTokens       / 1_000_000m * rates.CacheReadPerMtok;
