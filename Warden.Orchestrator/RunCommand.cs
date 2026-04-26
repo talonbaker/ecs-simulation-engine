@@ -86,7 +86,8 @@ public static class RunCommand
         bool              dryRun,
         string            runId,
         CancellationToken ct,
-        string?           runsRoot = null)
+        string?           runsRoot  = null,
+        string?           repoRoot  = null)
     {
         // -- 1. Load mission -------------------------------------------------------
         if (!missionFile.Exists)
@@ -208,7 +209,8 @@ public static class RunCommand
             : new GitWorktreeDiffSource(
                 NullLoggerFactory.Instance.CreateLogger<GitWorktreeDiffSource>());
 
-        var                  dispatcher = new SonnetDispatcher(client, cache, cot, ledger, budget, retry, log, diffSource);
+        var                  dispatcher = new SonnetDispatcher(client, cache, cot, ledger, budget, retry, log, diffSource,
+                                                                repoRoot: repoRoot ?? Environment.CurrentDirectory);
         var                  controller = new ConcurrencyController();
 
         // -- 6. Dry-run shortcut ---------------------------------------------------

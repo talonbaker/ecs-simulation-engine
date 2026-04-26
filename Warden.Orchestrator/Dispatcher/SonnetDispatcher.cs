@@ -7,6 +7,7 @@ using Warden.Contracts.Handshake;
 using Warden.Contracts.SchemaValidation;
 using Warden.Orchestrator.Cache;
 using Warden.Orchestrator.Infrastructure;
+using InlineOutcome = Warden.Orchestrator.Dispatcher.InlineReferenceFiles.Outcome;
 
 namespace Warden.Orchestrator.Dispatcher;
 
@@ -25,6 +26,7 @@ public sealed class SonnetDispatcher
     private readonly ResiliencePipeline<MessageResponse> _retry;
     private readonly ILogger<SonnetDispatcher>           _log;
     private readonly IWorktreeDiffSource                 _diffSource;
+    private readonly string                              _repoRoot;
 
     public SonnetDispatcher(
         IAnthropicClient                    client,
@@ -34,7 +36,8 @@ public sealed class SonnetDispatcher
         Persistence.BudgetGuard             budget,
         ResiliencePipeline<MessageResponse> retry,
         ILogger<SonnetDispatcher>           log,
-        IWorktreeDiffSource                 diffSource)
+        IWorktreeDiffSource                 diffSource,
+        string?                             repoRoot = null)
     {
         _client     = client;
         _cache      = cache;
@@ -44,6 +47,7 @@ public sealed class SonnetDispatcher
         _retry      = retry;
         _log        = log;
         _diffSource = diffSource;
+        _repoRoot   = repoRoot ?? Environment.CurrentDirectory;
     }
 
     /// <summary>
@@ -59,14 +63,41 @@ public sealed class SonnetDispatcher
         CancellationToken ct)
     {
         var specJson = JsonSerializer.Serialize(spec, JsonOptions.Wire);
-        var request  = _cache.BuildRequest(ModelId.SonnetV46, specJson);
+
+        // Inline-files preprocessing: pre-read every path listed in spec.Inputs.ReferenceFiles
+        // and prepend the formatted block to the user turn.  Sonnets dispatched via the API
+        // have no file-system access; without this step any spec with referenceFiles always
+        // blocks with missing-reference-file (PHASE-1-HANDOFF §4 / WP-2.0.A).
+        string userTurnBody = specJson;
+        if (spec.Inputs?.ReferenceFiles?.Count > 0)
+        {
+            InlineOutcome inlineResult = InlineReferenceFiles.Build(spec.Inputs.ReferenceFiles, _repoRoot);
+            if (inlineResult.Reason is not null)
+            {
+                var blocked = MakeBlockedResult(spec.SpecId, workerId,
+                    inlineResult.Reason.Value, inlineResult.Details ?? string.Empty);
+                if (!dryRun)
+                {
+                    var blockedJson = JsonSerializer.Serialize(blocked, JsonOptions.Wire);
+                    await _cot.PersistResultAsync(runId, workerId, blockedJson, ct).ConfigureAwait(false);
+                    await _cot.AppendEventAsync(runId,
+                        BuildInlineBlockedEventJson(workerId, spec.SpecId, inlineResult.Reason.Value),
+                        ct).ConfigureAwait(false);
+                }
+                return blocked;
+            }
+            if (inlineResult.InlinedBlock is not null)
+                userTurnBody = inlineResult.InlinedBlock + specJson;
+        }
+
+        var request = _cache.BuildRequest(ModelId.SonnetV46, userTurnBody);
 
         if (dryRun)
         {
             Console.WriteLine($"[dry-run] {workerId} prompt for spec '{spec.SpecId}':");
             foreach (var block in request.System ?? new List<ContentBlock>())
                 if (block is TextBlock tb) Console.WriteLine(tb.Text);
-            Console.WriteLine(specJson);
+            Console.WriteLine(userTurnBody);
             return MakeStubResult(spec.SpecId, workerId, OutcomeCode.Ok);
         }
 
@@ -237,4 +268,13 @@ public sealed class SonnetDispatcher
             AcceptanceTestResults = new List<AcceptanceTestResult>(),
             TokensUsed            = new Contracts.Handshake.TokenUsage()
         };
+
+    private static string BuildInlineBlockedEventJson(
+        string workerId, string specId, BlockReason reason)
+    {
+        // Serialise the reason enum to its kebab-case wire form, then strip the surrounding quotes.
+        var reasonStr = JsonSerializer.Serialize(reason, JsonOptions.Wire).Trim('"');
+        var ts = DateTimeOffset.UtcNow.ToString("O");
+        return $"{{\"ts\":\"{ts}\",\"kind\":\"inline-files-blocked\",\"workerId\":\"{workerId}\",\"reason\":\"{reasonStr}\",\"specId\":\"{specId}\"}}";
+    }
 }
