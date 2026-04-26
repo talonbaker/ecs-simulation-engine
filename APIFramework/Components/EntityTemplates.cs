@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using APIFramework.Config;
+using APIFramework.Components;
 
 namespace APIFramework.Core;
-
-using APIFramework.Components;
 
 /// <summary>
 /// Factory for spawning pre-configured entities into the world.
@@ -321,6 +320,76 @@ public static class EntityTemplates
         entity.Add(silhouette);
         entity.Add(archetypeRef);
         entity.Add(deal);
+        return entity;
+    }
+
+    /// <summary>
+    /// Spawns a stain entity at the given position.
+    /// Gets <see cref="StainTag"/>, <see cref="StainComponent"/>, <see cref="PositionComponent"/>,
+    /// and <see cref="ObstacleTag"/> if magnitude ≥ 50.
+    /// </summary>
+    public static Entity Stain(
+        EntityManager manager,
+        string?       roomId,
+        float         x,
+        float         z,
+        string        source,
+        int           magnitude,
+        string        chronicleEntryId,
+        long          createdAtTick)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new StainTag());
+        entity.Add(new PositionComponent { X = x, Y = 0f, Z = z });
+        entity.Add(new StainComponent
+        {
+            Source           = source,
+            Magnitude        = Math.Clamp(magnitude, 0, 100),
+            CreatedAtTick    = createdAtTick,
+            ChronicleEntryId = chronicleEntryId,
+        });
+        if (magnitude >= 50)
+            entity.Add(new ObstacleTag());
+        return entity;
+    }
+
+    /// <summary>
+    /// Spawns a broken-item entity at the given position.
+    /// Gets <see cref="BrokenItemTag"/>, <see cref="BrokenItemComponent"/>, and <see cref="PositionComponent"/>.
+    /// </summary>
+    public static Entity BrokenItem(
+        EntityManager manager,
+        string        originalKind,
+        string?       roomId,
+        float         x,
+        float         z,
+        BreakageKind  breakageKind,
+        string        chronicleEntryId,
+        long          createdAtTick)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new BrokenItemTag());
+        entity.Add(new PositionComponent { X = x, Y = 0f, Z = z });
+        entity.Add(new BrokenItemComponent
+        {
+            OriginalKind     = originalKind,
+            Breakage         = breakageKind,
+            CreatedAtTick    = createdAtTick,
+            ChronicleEntryId = chronicleEntryId,
+        });
+        return entity;
+    }
+
+    /// <summary>
+    /// Adds <see cref="DialogHistoryComponent"/> and optionally
+    /// <see cref="RecognizedTicComponent"/> to <paramref name="entity"/>.
+    /// Call after <see cref="WithSocial"/> so the entity already has an NpcTag.
+    /// </summary>
+    public static Entity WithDialogHistory(Entity entity, bool addTicRecognition = true)
+    {
+        entity.Add(new DialogHistoryComponent());
+        if (addTicRecognition)
+            entity.Add(new RecognizedTicComponent());
         return entity;
     }
 

@@ -119,7 +119,7 @@ public sealed class AiVerbTests : IDisposable
 
         // Must contain required top-level fields.
         var root = doc.RootElement;
-        Assert.Equal("0.3.0", root.GetProperty("schemaVersion").GetString());
+        Assert.Equal("0.4.0", root.GetProperty("schemaVersion").GetString());
         Assert.True(root.TryGetProperty("clock",    out _), "Missing 'clock' field.");
         Assert.True(root.TryGetProperty("entities", out _), "Missing 'entities' field.");
 

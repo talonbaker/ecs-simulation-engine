@@ -21,6 +21,8 @@ public class SimConfig
     public MovementConfig         Movement       { get; set; } = new();
     public NarrativeConfig        Narrative      { get; set; } = new();
     public CastGeneratorConfig    CastGenerator  { get; set; } = new();
+    public ChronicleConfig        Chronicle      { get; set; } = new();
+    public DialogConfig           Dialog         { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -651,6 +653,54 @@ public class RotSystemConfig
     public float RotTagThreshold { get; set; } = 30f;
 }
 
+// ── Dialog system ─────────────────────────────────────────────────────────────
+
+/// <summary>
+/// Tuning knobs for the dialog phrase-selection and calcification pipeline.
+/// All thresholds are on a 0–100 drive scale unless noted otherwise.
+/// </summary>
+public class DialogConfig
+{
+    /// <summary>Number of times a fragment must be selected before calcification is eligible.</summary>
+    public int    CalcifyThreshold              { get; set; } = 8;
+
+    /// <summary>Fraction of uses that must share the dominant context before calcification fires (0.0–1.0).</summary>
+    public double CalcifyContextDominanceMin    { get; set; } = 0.70;
+
+    /// <summary>Number of times a listener must hear a fragment from one speaker for tic recognition.</summary>
+    public int    TicRecognitionThreshold       { get; set; } = 5;
+
+    /// <summary>Game-seconds within which a prior use of the same fragment incurs RecencyPenalty.</summary>
+    public int    RecencyWindowSeconds          { get; set; } = 300;
+
+    /// <summary>Score added per drive key whose valence ordinal matches the speaker's current drive level.</summary>
+    public int    ValenceMatchScore             { get; set; } = 5;
+
+    /// <summary>Score penalty applied when the fragment was used within RecencyWindowSeconds.</summary>
+    public int    RecencyPenalty                { get; set; } = -10;
+
+    /// <summary>Bonus score added when a fragment is calcified for the speaker.</summary>
+    public int    CalcifyBiasScore              { get; set; } = 3;
+
+    /// <summary>Upper bound of the "low" valence ordinal bucket (drive value 0–ValenceLowMaxValue maps to "low").</summary>
+    public int    ValenceLowMaxValue            { get; set; } = 33;
+
+    /// <summary>Upper bound of the "mid" valence ordinal bucket (ValenceLowMaxValue+1–ValenceMidMaxValue maps to "mid").</summary>
+    public int    ValenceMidMaxValue            { get; set; } = 66;
+
+    /// <summary>Game-days of disuse before a calcified fragment loses its calcified status.</summary>
+    public int    DecalcifyTimeoutDays          { get; set; } = 30;
+
+    /// <summary>Relative path to the corpus JSON file, searched from CWD upward.</summary>
+    public string CorpusPath                    { get; set; } = "docs/c2-content/dialog/corpus-starter.json";
+
+    /// <summary>Drive level (0–100) at which a drive is considered elevated for context selection.</summary>
+    public int    DriveContextThreshold         { get; set; } = 60;
+
+    /// <summary>Per-tick probability (0–1) that an in-range NPC pair attempts dialog.</summary>
+    public double DialogAttemptProbability      { get; set; } = 0.05;
+}
+
 // ── Social systems ────────────────────────────────────────────────────────────
 
 public class SocialSystemConfig
@@ -887,4 +937,38 @@ public class CastGeneratorConfig
 
     /// <summary>Intensity range [min,max] for seeded relationships.</summary>
     public int[] RelationshipIntensityRange { get; set; } = new[] { 30, 70 };
+}
+
+// ── Chronicle systems ─────────────────────────────────────────────────────────
+
+public class ChronicleConfig
+{
+    /// <summary>Maximum number of chronicle entries before oldest are dropped.</summary>
+    public int MaxEntries { get; set; } = 4096;
+
+    public ChronicleThresholdRulesConfig ThresholdRules { get; set; } = new();
+
+    /// <summary>Stain magnitude range [min, max]. Default [10, 80].</summary>
+    public int[] StainMagnitudeRange { get; set; } = new[] { 10, 80 };
+
+    /// <summary>Broken-item magnitude range [min, max]. Default [20, 100].</summary>
+    public int[] BrokenItemMagnitudeRange { get; set; } = new[] { 20, 100 };
+}
+
+public class ChronicleThresholdRulesConfig
+{
+    /// <summary>Minimum relationship-intensity delta required to persist a relationship-changing candidate.</summary>
+    public int IntensityChangeMinForRelationshipStick { get; set; } = 15;
+
+    /// <summary>Minimum irritation drive value (after spike) required for physical manifest spawning.</summary>
+    public int IrritationSpikeMinForPhysicalManifest { get; set; } = 70;
+
+    /// <summary>
+    /// Game-seconds window after a DriveSpike candidate during which "drive returned to baseline"
+    /// is detected. Candidates still elevated after this window are eligible to persist.
+    /// </summary>
+    public double DriveReturnToBaselineWindowSeconds { get; set; } = 60;
+
+    /// <summary>Minimum number of different NPCs referencing the same event kind in a tick to trigger the talk-about rule.</summary>
+    public int TalkAboutMinReferenceCount { get; set; } = 2;
 }

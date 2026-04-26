@@ -84,6 +84,11 @@ public enum SystemPhase
     /// and emits NarrativeEventCandidates via NarrativeEventBus.
     /// </summary>
     Narrative   = 70,
+    /// <summary>
+    /// Dialog systems — after Narrative so final drive state is visible.
+    /// Phase order: DialogContextDecisionSystem → DialogFragmentRetrievalSystem → DialogCalcifySystem.
+    /// </summary>
+    Dialog      = 75,
     PostUpdate = 100,
 }
 

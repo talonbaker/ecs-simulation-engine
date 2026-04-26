@@ -32,7 +32,10 @@ public enum Schema
     WorldDefinition,
 
     /// <summary><c>archetypes.schema.json</c> — <c>ArchetypeCatalogDto</c></summary>
-    Archetypes
+    Archetypes,
+
+    /// <summary><c>corpus.schema.json</c> — dialog phrase corpus</summary>
+    Corpus
 }
 
 /// <summary>
@@ -41,7 +44,7 @@ public enum Schema
 /// </summary>
 public static class SchemaVersions
 {
-    public const string WorldState    = "0.3.0";
+    public const string WorldState    = "0.4.0";
     public const string OpusToSonnet  = "0.1.0";
     public const string SonnetResult  = "0.1.0";
     public const string SonnetToHaiku = "0.1.0";
@@ -49,4 +52,5 @@ public static class SchemaVersions
     public const string AiCommandBatch  = "0.1.0";
     public const string WorldDefinition = "0.1.0";
     public const string Archetypes      = "0.1.0";
+    public const string Corpus          = "0.1.0";
 }

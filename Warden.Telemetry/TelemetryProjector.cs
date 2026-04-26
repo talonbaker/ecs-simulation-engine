@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using APIFramework.Components;
 using APIFramework.Core;
+using System.Linq;
+using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Lighting;
 using Warden.Contracts.Telemetry;
 using ContractVocabRegister       = Warden.Contracts.Telemetry.VocabularyRegister;
@@ -15,7 +17,9 @@ using ContractBuildingFloor       = Warden.Contracts.Telemetry.BuildingFloor;
 using ContractLightKind           = Warden.Contracts.Telemetry.LightKind;
 using ContractLightState          = Warden.Contracts.Telemetry.LightState;
 using ContractApertureFacing      = Warden.Contracts.Telemetry.ApertureFacing;
-using ContractDayPhase            = Warden.Contracts.Telemetry.DayPhase;
+using ContractDayPhase              = Warden.Contracts.Telemetry.DayPhase;
+using ContractChronicleEventKind    = Warden.Contracts.Telemetry.ChronicleEventKind;
+using EngineChronicleEventKind      = APIFramework.Systems.Chronicle.ChronicleEventKind;
 
 namespace Warden.Telemetry;
 
@@ -61,11 +65,12 @@ public static class TelemetryProjector
         long               tick,
         int                seed,
         string             simVersion,
-        SunStateService?   sunStateService = null)
+        SunStateService?   sunStateService  = null,
+        ChronicleService?  chronicleService = null)
     {
         return new WorldStateDto
         {
-            SchemaVersion  = "0.3.0",
+            SchemaVersion  = "0.4.0",
             CapturedAt     = capturedAt,
             Tick           = (int)tick,
             Seed           = seed,
@@ -80,10 +85,11 @@ public static class TelemetryProjector
                 ViolationCount   = snap.ViolationCount,
                 RecentViolations = null,   // SimulationSnapshot carries only the count
             },
-            Relationships  = entityManager is not null ? ProjectRelationships(entityManager) : null,
-            Rooms          = entityManager is not null ? ProjectRooms(entityManager)          : null,
-            LightSources   = entityManager is not null ? ProjectLightSources(entityManager)   : null,
-            LightApertures = entityManager is not null ? ProjectLightApertures(entityManager) : null,
+            Relationships  = entityManager  is not null ? ProjectRelationships(entityManager)       : null,
+            Rooms          = entityManager  is not null ? ProjectRooms(entityManager)                : null,
+            LightSources   = entityManager  is not null ? ProjectLightSources(entityManager)         : null,
+            LightApertures = entityManager  is not null ? ProjectLightApertures(entityManager)       : null,
+            Chronicle      = chronicleService is not null ? ProjectChronicle(chronicleService)       : null,
         };
     }
 
@@ -466,6 +472,33 @@ public static class TelemetryProjector
                 TargetEntityId = s.TargetEntityId.ToString(),
                 ContentLabel   = s.ContentLabel,
                 Progress       = s.Progress,
+            });
+        }
+        return result;
+    }
+
+    // ── Chronicle ─────────────────────────────────────────────────────────────
+
+    private static IReadOnlyList<ChronicleEntryDto>? ProjectChronicle(ChronicleService svc)
+    {
+        var entries = svc.All;
+        if (entries.Count == 0) return null;
+
+        var result = new List<ChronicleEntryDto>(entries.Count);
+        foreach (var e in entries.OrderBy(x => x.Tick).ThenBy(x => x.Id))
+        {
+            result.Add(new ChronicleEntryDto
+            {
+                Id           = e.Id,
+                Kind         = (ContractChronicleEventKind)(int)e.Kind,
+                Tick         = e.Tick,
+                Participants = e.ParticipantIds
+                                .Select(ParticipantIntIdToGuidString)
+                                .ToList(),
+                Location     = string.IsNullOrEmpty(e.Location) ? null : e.Location,
+                Description  = e.Description,
+                Persistent   = e.Persistent,
+                PhysicalManifestEntityId = e.PhysicalManifestEntityId,
             });
         }
         return result;

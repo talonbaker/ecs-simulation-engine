@@ -62,6 +62,10 @@ public struct ObstacleTag { }
 public struct NpcSlotTag { }
 /// <summary>Marks an entity as an authored world object placed at a named anchor (e.g. box of floppy disks, parking-lot sign).</summary>
 public struct AnchorObjectTag { }
+/// <summary>Marks a persistent physical spill entity spawned by PhysicalManifestSpawner.</summary>
+public struct StainTag { }
+/// <summary>Marks a persistent broken-item entity spawned by PhysicalManifestSpawner.</summary>
+public struct BrokenItemTag { }
 #endregion
 
 #region Desire Tags

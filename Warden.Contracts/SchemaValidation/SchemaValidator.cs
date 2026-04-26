@@ -165,6 +165,7 @@ public static class SchemaValidator
         Schema.AiCommandBatch  => "Warden.Contracts.SchemaValidation.ai-command-batch.schema.json",
         Schema.WorldDefinition => "Warden.Contracts.SchemaValidation.world-definition.schema.json",
         Schema.Archetypes      => "Warden.Contracts.SchemaValidation.archetypes.schema.json",
+        Schema.Corpus          => "Warden.Contracts.SchemaValidation.corpus.schema.json",
         _                      => throw new ArgumentOutOfRangeException(nameof(schema))
     };
 
