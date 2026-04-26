@@ -32,4 +32,10 @@ public sealed class NullChainOfThoughtStore : IChainOfThoughtStore
         Console.WriteLine($"[NullCoT] {sonnetId}/result.json — skipped (WP-10)");
         return Task.CompletedTask;
     }
+
+    public Task AppendEventAsync(string runId, string eventJson, CancellationToken ct = default)
+    {
+        Console.WriteLine($"[NullCoT] events.jsonl ← {eventJson} — skipped");
+        return Task.CompletedTask;
+    }
 }

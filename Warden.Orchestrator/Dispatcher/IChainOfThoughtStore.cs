@@ -14,4 +14,5 @@ public interface IChainOfThoughtStore
     Task PersistPromptAsync(string runId, string sonnetId, string promptText, CancellationToken ct = default);
     Task PersistRawResponseAsync(string runId, string sonnetId, string responseJson, CancellationToken ct = default);
     Task PersistResultAsync(string runId, string sonnetId, string resultJson, CancellationToken ct = default);
+    Task AppendEventAsync(string runId, string eventJson, CancellationToken ct = default);
 }

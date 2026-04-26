@@ -148,7 +148,8 @@ public static class ResumeCommand
             : new GitWorktreeDiffSource(
                 NullLoggerFactory.Instance.CreateLogger<GitWorktreeDiffSource>());
 
-        var dispatcher = new SonnetDispatcher(client, cache, cot, ledger, budget, retry, log, diffSource);
+        var dispatcher = new SonnetDispatcher(client, cache, cot, ledger, budget, retry, log, diffSource,
+            repoRoot: Environment.CurrentDirectory);
         var controller = new ConcurrencyController();
 
         var specs    = new List<OpusSpecPacket>(pending.Count);

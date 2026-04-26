@@ -28,7 +28,8 @@ public sealed class CastValidateMockRunTests : IDisposable
     [Fact]
     public async Task AT10_MockRun_CastValidate_ExitsZeroAndWritesLedger()
     {
-        var (missionFile, specsGlob) = LocateCastValidateMission();
+        var repoRoot = FindRepoRoot();
+        var (missionFile, specsGlob) = LocateCastValidateMission(repoRoot);
 
         var exitCode = await RunCommand.RunAsync(
             missionFile: new FileInfo(missionFile),
@@ -38,7 +39,8 @@ public sealed class CastValidateMockRunTests : IDisposable
             dryRun:      false,
             runId:       "cast-validate-e2e-test",
             ct:          CancellationToken.None,
-            runsRoot:    Path.Combine(_tempDir, "runs"));
+            runsRoot:    Path.Combine(_tempDir, "runs"),
+            repoRoot:    repoRoot);
 
         Assert.Equal(0, exitCode);
 
@@ -53,7 +55,7 @@ public sealed class CastValidateMockRunTests : IDisposable
     [Fact]
     public async Task AT10_DryRun_CastValidate_ExitsZeroWithoutLedger()
     {
-        var (missionFile, specsGlob) = LocateCastValidateMission();
+        var (missionFile, specsGlob) = LocateCastValidateMission(FindRepoRoot());
 
         var exitCode = await RunCommand.RunAsync(
             missionFile: new FileInfo(missionFile),
@@ -70,9 +72,8 @@ public sealed class CastValidateMockRunTests : IDisposable
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private static (string missionFile, string specsGlob) LocateCastValidateMission()
+    private static (string missionFile, string specsGlob) LocateCastValidateMission(string repoRoot)
     {
-        var repoRoot = FindRepoRoot();
         var mission  = Path.Combine(repoRoot, "examples", "smoke-mission-cast-validate.md");
         var glob     = Path.Combine(repoRoot, "examples", "smoke-specs", "cast-validate.json");
 
