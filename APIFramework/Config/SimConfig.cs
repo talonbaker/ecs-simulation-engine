@@ -20,6 +20,7 @@ public class SimConfig
     public LightingConfig     Lighting  { get; set; } = new();
     public MovementConfig     Movement  { get; set; } = new();
     public NarrativeConfig    Narrative { get; set; } = new();
+    public ChronicleConfig    Chronicle { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -848,4 +849,38 @@ public class NarrativeConfig
 
     /// <summary>Maximum character length of the Detail field on any candidate.</summary>
     public int CandidateDetailMaxLength { get; set; } = 280;
+}
+
+// ── Chronicle systems ─────────────────────────────────────────────────────────
+
+public class ChronicleConfig
+{
+    /// <summary>Maximum number of chronicle entries before oldest are dropped.</summary>
+    public int MaxEntries { get; set; } = 4096;
+
+    public ChronicleThresholdRulesConfig ThresholdRules { get; set; } = new();
+
+    /// <summary>Stain magnitude range [min, max]. Default [10, 80].</summary>
+    public int[] StainMagnitudeRange { get; set; } = new[] { 10, 80 };
+
+    /// <summary>Broken-item magnitude range [min, max]. Default [20, 100].</summary>
+    public int[] BrokenItemMagnitudeRange { get; set; } = new[] { 20, 100 };
+}
+
+public class ChronicleThresholdRulesConfig
+{
+    /// <summary>Minimum relationship-intensity delta required to persist a relationship-changing candidate.</summary>
+    public int IntensityChangeMinForRelationshipStick { get; set; } = 15;
+
+    /// <summary>Minimum irritation drive value (after spike) required for physical manifest spawning.</summary>
+    public int IrritationSpikeMinForPhysicalManifest { get; set; } = 70;
+
+    /// <summary>
+    /// Game-seconds window after a DriveSpike candidate during which "drive returned to baseline"
+    /// is detected. Candidates still elevated after this window are eligible to persist.
+    /// </summary>
+    public double DriveReturnToBaselineWindowSeconds { get; set; } = 60;
+
+    /// <summary>Minimum number of different NPCs referencing the same event kind in a tick to trigger the talk-about rule.</summary>
+    public int TalkAboutMinReferenceCount { get; set; } = 2;
 }

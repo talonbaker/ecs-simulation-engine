@@ -297,6 +297,63 @@ public static class EntityTemplates
         return entity;
     }
 
+    /// <summary>
+    /// Spawns a stain entity at the given position.
+    /// Gets <see cref="StainTag"/>, <see cref="StainComponent"/>, <see cref="PositionComponent"/>,
+    /// and <see cref="ObstacleTag"/> if magnitude ≥ 50.
+    /// </summary>
+    public static Entity Stain(
+        EntityManager manager,
+        string?       roomId,
+        float         x,
+        float         z,
+        string        source,
+        int           magnitude,
+        string        chronicleEntryId,
+        long          createdAtTick)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new StainTag());
+        entity.Add(new PositionComponent { X = x, Y = 0f, Z = z });
+        entity.Add(new StainComponent
+        {
+            Source           = source,
+            Magnitude        = Math.Clamp(magnitude, 0, 100),
+            CreatedAtTick    = createdAtTick,
+            ChronicleEntryId = chronicleEntryId,
+        });
+        if (magnitude >= 50)
+            entity.Add(new ObstacleTag());
+        return entity;
+    }
+
+    /// <summary>
+    /// Spawns a broken-item entity at the given position.
+    /// Gets <see cref="BrokenItemTag"/>, <see cref="BrokenItemComponent"/>, and <see cref="PositionComponent"/>.
+    /// </summary>
+    public static Entity BrokenItem(
+        EntityManager manager,
+        string        originalKind,
+        string?       roomId,
+        float         x,
+        float         z,
+        BreakageKind  breakageKind,
+        string        chronicleEntryId,
+        long          createdAtTick)
+    {
+        var entity = manager.CreateEntity();
+        entity.Add(new BrokenItemTag());
+        entity.Add(new PositionComponent { X = x, Y = 0f, Z = z });
+        entity.Add(new BrokenItemComponent
+        {
+            OriginalKind     = originalKind,
+            Breakage         = breakageKind,
+            CreatedAtTick    = createdAtTick,
+            ChronicleEntryId = chronicleEntryId,
+        });
+        return entity;
+    }
+
     public static Entity SpawnCat(EntityManager manager, EntityConfig? cfg = null)
     {
         cfg ??= EntityConfig.DefaultCat;

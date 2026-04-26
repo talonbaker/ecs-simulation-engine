@@ -447,6 +447,26 @@
     "candidateDetailMaxLength":   280
   },
 
+  // ── Persistent chronicle ──────────────────────────────────────────────────
+  "chronicle": {
+    // Maximum entries before oldest are dropped.
+    "maxEntries": 4096,
+    "thresholdRules": {
+      // Minimum relationship-intensity delta to persist a relationship-changing candidate.
+      "intensityChangeMinForRelationshipStick": 15,
+      // Post-spike irritation value required for physical-manifest spawning.
+      "irritationSpikeMinForPhysicalManifest": 70,
+      // Game-seconds window used when checking drive-return-to-baseline.
+      "driveReturnToBaselineWindowSeconds": 60,
+      // Minimum distinct NPCs referencing the same event kind to trigger talk-about.
+      "talkAboutMinReferenceCount": 2
+    },
+    // [min, max] magnitude for stain entities.
+    "stainMagnitudeRange": [10, 80],
+    // [min, max] magnitude for broken-item entities.
+    "brokenItemMagnitudeRange": [20, 100]
+  },
+
   // ── Social engine ──────────────────────────────────────────────────────────
   "social": {
     "driveDecayPerTick": 0.15,

@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Lighting;
 using Warden.Contracts;
 using Warden.Contracts.SchemaValidation;
@@ -32,17 +33,18 @@ namespace Warden.Telemetry.Tests;
 /// <summary>
 /// Acceptance tests for <see cref="TelemetryProjector"/>:
 ///
-/// AT-01 — Projector emits SchemaVersion = "0.3.0".
+/// AT-01 — Projector emits SchemaVersion = "0.4.0".
 /// AT-02 — Two rooms produce a rooms[] array of length 2 with correct fields.
 /// AT-03 — Three light sources produce a lightSources[] array of length 3 with correct fields.
 /// AT-04 — One light aperture produces a lightApertures[] array of length 1 with correct fields.
 /// AT-05 — Noon sun state projects correct azimuth, elevation, and DayPhase.
 /// AT-06 — Midnight sun state projects negative elevation and DayPhase.Night.
 /// AT-07 — No rooms → rooms is null or absent.
-/// AT-08 — Full spatial snapshot validates against the v0.3 world-state schema.
+/// AT-08 — Full spatial snapshot validates against the v0.4 world-state schema.
 /// AT-09 — Two projections of the same snapshot produce byte-identical JSON.
 /// AT-10 — Rooms, light sources, and apertures are emitted sorted by id ascending.
-/// AT-11 — All pre-existing projector tests still pass.
+/// AT-11 — Chronicle entries from ChronicleService are projected to WorldStateDto.Chronicle.
+/// AT-12 — All pre-existing projector tests still pass.
 /// </summary>
 public class TelemetryProjectorTests
 {
@@ -68,10 +70,10 @@ public class TelemetryProjectorTests
     // ── AT-01: SchemaVersion ─────────────────────────────────────────────────
 
     [Fact]
-    public void AT01_SchemaVersion_Is030()
+    public void AT01_SchemaVersion_Is040()
     {
         var dto = Capture(MakeSim());
-        Assert.Equal("0.3.0", dto.SchemaVersion);
+        Assert.Equal("0.4.0", dto.SchemaVersion);
     }
 
     // ── AT-02: NPC social projection ─────────────────────────────────────────
@@ -541,7 +543,98 @@ public class TelemetryProjectorTests
         Assert.Equal(apIds.OrderBy(x => x, StringComparer.Ordinal).ToList(), apIds);
     }
 
-    // ── AT-11: Existing tests (unchanged below this line) ────────────────────
+    // ── AT-11: Chronicle projection ───────────────────────────────────────────
+
+    [Fact]
+    public void AT11_ChronicleService_WithEntries_ProjectsToChronicleArray()
+    {
+        var svc = new ChronicleService();
+        svc.Append(new ChronicleEntry(
+            Id:                       "aaaa0001-0000-0000-0000-000000000000",
+            Kind:                     APIFramework.Systems.Chronicle.ChronicleEventKind.SpilledSomething,
+            Tick:                     10L,
+            ParticipantIds:           new List<int> { 1, 2 },
+            Location:                 "breakroom",
+            Description:              "Coffee spilled on the table.",
+            Persistent:               true,
+            PhysicalManifestEntityId: null));
+        svc.Append(new ChronicleEntry(
+            Id:                       "aaaa0002-0000-0000-0000-000000000000",
+            Kind:                     APIFramework.Systems.Chronicle.ChronicleEventKind.PublicArgument,
+            Tick:                     20L,
+            ParticipantIds:           new List<int>(),
+            Location:                 string.Empty,
+            Description:              "Heated words in the hallway.",
+            Persistent:               true,
+            PhysicalManifestEntityId: null));
+
+        var snap = MakeSim(humanCount: 0).Capture();
+        var dto  = TelemetryProjector.Project(
+            snap, null, FixedCapture, 25L, 42, "test", chronicleService: svc);
+
+        Assert.NotNull(dto.Chronicle);
+        Assert.Equal(2, dto.Chronicle!.Count);
+
+        // Sorted by tick ascending
+        Assert.Equal(10L, dto.Chronicle[0].Tick);
+        Assert.Equal(20L, dto.Chronicle[1].Tick);
+
+        Assert.Equal(Warden.Contracts.Telemetry.ChronicleEventKind.SpilledSomething,
+            dto.Chronicle[0].Kind);
+        Assert.Equal("breakroom", dto.Chronicle[0].Location);
+        Assert.Equal("Coffee spilled on the table.", dto.Chronicle[0].Description);
+        Assert.True(dto.Chronicle[0].Persistent);
+
+        // Participants are projected as GUID strings
+        Assert.Equal(2, dto.Chronicle[0].Participants.Count);
+    }
+
+    [Fact]
+    public void AT11_ChronicleService_Empty_ProducesNullChronicle()
+    {
+        var svc  = new ChronicleService();  // no entries
+        var snap = MakeSim(humanCount: 0).Capture();
+        var dto  = TelemetryProjector.Project(
+            snap, null, FixedCapture, 0L, 42, "test", chronicleService: svc);
+
+        Assert.Null(dto.Chronicle);
+    }
+
+    [Fact]
+    public void AT11_NoChronicleService_ChronicleIsNull()
+    {
+        var snap = MakeSim(humanCount: 0).Capture();
+        var dto  = TelemetryProjector.Project(
+            snap, null, FixedCapture, 0L, 42, "test");
+
+        Assert.Null(dto.Chronicle);
+    }
+
+    [Fact]
+    public void AT11_ChronicleProjection_ValidatesAgainstSchema()
+    {
+        var svc = new ChronicleService();
+        svc.Append(new ChronicleEntry(
+            Id:                       "aaaa0003-0000-0000-0000-000000000000",
+            Kind:                     APIFramework.Systems.Chronicle.ChronicleEventKind.PublicArgument,
+            Tick:                     5L,
+            ParticipantIds:           new List<int>(),
+            Location:                 "office",
+            Description:              "A short description.",
+            Persistent:               true,
+            PhysicalManifestEntityId: null));
+
+        var snap   = MakeSim(humanCount: 0).Capture();
+        var dto    = TelemetryProjector.Project(
+            snap, null, FixedCapture, 5L, 42, "test", chronicleService: svc);
+        var json   = TelemetrySerializer.SerializeSnapshot(dto);
+        var result = SchemaValidator.Validate(json, Schema.WorldState);
+
+        Assert.True(result.IsValid,
+            $"Schema validation failed: {string.Join("; ", result.Errors)}\n\nJSON:\n{json}");
+    }
+
+    // ── AT-12: Existing tests (unchanged below this line) ────────────────────
 
     [Fact]
     public void AT01_FreshSim_ProjectValidatesAgainstSchema()

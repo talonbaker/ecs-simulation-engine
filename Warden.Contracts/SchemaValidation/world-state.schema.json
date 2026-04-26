@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "capturedAt", "tick", "clock", "entities", "worldItems", "worldObjects", "invariants"],
   "properties": {
-    "schemaVersion": { "type": "string", "enum": ["0.1.0", "0.2.1", "0.3.0"] },
+    "schemaVersion": { "type": "string", "enum": ["0.1.0", "0.2.1", "0.3.0", "0.4.0"] },
     "capturedAt":    { "type": "string", "format": "date-time" },
     "tick":          { "type": "integer", "minimum": 0 },
     "seed":          { "type": "integer", "minimum": 0, "description": "The RNG seed the sim was booted with. Required for determinism." },
@@ -79,6 +79,12 @@
       "type": "array",
       "maxItems": 64,
       "items": { "$ref": "#/$defs/lightAperture" }
+    },
+
+    "chronicle": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": { "$ref": "#/$defs/chronicleEntry" }
     },
 
     "invariants": {
@@ -452,6 +458,29 @@
       "properties": {
         "x": { "type": "integer", "minimum": 0, "maximum": 512 },
         "y": { "type": "integer", "minimum": 0, "maximum": 512 }
+      }
+    },
+
+    "chronicleEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "tick", "participants", "description", "persistent"],
+      "properties": {
+        "id":           { "type": "string", "format": "uuid" },
+        "kind":         { "type": "string",
+                          "enum": ["spilledSomething", "brokenItem",
+                                   "publicArgument", "publicHumiliation",
+                                   "affairRevealed", "promotion",
+                                   "firing", "kindnessInCrisis",
+                                   "betrayal", "deathOrLeaving",
+                                   "other"] },
+        "tick":         { "type": "integer", "minimum": 0 },
+        "participants": { "type": "array", "maxItems": 8,
+                          "items": { "type": "string" } },
+        "location":     { "type": "string", "maxLength": 64 },
+        "description":  { "type": "string", "maxLength": 280 },
+        "persistent":   { "type": "boolean" },
+        "physicalManifestEntityId": { "type": "string" }
       }
     }
   }

@@ -979,9 +979,10 @@ public class SchemaRoundTripTests
         List<MemoryEventDto>?         memoryEvents   = null,
         List<RoomDto>?                rooms          = null,
         List<LightSourceDto>?         lightSources   = null,
-        List<LightApertureDto>?       lightApertures = null) => new()
+        List<LightApertureDto>?       lightApertures = null,
+        List<ChronicleEntryDto>?      chronicle      = null) => new()
     {
-        SchemaVersion  = "0.3.0",
+        SchemaVersion  = "0.4.0",
         CapturedAt     = new DateTimeOffset(2026, 4, 25, 10, 0, 0, TimeSpan.Zero),
         Tick           = 1,
         Clock          = new ClockStateDto
@@ -997,6 +998,129 @@ public class SchemaRoundTripTests
         MemoryEvents   = memoryEvents,
         Rooms          = rooms,
         LightSources   = lightSources,
-        LightApertures = lightApertures
+        LightApertures = lightApertures,
+        Chronicle      = chronicle
     };
+
+    // ── v0.4 round-trip tests ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// AT-01 (v0.4) — The schema declares schemaVersion enum including "0.4.0"
+    /// and the chronicle[] field with maxItems: 4096.
+    /// </summary>
+    [Fact]
+    public void WorldState_V04_SchemaHas040EnumAndChronicleArray()
+    {
+        // A minimal "0.4.0" document with one chronicle entry validates clean.
+        var dto = MakeMinimalWorldState(
+            new List<EntityStateDto>(),
+            chronicle: new List<ChronicleEntryDto>
+            {
+                new()
+                {
+                    Id           = "aaaa0010-0000-0000-0000-000000000000",
+                    Kind         = ChronicleEventKind.SpilledSomething,
+                    Tick         = 1L,
+                    Participants = new List<string>(),
+                    Description  = "A spill.",
+                    Persistent   = true,
+                }
+            });
+
+        var json = JsonSerializer.Serialize(dto, JsonOptions.Wire);
+        var v    = SchemaValidator.Validate(json, Schema.WorldState);
+        Assert.True(v.IsValid, $"Schema validation failed: {string.Join("; ", v.Errors)}\n\nJSON:\n{json}");
+    }
+
+    /// <summary>
+    /// AT-02 (v0.4) — A v0.3 sample (no chronicle) round-trips clean under v0.4 schema.
+    /// Additive compatibility holds.
+    /// </summary>
+    [Fact]
+    public void WorldState_V03SampleRoundTripsUnderV04Schema() =>
+        AssertRoundTrip<WorldStateDto>("world-state-v030.json", Schema.WorldState);
+
+    /// <summary>
+    /// AT-03 (v0.4) — The canonical v0.4 sample with 3 chronicle entries round-trips clean.
+    /// </summary>
+    [Fact]
+    public void WorldState_V04SampleRoundTrips() =>
+        AssertRoundTrip<WorldStateDto>("world-state-v040.json", Schema.WorldState);
+
+    /// <summary>
+    /// AT-04 (v0.4) — chronicle[].kind with an unknown value is rejected by enum validation.
+    /// </summary>
+    [Fact]
+    public void WorldState_V04_ChronicleUnknownKind_FailsEnum()
+    {
+        const string json = """
+            {
+              "schemaVersion": "0.4.0",
+              "capturedAt": "2026-04-25T10:00:00+00:00",
+              "tick": 1,
+              "clock": {
+                "gameTimeDisplay": "t", "dayNumber": 1, "isDaytime": true,
+                "circadianFactor": 0.5, "timeScale": 1.0
+              },
+              "entities": [],
+              "worldItems": [],
+              "worldObjects": [],
+              "invariants": { "violationCount": 0 },
+              "chronicle": [{
+                "id": "aaaa0020-0000-0000-0000-000000000000",
+                "kind": "notARealKind",
+                "tick": 1,
+                "participants": [],
+                "description": "test",
+                "persistent": true
+              }]
+            }
+            """;
+
+        var result = SchemaValidator.Validate(json, Schema.WorldState);
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Contains("enum"));
+    }
+
+    /// <summary>
+    /// AT-05 (v0.4) — chronicle[] with 4097 entries fails maxItems: 4096.
+    /// </summary>
+    [Fact]
+    public void WorldState_V04_ChronicleOverMaxItems_Fails()
+    {
+        var entries = new System.Text.StringBuilder();
+        for (int i = 0; i < 4097; i++)
+        {
+            if (i > 0) entries.Append(',');
+            entries.Append($$$"""
+                {
+                  "id": "aaaa{{{i:D4}}}-0000-0000-0000-000000000000",
+                  "kind": "other",
+                  "tick": {{{i}}},
+                  "participants": [],
+                  "description": "entry",
+                  "persistent": true
+                }
+                """);
+        }
+
+        var json = $$"""
+            {
+              "schemaVersion": "0.4.0",
+              "capturedAt": "2026-04-25T10:00:00+00:00",
+              "tick": 1,
+              "clock": {
+                "gameTimeDisplay": "t", "dayNumber": 1, "isDaytime": true,
+                "circadianFactor": 0.5, "timeScale": 1.0
+              },
+              "entities": [], "worldItems": [], "worldObjects": [],
+              "invariants": { "violationCount": 0 },
+              "chronicle": [{{entries}}]
+            }
+            """;
+
+        var result = SchemaValidator.Validate(json, Schema.WorldState);
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Contains("4097") && e.Contains("4096"));
+    }
 }

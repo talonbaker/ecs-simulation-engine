@@ -1,6 +1,8 @@
+using System;
 using APIFramework.Components;
 using APIFramework.Core;
 using APIFramework.Diagnostics;
+using APIFramework.Systems.Chronicle;
 
 namespace APIFramework.Systems;
 
@@ -25,9 +27,14 @@ namespace APIFramework.Systems;
 public class InvariantSystem : ISystem
 {
     private readonly SimulationClock          _clock;
+    private readonly ChronicleService?        _chronicle;
     private readonly List<InvariantViolation> _violations = new();
 
-    public InvariantSystem(SimulationClock clock) => _clock = clock;
+    public InvariantSystem(SimulationClock clock, ChronicleService? chronicle = null)
+    {
+        _clock     = clock;
+        _chronicle = chronicle;
+    }
 
     /// <summary>All violations detected since the simulation started.</summary>
     public IReadOnlyList<InvariantViolation> Violations => _violations;
@@ -66,6 +73,9 @@ public class InvariantSystem : ISystem
             CheckDrives         (entity, name, gameTime);
             CheckTransit        (entity, name, gameTime);
         }
+
+        if (_chronicle is not null)
+            CheckChronicleIntegrity(em, gameTime);
     }
 
     // ── Per-component checks ─────────────────────────────────────────────────
@@ -237,6 +247,95 @@ public class InvariantSystem : ISystem
         dirty = v1;
 
         if (dirty) entity.Add(tr);
+    }
+
+    // ── Chronicle integrity ───────────────────────────────────────────────────
+
+    private void CheckChronicleIntegrity(EntityManager em, double gameTime)
+    {
+        // Build lookup of all entity int-IDs.
+        var stainIds  = new HashSet<string>();
+        var brokenIds = new HashSet<string>();
+
+        foreach (var entity in em.GetAllEntities())
+        {
+            if (entity.Has<StainTag>() && entity.Has<StainComponent>())
+            {
+                var sc = entity.Get<StainComponent>();
+                // Stain entity with missing chronicle entry → violation.
+                if (!string.IsNullOrEmpty(sc.ChronicleEntryId)
+                    && !_chronicle!.All.Any(e => e.Id == sc.ChronicleEntryId))
+                {
+                    _violations.Add(new InvariantViolation(
+                        GameTime:    gameTime,
+                        EntityName:  entity.ShortId,
+                        Component:   "StainComponent",
+                        Property:    "ChronicleEntryId",
+                        ActualValue: 0f,
+                        ClampedTo:   0f,
+                        ValidMin:    0f,
+                        ValidMax:    0f));
+                }
+                stainIds.Add(sc.ChronicleEntryId ?? string.Empty);
+            }
+
+            if (entity.Has<BrokenItemTag>() && entity.Has<BrokenItemComponent>())
+            {
+                var bc = entity.Get<BrokenItemComponent>();
+                // BrokenItem entity with missing chronicle entry → violation.
+                if (!string.IsNullOrEmpty(bc.ChronicleEntryId)
+                    && !_chronicle!.All.Any(e => e.Id == bc.ChronicleEntryId))
+                {
+                    _violations.Add(new InvariantViolation(
+                        GameTime:    gameTime,
+                        EntityName:  entity.ShortId,
+                        Component:   "BrokenItemComponent",
+                        Property:    "ChronicleEntryId",
+                        ActualValue: 0f,
+                        ClampedTo:   0f,
+                        ValidMin:    0f,
+                        ValidMax:    0f));
+                }
+                brokenIds.Add(bc.ChronicleEntryId ?? string.Empty);
+            }
+        }
+
+        // Build set of entity int-IDs for fast lookup.
+        var entityIntIds = new HashSet<int>();
+        foreach (var entity in em.GetAllEntities())
+            entityIntIds.Add(EntityIntId(entity));
+
+        // Chronicle entry with physicalManifestEntityId pointing to missing entity → violation.
+        foreach (var entry in _chronicle!.All)
+        {
+            if (string.IsNullOrEmpty(entry.PhysicalManifestEntityId)) continue;
+            int manifestIntId = GuidStringToIntId(entry.PhysicalManifestEntityId);
+            if (!entityIntIds.Contains(manifestIntId))
+            {
+                _violations.Add(new InvariantViolation(
+                    GameTime:    gameTime,
+                    EntityName:  entry.Id,
+                    Component:   "ChronicleService",
+                    Property:    "PhysicalManifestEntityId",
+                    ActualValue: 0f,
+                    ClampedTo:   0f,
+                    ValidMin:    0f,
+                    ValidMax:    0f));
+            }
+        }
+    }
+
+    private static int EntityIntId(Entity entity)
+    {
+        var b = entity.Id.ToByteArray();
+        return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
+    }
+
+    private static int GuidStringToIntId(string guidStr)
+    {
+        if (!Guid.TryParse(guidStr, out var g)) return -1;
+        var b = g.ToByteArray();
+        return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
     }
 
     // ── Guard primitive ───────────────────────────────────────────────────────

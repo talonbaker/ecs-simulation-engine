@@ -7,6 +7,7 @@ using APIFramework.Systems;
 using APIFramework.Systems.Coupling;
 using APIFramework.Systems.Lighting;
 using APIFramework.Systems.Movement;
+using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using System.Reflection;
@@ -102,6 +103,11 @@ public class SimulationBootstrapper
     /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
     public NarrativeEventBus NarrativeBus { get; }
 
+    // ── Chronicle services ────────────────────────────────────────────────────
+
+    /// <summary>Global persistent narrative chronicle. Read by TelemetryProjector each tick.</summary>
+    public ChronicleService Chronicle { get; }
+
     /// <summary>
     /// Primary constructor — accepts any IConfigProvider.
     /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
@@ -134,7 +140,6 @@ public class SimulationBootstrapper
         EntityManager   = new EntityManager();
         Clock           = new SimulationClock { TimeScale = Config.World.DefaultTimeScale };
         Engine          = new SimulationEngine(EntityManager, Clock);
-        Invariants      = new InvariantSystem(Clock);
         Random          = new SeededRandom(seed);
         WillpowerEvents = new WillpowerEventQueue();
 
@@ -156,6 +161,12 @@ public class SimulationBootstrapper
             Config.Spatial.WorldSize.Width,
             Config.Spatial.WorldSize.Height,
             Config.Movement);
+
+        // Chronicle services — created before Invariants so the check can be injected.
+        Chronicle = new ChronicleService(Config.Chronicle.MaxEntries);
+
+        // Invariants — receives Chronicle for the chronicle ↔ entity-tree agreement check.
+        Invariants = new InvariantSystem(Clock, Chronicle);
 
         // Narrative services
         NarrativeBus = new NarrativeEventBus();
@@ -262,6 +273,10 @@ public class SimulationBootstrapper
         // Narrative — runs last so all state has settled; emits candidates via NarrativeBus
         Engine.AddSystem(new NarrativeEventDetector(
             NarrativeBus, ProximityBus, RoomMembership, Config.Narrative),        SystemPhase.Narrative);
+
+        // Chronicle — evaluates candidates emitted this tick; must run after NarrativeEventDetector.
+        Engine.AddSystem(new PersistenceThresholdDetector(
+            Chronicle, NarrativeBus, EntityManager, Clock, Random, Config.Chronicle), SystemPhase.Narrative);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────
@@ -392,6 +407,8 @@ public class SimulationBootstrapper
         MergeFlat(newCfg.Systems.Mood,                Config.Systems.Mood,                changes);
         MergeFlat(newCfg.Systems.Rot,                 Config.Systems.Rot,                 changes);
         MergeFlat(newCfg.Narrative,                   Config.Narrative,                   changes);
+        MergeFlat(newCfg.Chronicle,                   Config.Chronicle,                   changes);
+        MergeFlat(newCfg.Chronicle.ThresholdRules,    Config.Chronicle.ThresholdRules,    changes);
 
         // ── Entity starting configs (only affect future spawns) ───────────────
         MergeFlat(newCfg.Entities.Human.Metabolism,     Config.Entities.Human.Metabolism,     changes);

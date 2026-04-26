@@ -9,11 +9,11 @@ namespace Warden.Contracts.Telemetry;
 /// <summary>
 /// Versioned, AI-consumable projection of <c>SimulationSnapshot</c>.
 /// Produced by <c>Warden.Telemetry.TelemetryProjector</c> (WP-03), consumed by
-/// Tier-3 Haikus. Schema: <c>world-state.schema.json</c> v0.3.0.
+/// Tier-3 Haikus. Schema: <c>world-state.schema.json</c> v0.4.0.
 /// </summary>
 public sealed record WorldStateDto
 {
-    public string                      SchemaVersion { get; init; } = "0.3.0";
+    public string                      SchemaVersion { get; init; } = "0.4.0";
     public DateTimeOffset              CapturedAt    { get; init; }
     public int                         Tick          { get; init; }
     public ClockStateDto               Clock         { get; init; } = default!;
@@ -35,6 +35,9 @@ public sealed record WorldStateDto
     public IReadOnlyList<RoomDto>?         Rooms          { get; init; }
     public IReadOnlyList<LightSourceDto>?  LightSources   { get; init; }
     public IReadOnlyList<LightApertureDto>? LightApertures { get; init; }
+
+    // v0.4 — persistent narrative chronicle (optional; projector omits when empty)
+    public IReadOnlyList<ChronicleEntryDto>? Chronicle     { get; init; }
 }
 
 // ── Clock ─────────────────────────────────────────────────────────────────────

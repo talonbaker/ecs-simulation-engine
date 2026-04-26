@@ -81,15 +81,28 @@ Referential integrity enforced by `WorldStateReferentialChecker`:
 - Duplicate `rooms[].id` → reason `"duplicate-room-id"`.
 - Overlapping `boundsRect` is allowed (hallways can pass under balconies).
 
-### v0.4 — Persistent narrative chronicle
+### v0.4 — Persistent narrative chronicle _(landed in WP-1.9.A)_
 
 **Driver:** post-Phase-0 Phase 4 (spill-stays-spilled mechanic). Shifted from v0.3 to v0.4 when the aesthetic bible promoted spatial to a foundation system.
 
-Schema additions:
+Schema additions (all new fields optional; v0.3 consumers ignore them):
 
-- `world-state` minor bump: `chronicle[]` array of authored-or-emergent narrative events with `id`, `kind`, `participants[]`, `location`, `tick`, `description`, `persistent: bool`. Persistent entries also exist as concrete entities (e.g., a `Stain` entity or a `BrokenItem` entity); the chronicle is the *narrative* index, the entity tree is the *spatial* index. Both must agree, enforced by an invariant check.
-- New `narrative-event-emit` command kind on `ai-command-batch`. **Design-time content authoring only — never runtime** (`00-SRD.md` §8.1).
-- Removes the `"global-scope-reserved-for-v0.3"` guard in `WorldStateReferentialChecker`; `scope: "global"` becomes live.
+- `world-state` minor bump: `chronicle[]` array (`maxItems: 4096`) of authored-or-emergent narrative events. Each entry carries `id` (UUID), `kind` (eleven-value enum: `spilledSomething | brokenItem | publicArgument | publicHumiliation | affairRevealed | promotion | firing | kindnessInCrisis | betrayal | deathOrLeaving | other`), `tick`, `participants[]` (`maxItems: 8`), optional `location` (`maxLength: 64`), `description` (`maxLength: 280`), `persistent: bool`, and optional `physicalManifestEntityId` (references a concrete `Stain` or `BrokenItem` entity). `additionalProperties: false`.
+- `schemaVersion` enum becomes `["0.1.0", "0.2.1", "0.3.0", "0.4.0"]`.
+- Persistent chronicle entries with `physicalManifestEntityId` must resolve to an entity tagged `StainTag` or `BrokenItemTag`; validated by `InvariantSystem` at runtime.
+
+**Engine additions (WP-1.9.A):**
+- `ChronicleService` — global ring buffer (singleton), bounded at `SimConfig.chronicle.maxEntries` (default 4096).
+- `PersistenceThresholdDetector` — runs in `SystemPhase.Narrative` after `NarrativeEventDetector`; applies world-bible persistence threshold to candidates.
+- `Stain` and `BrokenItem` entity templates with `StainTag`/`BrokenItemTag` components.
+- `PhysicalManifestSpawner` — spawns physical entities from chronicle events.
+- `InvariantSystem` extended with chronicle ↔ entity-tree agreement check.
+- `TelemetryProjector` bumped to emit `schemaVersion: "0.4.0"` and populate `Chronicle[]` from `ChronicleService`.
+
+**Deliberate variances from the original roadmap draft:**
+
+1. **`narrative-event-emit` command deferred.** The schema roadmap reserved a new `narrative-event-emit` command kind for design-time content authoring. Not implemented — deferred to a content-authoring packet once the workflow needs it.
+2. **`scope: "global"` guard retained.** The roadmap said v0.4 would remove `WorldStateReferentialChecker`'s `"global-scope-reserved-for-v0.3"` guard. This was not in the WP-1.9.A deliverables table and has been deferred to a follow-up.
 
 ### v0.5 — Character definitions and customization
 
