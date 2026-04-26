@@ -566,6 +566,22 @@
     "neuroticismStressFactor":        0.2
   },
 
+  // ── Schedule layer ─────────────────────────────────────────────────────────
+  "schedule": {
+    // Weight of schedule-driven Approach/Linger candidates vs drive-driven ones.
+    "scheduleAnchorBaseWeight":     0.30,
+    // Distance (tiles) below which AtDesk/Sleeping emits Linger instead of Approach.
+    "scheduleLingerThresholdCells": 2.0
+  },
+
+  // ── Memory system ─────────────────────────────────────────────────────────
+  "memory": {
+    // Maximum entries per relationship pair before oldest is dropped
+    "maxRelationshipMemoryCount": 32,
+    // Maximum personal entries per NPC before oldest is dropped
+    "maxPersonalMemoryCount": 16
+  },
+
   // ── Action selection ───────────────────────────────────────────────────────
   "actionSelection": {
     // Drive.Current must exceed this to enumerate candidates

@@ -90,7 +90,7 @@ public class ActionSelectionToDialogTests
         var corpus = new DialogCorpusService(MinimalCorpusJson);
         var actionSys   = new ActionSelectionSystem(
             spatial, new EntityRoomMembership(), wq,
-            new SeededRandom(42), DefaultActionCfg(), em);
+            new SeededRandom(42), DefaultActionCfg(), new ScheduleConfig(), em);
         var dialogDecSys = new DialogContextDecisionSystem(pending, bus, new DialogConfig(), new SeededRandom(99));
         var fragRetrSys  = new DialogFragmentRetrievalSystem(pending, corpus, bus, new DialogConfig());
 

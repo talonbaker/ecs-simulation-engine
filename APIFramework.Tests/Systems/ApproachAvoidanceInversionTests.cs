@@ -71,7 +71,7 @@ public class ApproachAvoidanceInversionTests
 
         var sys = new ActionSelectionSystem(
             spatial, new EntityRoomMembership(), queue, new SeededRandom(seed),
-            DefaultCfg(), em);
+            DefaultCfg(), new ScheduleConfig(), em);
 
         sys.Update(em, 1f);
 
@@ -164,7 +164,7 @@ public class ApproachAvoidanceInversionTests
 
         var sys = new ActionSelectionSystem(
             spatial, new EntityRoomMembership(), queue, new SeededRandom(42),
-            DefaultCfg(), em);
+            DefaultCfg(), new ScheduleConfig(), em);
 
         sys.Update(em, 1f);
 

@@ -21,14 +21,22 @@ public static class CastGenerator
     /// <paramref name="em"/>.  Slot entities are destroyed after spawning.
     /// Returns the list of spawned NPC entities in iteration order.
     /// </summary>
+    /// <param name="namePool">
+    /// Optional explicit name pool. When <c>null</c>, <see cref="NamePoolLoader.LoadDefault"/>
+    /// is called. If no pool is available names are not assigned.
+    /// </param>
     public static IReadOnlyList<Entity> SpawnAll(
         ArchetypeCatalog    catalog,
         EntityManager       em,
         SeededRandom        rng,
-        CastGeneratorConfig config)
+        CastGeneratorConfig config,
+        NamePoolDto?        namePool = null)
     {
-        var slots  = em.Query<NpcSlotTag>().ToList();
-        var result = new List<Entity>(slots.Count);
+        namePool ??= NamePoolLoader.LoadDefault();
+
+        var slots     = em.Query<NpcSlotTag>().ToList();
+        var result    = new List<Entity>(slots.Count);
+        var usedNames = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var slot in slots)
         {
@@ -38,8 +46,22 @@ public static class CastGenerator
                               ?? catalog.AllArchetypes[rng.NextInt(catalog.AllArchetypes.Count)];
 
             var npc = SpawnNpc(archetype, slotComp, em, rng, config);
-            result.Add(npc);
 
+            if (namePool is not null)
+            {
+                var available = namePool.FirstNames
+                    .Except(usedNames, StringComparer.Ordinal)
+                    .ToList();
+                if (available.Count == 0)
+                    throw new InvalidOperationException(
+                        "Name pool exhausted. Add more entries to name-pool.json or reduce cast size.");
+                var idx  = rng.NextInt(available.Count);
+                var name = available[idx];
+                usedNames.Add(name);
+                npc.Add(new IdentityComponent(name));
+            }
+
+            result.Add(npc);
             em.DestroyEntity(slot);
         }
 

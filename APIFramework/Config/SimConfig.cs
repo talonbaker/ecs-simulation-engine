@@ -25,6 +25,8 @@ public class SimConfig
     public DialogConfig           Dialog         { get; set; } = new();
     public ActionSelectionConfig  ActionSelection { get; set; } = new();
     public StressConfig           Stress          { get; set; } = new();
+    public ScheduleConfig         Schedule        { get; set; } = new();
+    public MemoryConfig           Memory          { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1055,4 +1057,26 @@ public class StressConfig
     /// Range: Neuroticism –2..+2 → factor 0.6..1.4 at default 0.2.
     /// </summary>
     public double NeuroticismStressFactor       { get; set; } = 0.2;
+}
+
+// ── Schedule system ───────────────────────────────────────────────────────────
+
+public class ScheduleConfig
+{
+    /// <summary>Weight assigned to a schedule-driven Approach/Linger candidate. Default 0.30.</summary>
+    public double ScheduleAnchorBaseWeight     { get; set; } = 0.30;
+
+    /// <summary>Distance (tiles) below which AtDesk/Sleeping activity emits Linger instead of Approach. Default 2.0.</summary>
+    public float  ScheduleLingerThresholdCells { get; set; } = 2.0f;
+}
+
+// ── Memory system ─────────────────────────────────────────────────────────────
+
+public class MemoryConfig
+{
+    /// <summary>Maximum entries in RelationshipMemoryComponent.Recent before oldest is dropped.</summary>
+    public int MaxRelationshipMemoryCount { get; set; } = 32;
+
+    /// <summary>Maximum entries in PersonalMemoryComponent.Recent before oldest is dropped.</summary>
+    public int MaxPersonalMemoryCount { get; set; } = 16;
 }
