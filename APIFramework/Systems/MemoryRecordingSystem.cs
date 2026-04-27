@@ -169,6 +169,8 @@ public sealed class MemoryRecordingSystem : ISystem
         NarrativeEventKind.WillpowerCollapse => true,
         NarrativeEventKind.LeftRoomAbruptly  => true,
         NarrativeEventKind.MaskSlip          => true,
+        NarrativeEventKind.OverdueTask       => true,
+        NarrativeEventKind.TaskCompleted     => false,
         _                                    => false,
     };
 
