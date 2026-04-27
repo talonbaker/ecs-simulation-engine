@@ -11,4 +11,5 @@ public enum NarrativeEventKind
     WillpowerLow,
     ConversationStarted,
     LeftRoomAbruptly,
+    MaskSlip,
 }

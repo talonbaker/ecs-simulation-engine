@@ -280,6 +280,9 @@ public class SimulationBootstrapper
         Engine.AddSystem(
             new StressInitializerSystem(StressInitializerSystem.LoadBaselines()),  SystemPhase.PreUpdate);
 
+        // Mask initialization — attaches SocialMaskComponent with personality-derived baseline.
+        Engine.AddSystem(new MaskInitializerSystem(),                              SystemPhase.PreUpdate);
+
         // Physiology — raw biological resource drain/restore
         Engine.AddSystem(new MetabolismSystem(),                                   SystemPhase.Physiology);
         Engine.AddSystem(new EnergySystem(sys.Energy),                            SystemPhase.Physiology);
@@ -301,6 +304,7 @@ public class SimulationBootstrapper
                                                                                    SystemPhase.Cognition);
         Engine.AddSystem(new WillpowerSystem(Config.Social, WillpowerEvents),      SystemPhase.Cognition);
         Engine.AddSystem(RelationshipLifecycleSystem.LoadFromFile(Config.Social),  SystemPhase.Cognition);
+        Engine.AddSystem(new SocialMaskSystem(RoomMembership, Config.SocialMask),  SystemPhase.Cognition);
 
         // Behavior — act on the dominant drive
         Engine.AddSystem(new FeedingSystem(sys.Feeding),                          SystemPhase.Behavior);
@@ -357,6 +361,11 @@ public class SimulationBootstrapper
         // NarrativeEventDetector (Narrative) so all tick state has settled.
         Engine.AddSystem(
             new StressSystem(Config.Stress, Clock, WillpowerEvents, NarrativeBus), SystemPhase.Cleanup);
+
+        // Mask crack detection — runs at Cleanup so it fires after ActionSelectionSystem has
+        // written its intent; the crack override wins for the following Dialog phase.
+        Engine.AddSystem(
+            new MaskCrackSystem(RoomMembership, NarrativeBus, Config.SocialMask),  SystemPhase.Cleanup);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────

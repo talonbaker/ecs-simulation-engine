@@ -117,6 +117,7 @@ public sealed class DialogContextDecisionSystem : ISystem
         DialogContextValue.Encourage  => "encourage",
         DialogContextValue.Thanks     => "thanks",
         DialogContextValue.Apologise  => "apology",
+        DialogContextValue.MaskSlip  => "maskSlip",
         _                             => "greeting"
     };
 }

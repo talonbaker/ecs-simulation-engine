@@ -582,6 +582,30 @@
     "maxPersonalMemoryCount": 16
   },
 
+  // ── Social mask system ─────────────────────────────────────────────────────
+  "socialMask": {
+    // Maximum mask delta gained per tick at full drive + full exposure
+    "maskGainPerTick":              0.5,
+    // Mask delta lost per tick when in low-exposure context
+    "maskDecayPerTick":              0.3,
+    // Exposure factor below which mask decays instead of grows
+    "lowExposureThreshold":          0.30,
+    // Per point of Conscientiousness: gain *= (1 + C * scale)
+    "personalityMaskScale":          0.20,
+    // Per point of Extraversion: gain *= (1 - E * scale)
+    "personalityExtraversionScale":  0.10,
+    // Crack fires when crackPressure >= crackThreshold
+    "crackThreshold":                1.50,
+    // Fraction of AcuteLevel added to crack pressure
+    "stressCrackContribution":       0.50,
+    // Flat crack pressure bonus when BurningOutTag is present
+    "burnoutCrackBonus":             0.30,
+    // Willpower at or below this contributes to crack pressure
+    "lowWillpowerThreshold":         30,
+    // Minimum ticks between cracks for the same NPC (≈ 30 game-minutes)
+    "slipCooldownTicks":             1800
+  },
+
   // ── Action selection ───────────────────────────────────────────────────────
   "actionSelection": {
     // Drive.Current must exceed this to enumerate candidates

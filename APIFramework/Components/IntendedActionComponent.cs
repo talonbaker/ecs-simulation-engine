@@ -24,7 +24,8 @@ public enum DialogContextValue
     Complain,
     Encourage,
     Thanks,
-    Apologise
+    Apologise,
+    MaskSlip
 }
 
 /// <summary>
