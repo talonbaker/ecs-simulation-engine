@@ -13,5 +13,6 @@ public struct StressComponent
     public int    SuppressionEventsToday;
     public int    DriveSpikeEventsToday;
     public int    SocialConflictEventsToday;
+    public int    OverdueTaskEventsToday;    // count of overdue-task source hits this day
     public int    BurnoutLastAppliedDay;     // DayNumber when BurningOutTag was last applied (0 = never)
 }

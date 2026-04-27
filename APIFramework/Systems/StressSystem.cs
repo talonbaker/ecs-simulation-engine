@@ -21,6 +21,7 @@ namespace APIFramework.Systems;
 public class StressSystem : ISystem
 {
     private readonly StressConfig        _cfg;
+    private readonly WorkloadConfig      _workloadCfg;
     private readonly SimulationClock     _clock;
     private readonly WillpowerEventQueue _queue;
 
@@ -30,12 +31,17 @@ public class StressSystem : ISystem
     // Conflict participant IDs gathered from the narrative bus since the last Update.
     private HashSet<int> _pendingConflictIds = new();
 
-    public StressSystem(StressConfig cfg, SimulationClock clock,
-        WillpowerEventQueue queue, NarrativeEventBus narrativeBus)
+    private readonly EntityManager _em;
+
+    public StressSystem(StressConfig cfg, WorkloadConfig workloadCfg, SimulationClock clock,
+        WillpowerEventQueue queue, NarrativeEventBus narrativeBus,
+        EntityManager em)
     {
-        _cfg   = cfg;
-        _clock = clock;
-        _queue = queue;
+        _cfg         = cfg;
+        _workloadCfg = workloadCfg;
+        _clock       = clock;
+        _queue       = queue;
+        _em          = em;
         narrativeBus.OnCandidateEmitted += OnNarrativeCandidate;
     }
 
@@ -105,7 +111,31 @@ public class StressSystem : ISystem
                 stress.SocialConflictEventsToday++;
             }
 
-            // 4. Per-tick acute decay via fractional accumulator.
+            // 4. Overdue task stress gain — each overdue task contributes per tick.
+            if (entity.Has<WorkloadComponent>())
+            {
+                var wl = entity.Get<WorkloadComponent>();
+                var activeTasks = wl.ActiveTasks;
+                if (activeTasks != null && activeTasks.Count > 0)
+                {
+                    int overdueCount = 0;
+                    foreach (var taskGuid in activeTasks)
+                    {
+                        var taskEntity = FindEntityByGuid(taskGuid);
+                        if (taskEntity != null && taskEntity.Has<OverdueTag>())
+                            overdueCount++;
+                    }
+                    if (overdueCount > 0)
+                    {
+                        double gain = overdueCount * _workloadCfg.OverdueTaskStressGain * neuroFactor;
+                        stress.AcuteLevel = Math.Clamp(
+                            (int)(stress.AcuteLevel + gain), 0, 100);
+                        stress.OverdueTaskEventsToday += overdueCount;
+                    }
+                }
+            }
+
+            // 5. Per-tick acute decay via fractional accumulator.
             if (!_decayAccum.TryGetValue(entity.Id, out var decayRemainder))
                 decayRemainder = 0.0;
             decayRemainder += _cfg.AcuteDecayPerTick;
@@ -114,7 +144,7 @@ public class StressSystem : ISystem
             _decayAccum[entity.Id] = decayRemainder;
             stress.AcuteLevel = Math.Clamp(stress.AcuteLevel - decayInt, 0, 100);
 
-            // 5. Per-day chronic update (fires once when DayNumber advances).
+            // 6. Per-day chronic update (fires once when DayNumber advances).
             if (stress.LastDayUpdated == 0)
             {
                 // First time this NPC is processed — bootstrap the day counter.
@@ -127,13 +157,14 @@ public class StressSystem : ISystem
                 stress.SuppressionEventsToday    = 0;
                 stress.DriveSpikeEventsToday     = 0;
                 stress.SocialConflictEventsToday = 0;
+                stress.OverdueTaskEventsToday    = 0;
                 stress.LastDayUpdated = _clock.DayNumber;
             }
 
-            // 6. Tag updates.
+            // 7. Tag updates.
             UpdateTags(entity, ref stress);
 
-            // 7. Push amplification event if stressed — picked up by WillpowerSystem next tick.
+            // 8. Push amplification event if stressed — picked up by WillpowerSystem next tick.
             if (stress.AcuteLevel >= _cfg.StressedTagThreshold)
             {
                 double range = 100 - _cfg.StressedTagThreshold;
@@ -148,6 +179,13 @@ public class StressSystem : ISystem
 
             entity.Add(stress);
         }
+    }
+
+    private Entity? FindEntityByGuid(Guid guid)
+    {
+        foreach (var e in _em.GetAllEntities())
+            if (e.Id == guid) return e;
+        return null;
     }
 
     private int CountDriveSpikes(SocialDrivesComponent drives)

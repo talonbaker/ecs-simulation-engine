@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypeCapacity": [
+    { "archetypeId": "the-vent",            "capacity": 3 },
+    { "archetypeId": "the-hermit",          "capacity": 2 },
+    { "archetypeId": "the-climber",         "capacity": 5 },
+    { "archetypeId": "the-cynic",           "capacity": 3 },
+    { "archetypeId": "the-newbie",          "capacity": 2 },
+    { "archetypeId": "the-old-hand",        "capacity": 4 },
+    { "archetypeId": "the-affair",          "capacity": 3 },
+    { "archetypeId": "the-recovering",      "capacity": 2 },
+    { "archetypeId": "the-founders-nephew", "capacity": 1 },
+    { "archetypeId": "the-crush",           "capacity": 3 }
+  ]
+}

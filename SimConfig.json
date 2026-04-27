@@ -582,6 +582,35 @@
     "maxPersonalMemoryCount": 16
   },
 
+  // ── Workload system ───────────────────────────────────────────────────────
+  "workload": {
+    // Game-hour at which TaskGeneratorSystem fires each day (24h clock)
+    "taskGenerationHourOfDay":        8.0,
+    // Tasks created per generation event
+    "taskGenerationCountPerDay":      5,
+    // Task effort (game-hours) range
+    "taskEffortHoursMin":             0.5,
+    "taskEffortHoursMax":             6.0,
+    // Deadline offset from now (game-hours) range
+    "taskDeadlineHoursMin":           4.0,
+    "taskDeadlineHoursMax":           48.0,
+    // Task priority range [min, max]
+    "taskPriorityMin":                30,
+    "taskPriorityMax":                80,
+    // Base progress rate (fraction per game-second, before multipliers)
+    "baseProgressRatePerSecond":      0.0001,
+    // Per Conscientiousness point: rate *= (1 + C * bias)
+    "conscientiousnessProgressBias":  0.10,
+    // QualityLevel lost per game-second under poor conditions
+    "qualityDecayPerStressedTick":    0.0002,
+    // QualityLevel recovered per game-second under good conditions
+    "qualityRecoveryPerGoodTick":     0.0001,
+    // Weight of Work candidate in ActionSelectionSystem
+    "workActionBaseWeight":           0.40,
+    // Stress gain per overdue task per tick (before neuroticism scaling)
+    "overdueTaskStressGain":          1.0
+  },
+
   // ── Action selection ───────────────────────────────────────────────────────
   "actionSelection": {
     // Drive.Current must exceed this to enumerate candidates

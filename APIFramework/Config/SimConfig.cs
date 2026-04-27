@@ -27,6 +27,7 @@ public class SimConfig
     public StressConfig           Stress          { get; set; } = new();
     public ScheduleConfig         Schedule        { get; set; } = new();
     public MemoryConfig           Memory          { get; set; } = new();
+    public WorkloadConfig         Workload        { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1068,6 +1069,53 @@ public class ScheduleConfig
 
     /// <summary>Distance (tiles) below which AtDesk/Sleeping activity emits Linger instead of Approach. Default 2.0.</summary>
     public float  ScheduleLingerThresholdCells { get; set; } = 2.0f;
+}
+
+// ── Workload system ───────────────────────────────────────────────────────────
+
+public class WorkloadConfig
+{
+    /// <summary>Game-hour (0–24) at which TaskGeneratorSystem fires each day. Default 8.0 (8 AM).</summary>
+    public double TaskGenerationHourOfDay      { get; set; } = 8.0;
+
+    /// <summary>Tasks created per generation event. Default 5.</summary>
+    public int    TaskGenerationCountPerDay    { get; set; } = 5;
+
+    /// <summary>Minimum task effort in game-hours. Default 0.5.</summary>
+    public float  TaskEffortHoursMin           { get; set; } = 0.5f;
+
+    /// <summary>Maximum task effort in game-hours. Default 6.0.</summary>
+    public float  TaskEffortHoursMax           { get; set; } = 6.0f;
+
+    /// <summary>Minimum deadline offset from now in game-hours. Default 4.0.</summary>
+    public float  TaskDeadlineHoursMin         { get; set; } = 4.0f;
+
+    /// <summary>Maximum deadline offset from now in game-hours. Default 48.0.</summary>
+    public float  TaskDeadlineHoursMax         { get; set; } = 48.0f;
+
+    /// <summary>Minimum randomly assigned task priority. Default 30.</summary>
+    public int    TaskPriorityMin              { get; set; } = 30;
+
+    /// <summary>Maximum randomly assigned task priority. Default 80.</summary>
+    public int    TaskPriorityMax              { get; set; } = 80;
+
+    /// <summary>Base work-progress gained per game-second (before multipliers). Default 0.0001.</summary>
+    public double BaseProgressRatePerSecond    { get; set; } = 0.0001;
+
+    /// <summary>Per Conscientiousness point, progress rate is multiplied by (1 + C × bias). Default 0.10.</summary>
+    public double ConscientiousnessProgressBias { get; set; } = 0.10;
+
+    /// <summary>QualityLevel lost per tick when stressed or under poor physiological conditions. Default 0.0002.</summary>
+    public double QualityDecayPerStressedTick  { get; set; } = 0.0002;
+
+    /// <summary>QualityLevel recovered per tick under good physiological conditions. Default 0.0001.</summary>
+    public double QualityRecoveryPerGoodTick   { get; set; } = 0.0001;
+
+    /// <summary>Base weight of the Work candidate in ActionSelectionSystem. Default 0.40.</summary>
+    public double WorkActionBaseWeight         { get; set; } = 0.40;
+
+    /// <summary>Stress gain per overdue task per tick (before neuroticism scaling). Default 1.0.</summary>
+    public double OverdueTaskStressGain        { get; set; } = 1.0;
 }
 
 // ── Memory system ─────────────────────────────────────────────────────────────
