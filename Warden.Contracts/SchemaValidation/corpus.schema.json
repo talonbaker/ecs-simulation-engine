@@ -28,7 +28,7 @@
                       "enum": ["greeting", "refusal", "agreement", "complaint",
                                "flirt", "deflect", "lashOut", "share",
                                "brushOff", "encouragement", "thanks",
-                               "apology", "acknowledge"] },
+                               "apology", "acknowledge", "maskSlip"] },
         "valenceProfile": {
           "type": "object",
           "additionalProperties": false,

@@ -28,6 +28,7 @@ public class SimConfig
     public ScheduleConfig         Schedule        { get; set; } = new();
     public MemoryConfig           Memory          { get; set; } = new();
     public WorkloadConfig         Workload        { get; set; } = new();
+    public SocialMaskConfig       SocialMask      { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1130,4 +1131,39 @@ public class MemoryConfig
 
     /// <summary>Maximum entries in PersonalMemoryComponent.Recent before oldest is dropped.</summary>
     public int MaxPersonalMemoryCount { get; set; } = 16;
+}
+
+// ── Social mask system ────────────────────────────────────────────────────────
+
+public class SocialMaskConfig
+{
+    /// <summary>Maximum mask delta gained per tick when drive is elevated and exposure is full (0–100 scale).</summary>
+    public double MaskGainPerTick              { get; set; } = 0.5;
+
+    /// <summary>Mask delta lost per tick in low-exposure context (0–100 scale).</summary>
+    public double MaskDecayPerTick             { get; set; } = 0.3;
+
+    /// <summary>Exposure factor below which mask decays rather than grows (0–1).</summary>
+    public double LowExposureThreshold         { get; set; } = 0.30;
+
+    /// <summary>Per point of Conscientiousness: mask gain multiplied by (1 + C × scale).</summary>
+    public double PersonalityMaskScale         { get; set; } = 0.20;
+
+    /// <summary>Per point of Extraversion: mask gain multiplied by (1 - E × scale).</summary>
+    public double PersonalityExtraversionScale { get; set; } = 0.10;
+
+    /// <summary>Crack fires when crackPressure >= this threshold. Default 1.50.</summary>
+    public double CrackThreshold               { get; set; } = 1.50;
+
+    /// <summary>Fraction of AcuteLevel added to crack pressure. Default 0.50.</summary>
+    public double StressCrackContribution      { get; set; } = 0.50;
+
+    /// <summary>Flat crack pressure bonus when BurningOutTag is present. Default 0.30.</summary>
+    public double BurnoutCrackBonus            { get; set; } = 0.30;
+
+    /// <summary>Willpower at or below this contributes to crack pressure. Default 30.</summary>
+    public int    LowWillpowerThreshold        { get; set; } = 30;
+
+    /// <summary>Minimum ticks between successive cracks for the same NPC. Default 1800.</summary>
+    public int    SlipCooldownTicks            { get; set; } = 1800;
 }

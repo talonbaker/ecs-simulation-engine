@@ -186,6 +186,26 @@
     { "id": "folksy-apology-1", "text": "I sure am sorry about that.", "register": "folksy", "context": "apology", "valenceProfile": { "irritation": "low", "trust": "high" }, "noteworthiness": 50 },
     { "id": "folksy-apology-2", "text": "That wasn't right of me.", "register": "folksy", "context": "apology", "valenceProfile": { "trust": "high", "irritation": "low" }, "noteworthiness": 48 },
     { "id": "folksy-acknowledge-1", "text": "Mm-hm.", "register": "folksy", "context": "acknowledge", "valenceProfile": {}, "noteworthiness": 5 },
-    { "id": "folksy-acknowledge-2", "text": "Well.", "register": "folksy", "context": "acknowledge", "valenceProfile": {}, "noteworthiness": 5 }
+    { "id": "folksy-acknowledge-2", "text": "Well.", "register": "folksy", "context": "acknowledge", "valenceProfile": {}, "noteworthiness": 5 },
+
+    { "id": "formal-maskSlip-1", "text": "I—pardon me. That was entirely uncalled for.", "register": "formal", "context": "maskSlip", "valenceProfile": { "irritation": "high" }, "noteworthiness": 80 },
+    { "id": "formal-maskSlip-2", "text": "Please disregard that. I don't know what came over me.", "register": "formal", "context": "maskSlip", "valenceProfile": { "affection": "mid", "loneliness": "mid" }, "noteworthiness": 75 },
+    { "id": "formal-maskSlip-3", "text": "I'm not usually— never mind. Let's move on.", "register": "formal", "context": "maskSlip", "valenceProfile": { "loneliness": "mid" }, "noteworthiness": 78 },
+
+    { "id": "casual-maskSlip-1", "text": "I didn't mean to say that. Out loud, I mean.", "register": "casual", "context": "maskSlip", "valenceProfile": { "irritation": "mid" }, "noteworthiness": 82 },
+    { "id": "casual-maskSlip-2", "text": "Okay, where did that come from? Sorry.", "register": "casual", "context": "maskSlip", "valenceProfile": {}, "noteworthiness": 78 },
+    { "id": "casual-maskSlip-3", "text": "That was— just pretend I didn't say anything.", "register": "casual", "context": "maskSlip", "valenceProfile": { "irritation": "low" }, "noteworthiness": 75 },
+
+    { "id": "clipped-maskSlip-1", "text": "Nothing. Forget it.", "register": "clipped", "context": "maskSlip", "valenceProfile": { "irritation": "mid" }, "noteworthiness": 72 },
+    { "id": "clipped-maskSlip-2", "text": "That's not— I didn't mean that.", "register": "clipped", "context": "maskSlip", "valenceProfile": { "irritation": "low" }, "noteworthiness": 74 },
+    { "id": "clipped-maskSlip-3", "text": "Ignore me.", "register": "clipped", "context": "maskSlip", "valenceProfile": {}, "noteworthiness": 70 },
+
+    { "id": "crass-maskSlip-1", "text": "Christ. Pretend you didn't hear that.", "register": "crass", "context": "maskSlip", "valenceProfile": { "irritation": "high" }, "noteworthiness": 82 },
+    { "id": "crass-maskSlip-2", "text": "That came out so wrong. God.", "register": "crass", "context": "maskSlip", "valenceProfile": { "irritation": "mid" }, "noteworthiness": 80 },
+    { "id": "crass-maskSlip-3", "text": "I don't— shit— never mind.", "register": "crass", "context": "maskSlip", "valenceProfile": { "irritation": "high" }, "noteworthiness": 78 },
+
+    { "id": "folksy-maskSlip-1", "text": "Well now. That wasn't meant to slip out like that.", "register": "folksy", "context": "maskSlip", "valenceProfile": { "loneliness": "mid", "affection": "mid" }, "noteworthiness": 78 },
+    { "id": "folksy-maskSlip-2", "text": "Lord, listen to me. Don't pay me any mind.", "register": "folksy", "context": "maskSlip", "valenceProfile": { "loneliness": "low" }, "noteworthiness": 74 },
+    { "id": "folksy-maskSlip-3", "text": "I been holding that in. I reckon it shows.", "register": "folksy", "context": "maskSlip", "valenceProfile": { "loneliness": "high", "affection": "mid" }, "noteworthiness": 82 }
   ]
 }
