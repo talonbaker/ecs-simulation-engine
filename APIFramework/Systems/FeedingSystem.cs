@@ -47,6 +47,11 @@ public class FeedingSystem : ISystem
             if (!entity.Has<DriveComponent>()) continue;
             if (entity.Get<DriveComponent>().Dominant != DesireType.Eat) continue;
 
+            // Social inhibition veto: bodyImageEating overrides hunger.
+            if (entity.Has<BlockedActionsComponent>() &&
+                entity.Get<BlockedActionsComponent>().Contains(BlockedActionClass.Eat))
+                continue;
+
             var meta = entity.Get<MetabolismComponent>();
             if (meta.Hunger < _cfg.HungerThreshold) continue;
 

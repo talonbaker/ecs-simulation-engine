@@ -29,6 +29,7 @@ public class SimConfig
     public MemoryConfig           Memory          { get; set; } = new();
     public WorkloadConfig         Workload        { get; set; } = new();
     public SocialMaskConfig       SocialMask      { get; set; } = new();
+    public PhysiologyGateConfig   PhysiologyGate  { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1131,6 +1132,34 @@ public class MemoryConfig
 
     /// <summary>Maximum entries in PersonalMemoryComponent.Recent before oldest is dropped.</summary>
     public int MaxPersonalMemoryCount { get; set; } = 16;
+}
+
+// ── Physiology gate system ────────────────────────────────────────────────────
+
+/// <summary>
+/// Tuning knobs for PhysiologyGateSystem — the layer that lets social inhibitions
+/// veto autonomous physiology actions (eating, sleeping, urinating, defecating).
+/// </summary>
+public class PhysiologyGateConfig
+{
+    /// <summary>
+    /// Effective veto strength at or above which an action class is blocked.
+    /// Range 0–1. Default 0.50: a 50% effective inhibition is sufficient to veto.
+    /// </summary>
+    public double VetoStrengthThreshold { get; set; } = 0.50;
+
+    /// <summary>
+    /// Willpower value below which low-willpower leakage begins weakening the veto.
+    /// At this value leakage is 0; at willpower 0 leakage is 1 (gate fully open).
+    /// Default 30.
+    /// </summary>
+    public int LowWillpowerLeakageStart { get; set; } = 30;
+
+    /// <summary>
+    /// Maximum fraction by which acute stress can relax the veto (0–1).
+    /// At default 0.7: an NPC at 100% acute stress has only 30% of normal veto strength.
+    /// </summary>
+    public double StressMaxRelaxation { get; set; } = 0.7;
 }
 
 // ── Social mask system ────────────────────────────────────────────────────────

@@ -33,6 +33,11 @@ public class DefecationSystem : ISystem
             if (drives.Dominant != DesireType.Defecate) continue;
             if (!entity.Has<ColonComponent>()) continue;
 
+            // Social inhibition veto: publicEmotion overrides bowel urgency.
+            if (entity.Has<BlockedActionsComponent>() &&
+                entity.Get<BlockedActionsComponent>().Contains(BlockedActionClass.Defecate))
+                continue;
+
             var colon = entity.Get<ColonComponent>();
             if (colon.IsEmpty) continue;
 
