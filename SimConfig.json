@@ -526,6 +526,8 @@
     "recencyPenalty":             -10,
     // Bonus for calcified fragment
     "calcifyBiasScore":           3,
+    // Bonus for fragment previously used with this specific listener
+    "perListenerBiasScore":       2,
     // Drive value at or below this maps to "low" ordinal
     "valenceLowMaxValue":         33,
     // Drive value at or below this maps to "mid" ordinal (above: "high")

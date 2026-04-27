@@ -11,9 +11,13 @@ public struct DialogHistoryComponent
 {
     public Dictionary<string, FragmentUseRecord> UsesByFragmentId;
 
+    /// <summary>Per-(listener, fragment) use counter. Key: listener int id. Value: counts per fragment.</summary>
+    public Dictionary<int, Dictionary<string, int>> UsesByListenerAndFragmentId;
+
     public DialogHistoryComponent()
     {
-        UsesByFragmentId = new Dictionary<string, FragmentUseRecord>();
+        UsesByFragmentId            = new Dictionary<string, FragmentUseRecord>();
+        UsesByListenerAndFragmentId = new Dictionary<int, Dictionary<string, int>>();
     }
 }
 

@@ -18,8 +18,7 @@
       "Bash(grep -v \"^$\")",
       "Bash(git checkout *)",
       "Bash(git commit *)",
-      "Bash(python3 -c ' *)",
-      "Bash(git restore *)"
+      "Bash(git *)"
     ]
   }
 }
