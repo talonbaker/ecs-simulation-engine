@@ -158,3 +158,12 @@ public struct StressedTag { }     // AcuteLevel ≥ stressedTagThreshold (defaul
 public struct OverwhelmedTag { }  // AcuteLevel ≥ overwhelmedTagThreshold (default 85)
 public struct BurningOutTag { }   // ChronicLevel ≥ burningOutTagThreshold; sticky for cooldown days
 #endregion
+
+#region Workload Tags
+/// <summary>Marks a task entity. Systems use this to iterate all tasks without scanning all entities.</summary>
+public struct TaskTag { }
+/// <summary>Applied by WorkloadSystem when a task's DeadlineTick has passed. Removed only when the task is completed or destroyed.</summary>
+public struct OverdueTag { }
+/// <summary>Applied to an NPC when all capacity slots are filled with overdue tasks. Query helper only; no system reacts to it.</summary>
+public struct BurnedOutFromWorkloadTag { }
+#endregion
