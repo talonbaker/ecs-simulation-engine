@@ -1,7 +1,7 @@
 ﻿# ECS Simulation Engine — Fact Sheet
 
 **SimVersion:** ECS Simulation Engine  v0.7.2
-**Generated:** 2026-04-26T23:23:17.4922409+00:00
+**Generated:** 2026-04-27T01:08:04.6492719+00:00
 **TelemetrySchema:** world-state.schema.json v0.1.0
 
 ## Registered Systems
@@ -19,45 +19,51 @@
 | 9 | `InvariantSystem` | `PreUpdate` | 0 |
 | 10 | `ScheduleSpawnerSystem` | `PreUpdate` | 0 |
 | 11 | `StressInitializerSystem` | `PreUpdate` | 0 |
-| 12 | `MetabolismSystem` | `Physiology` | 10 |
-| 13 | `EnergySystem` | `Physiology` | 10 |
-| 14 | `BladderFillSystem` | `Physiology` | 10 |
-| 15 | `BiologicalConditionSystem` | `Condition` | 20 |
-| 16 | `ScheduleSystem` | `Condition` | 20 |
-| 17 | `MoodSystem` | `Cognition` | 30 |
-| 18 | `BrainSystem` | `Cognition` | 30 |
-| 19 | `DriveDynamicsSystem` | `Cognition` | 30 |
-| 20 | `ActionSelectionSystem` | `Cognition` | 30 |
-| 21 | `WillpowerSystem` | `Cognition` | 30 |
-| 22 | `RelationshipLifecycleSystem` | `Cognition` | 30 |
-| 23 | `FeedingSystem` | `Behavior` | 40 |
-| 24 | `DrinkingSystem` | `Behavior` | 40 |
-| 25 | `SleepSystem` | `Behavior` | 40 |
-| 26 | `DefecationSystem` | `Behavior` | 40 |
-| 27 | `UrinationSystem` | `Behavior` | 40 |
-| 28 | `InteractionSystem` | `Transit` | 50 |
-| 29 | `EsophagusSystem` | `Transit` | 50 |
-| 30 | `DigestionSystem` | `Transit` | 50 |
-| 31 | `SmallIntestineSystem` | `Elimination` | 55 |
-| 32 | `LargeIntestineSystem` | `Elimination` | 55 |
-| 33 | `ColonSystem` | `Elimination` | 55 |
-| 34 | `BladderSystem` | `Elimination` | 55 |
-| 35 | `RotSystem` | `World` | 60 |
-| 36 | `PathfindingTriggerSystem` | `World` | 60 |
-| 37 | `MovementSpeedModifierSystem` | `World` | 60 |
-| 38 | `StepAsideSystem` | `World` | 60 |
-| 39 | `MovementSystem` | `World` | 60 |
-| 40 | `FacingSystem` | `World` | 60 |
-| 41 | `IdleMovementSystem` | `World` | 60 |
-| 42 | `NarrativeEventDetector` | `Narrative` | 70 |
-| 43 | `PersistenceThresholdDetector` | `Narrative` | 70 |
-| 44 | `MemoryRecordingSystem` | `Narrative` | 70 |
-| 45 | `DialogContextDecisionSystem` | `Dialog` | 75 |
-| 46 | `DialogFragmentRetrievalSystem` | `Dialog` | 75 |
-| 47 | `DialogCalcifySystem` | `Dialog` | 75 |
-| 48 | `StressSystem` | `Cleanup` | 80 |
+| 12 | `MaskInitializerSystem` | `PreUpdate` | 0 |
+| 13 | `WorkloadInitializerSystem` | `PreUpdate` | 0 |
+| 14 | `TaskGeneratorSystem` | `PreUpdate` | 0 |
+| 15 | `MetabolismSystem` | `Physiology` | 10 |
+| 16 | `EnergySystem` | `Physiology` | 10 |
+| 17 | `BladderFillSystem` | `Physiology` | 10 |
+| 18 | `BiologicalConditionSystem` | `Condition` | 20 |
+| 19 | `ScheduleSystem` | `Condition` | 20 |
+| 20 | `MoodSystem` | `Cognition` | 30 |
+| 21 | `BrainSystem` | `Cognition` | 30 |
+| 22 | `DriveDynamicsSystem` | `Cognition` | 30 |
+| 23 | `ActionSelectionSystem` | `Cognition` | 30 |
+| 24 | `WillpowerSystem` | `Cognition` | 30 |
+| 25 | `RelationshipLifecycleSystem` | `Cognition` | 30 |
+| 26 | `SocialMaskSystem` | `Cognition` | 30 |
+| 27 | `FeedingSystem` | `Behavior` | 40 |
+| 28 | `DrinkingSystem` | `Behavior` | 40 |
+| 29 | `SleepSystem` | `Behavior` | 40 |
+| 30 | `DefecationSystem` | `Behavior` | 40 |
+| 31 | `UrinationSystem` | `Behavior` | 40 |
+| 32 | `InteractionSystem` | `Transit` | 50 |
+| 33 | `EsophagusSystem` | `Transit` | 50 |
+| 34 | `DigestionSystem` | `Transit` | 50 |
+| 35 | `SmallIntestineSystem` | `Elimination` | 55 |
+| 36 | `LargeIntestineSystem` | `Elimination` | 55 |
+| 37 | `ColonSystem` | `Elimination` | 55 |
+| 38 | `BladderSystem` | `Elimination` | 55 |
+| 39 | `RotSystem` | `World` | 60 |
+| 40 | `PathfindingTriggerSystem` | `World` | 60 |
+| 41 | `MovementSpeedModifierSystem` | `World` | 60 |
+| 42 | `StepAsideSystem` | `World` | 60 |
+| 43 | `MovementSystem` | `World` | 60 |
+| 44 | `FacingSystem` | `World` | 60 |
+| 45 | `IdleMovementSystem` | `World` | 60 |
+| 46 | `NarrativeEventDetector` | `Narrative` | 70 |
+| 47 | `PersistenceThresholdDetector` | `Narrative` | 70 |
+| 48 | `MemoryRecordingSystem` | `Narrative` | 70 |
+| 49 | `DialogContextDecisionSystem` | `Dialog` | 75 |
+| 50 | `DialogFragmentRetrievalSystem` | `Dialog` | 75 |
+| 51 | `DialogCalcifySystem` | `Dialog` | 75 |
+| 52 | `StressSystem` | `Cleanup` | 80 |
+| 53 | `WorkloadSystem` | `Cleanup` | 80 |
+| 54 | `MaskCrackSystem` | `Cleanup` | 80 |
 
-**Total:** 48 systems
+**Total:** 54 systems
 
 ## Component Types
 
@@ -84,6 +90,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `BowelCriticalTag` | *(tag — no fields)* |
 | `BrokenItemComponent` | `OriginalKind: string`, `Breakage: BreakageKind`, `CreatedAtTick: Int64`, `ChronicleEntryId: string` |
 | `BrokenItemTag` | *(tag — no fields)* |
+| `BurnedOutFromWorkloadTag` | *(tag — no fields)* |
 | `BurningOutTag` | *(tag — no fields)* |
 | `CatTag` | *(tag — no fields)* |
 | `ColonComponent` | `UrgeThresholdMl: float`, `CapacityMl: float`, `StoolVolumeMl: float`, `Fill: float`, `HasUrge: bool`, `IsCritical: bool`, `IsEmpty: bool` |
@@ -92,7 +99,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `CurrentScheduleBlockComponent` | `ActiveBlockIndex: int`, `AnchorEntityId: Guid`, `Activity: ScheduleActivityKind` |
 | `DefecationUrgeTag` | *(tag — no fields)* |
 | `DehydratedTag` | *(tag — no fields)* |
-| `DialogHistoryComponent` | `UsesByFragmentId: Dictionary`2` |
+| `DialogHistoryComponent` | `UsesByFragmentId: Dictionary`2`, `UsesByListenerAndFragmentId: Dictionary`2` |
 | `DisgustTag` | *(tag — no fields)* |
 | `DistractedTag` | *(tag — no fields)* |
 | `DriveComponent` | `EatUrgency: float`, `DrinkUrgency: float`, `SleepUrgency: float`, `DefecateUrgency: float`, `PeeUrgency: float`, `Dominant: DesireType` |
@@ -139,6 +146,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `NpcTag` | *(tag — no fields)* |
 | `NutrientProfile` | `Carbohydrates: float`, `Proteins: float`, `Fats: float`, `Fiber: float`, `Water: float`, `VitaminA: float`, `VitaminB: float`, `VitaminC: float`, `VitaminD: float`, `VitaminE: float`, `VitaminK: float`, `Sodium: float`, `Potassium: float`, `Calcium: float`, `Iron: float`, `Magnesium: float`, `Calories: float`, `IsEmpty: bool` |
 | `ObstacleTag` | *(tag — no fields)* |
+| `OverdueTag` | *(tag — no fields)* |
 | `OverwhelmedTag` | *(tag — no fields)* |
 | `PathComponent` | `Waypoints: IReadOnlyList`1`, `CurrentWaypointIndex: int` |
 | `PensiveTag` | *(tag — no fields)* |
@@ -166,15 +174,18 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `SleepingTag` | *(tag — no fields)* |
 | `SmallIntestineComponent` | `ChymeVolumeMl: float`, `AbsorptionRate: float`, `Chyme: NutrientProfile`, `ResidueToLargeFraction: float`, `Fill: float`, `IsEmpty: bool` |
 | `SocialDrivesComponent` | `Belonging: DriveValue`, `Status: DriveValue`, `Affection: DriveValue`, `Irritation: DriveValue`, `Attraction: DriveValue`, `Trust: DriveValue`, `Suspicion: DriveValue`, `Loneliness: DriveValue` |
+| `SocialMaskComponent` | `IrritationMask: int`, `AffectionMask: int`, `AttractionMask: int`, `LonelinessMask: int`, `CurrentLoad: int`, `Baseline: int`, `LastSlipTick: Int64` |
 | `StainComponent` | `Source: string`, `Magnitude: int`, `CreatedAtTick: Int64`, `ChronicleEntryId: string` |
 | `StainTag` | *(tag — no fields)* |
 | `StarvingTag` | *(tag — no fields)* |
 | `StomachComponent` | `CurrentVolumeMl: float`, `DigestionRate: float`, `NutrientsQueued: NutrientProfile`, `Fill: float`, `IsEmpty: bool`, `IsFull: bool` |
 | `StoredTag` | *(tag — no fields)* |
-| `StressComponent` | `AcuteLevel: int`, `ChronicLevel: double`, `LastDayUpdated: int`, `SuppressionEventsToday: int`, `DriveSpikeEventsToday: int`, `SocialConflictEventsToday: int`, `BurnoutLastAppliedDay: int` |
+| `StressComponent` | `AcuteLevel: int`, `ChronicLevel: double`, `LastDayUpdated: int`, `SuppressionEventsToday: int`, `DriveSpikeEventsToday: int`, `SocialConflictEventsToday: int`, `OverdueTaskEventsToday: int`, `BurnoutLastAppliedDay: int` |
 | `StressedTag` | *(tag — no fields)* |
 | `SunStateRecord` | `AzimuthDeg: double`, `ElevationDeg: double`, `DayPhase: DayPhase` |
 | `SurprisedTag` | *(tag — no fields)* |
+| `TaskComponent` | `EffortHours: float`, `DeadlineTick: Int64`, `Priority: int`, `Progress: float`, `QualityLevel: float`, `AssignedNpcId: Guid`, `CreatedTick: Int64` |
+| `TaskTag` | *(tag — no fields)* |
 | `TerrorTag` | *(tag — no fields)* |
 | `ThirstTag` | *(tag — no fields)* |
 | `ThirstyTag` | *(tag — no fields)* |
@@ -185,8 +196,9 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `VigilantTag` | *(tag — no fields)* |
 | `WaterDesireTag` | *(tag — no fields)* |
 | `WillpowerComponent` | `Current: int`, `Baseline: int` |
+| `WorkloadComponent` | `ActiveTasks: IReadOnlyList`1`, `Capacity: int`, `CurrentLoad: int` |
 
-**Total:** 120 component types
+**Total:** 126 component types
 
 ## SimConfig Keys
 
@@ -370,6 +382,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Dialog.ValenceMatchScore` | `int` | `5` |
 | `Dialog.RecencyPenalty` | `int` | `-10` |
 | `Dialog.CalcifyBiasScore` | `int` | `3` |
+| `Dialog.PerListenerBiasScore` | `int` | `2` |
 | `Dialog.ValenceLowMaxValue` | `int` | `33` |
 | `Dialog.ValenceMidMaxValue` | `int` | `66` |
 | `Dialog.DecalcifyTimeoutDays` | `int` | `30` |
@@ -402,4 +415,28 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Schedule.ScheduleLingerThresholdCells` | `float` | `2` |
 | `Memory.MaxRelationshipMemoryCount` | `int` | `32` |
 | `Memory.MaxPersonalMemoryCount` | `int` | `16` |
+| `Workload.TaskGenerationHourOfDay` | `double` | `8` |
+| `Workload.TaskGenerationCountPerDay` | `int` | `5` |
+| `Workload.TaskEffortHoursMin` | `float` | `0.5` |
+| `Workload.TaskEffortHoursMax` | `float` | `6` |
+| `Workload.TaskDeadlineHoursMin` | `float` | `4` |
+| `Workload.TaskDeadlineHoursMax` | `float` | `48` |
+| `Workload.TaskPriorityMin` | `int` | `30` |
+| `Workload.TaskPriorityMax` | `int` | `80` |
+| `Workload.BaseProgressRatePerSecond` | `double` | `0.0001` |
+| `Workload.ConscientiousnessProgressBias` | `double` | `0.1` |
+| `Workload.QualityDecayPerStressedTick` | `double` | `0.0002` |
+| `Workload.QualityRecoveryPerGoodTick` | `double` | `0.0001` |
+| `Workload.WorkActionBaseWeight` | `double` | `0.4` |
+| `Workload.OverdueTaskStressGain` | `double` | `1` |
+| `SocialMask.MaskGainPerTick` | `double` | `0.5` |
+| `SocialMask.MaskDecayPerTick` | `double` | `0.3` |
+| `SocialMask.LowExposureThreshold` | `double` | `0.3` |
+| `SocialMask.PersonalityMaskScale` | `double` | `0.2` |
+| `SocialMask.PersonalityExtraversionScale` | `double` | `0.1` |
+| `SocialMask.CrackThreshold` | `double` | `1.5` |
+| `SocialMask.StressCrackContribution` | `double` | `0.5` |
+| `SocialMask.BurnoutCrackBonus` | `double` | `0.3` |
+| `SocialMask.LowWillpowerThreshold` | `int` | `30` |
+| `SocialMask.SlipCooldownTicks` | `int` | `1800` |
 
