@@ -41,6 +41,14 @@ public class SleepSystem : ISystem
 
             bool brainWantsSleep = drives.Dominant == DesireType.Sleep;
 
+            // Social inhibition veto: vulnerability overrides exhaustion.
+            if (entity.Has<BlockedActionsComponent>() &&
+                entity.Get<BlockedActionsComponent>().Contains(BlockedActionClass.Sleep))
+            {
+                // Veto only suppresses the fall-asleep action; wake-up is always allowed.
+                if (!energy.IsSleeping) continue;
+            }
+
             if (!energy.IsSleeping && brainWantsSleep)
             {
                 // ── Fall asleep ───────────────────────────────────────────────
