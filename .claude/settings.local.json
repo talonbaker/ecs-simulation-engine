@@ -17,7 +17,8 @@
       "Bash(python -c \"import json; data = json.load\\(open\\('examples/mocks/cast-validate.sonnet.json'\\)\\); sb = data.get\\('scenarioBatch', {}\\); print\\('batchId:', sb.get\\('batchId'\\)\\); print\\('Scenario IDs:', [s.get\\('scenarioId'\\) for s in sb.get\\('scenarios', []\\)]\\)\")",
       "Bash(grep -v \"^$\")",
       "Bash(git checkout *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git *)"
     ]
   }
 }

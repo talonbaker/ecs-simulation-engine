@@ -21,9 +21,9 @@ public class StressSystemTests
         clock   ??= new SimulationClock();
         var queue = new WillpowerEventQueue();
         var bus   = new NarrativeEventBus();
-        var sys   = new StressSystem(cfg, clock, queue, bus);
+        var em    = new EntityManager();
+        var sys   = new StressSystem(cfg, new WorkloadConfig(), clock, queue, bus, em);
 
-        var em  = new EntityManager();
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
         npc.Add(new StressComponent
@@ -161,9 +161,9 @@ public class StressSystemTests
         // No decay accumulation across ticks we don't care about — use large AcuteLevel
         var queue = new WillpowerEventQueue();
         var bus   = new NarrativeEventBus();
-        var sys   = new StressSystem(cfg, clock, queue, bus);
+        var em    = new EntityManager();
+        var sys   = new StressSystem(cfg, new WorkloadConfig(), clock, queue, bus, em);
 
-        var em  = new EntityManager();
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
         npc.Add(new PersonalityComponent(0, 0, 0, 0, 0));
@@ -276,9 +276,8 @@ public class StressSystemTests
         var clock = new SimulationClock();
         var queue = new WillpowerEventQueue();
         var bus   = new NarrativeEventBus();
-        var sys   = new StressSystem(cfg, clock, queue, bus);
-
-        var em  = new EntityManager();
+        var em    = new EntityManager();
+        var sys   = new StressSystem(cfg, new WorkloadConfig(), clock, queue, bus, em);
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
         npc.Add(new PersonalityComponent(0, 0, 0, 0, 0));

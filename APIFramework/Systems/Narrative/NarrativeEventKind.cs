@@ -12,4 +12,6 @@ public enum NarrativeEventKind
     ConversationStarted,
     LeftRoomAbruptly,
     MaskSlip,
+    OverdueTask,
+    TaskCompleted,
 }

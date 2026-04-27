@@ -18,6 +18,9 @@ namespace ECSCli.Tests;
 /// <c>InvokeAsync</c> — no subprocess, no <c>Environment.Exit()</c>.
 /// Output files land in the OS temp directory and are cleaned up after each test.
 /// </summary>
+// Same collection as FactSheetStalenessTests: System.CommandLine beta's
+// RootCommand singleton is not safe for concurrent InvokeAsync calls.
+[Collection("AiCommandSingleton")]
 public sealed class AiVerbTests : IDisposable
 {
     // ── Shared temp directory ─────────────────────────────────────────────────

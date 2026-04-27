@@ -283,6 +283,14 @@ public class SimulationBootstrapper
         // Mask initialization — attaches SocialMaskComponent with personality-derived baseline.
         Engine.AddSystem(new MaskInitializerSystem(),                              SystemPhase.PreUpdate);
 
+        // Workload initialization — attaches WorkloadComponent with per-archetype capacity.
+        Engine.AddSystem(
+            new WorkloadInitializerSystem(WorkloadInitializerSystem.LoadCapacities()), SystemPhase.PreUpdate);
+
+        // Task generation — spawns new task entities once per game-day at the configured hour.
+        Engine.AddSystem(
+            new TaskGeneratorSystem(Config.Workload, Clock, Random),               SystemPhase.PreUpdate);
+
         // Physiology — raw biological resource drain/restore
         Engine.AddSystem(new MetabolismSystem(),                                   SystemPhase.Physiology);
         Engine.AddSystem(new EnergySystem(sys.Energy),                            SystemPhase.Physiology);
@@ -300,7 +308,7 @@ public class SimulationBootstrapper
         // Social cognition — drive dynamics, action selection, willpower, relationship lifecycle
         Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random, Config.Stress), SystemPhase.Cognition);
         Engine.AddSystem(new ActionSelectionSystem(
-            SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, Config.Schedule, EntityManager),
+            SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, Config.Schedule, EntityManager, Config.Workload),
                                                                                    SystemPhase.Cognition);
         Engine.AddSystem(new WillpowerSystem(Config.Social, WillpowerEvents),      SystemPhase.Cognition);
         Engine.AddSystem(RelationshipLifecycleSystem.LoadFromFile(Config.Social),  SystemPhase.Cognition);
@@ -360,7 +368,11 @@ public class SimulationBootstrapper
         // Cleanup — stress accumulation; runs after WillpowerSystem (Cognition) and
         // NarrativeEventDetector (Narrative) so all tick state has settled.
         Engine.AddSystem(
-            new StressSystem(Config.Stress, Clock, WillpowerEvents, NarrativeBus), SystemPhase.Cleanup);
+            new StressSystem(Config.Stress, Config.Workload, Clock, WillpowerEvents, NarrativeBus, EntityManager), SystemPhase.Cleanup);
+
+        // Workload system — advances task progress, detects completion and overdue.
+        Engine.AddSystem(
+            new WorkloadSystem(Config.Workload, Clock, NarrativeBus, EntityManager), SystemPhase.Cleanup);
 
         // Mask crack detection — runs at Cleanup so it fires after ActionSelectionSystem has
         // written its intent; the crack override wins for the following Dialog phase.

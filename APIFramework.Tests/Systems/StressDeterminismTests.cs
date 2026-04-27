@@ -56,9 +56,8 @@ public class StressDeterminismTests
 
         var driveSys  = new DriveDynamicsSystem(socialCfg, clock, rng, stressCfg);
         var wpSys     = new WillpowerSystem(socialCfg, queue);
-        var stressSys = new StressSystem(stressCfg, clock, queue, bus);
-
-        var em  = new EntityManager();
+        var em        = new EntityManager();
+        var stressSys = new StressSystem(stressCfg, new WorkloadConfig(), clock, queue, bus, em);
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
         npc.Add(new PersonalityComponent(0, 0, 0, 0, 1));   // Neuroticism=1 for variance

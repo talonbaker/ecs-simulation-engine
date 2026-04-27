@@ -19,7 +19,7 @@ namespace APIFramework.Systems;
 public sealed class ActionSelectionSystem : ISystem
 {
     // ── Candidate source tags (for diagnostics) ───────────────────────────────
-    private enum CandidateSource { Drive = 0, Schedule = 1, Idle = 2 }
+    private enum CandidateSource { Drive = 0, Schedule = 1, Idle = 2, Workload = 3 }
 
     // ── Drive ordinals (deterministic sort key) ───────────────────────────────
     private enum DriveOrdinal { Belonging = 0, Status = 1, Affection = 2, Irritation = 3, Attraction = 4, Trust = 5, Suspicion = 6, Loneliness = 7 }
@@ -69,6 +69,7 @@ public sealed class ActionSelectionSystem : ISystem
     private readonly SeededRandom         _rng;
     private readonly ActionSelectionConfig _cfg;
     private readonly ScheduleConfig        _scheduleCfg;
+    private readonly WorkloadConfig        _workloadCfg;
     private readonly EntityManager        _em;
 
     // Flee-target entities: NPC → ephemeral entity positioned at flee point.
@@ -81,7 +82,8 @@ public sealed class ActionSelectionSystem : ISystem
         SeededRandom         rng,
         ActionSelectionConfig cfg,
         ScheduleConfig        scheduleCfg,
-        EntityManager        em)
+        EntityManager        em,
+        WorkloadConfig?       workloadCfg = null)
     {
         _spatial        = spatial;
         _rooms          = rooms;
@@ -89,6 +91,7 @@ public sealed class ActionSelectionSystem : ISystem
         _rng            = rng;
         _cfg            = cfg;
         _scheduleCfg    = scheduleCfg;
+        _workloadCfg    = workloadCfg ?? new WorkloadConfig();
         _em             = em;
     }
 
@@ -167,6 +170,48 @@ public sealed class ActionSelectionSystem : ISystem
                             Inhibition         = 0.0,
                             Weight             = _scheduleCfg.ScheduleAnchorBaseWeight,
                             Source             = CandidateSource.Schedule
+                        });
+                    }
+                }
+            }
+
+            // Work candidate — emitted when NPC has an active task AND is scheduled AtDesk.
+            if (npc.Has<WorkloadComponent>() && npc.Has<CurrentScheduleBlockComponent>())
+            {
+                var workload = npc.Get<WorkloadComponent>();
+                var sched    = npc.Get<CurrentScheduleBlockComponent>();
+                var active   = workload.ActiveTasks;
+                if (active != null && active.Count > 0 &&
+                    sched.Activity == ScheduleActivityKind.AtDesk)
+                {
+                    // Pick highest-priority active task.
+                    Entity? topTask   = null;
+                    int     topPriority = -1;
+                    foreach (var taskGuid in active)
+                    {
+                        var te = FindEntityByGuid(taskGuid);
+                        if (te == null || !te.Has<TaskComponent>()) continue;
+                        int p = te.Get<TaskComponent>().Priority;
+                        if (p > topPriority)
+                        {
+                            topPriority = p;
+                            topTask     = te;
+                        }
+                    }
+
+                    if (topTask != null)
+                    {
+                        candidates.Add(new Candidate
+                        {
+                            Kind               = IntendedActionKind.Work,
+                            Context            = DialogContextValue.None,
+                            TargetEntityId     = WillpowerSystem.EntityIntId(topTask),
+                            TargetEntityGuid   = topTask.Id,
+                            DriveOrdinal       = 97,
+                            SourceDriveCurrent = 0,
+                            Inhibition         = 0.0,
+                            Weight             = _workloadCfg.WorkActionBaseWeight,
+                            Source             = CandidateSource.Workload
                         });
                     }
                 }

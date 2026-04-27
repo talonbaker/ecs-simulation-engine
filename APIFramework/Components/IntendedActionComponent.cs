@@ -6,7 +6,8 @@ public enum IntendedActionKind
     Dialog,
     Approach,
     Avoid,
-    Linger
+    Linger,
+    Work
 }
 
 public enum DialogContextValue

@@ -23,9 +23,8 @@ public class StressBurningOutStickyTests
         var clock = new SimulationClock();
         var queue = new WillpowerEventQueue();
         var bus   = new NarrativeEventBus();
-        var sys   = new StressSystem(cfg, clock, queue, bus);
-
-        var em  = new EntityManager();
+        var em    = new EntityManager();
+        var sys   = new StressSystem(cfg, new WorkloadConfig(), clock, queue, bus, em);
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
         npc.Add(new PersonalityComponent(0, 0, 0, 0, 0));
