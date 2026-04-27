@@ -43,7 +43,8 @@ namespace APIFramework.Core;
 ///  Condition   (20) BiologicalConditionSystem — set hunger/thirst/irritable tags
 ///  Cognition   (30) MoodSystem                — decay emotions; apply Plutchik intensity tags
 ///  Cognition   (30) BrainSystem               — score drives (incl. circadian, colon, bladder); pick dominant
-///  Behavior    (40) FeedingSystem             — act if Eat is dominant
+///  Cognition   (30) PhysiologyGateSystem      — write BlockedActionsComponent; inhibitions veto biology
+///  Behavior    (40) FeedingSystem             — act if Eat is dominant (skipped if Eat blocked)
 ///  Behavior    (40) DrinkingSystem            — act if Drink is dominant
 ///  Behavior    (40) SleepSystem               — toggle IsSleeping based on dominant desire
 ///  Behavior    (40) DefecationSystem          — empty colon if Defecate is dominant
@@ -304,6 +305,10 @@ public class SimulationBootstrapper
         // Cognition — process conditions into emotions and drive scores
         Engine.AddSystem(new MoodSystem(sys.Mood),                                SystemPhase.Cognition);
         Engine.AddSystem(new BrainSystem(sys.Brain, Clock),                       SystemPhase.Cognition);
+
+        // Physiology gate — veto set computed after BrainSystem, before Behavior systems act.
+        // PhysiologyGateSystem writes BlockedActionsComponent for each NPC with inhibitions.
+        Engine.AddSystem(new PhysiologyGateSystem(Config.PhysiologyGate),                  SystemPhase.Cognition);
 
         // Social cognition — drive dynamics, action selection, willpower, relationship lifecycle
         Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random, Config.Stress), SystemPhase.Cognition);

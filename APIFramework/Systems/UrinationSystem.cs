@@ -30,6 +30,11 @@ public class UrinationSystem : ISystem
             if (drives.Dominant != DesireType.Pee) continue;
             if (!entity.Has<BladderComponent>()) continue;
 
+            // Social inhibition veto: publicEmotion overrides bladder urgency.
+            if (entity.Has<BlockedActionsComponent>() &&
+                entity.Get<BlockedActionsComponent>().Contains(BlockedActionClass.Urinate))
+                continue;
+
             var bladder     = entity.Get<BladderComponent>();
             bladder.VolumeML = 0f;
             entity.Add(bladder);

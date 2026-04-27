@@ -637,6 +637,22 @@
     "slipCooldownTicks":             1800
   },
 
+  // ── Physiology gate system ────────────────────────────────────────────────
+  // PhysiologyGateSystem computes per-NPC veto sets: when an inhibition is strong
+  // enough (accounting for willpower leakage and stress relaxation), it blocks the
+  // matching physiology action for the tick.
+  "physiologyGate": {
+    // Effective veto strength at or above which the action is blocked (0–1).
+    // 0.50 = a 50% effective inhibition is sufficient to veto.
+    "vetoStrengthThreshold":    0.50,
+    // Willpower below this triggers leakage that weakens the veto.
+    // At willpower == 0, leakage == 1 (gate fully open).
+    "lowWillpowerLeakageStart": 30,
+    // Fraction by which 100% acute stress relaxes the veto.
+    // 0.7 means a maximally stressed NPC has only 30% normal veto strength.
+    "stressMaxRelaxation":      0.7
+  },
+
   // ── Action selection ───────────────────────────────────────────────────────
   "actionSelection": {
     // Drive.Current must exceed this to enumerate candidates
