@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -46,6 +47,7 @@ public class MoodSystem : ISystem
     {
         foreach (var entity in em.Query<MoodComponent>())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             var mood = entity.Get<MoodComponent>();
 
             // ── Decay all emotions toward zero ────────────────────────────────

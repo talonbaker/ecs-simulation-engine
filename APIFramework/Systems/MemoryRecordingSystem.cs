@@ -171,6 +171,24 @@ public sealed class MemoryRecordingSystem : ISystem
         NarrativeEventKind.MaskSlip          => true,
         NarrativeEventKind.OverdueTask       => true,
         NarrativeEventKind.TaskCompleted     => false,
+
+        // Phase 3 — death events (WP-3.0.0). Death is always persistent.
+        NarrativeEventKind.Choked            => true,
+        NarrativeEventKind.SlippedAndFell    => true,
+        NarrativeEventKind.StarvedAlone      => true,
+        NarrativeEventKind.Died              => true,
+
+        // Phase 3 — scenario-level events (WP-3.0.1). Witnesses remember the start of a choke episode.
+        NarrativeEventKind.ChokeStarted      => true,
+
+        // Phase 3 — bereavement events (WP-3.0.2). Colleagues permanently remember grief impact.
+        NarrativeEventKind.BereavementImpact => true,
+
+        // Phase 3 — fainting events (WP-3.0.6).
+        // Witnesses remember seeing someone faint; waking up is not a standalone persistent memory.
+        NarrativeEventKind.Fainted               => true,
+        NarrativeEventKind.RegainedConsciousness => false,
+
         _                                    => false,
     };
 

@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems.Movement;
 
@@ -27,6 +28,7 @@ public sealed class MovementSpeedModifierSystem : ISystem
     {
         foreach (var entity in em.Query<MovementComponent>())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             var move = entity.Get<MovementComponent>();
 
             float multiplier = 1.0f;

@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -23,6 +24,8 @@ public class InteractionSystem : ISystem
     {
         foreach (var human in em.Query<MetabolismComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(human)) continue;  // WP-3.0.0: skip Incapacitated/Deceased NPCs
+
             // Throat must be clear before we can swallow anything
             bool isEsophagusBusy = em.Query<EsophagusTransitComponent>()
                 .Any(t => t.Get<EsophagusTransitComponent>().TargetEntityId == human.Id);

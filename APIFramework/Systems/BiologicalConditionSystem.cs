@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -26,6 +27,8 @@ public class BiologicalConditionSystem : ISystem
 
         foreach (var entity in em.Query<MetabolismComponent>().ToList())
         {
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: skip Deceased NPCs (Incapacitated still ticks)
+
             var meta = entity.Get<MetabolismComponent>();
 
             // Hunger and Thirst are computed: Hunger = 100 - Satiation, Thirst = 100 - Hydration

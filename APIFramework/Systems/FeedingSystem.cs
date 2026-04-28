@@ -3,6 +3,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -43,6 +44,8 @@ public class FeedingSystem : ISystem
 
         foreach (var entity in em.Query<MetabolismComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip Incapacitated/Deceased NPCs
+
             // Only act if the brain has selected Eat as the dominant drive.
             if (!entity.Has<DriveComponent>()) continue;
             if (entity.Get<DriveComponent>().Dominant != DesireType.Eat) continue;

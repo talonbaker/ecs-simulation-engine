@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -31,6 +32,7 @@ public sealed class ScheduleSystem : ISystem
                               .Where(e => e.Has<ScheduleComponent>())
                               .ToList())
         {
+            if (!LifeStateGuard.IsAlive(npc)) continue;  // WP-3.0.0: skip non-Alive NPCs
             var schedule = npc.Get<ScheduleComponent>();
             var prev     = npc.Has<CurrentScheduleBlockComponent>()
                 ? npc.Get<CurrentScheduleBlockComponent>()

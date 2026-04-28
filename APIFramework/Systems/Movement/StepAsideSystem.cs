@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems.Movement;
@@ -37,6 +38,7 @@ public sealed class StepAsideSystem : ISystem
 
         foreach (var entity in em.Query<MovementComponent>())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!entity.Has<PositionComponent>()) continue;
             if (!entity.Has<HandednessComponent>()) continue;
 

@@ -3,6 +3,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems.Dialog;
 
@@ -36,6 +37,7 @@ public sealed class DialogCalcifySystem : ISystem
 
         foreach (var entity in em.Query<DialogHistoryComponent>())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             var hist = entity.Get<DialogHistoryComponent>();
 
             foreach (var rec in hist.UsesByFragmentId.Values)

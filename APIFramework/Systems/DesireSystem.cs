@@ -1,5 +1,6 @@
 ﻿using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -11,6 +12,7 @@ public class DesireSystem : ISystem
 
         foreach (var entity in em.Query<MetabolismComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             // 1. Evaluate Biological Needs
             bool needsWater = entity.Has<ThirstTag>();
             bool needsFood = entity.Has<HungerTag>();

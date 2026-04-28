@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -32,6 +33,7 @@ public class WillpowerSystem : ISystem
         // Push RestTick signals for sleeping NPCs
         foreach (var entity in em.Query<NpcTag>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!entity.Has<WillpowerComponent>()) continue;
             if (!entity.Has<SleepingTag>()) continue;
 

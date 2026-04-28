@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -47,6 +48,8 @@ public class DigestionSystem : ISystem
     {
         foreach (var entity in em.Query<StomachComponent>().ToList())
         {
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: skip Deceased NPCs (Incapacitated still ticks)
+
             var stomach = entity.Get<StomachComponent>();
             if (stomach.IsEmpty) continue;
 

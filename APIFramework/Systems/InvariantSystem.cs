@@ -3,6 +3,7 @@ using APIFramework.Components;
 using APIFramework.Core;
 using APIFramework.Diagnostics;
 using APIFramework.Systems.Chronicle;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -63,15 +64,26 @@ public class InvariantSystem : ISystem
                 ? entity.Get<IdentityComponent>().Name
                 : entity.ShortId;
 
-            CheckMetabolism     (entity, name, gameTime);
-            CheckEnergy         (entity, name, gameTime);
-            CheckStomach        (entity, name, gameTime);
-            CheckSmallIntestine (entity, name, gameTime);
-            CheckLargeIntestine (entity, name, gameTime);
-            CheckColon          (entity, name, gameTime);
-            CheckBladder        (entity, name, gameTime);
-            CheckDrives         (entity, name, gameTime);
-            CheckTransit        (entity, name, gameTime);
+            // WP-3.0.0: Deceased entities are checked against a reduced invariant set only.
+            // Their physiology components are frozen by design — do not raise alerts for them.
+            if (entity.Has<LifeStateComponent>() &&
+                entity.Get<LifeStateComponent>().State == LifeState.Deceased)
+            {
+                CheckLifeStateComponent (entity, name, gameTime);
+                CheckCauseOfDeath       (entity, name, gameTime);
+                continue;
+            }
+
+            CheckLifeStateComponent (entity, name, gameTime);
+            CheckMetabolism         (entity, name, gameTime);
+            CheckEnergy             (entity, name, gameTime);
+            CheckStomach            (entity, name, gameTime);
+            CheckSmallIntestine     (entity, name, gameTime);
+            CheckLargeIntestine     (entity, name, gameTime);
+            CheckColon              (entity, name, gameTime);
+            CheckBladder            (entity, name, gameTime);
+            CheckDrives             (entity, name, gameTime);
+            CheckTransit            (entity, name, gameTime);
         }
 
         if (_chronicle is not null)
@@ -79,6 +91,76 @@ public class InvariantSystem : ISystem
     }
 
     // ── Per-component checks ─────────────────────────────────────────────────
+
+    private void CheckLifeStateComponent(Entity entity, string name, double t)
+    {
+        if (!entity.Has<LifeStateComponent>()) return;
+        var ls = entity.Get<LifeStateComponent>();
+
+        // State must be a defined enum value (0=Alive, 1=Incapacitated, 2=Deceased).
+        int stateVal = (int)ls.State;
+        if (stateVal < 0 || stateVal > 2)
+        {
+            _violations.Add(new InvariantViolation(
+                GameTime:    t,
+                EntityName:  name,
+                Component:   "LifeStateComponent",
+                Property:    "State",
+                ActualValue: (float)stateVal,
+                ClampedTo:   (float)Math.Clamp(stateVal, 0, 2),
+                ValidMin:    0f,
+                ValidMax:    2f));
+        }
+
+        // Deceased entities must have a CauseOfDeathComponent attached.
+        if (ls.State == LifeState.Deceased && !entity.Has<CauseOfDeathComponent>())
+        {
+            _violations.Add(new InvariantViolation(
+                GameTime:    t,
+                EntityName:  name,
+                Component:   "LifeStateComponent",
+                Property:    "MissingCauseOfDeath",
+                ActualValue: 0f,
+                ClampedTo:   0f,
+                ValidMin:    0f,
+                ValidMax:    0f));
+        }
+    }
+
+    private void CheckCauseOfDeath(Entity entity, string name, double t)
+    {
+        if (!entity.Has<CauseOfDeathComponent>()) return;
+        var cod = entity.Get<CauseOfDeathComponent>();
+
+        // Cause must be a defined CauseOfDeath enum value (0=Unknown … 3=StarvedAlone).
+        int causeVal = (int)cod.Cause;
+        if (causeVal < 0 || causeVal > 3)
+        {
+            _violations.Add(new InvariantViolation(
+                GameTime:    t,
+                EntityName:  name,
+                Component:   "CauseOfDeathComponent",
+                Property:    "Cause",
+                ActualValue: (float)causeVal,
+                ClampedTo:   (float)Math.Clamp(causeVal, 0, 3),
+                ValidMin:    0f,
+                ValidMax:    3f));
+        }
+
+        // DeathTick must be positive (zero means uninitialized).
+        if (cod.DeathTick <= 0)
+        {
+            _violations.Add(new InvariantViolation(
+                GameTime:    t,
+                EntityName:  name,
+                Component:   "CauseOfDeathComponent",
+                Property:    "DeathTick",
+                ActualValue: (float)cod.DeathTick,
+                ClampedTo:   1f,
+                ValidMin:    1f,
+                ValidMax:    float.MaxValue));
+        }
+    }
 
     private void CheckMetabolism(Entity entity, string name, double t)
     {

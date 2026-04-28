@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems.Spatial;
 
@@ -43,6 +44,7 @@ public sealed class RoomMembershipSystem : ISystem
         foreach (var entity in em.Query<PositionComponent>().OrderBy(e => e.Id))
         {
             if (entity.Has<RoomTag>()) continue;
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: preserve deceased NPC's last room membership; WP-3.0.2 manages corpse moves
 
             var pos = entity.Get<PositionComponent>();
             int tx = (int)Math.Round(pos.X);

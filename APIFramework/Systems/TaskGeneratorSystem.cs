@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -40,9 +41,10 @@ public class TaskGeneratorSystem : ISystem
 
     private void GenerateTasks(EntityManager em)
     {
-        // Build round-robin pool: NPCs with capacity, sorted ascending by EntityIntId.
+        // Build round-robin pool: Alive NPCs with capacity, sorted ascending by EntityIntId.
+        // WP-3.0.0: Deceased and Incapacitated NPCs excluded from the assignment pool.
         var available = em.Query<NpcTag>()
-            .Where(e => e.Has<WorkloadComponent>())
+            .Where(e => e.Has<WorkloadComponent>() && LifeStateGuard.IsAlive(e))
             .OrderBy(WillpowerSystem.EntityIntId)
             .ToList();
 

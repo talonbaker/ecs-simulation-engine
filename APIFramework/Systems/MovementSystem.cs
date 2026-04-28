@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -58,6 +59,7 @@ public class MovementSystem : ISystem
         foreach (var entity in em.Query<PositionComponent>())
         {
             if (!entity.Has<MovementComponent>()) continue;
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: deceased position frozen
 
             var pos  = entity.Get<PositionComponent>();
             var move = entity.Get<MovementComponent>();

@@ -30,6 +30,11 @@ public class SimConfig
     public WorkloadConfig         Workload        { get; set; } = new();
     public SocialMaskConfig       SocialMask      { get; set; } = new();
     public PhysiologyGateConfig   PhysiologyGate  { get; set; } = new();
+    public LifeStateConfig        LifeState       { get; set; } = new();
+    public ChokingConfig          Choking         { get; set; } = new();
+    public BereavementConfig      Bereavement     { get; set; } = new();
+    public CorpseConfig           Corpse          { get; set; } = new();
+    public FaintingConfig         Fainting        { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1160,6 +1165,226 @@ public class PhysiologyGateConfig
     /// At default 0.7: an NPC at 100% acute stress has only 30% of normal veto strength.
     /// </summary>
     public double StressMaxRelaxation { get; set; } = 0.7;
+}
+
+// ── Life-state system (WP-3.0.0) ─────────────────────────────────────────────
+
+public class LifeStateConfig
+{
+    /// <summary>
+    /// Default number of ticks an NPC remains in <see cref="LifeState.Incapacitated"/>
+    /// before the transition system auto-promotes to <see cref="LifeState.Deceased"/>.
+    /// At the default time scale (120 game-s/real-s), 180 ticks ≈ 3 game-minutes.
+    /// Per-cause overrides (e.g. chokingIncapacitationTicks) live on their respective
+    /// scenario configs (ChokingConfig, etc.) and are written into LifeStateComponent
+    /// at incapacitation time.
+    /// Default: 180.
+    /// </summary>
+    public int DefaultIncapacitatedTicks { get; set; } = 180;
+
+    /// <summary>
+    /// When true, the InvariantSystem applies the deceased-invariant set to Deceased
+    /// entities rather than the live-invariant set. Disable only for debugging.
+    /// Default: true.
+    /// </summary>
+    public bool EmitDeathInvariantOnTransition { get; set; } = true;
+
+    /// <summary>
+    /// When true, an Incapacitated NPC's bladder may void autonomously
+    /// (BladderSystem still runs on IsBiologicallyTicking entities).
+    /// Default: true — matches real physiology.
+    /// </summary>
+    public bool IncapacitatedAllowsBladderVoid { get; set; } = true;
+
+    /// <summary>
+    /// When true, a Deceased NPC's position is frozen by MovementSystem skipping them.
+    /// The body stays where it fell. WP-3.0.2 introduces corpse-drag for removal.
+    /// Default: true.
+    /// </summary>
+    public bool DeceasedFreezesPosition { get; set; } = true;
+}
+
+// ── Choking scenario (WP-3.0.1) ──────────────────────────────────────────────
+
+/// <summary>
+/// Tuning knobs for <see cref="APIFramework.Systems.LifeState.ChokingDetectionSystem"/>.
+/// Controls which boluses are choking hazards, what physiological conditions
+/// make an NPC vulnerable, and how severe the resulting incapacitation is.
+/// </summary>
+public class ChokingConfig
+{
+    /// <summary>
+    /// BolusComponent.Toughness (0–1) at or above which a bolus is a choking hazard.
+    /// Banana default is 0.2 — well below the threshold. Tough foods (jerky ~0.8)
+    /// will choke a distracted NPC.
+    /// Default: 0.65.
+    /// </summary>
+    public float BolusSizeThreshold { get; set; } = 0.65f;
+
+    /// <summary>
+    /// EnergyComponent.Energy (0–100) strictly below which the NPC is considered
+    /// sufficiently distracted to choke. Low energy → fatigue → impaired swallowing.
+    /// Default: 40.
+    /// </summary>
+    public float EnergyThreshold { get; set; } = 40f;
+
+    /// <summary>
+    /// StressComponent.AcuteLevel (0–100) at or above which the NPC is distracted
+    /// enough to choke. High stress degrades motor coordination.
+    /// Default: 70.
+    /// </summary>
+    public int StressThreshold { get; set; } = 70;
+
+    /// <summary>
+    /// SocialDrivesComponent.Irritation.Current (0–100) at or above which the NPC
+    /// is distracted enough to choke. Irritation drives inattentive eating.
+    /// Default: 65.
+    /// </summary>
+    public int IrritationThreshold { get; set; } = 65;
+
+    /// <summary>
+    /// Ticks the NPC remains in <see cref="LifeState.Incapacitated"/> while choking
+    /// before LifeStateTransitionSystem auto-promotes to Deceased.
+    /// At the default time scale (120 game-s/real-s), 90 ticks ≈ 1.5 game-minutes
+    /// — shorter than the generic DefaultIncapacitatedTicks (180) since choking is acute.
+    /// Default: 90.
+    /// </summary>
+    public int IncapacitationTicks { get; set; } = 90;
+
+    /// <summary>
+    /// Acute panic level (0..1, NOT the 0–100 emotion scale) applied to
+    /// <see cref="APIFramework.Components.MoodComponent.PanicLevel"/> at the moment of choke.
+    /// MoodSystem decays this toward 0 at NegativeDecayRate each game-second.
+    /// Default: 0.85.
+    /// </summary>
+    public float PanicMoodIntensity { get; set; } = 0.85f;
+
+    /// <summary>
+    /// When true, ChokingDetectionSystem emits a ChokeStarted narrative candidate at
+    /// the instant of choke so witnesses record the onset of the episode.
+    /// Default: true.
+    /// </summary>
+    public bool EmitChokeStartedNarrative { get; set; } = true;
+}
+
+// ── Bereavement scenario (WP-3.0.2) ──────────────────────────────────────────
+
+/// <summary>
+/// Tuning knobs for the bereavement pipeline:
+/// <see cref="APIFramework.Systems.LifeState.BereavementSystem"/> (immediate cascade),
+/// <see cref="APIFramework.Systems.LifeState.BereavementByProximitySystem"/> (proximity tier),
+/// and <see cref="APIFramework.Systems.StressSystem"/> (bereavement stress branches).
+/// </summary>
+public class BereavementConfig
+{
+    /// <summary>
+    /// Stress gain applied once to a witness (second participant in a death narrative event).
+    /// StressSystem reads StressComponent.WitnessedDeathEventsToday, applies this gain, then
+    /// clears the counter. Default: 20.
+    /// </summary>
+    public double WitnessedDeathStressGain { get; set; } = 20.0;
+
+    /// <summary>
+    /// Stress gain applied once to a non-witness colleague per bereavement event.
+    /// StressSystem reads StressComponent.BereavementEventsToday, applies this gain, then
+    /// clears the counter. Default: 5.
+    /// </summary>
+    public double BereavementStressGain { get; set; } = 5.0;
+
+    /// <summary>
+    /// MoodComponent.GriefLevel (0–100) set on the witness immediately after a death.
+    /// Applied as Max(current, WitnessGriefIntensity). Default: 80.
+    /// </summary>
+    public float WitnessGriefIntensity { get; set; } = 80f;
+
+    /// <summary>
+    /// MoodComponent.GriefLevel ceiling for non-witness colleagues before scaling by
+    /// relationship intensity fraction. Final value = ColleagueBereavementGriefIntensity × (Intensity / 100).
+    /// Default: 40.
+    /// </summary>
+    public float ColleagueBereavementGriefIntensity { get; set; } = 40f;
+
+    /// <summary>
+    /// Minimum RelationshipComponent.Intensity (0–100) required for a non-witness colleague
+    /// to receive bereavement impact. Below this threshold: no impact, no narrative.
+    /// Default: 20.
+    /// </summary>
+    public int BereavementMinIntensity { get; set; } = 20;
+
+    /// <summary>
+    /// Minimum RelationshipComponent.Intensity (0–100) required for proximity bereavement
+    /// to fire when an NPC enters the corpse's room. Default: 30.
+    /// </summary>
+    public int ProximityBereavementMinIntensity { get; set; } = 30;
+
+    /// <summary>
+    /// Direct AcuteLevel gain applied (one-shot, per NPC per corpse) when an NPC physically
+    /// enters the room containing the corpse of a NPC they had a meaningful relationship with.
+    /// Applied directly to StressComponent.AcuteLevel. Default: 8.
+    /// </summary>
+    public double ProximityBereavementStressGain { get; set; } = 8.0;
+}
+
+// ── Fainting scenario (WP-3.0.6) ─────────────────────────────────────────────
+
+/// <summary>
+/// Tuning knobs for the fainting pipeline:
+/// <see cref="APIFramework.Systems.LifeState.FaintingDetectionSystem"/> (trigger),
+/// <see cref="APIFramework.Systems.LifeState.FaintingRecoverySystem"/> (wakeup), and
+/// <see cref="APIFramework.Systems.LifeState.FaintingCleanupSystem"/> (tag removal).
+///
+/// Fainting is a temporary loss of consciousness triggered by extreme fear. The NPC
+/// enters <see cref="LifeState.Incapacitated"/> and automatically recovers to
+/// <see cref="LifeState.Alive"/> after <see cref="FaintDurationTicks"/> — it is
+/// never fatal by design.
+/// </summary>
+public class FaintingConfig
+{
+    /// <summary>
+    /// MoodComponent.Fear (0–100) at or above which an Alive NPC faints.
+    /// At the default of 85 this corresponds to near-terror on Plutchik's wheel.
+    /// Default: 85.
+    /// </summary>
+    public float FearThreshold { get; set; } = 85f;
+
+    /// <summary>
+    /// Number of ticks the NPC remains Incapacitated before FaintingRecoverySystem
+    /// queues the recovery to Alive. The IncapacitatedTickBudget is set to
+    /// FaintDurationTicks + 1 so the budget-expiry death check cannot fire first.
+    /// At the default time scale (120 game-s/real-s), 20 ticks ≈ 20 game-seconds.
+    /// Default: 20.
+    /// </summary>
+    public int FaintDurationTicks { get; set; } = 20;
+
+    /// <summary>
+    /// When true, FaintingDetectionSystem emits a <see cref="APIFramework.Systems.Narrative.NarrativeEventKind.Fainted"/>
+    /// candidate on the NarrativeEventBus before the incapacitation request is enqueued,
+    /// so witnesses record the onset of the faint while all participants are Alive.
+    /// Default: true.
+    /// </summary>
+    public bool EmitFaintedNarrative { get; set; } = true;
+
+    /// <summary>
+    /// When true, FaintingRecoverySystem emits a
+    /// <see cref="APIFramework.Systems.Narrative.NarrativeEventKind.RegainedConsciousness"/>
+    /// candidate on the NarrativeEventBus before the Alive recovery request is enqueued.
+    /// Default: true.
+    /// </summary>
+    public bool EmitRegainedConsciousnessNarrative { get; set; } = true;
+}
+
+// ── Corpse scenario (WP-3.0.2) ───────────────────────────────────────────────
+
+/// <summary>
+/// Configuration for corpse entity behaviour after death.
+/// Reserved for future expansion (decay, smell, ambient drift config).
+/// At v0.1 this class is a stub; all corpse behaviour is governed by the life-state
+/// and bereavement systems.
+/// </summary>
+public class CorpseConfig
+{
+    // Placeholder for future per-cause or per-archetype corpse configuration.
+    // WP-3.0.2: no active tuning knobs at v0.1.
 }
 
 // ── Social mask system ────────────────────────────────────────────────────────

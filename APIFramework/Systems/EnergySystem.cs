@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -30,6 +31,8 @@ public class EnergySystem : ISystem
     {
         foreach (var entity in em.Query<EnergyComponent>().ToList())
         {
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: skip Deceased NPCs (Incapacitated still ticks)
+
             var e = entity.Get<EnergyComponent>();
 
             if (e.IsSleeping)

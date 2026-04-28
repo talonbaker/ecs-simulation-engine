@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems.Dialog;
@@ -53,6 +54,7 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
             var listener = pending.Listener;
             var context  = pending.Context;
 
+            if (!LifeStateGuard.IsAlive(speaker)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!speaker.Has<PersonalityComponent>()) continue;
 
             var personality = speaker.Get<PersonalityComponent>();

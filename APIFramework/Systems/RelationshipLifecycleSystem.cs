@@ -4,6 +4,7 @@ using System.IO;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -44,6 +45,7 @@ public class RelationshipLifecycleSystem : ISystem
     {
         foreach (var entity in em.Query<RelationshipTag>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!entity.Has<RelationshipComponent>()) continue;
 
             var rel = entity.Get<RelationshipComponent>();

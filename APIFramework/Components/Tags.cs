@@ -167,3 +167,32 @@ public struct OverdueTag { }
 /// <summary>Applied to an NPC when all capacity slots are filled with overdue tasks. Query helper only; no system reacts to it.</summary>
 public struct BurnedOutFromWorkloadTag { }
 #endregion
+
+#region Life-State / Scenario Tags (WP-3.0.1+)
+/// <summary>
+/// Applied by <see cref="APIFramework.Systems.LifeState.ChokingDetectionSystem"/> when an NPC begins to choke on a bolus.
+/// Removed by <see cref="APIFramework.Systems.LifeState.ChokingCleanupSystem"/> on transition to Deceased.
+/// While present, the NPC has <see cref="ChokingComponent"/> for detailed choke state.
+/// </summary>
+public struct IsChokingTag { }
+
+/// <summary>
+/// Applied by <see cref="APIFramework.Systems.LifeState.CorpseSpawnerSystem"/> when an NPC's death
+/// narrative event is received. Persists for the lifetime of the entity — the body remains in the world.
+/// The entity also receives <see cref="CorpseComponent"/> with death metadata.
+/// WP-3.0.2: Deceased-Entity Handling + Bereavement.
+/// </summary>
+public struct CorpseTag { }
+
+/// <summary>
+/// Applied by <see cref="APIFramework.Systems.LifeState.FaintingDetectionSystem"/> when an NPC's
+/// <see cref="MoodComponent.Fear"/> exceeds the configured threshold.
+/// The NPC enters <see cref="LifeState.Incapacitated"/> for a fixed duration and then recovers
+/// automatically — fainting never leads to death.
+/// Removed by <see cref="APIFramework.Systems.LifeState.FaintingCleanupSystem"/> once the NPC
+/// returns to <see cref="LifeState.Alive"/>.
+/// The entity also carries <see cref="FaintingComponent"/> with timing metadata.
+/// WP-3.0.6: Fainting System.
+/// </summary>
+public struct IsFaintingTag { }
+#endregion

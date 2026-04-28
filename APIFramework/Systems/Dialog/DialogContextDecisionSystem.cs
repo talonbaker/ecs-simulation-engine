@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems.Dialog;
@@ -58,6 +59,8 @@ public sealed class DialogContextDecisionSystem : ISystem
         {
             if (!speaker.Has<NpcTag>())  continue;
             if (!listener.Has<NpcTag>()) continue;
+            if (!LifeStateGuard.IsAlive(speaker))  continue;  // WP-3.0.0: skip non-Alive NPCs
+            if (!LifeStateGuard.IsAlive(listener)) continue;
 
             // Path 1: IntendedActionComponent with Dialog intent.
             if (!processedSpeakers.Contains(speaker) &&

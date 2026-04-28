@@ -1,5 +1,6 @@
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -19,7 +20,8 @@ public class EsophagusSystem : ISystem
                 // Find the consumer this bolus/liquid was headed for
                 var consumer = em.GetAllEntities().FirstOrDefault(e => e.Id == transit.TargetEntityId);
 
-                if (consumer != null && consumer.Has<StomachComponent>())
+                // WP-3.0.0: Deceased consumers no longer receive deposits; transit entity is still destroyed.
+                if (consumer != null && consumer.Has<StomachComponent>() && LifeStateGuard.IsBiologicallyTicking(consumer))
                 {
                     var stomach = consumer.Get<StomachComponent>();
 

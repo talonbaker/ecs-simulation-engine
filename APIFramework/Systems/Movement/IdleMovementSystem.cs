@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems.Movement;
 
@@ -29,6 +30,7 @@ public sealed class IdleMovementSystem : ISystem
     {
         foreach (var entity in em.Query<PositionComponent>())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!entity.Has<MovementComponent>()) continue;
             if (entity.Has<MovementTargetComponent>()) continue; // goal-directed — not idle
 

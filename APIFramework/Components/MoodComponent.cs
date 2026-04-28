@@ -68,6 +68,34 @@ public struct MoodComponent
     /// <summary>Forward-directed emotion toward upcoming rewards or goals. Low = interest, High = vigilance.</summary>
     public float Anticipation;
 
+    // ── Choking / acute-panic (WP-3.0.1) ────────────────────────────────────
+
+    /// <summary>
+    /// Acute panic level (0..1) set by <see cref="APIFramework.Systems.LifeState.ChokingDetectionSystem"/>
+    /// at the moment of a choke event. MoodSystem decays this toward 0 each tick
+    /// at <see cref="APIFramework.Config.MoodSystemConfig.NegativeDecayRate"/> per game-second (follow-up:
+    /// add explicit PanicDecayRate to MoodSystemConfig if tuning is needed).
+    ///
+    /// While <c>PanicLevel &gt; 0</c>, the NPC is in a panic state. The Incapacitated
+    /// life-state guard in FacingSystem already freezes facing; this field provides a
+    /// queryable hook for future systems (UI animations, witness reactions, etc.).
+    /// </summary>
+    public float PanicLevel;
+
+    // ── Bereavement / grief (WP-3.0.2) ───────────────────────────────────────
+
+    /// <summary>
+    /// Bereavement grief intensity (0–100), applied by
+    /// <see cref="APIFramework.Systems.LifeState.BereavementSystem"/> at the moment a
+    /// death event is received. Uses the same 0–100 scale as the eight primary Plutchik
+    /// emotions; MoodSystem decays this toward 0 each tick at
+    /// <see cref="APIFramework.Config.MoodSystemConfig.NegativeDecayRate"/> per game-second.
+    ///
+    /// Distinct from the structural <see cref="Sadness"/> field so that bereavement grief
+    /// can be set and tracked independently of hunger/thirst-driven sadness.
+    /// </summary>
+    public float GriefLevel;
+
     // ── Convenience ───────────────────────────────────────────────────────────
 
     /// <summary>True if any emotion is above a negligible threshold (not emotionally neutral).</summary>

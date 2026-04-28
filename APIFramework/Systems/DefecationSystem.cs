@@ -1,5 +1,6 @@
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -29,6 +30,8 @@ public class DefecationSystem : ISystem
     {
         foreach (var entity in em.Query<DriveComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip Incapacitated/Deceased NPCs (autonomous trigger only)
+
             var drives = entity.Get<DriveComponent>();
             if (drives.Dominant != DesireType.Defecate) continue;
             if (!entity.Has<ColonComponent>()) continue;

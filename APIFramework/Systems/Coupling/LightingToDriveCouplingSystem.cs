@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Lighting;
 using APIFramework.Systems.Spatial;
 
@@ -63,6 +64,7 @@ public sealed class LightingToDriveCouplingSystem : ISystem
 
         foreach (var entity in _npcBuffer)
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!entity.Has<SocialDrivesComponent>()) continue;
 
             var roomEntity = _roomMembership.GetRoom(entity);

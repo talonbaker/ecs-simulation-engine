@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -70,6 +71,7 @@ public class PhysiologyGateSystem : ISystem
         // Only NPCs with InhibitionsComponent are candidates for vetoes.
         foreach (var entity in em.Query<InhibitionsComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             var inhibitions = entity.Get<InhibitionsComponent>();
 
             // Read willpower — default to maximum if component absent (no leakage).

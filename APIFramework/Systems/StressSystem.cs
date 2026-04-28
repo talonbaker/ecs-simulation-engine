@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 
 namespace APIFramework.Systems;
@@ -22,6 +23,7 @@ public class StressSystem : ISystem
 {
     private readonly StressConfig        _cfg;
     private readonly WorkloadConfig      _workloadCfg;
+    private readonly BereavementConfig   _bereavementCfg;
     private readonly SimulationClock     _clock;
     private readonly WillpowerEventQueue _queue;
 
@@ -35,13 +37,14 @@ public class StressSystem : ISystem
 
     public StressSystem(StressConfig cfg, WorkloadConfig workloadCfg, SimulationClock clock,
         WillpowerEventQueue queue, NarrativeEventBus narrativeBus,
-        EntityManager em)
+        EntityManager em, BereavementConfig? bereavementCfg = null)
     {
-        _cfg         = cfg;
-        _workloadCfg = workloadCfg;
-        _clock       = clock;
-        _queue       = queue;
-        _em          = em;
+        _cfg            = cfg;
+        _workloadCfg    = workloadCfg;
+        _bereavementCfg = bereavementCfg ?? new BereavementConfig();
+        _clock          = clock;
+        _queue          = queue;
+        _em             = em;
         narrativeBus.OnCandidateEmitted += OnNarrativeCandidate;
     }
 
@@ -64,6 +67,7 @@ public class StressSystem : ISystem
 
         foreach (var entity in em.Query<NpcTag>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!entity.Has<StressComponent>()) continue;
 
             var stress   = entity.Get<StressComponent>();
@@ -135,6 +139,26 @@ public class StressSystem : ISystem
                 }
             }
 
+            // 4.1. Witnessed death — one-shot bereavement stress for witnesses (WP-3.0.2).
+            // BereavementSystem sets WitnessedDeathEventsToday at death-event time.
+            // Applied and cleared here so the gain fires exactly once, not every tick.
+            if (stress.WitnessedDeathEventsToday > 0)
+            {
+                double gain = stress.WitnessedDeathEventsToday * _bereavementCfg.WitnessedDeathStressGain * neuroFactor;
+                stress.AcuteLevel = Math.Clamp(
+                    (int)(stress.AcuteLevel + gain), 0, 100);
+                stress.WitnessedDeathEventsToday = 0; // one-shot: clear after application
+            }
+
+            // 4.2. Colleague bereavement — one-shot hit for non-witness colleagues (WP-3.0.2).
+            if (stress.BereavementEventsToday > 0)
+            {
+                double gain = stress.BereavementEventsToday * _bereavementCfg.BereavementStressGain * neuroFactor;
+                stress.AcuteLevel = Math.Clamp(
+                    (int)(stress.AcuteLevel + gain), 0, 100);
+                stress.BereavementEventsToday = 0; // one-shot: clear after application
+            }
+
             // 5. Per-tick acute decay via fractional accumulator.
             if (!_decayAccum.TryGetValue(entity.Id, out var decayRemainder))
                 decayRemainder = 0.0;
@@ -158,6 +182,8 @@ public class StressSystem : ISystem
                 stress.DriveSpikeEventsToday     = 0;
                 stress.SocialConflictEventsToday = 0;
                 stress.OverdueTaskEventsToday    = 0;
+                stress.WitnessedDeathEventsToday = 0; // WP-3.0.2 (already cleared on use)
+                stress.BereavementEventsToday    = 0; // WP-3.0.2 (already cleared on use)
                 stress.LastDayUpdated = _clock.DayNumber;
             }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems.Spatial;
 
@@ -44,6 +45,8 @@ public sealed class SpatialIndexSyncSystem : ISystem
     {
         foreach (var entity in em.Query<PositionComponent>())
         {
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: Deceased position is frozen; prior tick's index entry remains valid
+
             var pos = entity.Get<PositionComponent>();
             int tx = (int)Math.Round(pos.X);
             int ty = (int)Math.Round(pos.Z);

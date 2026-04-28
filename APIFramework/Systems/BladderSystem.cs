@@ -1,5 +1,6 @@
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -31,6 +32,8 @@ public class BladderSystem : ISystem
     {
         foreach (var entity in em.Query<BladderComponent>().ToList())
         {
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: skip Deceased NPCs (Incapacitated still ticks)
+
             var bladder = entity.Get<BladderComponent>();
 
             ToggleTag<UrinationUrgeTag> (entity, bladder.HasUrge);

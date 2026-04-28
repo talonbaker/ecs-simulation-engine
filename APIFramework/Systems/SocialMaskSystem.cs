@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems;
@@ -49,6 +50,7 @@ public sealed class SocialMaskSystem : ISystem
 
         foreach (var entity in em.Query<NpcTag>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!entity.Has<SocialMaskComponent>())   continue;
             if (!entity.Has<SocialDrivesComponent>()) continue;
             if (!entity.Has<PersonalityComponent>())  continue;

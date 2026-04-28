@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems.Spatial;
 
@@ -61,6 +62,7 @@ public sealed class ProximityEventSystem : ISystem
 
         foreach (var npcA in npcs)
         {
+            if (!LifeStateGuard.IsAlive(npcA)) continue;  // WP-3.0.0: deceased NPCs do not act as proximity observers
             if (!npcA.Has<PositionComponent>()) continue;
 
             var posA  = npcA.Get<PositionComponent>();

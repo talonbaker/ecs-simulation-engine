@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -33,6 +34,8 @@ public class SleepSystem : ISystem
     {
         foreach (var entity in em.Query<EnergyComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip Incapacitated/Deceased NPCs
+
             // Only entities that the brain evaluates are eligible for sleep
             if (!entity.Has<DriveComponent>()) continue;
 

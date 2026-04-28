@@ -1,5 +1,6 @@
 using APIFramework.Core;
 using APIFramework.Components;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -9,6 +10,8 @@ public class MetabolismSystem : ISystem
     {
         foreach (var entity in em.Query<MetabolismComponent>())
         {
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: skip Deceased NPCs (Incapacitated still ticks)
+
             var meta = entity.Get<MetabolismComponent>();
 
             // While sleeping (SleepingTag present) metabolism slows dramatically.
