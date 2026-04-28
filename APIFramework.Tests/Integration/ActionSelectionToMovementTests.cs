@@ -36,8 +36,12 @@ public class ActionSelectionToMovementTests
     private static GridSpatialIndex MakeSpatial() =>
         new(new SpatialConfig { CellSizeTiles = 4, WorldSize = new() { Width = 64, Height = 64 } });
 
-    private static PathfindingTriggerSystem MakePathfinder(EntityManager em) =>
-        new(new PathfindingService(em, worldWidth: 64, worldHeight: 64, new MovementConfig()));
+    private static PathfindingTriggerSystem MakePathfinder(EntityManager em)
+    {
+        var cache = new PathfindingCache(512);
+        var bus = new StructuralChangeBus();
+        return new PathfindingTriggerSystem(new PathfindingService(em, worldWidth: 64, worldHeight: 64, new MovementConfig(), cache, bus));
+    }
 
     // ── AT-09a: Approach ─────────────────────────────────────────────────────────
 

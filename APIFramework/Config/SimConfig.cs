@@ -17,6 +17,7 @@ public class SimConfig
     public SystemsConfig          Systems        { get; set; } = new();
     public SocialSystemConfig     Social         { get; set; } = new();
     public SpatialConfig          Spatial        { get; set; } = new();
+    public StructuralChangeConfig StructuralChange { get; set; } = new();
     public LightingConfig         Lighting       { get; set; } = new();
     public MovementConfig         Movement       { get; set; } = new();
     public NarrativeConfig        Narrative      { get; set; } = new();
@@ -805,6 +806,29 @@ public class MovementPathfindingConfig
 
     /// <summary>Scale of seeded hash noise used to break A* f-cost ties (produces path variety).</summary>
     public float TieBreakNoiseScale { get; set; } = 0.1f;
+
+    /// <summary>Maximum number of entries in the pathfinding cache (LRU eviction).</summary>
+    public int CacheMaxEntries { get; set; } = 512;
+
+    /// <summary>Cache eviction strategy ("wipeOnChange" or future "regionScoped").</summary>
+    public string CacheEvictionStrategy { get; set; } = "wipeOnChange";
+
+    /// <summary>Log cache hit rate statistics every tick (dev-only telemetry).</summary>
+    public bool LogCacheHitRateEveryTick { get; set; } = false;
+
+    /// <summary>Warn if observed cache hit rate falls below this threshold (when telemetry is on).</summary>
+    public float WarnIfCacheHitRateBelow { get; set; } = 0.50f;
+}
+
+// ── Structural change system ──────────────────────────────────────────────────
+
+public class StructuralChangeConfig
+{
+    /// <summary>Emit StructuralChangeEvent when an NPC moves (should always be false; documented for clarity).</summary>
+    public bool EmitOnNpcMovement { get; set; } = false;
+
+    /// <summary>Emit StructuralChangeEvent when a room's bounds change.</summary>
+    public bool EmitOnRoomBoundsChange { get; set; } = true;
 }
 
 // ── Spatial systems ───────────────────────────────────────────────────────────

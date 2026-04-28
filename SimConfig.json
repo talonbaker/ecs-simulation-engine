@@ -330,8 +330,18 @@
     },
     "pathfinding": {
       "doorwayDiscount":    1.0,
-      "tieBreakNoiseScale": 0.1
+      "tieBreakNoiseScale": 0.1,
+      "cacheMaxEntries":    512,
+      "cacheEvictionStrategy": "wipeOnChange",
+      "logCacheHitRateEveryTick": false,
+      "warnIfCacheHitRateBelow": 0.5
     }
+  },
+
+  // ── Structural change system ───────────────────────────────────────────────
+  "structuralChange": {
+    "emitOnNpcMovement":     false,
+    "emitOnRoomBoundsChange": true
   },
 
   // ── Spatial engine ─────────────────────────────────────────────────────────

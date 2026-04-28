@@ -1,7 +1,7 @@
 ﻿# ECS Simulation Engine — Fact Sheet
 
 **SimVersion:** ECS Simulation Engine  v0.7.2
-**Generated:** 2026-04-27T02:16:19.0789554+00:00
+**Generated:** 2026-04-28T04:16:54.2257149+00:00
 **TelemetrySchema:** world-state.schema.json v0.1.0
 
 ## Registered Systems
@@ -10,61 +10,63 @@
 |:--|:-------|:------|:-----------|
 | 1 | `SpatialIndexSyncSystem` | `Spatial` | 5 |
 | 2 | `RoomMembershipSystem` | `Spatial` | 5 |
-| 3 | `SunSystem` | `Lighting` | 7 |
-| 4 | `LightSourceStateSystem` | `Lighting` | 7 |
-| 5 | `ApertureBeamSystem` | `Lighting` | 7 |
-| 6 | `IlluminationAccumulationSystem` | `Lighting` | 7 |
-| 7 | `ProximityEventSystem` | `Lighting` | 7 |
-| 8 | `LightingToDriveCouplingSystem` | `Coupling` | 8 |
-| 9 | `InvariantSystem` | `PreUpdate` | 0 |
-| 10 | `ScheduleSpawnerSystem` | `PreUpdate` | 0 |
-| 11 | `StressInitializerSystem` | `PreUpdate` | 0 |
-| 12 | `MaskInitializerSystem` | `PreUpdate` | 0 |
-| 13 | `WorkloadInitializerSystem` | `PreUpdate` | 0 |
-| 14 | `TaskGeneratorSystem` | `PreUpdate` | 0 |
-| 15 | `MetabolismSystem` | `Physiology` | 10 |
-| 16 | `EnergySystem` | `Physiology` | 10 |
-| 17 | `BladderFillSystem` | `Physiology` | 10 |
-| 18 | `BiologicalConditionSystem` | `Condition` | 20 |
-| 19 | `ScheduleSystem` | `Condition` | 20 |
-| 20 | `MoodSystem` | `Cognition` | 30 |
-| 21 | `BrainSystem` | `Cognition` | 30 |
-| 22 | `PhysiologyGateSystem` | `Cognition` | 30 |
-| 23 | `DriveDynamicsSystem` | `Cognition` | 30 |
-| 24 | `ActionSelectionSystem` | `Cognition` | 30 |
-| 25 | `WillpowerSystem` | `Cognition` | 30 |
-| 26 | `RelationshipLifecycleSystem` | `Cognition` | 30 |
-| 27 | `SocialMaskSystem` | `Cognition` | 30 |
-| 28 | `FeedingSystem` | `Behavior` | 40 |
-| 29 | `DrinkingSystem` | `Behavior` | 40 |
-| 30 | `SleepSystem` | `Behavior` | 40 |
-| 31 | `DefecationSystem` | `Behavior` | 40 |
-| 32 | `UrinationSystem` | `Behavior` | 40 |
-| 33 | `InteractionSystem` | `Transit` | 50 |
-| 34 | `EsophagusSystem` | `Transit` | 50 |
-| 35 | `DigestionSystem` | `Transit` | 50 |
-| 36 | `SmallIntestineSystem` | `Elimination` | 55 |
-| 37 | `LargeIntestineSystem` | `Elimination` | 55 |
-| 38 | `ColonSystem` | `Elimination` | 55 |
-| 39 | `BladderSystem` | `Elimination` | 55 |
-| 40 | `RotSystem` | `World` | 60 |
-| 41 | `PathfindingTriggerSystem` | `World` | 60 |
-| 42 | `MovementSpeedModifierSystem` | `World` | 60 |
-| 43 | `StepAsideSystem` | `World` | 60 |
-| 44 | `MovementSystem` | `World` | 60 |
-| 45 | `FacingSystem` | `World` | 60 |
-| 46 | `IdleMovementSystem` | `World` | 60 |
-| 47 | `NarrativeEventDetector` | `Narrative` | 70 |
-| 48 | `PersistenceThresholdDetector` | `Narrative` | 70 |
-| 49 | `MemoryRecordingSystem` | `Narrative` | 70 |
-| 50 | `DialogContextDecisionSystem` | `Dialog` | 75 |
-| 51 | `DialogFragmentRetrievalSystem` | `Dialog` | 75 |
-| 52 | `DialogCalcifySystem` | `Dialog` | 75 |
-| 53 | `StressSystem` | `Cleanup` | 80 |
-| 54 | `WorkloadSystem` | `Cleanup` | 80 |
-| 55 | `MaskCrackSystem` | `Cleanup` | 80 |
+| 3 | `PathfindingCacheInvalidationSystem` | `Spatial` | 5 |
+| 4 | `SunSystem` | `Lighting` | 7 |
+| 5 | `LightSourceStateSystem` | `Lighting` | 7 |
+| 6 | `ApertureBeamSystem` | `Lighting` | 7 |
+| 7 | `IlluminationAccumulationSystem` | `Lighting` | 7 |
+| 8 | `ProximityEventSystem` | `Lighting` | 7 |
+| 9 | `LightingToDriveCouplingSystem` | `Coupling` | 8 |
+| 10 | `InvariantSystem` | `PreUpdate` | 0 |
+| 11 | `StructuralTaggingSystem` | `PreUpdate` | 0 |
+| 12 | `ScheduleSpawnerSystem` | `PreUpdate` | 0 |
+| 13 | `StressInitializerSystem` | `PreUpdate` | 0 |
+| 14 | `MaskInitializerSystem` | `PreUpdate` | 0 |
+| 15 | `WorkloadInitializerSystem` | `PreUpdate` | 0 |
+| 16 | `TaskGeneratorSystem` | `PreUpdate` | 0 |
+| 17 | `MetabolismSystem` | `Physiology` | 10 |
+| 18 | `EnergySystem` | `Physiology` | 10 |
+| 19 | `BladderFillSystem` | `Physiology` | 10 |
+| 20 | `BiologicalConditionSystem` | `Condition` | 20 |
+| 21 | `ScheduleSystem` | `Condition` | 20 |
+| 22 | `MoodSystem` | `Cognition` | 30 |
+| 23 | `BrainSystem` | `Cognition` | 30 |
+| 24 | `PhysiologyGateSystem` | `Cognition` | 30 |
+| 25 | `DriveDynamicsSystem` | `Cognition` | 30 |
+| 26 | `ActionSelectionSystem` | `Cognition` | 30 |
+| 27 | `WillpowerSystem` | `Cognition` | 30 |
+| 28 | `RelationshipLifecycleSystem` | `Cognition` | 30 |
+| 29 | `SocialMaskSystem` | `Cognition` | 30 |
+| 30 | `FeedingSystem` | `Behavior` | 40 |
+| 31 | `DrinkingSystem` | `Behavior` | 40 |
+| 32 | `SleepSystem` | `Behavior` | 40 |
+| 33 | `DefecationSystem` | `Behavior` | 40 |
+| 34 | `UrinationSystem` | `Behavior` | 40 |
+| 35 | `InteractionSystem` | `Transit` | 50 |
+| 36 | `EsophagusSystem` | `Transit` | 50 |
+| 37 | `DigestionSystem` | `Transit` | 50 |
+| 38 | `SmallIntestineSystem` | `Elimination` | 55 |
+| 39 | `LargeIntestineSystem` | `Elimination` | 55 |
+| 40 | `ColonSystem` | `Elimination` | 55 |
+| 41 | `BladderSystem` | `Elimination` | 55 |
+| 42 | `RotSystem` | `World` | 60 |
+| 43 | `PathfindingTriggerSystem` | `World` | 60 |
+| 44 | `MovementSpeedModifierSystem` | `World` | 60 |
+| 45 | `StepAsideSystem` | `World` | 60 |
+| 46 | `MovementSystem` | `World` | 60 |
+| 47 | `FacingSystem` | `World` | 60 |
+| 48 | `IdleMovementSystem` | `World` | 60 |
+| 49 | `NarrativeEventDetector` | `Narrative` | 70 |
+| 50 | `PersistenceThresholdDetector` | `Narrative` | 70 |
+| 51 | `MemoryRecordingSystem` | `Narrative` | 70 |
+| 52 | `DialogContextDecisionSystem` | `Dialog` | 75 |
+| 53 | `DialogFragmentRetrievalSystem` | `Dialog` | 75 |
+| 54 | `DialogCalcifySystem` | `Dialog` | 75 |
+| 55 | `StressSystem` | `Cleanup` | 80 |
+| 56 | `WorkloadSystem` | `Cleanup` | 80 |
+| 57 | `MaskCrackSystem` | `Cleanup` | 80 |
 
-**Total:** 55 systems
+**Total:** 57 systems
 
 ## Component Types
 
@@ -139,6 +141,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `MoodComponent` | `Joy: float`, `Trust: float`, `Fear: float`, `Surprise: float`, `Sadness: float`, `Disgust: float`, `Anger: float`, `Anticipation: float`, `HasAnyEmotion: bool`, `Valence: float` |
 | `MovementComponent` | `Speed: float`, `ArrivalDistance: float`, `SpeedModifier: float`, `LastVelocityX: float`, `LastVelocityZ: float` |
 | `MovementTargetComponent` | `TargetEntityId: Guid`, `Label: string` |
+| `MutableTopologyTag` | *(tag — no fields)* |
 | `NamedAnchorComponent` | `Tag: string`, `Description: string`, `SmellTag: string` |
 | `NoteComponent` | `Notes: IReadOnlyList`1` |
 | `NpcArchetypeComponent` | `ArchetypeId: string` |
@@ -184,6 +187,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `StoredTag` | *(tag — no fields)* |
 | `StressComponent` | `AcuteLevel: int`, `ChronicLevel: double`, `LastDayUpdated: int`, `SuppressionEventsToday: int`, `DriveSpikeEventsToday: int`, `SocialConflictEventsToday: int`, `OverdueTaskEventsToday: int`, `BurnoutLastAppliedDay: int` |
 | `StressedTag` | *(tag — no fields)* |
+| `StructuralTag` | *(tag — no fields)* |
 | `SunStateRecord` | `AzimuthDeg: double`, `ElevationDeg: double`, `DayPhase: DayPhase` |
 | `SurprisedTag` | *(tag — no fields)* |
 | `TaskComponent` | `EffortHours: float`, `DeadlineTick: Int64`, `Priority: int`, `Progress: float`, `QualityLevel: float`, `AssignedNpcId: Guid`, `CreatedTick: Int64` |
@@ -200,7 +204,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `WillpowerComponent` | `Current: int`, `Baseline: int` |
 | `WorkloadComponent` | `ActiveTasks: IReadOnlyList`1`, `Capacity: int`, `CurrentLoad: int` |
 
-**Total:** 127 component types
+**Total:** 129 component types
 
 ## SimConfig Keys
 
@@ -332,6 +336,8 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Spatial.ProximityRangeDefaults.ConversationTiles` | `int` | `2` |
 | `Spatial.ProximityRangeDefaults.AwarenessTiles` | `int` | `8` |
 | `Spatial.ProximityRangeDefaults.SightTiles` | `int` | `32` |
+| `StructuralChange.EmitOnNpcMovement` | `bool` | `False` |
+| `StructuralChange.EmitOnRoomBoundsChange` | `bool` | `True` |
 | `Lighting.DayPhaseBoundaries.EarlyMorningStart` | `double` | `0.2` |
 | `Lighting.DayPhaseBoundaries.MidMorningStart` | `double` | `0.3` |
 | `Lighting.DayPhaseBoundaries.AfternoonStart` | `double` | `0.45` |
@@ -354,6 +360,10 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Movement.SpeedModifier.MaxMultiplier` | `float` | `2` |
 | `Movement.Pathfinding.DoorwayDiscount` | `float` | `1` |
 | `Movement.Pathfinding.TieBreakNoiseScale` | `float` | `0.1` |
+| `Movement.Pathfinding.CacheMaxEntries` | `int` | `512` |
+| `Movement.Pathfinding.CacheEvictionStrategy` | `string` | `wipeOnChange` |
+| `Movement.Pathfinding.LogCacheHitRateEveryTick` | `bool` | `False` |
+| `Movement.Pathfinding.WarnIfCacheHitRateBelow` | `float` | `0.5` |
 | `Narrative.DriveSpikeThreshold` | `int` | `15` |
 | `Narrative.WillpowerDropThreshold` | `int` | `10` |
 | `Narrative.WillpowerLowThreshold` | `int` | `20` |

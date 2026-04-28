@@ -167,3 +167,14 @@ public struct OverdueTag { }
 /// <summary>Applied to an NPC when all capacity slots are filled with overdue tasks. Query helper only; no system reacts to it.</summary>
 public struct BurnedOutFromWorkloadTag { }
 #endregion
+
+#region Structural / Topology Tags
+/// <summary>Marks an entity whose position affects pathfinding topology (walls, doors, desks, obstacles).
+/// When a StructuralTag entity changes position or is added/removed, StructuralChangeBus emits an event.
+/// Mutations to such entities must flow through IWorldMutationApi for cache invalidation.</summary>
+public struct StructuralTag { }
+/// <summary>Marks an entity that can be moved at runtime via IWorldMutationApi.MoveEntity.
+/// Usually attached to StructuralTag entities except walls (which move via add/remove, not move).
+/// IWorldMutationApi.MoveEntity rejects moves on entities lacking this tag.</summary>
+public struct MutableTopologyTag { }
+#endregion
