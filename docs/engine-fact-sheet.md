@@ -1,7 +1,7 @@
 ﻿# ECS Simulation Engine — Fact Sheet
 
 **SimVersion:** ECS Simulation Engine  v0.7.2
-**Generated:** 2026-04-28T04:16:54.2257149+00:00
+**Generated:** 2026-04-28T04:43:33.8489342+00:00
 **TelemetrySchema:** world-state.schema.json v0.1.0
 
 ## Registered Systems
@@ -23,50 +23,54 @@
 | 13 | `StressInitializerSystem` | `PreUpdate` | 0 |
 | 14 | `MaskInitializerSystem` | `PreUpdate` | 0 |
 | 15 | `WorkloadInitializerSystem` | `PreUpdate` | 0 |
-| 16 | `TaskGeneratorSystem` | `PreUpdate` | 0 |
-| 17 | `MetabolismSystem` | `Physiology` | 10 |
-| 18 | `EnergySystem` | `Physiology` | 10 |
-| 19 | `BladderFillSystem` | `Physiology` | 10 |
-| 20 | `BiologicalConditionSystem` | `Condition` | 20 |
-| 21 | `ScheduleSystem` | `Condition` | 20 |
-| 22 | `MoodSystem` | `Cognition` | 30 |
-| 23 | `BrainSystem` | `Cognition` | 30 |
-| 24 | `PhysiologyGateSystem` | `Cognition` | 30 |
-| 25 | `DriveDynamicsSystem` | `Cognition` | 30 |
-| 26 | `ActionSelectionSystem` | `Cognition` | 30 |
-| 27 | `WillpowerSystem` | `Cognition` | 30 |
-| 28 | `RelationshipLifecycleSystem` | `Cognition` | 30 |
-| 29 | `SocialMaskSystem` | `Cognition` | 30 |
-| 30 | `FeedingSystem` | `Behavior` | 40 |
-| 31 | `DrinkingSystem` | `Behavior` | 40 |
-| 32 | `SleepSystem` | `Behavior` | 40 |
-| 33 | `DefecationSystem` | `Behavior` | 40 |
-| 34 | `UrinationSystem` | `Behavior` | 40 |
-| 35 | `InteractionSystem` | `Transit` | 50 |
-| 36 | `EsophagusSystem` | `Transit` | 50 |
-| 37 | `DigestionSystem` | `Transit` | 50 |
-| 38 | `SmallIntestineSystem` | `Elimination` | 55 |
-| 39 | `LargeIntestineSystem` | `Elimination` | 55 |
-| 40 | `ColonSystem` | `Elimination` | 55 |
-| 41 | `BladderSystem` | `Elimination` | 55 |
-| 42 | `RotSystem` | `World` | 60 |
-| 43 | `PathfindingTriggerSystem` | `World` | 60 |
-| 44 | `MovementSpeedModifierSystem` | `World` | 60 |
-| 45 | `StepAsideSystem` | `World` | 60 |
-| 46 | `MovementSystem` | `World` | 60 |
-| 47 | `FacingSystem` | `World` | 60 |
-| 48 | `IdleMovementSystem` | `World` | 60 |
-| 49 | `NarrativeEventDetector` | `Narrative` | 70 |
-| 50 | `PersistenceThresholdDetector` | `Narrative` | 70 |
-| 51 | `MemoryRecordingSystem` | `Narrative` | 70 |
-| 52 | `DialogContextDecisionSystem` | `Dialog` | 75 |
-| 53 | `DialogFragmentRetrievalSystem` | `Dialog` | 75 |
-| 54 | `DialogCalcifySystem` | `Dialog` | 75 |
-| 55 | `StressSystem` | `Cleanup` | 80 |
-| 56 | `WorkloadSystem` | `Cleanup` | 80 |
-| 57 | `MaskCrackSystem` | `Cleanup` | 80 |
+| 16 | `LifeStateInitializerSystem` | `PreUpdate` | 0 |
+| 17 | `TaskGeneratorSystem` | `PreUpdate` | 0 |
+| 18 | `MetabolismSystem` | `Physiology` | 10 |
+| 19 | `EnergySystem` | `Physiology` | 10 |
+| 20 | `BladderFillSystem` | `Physiology` | 10 |
+| 21 | `BiologicalConditionSystem` | `Condition` | 20 |
+| 22 | `ScheduleSystem` | `Condition` | 20 |
+| 23 | `MoodSystem` | `Cognition` | 30 |
+| 24 | `BrainSystem` | `Cognition` | 30 |
+| 25 | `PhysiologyGateSystem` | `Cognition` | 30 |
+| 26 | `DriveDynamicsSystem` | `Cognition` | 30 |
+| 27 | `ActionSelectionSystem` | `Cognition` | 30 |
+| 28 | `WillpowerSystem` | `Cognition` | 30 |
+| 29 | `RelationshipLifecycleSystem` | `Cognition` | 30 |
+| 30 | `SocialMaskSystem` | `Cognition` | 30 |
+| 31 | `FeedingSystem` | `Behavior` | 40 |
+| 32 | `DrinkingSystem` | `Behavior` | 40 |
+| 33 | `SleepSystem` | `Behavior` | 40 |
+| 34 | `DefecationSystem` | `Behavior` | 40 |
+| 35 | `UrinationSystem` | `Behavior` | 40 |
+| 36 | `InteractionSystem` | `Transit` | 50 |
+| 37 | `EsophagusSystem` | `Transit` | 50 |
+| 38 | `DigestionSystem` | `Transit` | 50 |
+| 39 | `SmallIntestineSystem` | `Elimination` | 55 |
+| 40 | `LargeIntestineSystem` | `Elimination` | 55 |
+| 41 | `ColonSystem` | `Elimination` | 55 |
+| 42 | `BladderSystem` | `Elimination` | 55 |
+| 43 | `RotSystem` | `World` | 60 |
+| 44 | `PathfindingTriggerSystem` | `World` | 60 |
+| 45 | `MovementSpeedModifierSystem` | `World` | 60 |
+| 46 | `StepAsideSystem` | `World` | 60 |
+| 47 | `MovementSystem` | `World` | 60 |
+| 48 | `FacingSystem` | `World` | 60 |
+| 49 | `IdleMovementSystem` | `World` | 60 |
+| 50 | `NarrativeEventDetector` | `Narrative` | 70 |
+| 51 | `PersistenceThresholdDetector` | `Narrative` | 70 |
+| 52 | `MemoryRecordingSystem` | `Narrative` | 70 |
+| 53 | `DialogContextDecisionSystem` | `Dialog` | 75 |
+| 54 | `DialogFragmentRetrievalSystem` | `Dialog` | 75 |
+| 55 | `DialogCalcifySystem` | `Dialog` | 75 |
+| 56 | `StressSystem` | `Cleanup` | 80 |
+| 57 | `WorkloadSystem` | `Cleanup` | 80 |
+| 58 | `MaskCrackSystem` | `Cleanup` | 80 |
+| 59 | `ChokingDetectionSystem` | `Cleanup` | 80 |
+| 60 | `LifeStateTransitionSystem` | `Cleanup` | 80 |
+| 61 | `ChokingCleanupSystem` | `Cleanup` | 80 |
 
-**Total:** 57 systems
+**Total:** 61 systems
 
 ## Component Types
 
@@ -97,6 +101,8 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `BurnedOutFromWorkloadTag` | *(tag — no fields)* |
 | `BurningOutTag` | *(tag — no fields)* |
 | `CatTag` | *(tag — no fields)* |
+| `CauseOfDeathComponent` | `Cause: CauseOfDeath`, `DeathTick: Int64`, `WitnessedByNpcId: Guid`, `LocationRoomId: Guid` |
+| `ChokingComponent` | `ChokeStartTick: Int64`, `RemainingTicks: int`, `BolusSize: float`, `PendingCause: CauseOfDeath` |
 | `ColonComponent` | `UrgeThresholdMl: float`, `CapacityMl: float`, `StoolVolumeMl: float`, `Fill: float`, `HasUrge: bool`, `IsCritical: bool`, `IsEmpty: bool` |
 | `ConsumedRottenFoodTag` | *(tag — no fields)* |
 | `ContainerComponent` | `Contents: List`1`, `Count: int`, `IsEmpty: bool` |
@@ -128,8 +134,10 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `IntendedActionComponent` | `Kind: IntendedActionKind`, `TargetEntityId: int`, `Context: DialogContextValue`, `IntensityHint: int` |
 | `InterestedTag` | *(tag — no fields)* |
 | `IrritableTag` | *(tag — no fields)* |
+| `IsChokingTag` | *(tag — no fields)* |
 | `JoyfulTag` | *(tag — no fields)* |
 | `LargeIntestineComponent` | `ContentVolumeMl: float`, `WaterReabsorptionRate: float`, `MobilityRate: float`, `StoolFraction: float`, `Fill: float`, `IsEmpty: bool` |
+| `LifeStateComponent` | `State: LifeState`, `LastTransitionTick: Int64`, `IncapacitatedTickBudget: int`, `PendingDeathCause: CauseOfDeath` |
 | `LightApertureComponent` | `Id: string`, `TileX: int`, `TileY: int`, `RoomId: string`, `Facing: ApertureFacing`, `AreaSqTiles: double` |
 | `LightApertureTag` | *(tag — no fields)* |
 | `LightSourceComponent` | `Id: string`, `Kind: LightKind`, `State: LightState`, `Intensity: int`, `ColorTemperatureK: int`, `TileX: int`, `TileY: int`, `RoomId: string` |
@@ -138,7 +146,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `LoathingTag` | *(tag — no fields)* |
 | `MemoryEntry` | `Id: string`, `Tick: Int64`, `Kind: NarrativeEventKind`, `ParticipantIds: IReadOnlyList`1`, `RoomId: string`, `Detail: string`, `Persistent: bool` |
 | `MetabolismComponent` | `Satiation: float`, `Hydration: float`, `BodyTemp: float`, `Energy: float`, `NutrientStores: NutrientProfile`, `SatiationDrainRate: float`, `HydrationDrainRate: float`, `SleepMetabolismMultiplier: float`, `Hunger: float`, `Thirst: float` |
-| `MoodComponent` | `Joy: float`, `Trust: float`, `Fear: float`, `Surprise: float`, `Sadness: float`, `Disgust: float`, `Anger: float`, `Anticipation: float`, `HasAnyEmotion: bool`, `Valence: float` |
+| `MoodComponent` | `Joy: float`, `Trust: float`, `Fear: float`, `Surprise: float`, `Sadness: float`, `Disgust: float`, `Anger: float`, `Anticipation: float`, `PanicLevel: float`, `HasAnyEmotion: bool`, `Valence: float` |
 | `MovementComponent` | `Speed: float`, `ArrivalDistance: float`, `SpeedModifier: float`, `LastVelocityX: float`, `LastVelocityZ: float` |
 | `MovementTargetComponent` | `TargetEntityId: Guid`, `Label: string` |
 | `MutableTopologyTag` | *(tag — no fields)* |
@@ -204,7 +212,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `WillpowerComponent` | `Current: int`, `Baseline: int` |
 | `WorkloadComponent` | `ActiveTasks: IReadOnlyList`1`, `Capacity: int`, `CurrentLoad: int` |
 
-**Total:** 129 component types
+**Total:** 133 component types
 
 ## SimConfig Keys
 
@@ -454,4 +462,15 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `PhysiologyGate.VetoStrengthThreshold` | `double` | `0.5` |
 | `PhysiologyGate.LowWillpowerLeakageStart` | `int` | `30` |
 | `PhysiologyGate.StressMaxRelaxation` | `double` | `0.7` |
+| `LifeState.DefaultIncapacitatedTicks` | `int` | `180` |
+| `LifeState.IncapacitatedAllowsBladderVoid` | `bool` | `True` |
+| `LifeState.DeceasedFreezesPosition` | `bool` | `True` |
+| `LifeState.EmitDeathInvariantOnTransition` | `bool` | `True` |
+| `Choking.BolusSizeThreshold` | `float` | `0.65` |
+| `Choking.EnergyThreshold` | `int` | `30` |
+| `Choking.StressThreshold` | `int` | `60` |
+| `Choking.IrritationThreshold` | `int` | `70` |
+| `Choking.IncapacitationTicks` | `int` | `180` |
+| `Choking.PanicMoodIntensity` | `float` | `0.85` |
+| `Choking.EmitChokeStartedNarrative` | `bool` | `True` |
 
