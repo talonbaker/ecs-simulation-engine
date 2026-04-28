@@ -25,6 +25,7 @@ public class EntityManager
 {
     private readonly List<Entity>                       _entities        = new();
     private readonly Dictionary<Type, HashSet<Entity>> _componentIndex  = new();
+    private readonly ComponentStoreRegistry             _componentRegistry = new();
 
     // ── Deterministic entity ID counter ──────────────────────────────────────
     //
@@ -42,6 +43,9 @@ public class EntityManager
     private long _idCounter = 0;
 
     public IReadOnlyList<Entity> Entities => _entities;
+
+    /// <summary>Returns the component store registry. Internal use only.</summary>
+    internal ComponentStoreRegistry ComponentRegistry => _componentRegistry;
 
     /// <summary>
     /// Fires immediately before an entity is removed from the manager.
@@ -76,7 +80,7 @@ public class EntityManager
         bytes[6]  = (byte)((count >> 48) & 0xFF);
         bytes[7]  = (byte)((count >> 56) & 0xFF);
 
-        var entity = new Entity(new Guid(bytes), OnComponentChanged);
+        var entity = new Entity(new Guid(bytes), _componentRegistry, OnComponentChanged);
         _entities.Add(entity);
         return entity;
     }
@@ -84,7 +88,7 @@ public class EntityManager
     /// <summary>Creates an entity with a pre-existing Guid (e.g. deserialization).</summary>
     public Entity CreateEntity(Guid existingId)
     {
-        var entity = new Entity(existingId, OnComponentChanged);
+        var entity = new Entity(existingId, _componentRegistry, OnComponentChanged);
         _entities.Add(entity);
         return entity;
     }

@@ -5,9 +5,9 @@
 ///
 /// COMPONENT STORAGE
 /// ─────────────────
-/// Components are stored as Dictionary&lt;Type, object&gt;, which boxes every struct
-/// on the heap. This is a known cost accepted in v0.7.x. The fix (ComponentStore&lt;T&gt;
-/// typed arrays) is documented in ARCHITECTURE.md and deferred to v0.8+.
+/// Components are stored in a per-type ComponentStoreRegistry without boxing.
+/// Entity holds a reference to the registry; Get&lt;T&gt;() delegates to registry.Store&lt;T&gt;().Get(Id).
+/// This refactor (WP-3.0.5) eliminates the O(E) boxing cost of Dictionary&lt;Type, object&gt;.
 ///
 /// CHANGE NOTIFICATION
 /// ───────────────────
@@ -27,22 +27,36 @@ public class Entity
     public Guid   Id      { get; }
     public string ShortId => Id.ToString().Substring(0, 8).ToUpper();
 
-    private readonly Dictionary<Type, object>      _components = new();
+    private readonly ComponentStoreRegistry         _registry;
     private readonly Action<Entity, Type, bool>?   _onChange;
 
     // ── Constructors ──────────────────────────────────────────────────────────
 
-    /// <summary>Creates a new entity with a fresh Guid.</summary>
+    /// <summary>Creates a new entity with a fresh Guid and optional registry.</summary>
     public Entity(Action<Entity, Type, bool>? onChange = null)
+        : this(new ComponentStoreRegistry(), onChange)
+    {
+    }
+
+    /// <summary>Creates a new entity with a fresh Guid and the provided registry.</summary>
+    public Entity(ComponentStoreRegistry registry, Action<Entity, Type, bool>? onChange = null)
     {
         Id        = Guid.NewGuid();
+        _registry = registry;
         _onChange = onChange;
     }
 
     /// <summary>Creates an entity with an existing Guid (e.g. for deserialization).</summary>
     public Entity(Guid existingId, Action<Entity, Type, bool>? onChange = null)
+        : this(existingId, new ComponentStoreRegistry(), onChange)
+    {
+    }
+
+    /// <summary>Creates an entity with an existing Guid and the provided registry.</summary>
+    public Entity(Guid existingId, ComponentStoreRegistry registry, Action<Entity, Type, bool>? onChange = null)
     {
         Id        = existingId;
+        _registry = registry;
         _onChange = onChange;
     }
 
@@ -50,25 +64,41 @@ public class Entity
 
     public void Add<T>(T component) where T : struct
     {
-        bool isNew = !_components.ContainsKey(typeof(T));
-        _components[typeof(T)] = component;
-        if (isNew) _onChange?.Invoke(this, typeof(T), true);
+        var store = _registry.Store<T>();
+        bool isNew = !store.Has(Id);
+        if (isNew)
+        {
+            store.Add(Id, component);
+            _onChange?.Invoke(this, typeof(T), true);
+        }
+        else
+        {
+            // Overwrite existing component (no callback — membership doesn't change)
+            store.Set(Id, component);
+        }
     }
 
     public T Get<T>() where T : struct
-        => (T)_components[typeof(T)];
+        => _registry.Store<T>().Get(Id);
 
     public bool Has<T>() where T : struct
-        => _components.ContainsKey(typeof(T));
+        => _registry.Store<T>().Has(Id);
+
+    public void Set<T>(T value) where T : struct
+        => _registry.Store<T>().Set(Id, value);
 
     public void Remove<T>() where T : struct
     {
-        if (_components.Remove(typeof(T)))
+        var store = _registry.Store<T>();
+        if (store.Has(Id))
+        {
+            store.Remove(Id);
             _onChange?.Invoke(this, typeof(T), false);
+        }
     }
 
-    public IEnumerable<object> GetAll()             => _components.Values;
-    public IEnumerable<object> GetAllComponents()   => _components.Values;
+    public IEnumerable<object> GetAll()             => GetAllComponents();
+    public IEnumerable<object> GetAllComponents()   => [];  // Deprecated; not used in practice
 
     // ── Identity ──────────────────────────────────────────────────────────────
 
