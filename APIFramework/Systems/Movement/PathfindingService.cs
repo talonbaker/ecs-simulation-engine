@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems.Movement;
 
@@ -11,6 +12,9 @@ namespace APIFramework.Systems.Movement;
 /// Computes paths that avoid ObstacleTag entities and prefer doorway tiles.
 /// Seeded tie-break noise ensures two NPCs taking the same trip with different
 /// seeds trace slightly different routes (the "natural paths" quality goal).
+///
+/// v0.1: Caches queries by (fromX, fromY, toX, toY, seed, topologyVersion).
+/// Cache is invalidated (cleared) whenever the topology changes (via StructuralChangeBus).
 /// </summary>
 public sealed class PathfindingService
 {
@@ -19,28 +23,50 @@ public sealed class PathfindingService
     private readonly int           _worldHeight;
     private readonly float         _doorwayDiscount;
     private readonly float         _tieBreakNoiseScale;
+    private readonly PathfindingCache _cache;
+    private readonly StructuralChangeBus _bus;
 
     private static readonly (int dx, int dy)[] Directions = { (0, -1), (0, 1), (-1, 0), (1, 0) };
 
-    public PathfindingService(EntityManager em, int worldWidth, int worldHeight, MovementConfig cfg)
+    public PathfindingService(EntityManager em, int worldWidth, int worldHeight, MovementConfig cfg, PathfindingCache cache, StructuralChangeBus bus)
     {
         _em                 = em;
         _worldWidth         = worldWidth;
         _worldHeight        = worldHeight;
         _doorwayDiscount    = cfg.Pathfinding.DoorwayDiscount;
         _tieBreakNoiseScale = cfg.Pathfinding.TieBreakNoiseScale;
+        _cache              = cache;
+        _bus                = bus;
     }
 
     /// <summary>
     /// Returns the tile waypoints from start (exclusive) to goal (inclusive).
     /// Returns an empty list when start == goal or no path exists.
     /// The same (from, to, seed) triple always produces the same path.
+    /// Uses the pathfinding cache; cache hits are invisible to the caller.
     /// </summary>
     public IReadOnlyList<(int X, int Y)> ComputePath(int fromX, int fromY, int toX, int toY, int seed)
     {
         if (fromX == toX && fromY == toY)
             return Array.Empty<(int, int)>();
 
+        // Check cache first
+        var key = new PathQueryKey(fromX, fromY, toX, toY, seed, _bus.TopologyVersion);
+        if (_cache.TryGet(key, out var cached))
+            return cached;
+
+        // Cache miss — compute the path
+        var path = ComputePathUncached(fromX, fromY, toX, toY, seed);
+        _cache.Put(key, path);
+        return path;
+    }
+
+    /// <summary>
+    /// Internal method that performs the uncached A* computation.
+    /// Extracted to keep ComputePath clean; called only on cache misses.
+    /// </summary>
+    private IReadOnlyList<(int X, int Y)> ComputePathUncached(int fromX, int fromY, int toX, int toY, int seed)
+    {
         var obstacles = BuildObstacleSet();
         var doorways  = BuildDoorwaySet();
 
@@ -122,12 +148,23 @@ public sealed class PathfindingService
     private HashSet<(int, int)> BuildObstacleSet()
     {
         var set = new HashSet<(int, int)>();
+
+        // Add entities marked with ObstacleTag
         foreach (var e in _em.Query<ObstacleTag>())
         {
             if (!e.Has<PositionComponent>()) continue;
             var pos = e.Get<PositionComponent>();
             set.Add(((int)MathF.Round(pos.X), (int)MathF.Round(pos.Z)));
         }
+
+        // Add doors marked with LockedTag (locked doors are impassable)
+        foreach (var e in _em.Query<LockedTag>())
+        {
+            if (!e.Has<PositionComponent>()) continue;
+            var pos = e.Get<PositionComponent>();
+            set.Add(((int)MathF.Round(pos.X), (int)MathF.Round(pos.Z)));
+        }
+
         return set;
     }
 
