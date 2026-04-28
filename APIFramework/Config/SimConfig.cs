@@ -32,6 +32,7 @@ public class SimConfig
     public SocialMaskConfig       SocialMask      { get; set; } = new();
     public PhysiologyGateConfig   PhysiologyGate  { get; set; } = new();
     public LifeStateConfig        LifeState       { get; set; } = new();
+    public ChokingConfig          Choking         { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1256,4 +1257,50 @@ public class LifeStateConfig
     /// Default true. Placeholder for 3.0.2+.
     /// </summary>
     public bool EmitDeathInvariantOnTransition { get; set; } = true;
+}
+
+public class ChokingConfig
+{
+    /// <summary>
+    /// Bolus size threshold (fraction of esophagus capacity, 0..1) above which choking is possible.
+    /// Default 0.65 (65% of esophagus).
+    /// </summary>
+    public float BolusSizeThreshold { get; set; } = 0.65f;
+
+    /// <summary>
+    /// Energy threshold below which an NPC is considered "distracted-tired" (one choke trigger).
+    /// Default 30.
+    /// </summary>
+    public int EnergyThreshold { get; set; } = 30;
+
+    /// <summary>
+    /// Acute stress threshold at or above which an NPC is considered "distracted-stressed" (one choke trigger).
+    /// Default 60.
+    /// </summary>
+    public int StressThreshold { get; set; } = 60;
+
+    /// <summary>
+    /// Irritation drive threshold at or above which an NPC is considered "frustrated-eating" (one choke trigger).
+    /// Default 70.
+    /// </summary>
+    public int IrritationThreshold { get; set; } = 70;
+
+    /// <summary>
+    /// Number of ticks the choking NPC remains Incapacitated before transitioning to Deceased(Choked).
+    /// ~3 game-minutes at current tick rate. Default 180.
+    /// This value overrides LifeStateConfig.DefaultIncapacitatedTicks for choke-specific incapacitation.
+    /// </summary>
+    public int IncapacitationTicks { get; set; } = 180;
+
+    /// <summary>
+    /// Mood panic intensity set on choke (0..1 scale). The existing mood system applies decay.
+    /// Default 0.85 (85% peak panic).
+    /// </summary>
+    public float PanicMoodIntensity { get; set; } = 0.85f;
+
+    /// <summary>
+    /// Dev kill-switch for choke-started narrative emission. Always true in production.
+    /// Default true.
+    /// </summary>
+    public bool EmitChokeStartedNarrative { get; set; } = true;
 }

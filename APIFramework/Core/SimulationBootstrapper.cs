@@ -404,10 +404,29 @@ public class SimulationBootstrapper
         Engine.AddSystem(
             new MaskCrackSystem(RoomMembership, NarrativeBus, Config.SocialMask),  SystemPhase.Cleanup);
 
+        // Create a single LifeStateTransitionSystem instance for both choking and life-state management.
+        var lifeStateTransition = new LifeStateTransitionSystem(NarrativeBus, EntityManager, Clock, Config);
+
+        // Choking detection — identifies choking conditions (bolus + distraction) and enqueues transition to Incapacitated.
+        // Runs after EsophagusSystem (in Transit) so the bolus has had its chance to advance,
+        // and before LifeStateTransitionSystem so the request reaches the queue this tick.
+        Engine.AddSystem(
+            new ChokingDetectionSystem(
+                lifeStateTransition,
+                NarrativeBus,
+                Clock,
+                Config.Choking,
+                EntityManager),
+            SystemPhase.Cleanup);
+
         // Life state transitions — processes queued state changes (Alive→Incapacitated→Deceased);
         // runs after WorkloadSystem and MaskCrackSystem so all cognitive ticking is complete.
+        Engine.AddSystem(lifeStateTransition, SystemPhase.Cleanup);
+
+        // Choking cleanup — removes IsChokingTag and ChokingComponent when NPC transitions to Deceased.
+        // Runs at the very end of Cleanup phase (after LifeStateTransitionSystem).
         Engine.AddSystem(
-            new LifeStateTransitionSystem(NarrativeBus, EntityManager, Clock, Config), SystemPhase.Cleanup);
+            new ChokingCleanupSystem(), SystemPhase.Cleanup);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────

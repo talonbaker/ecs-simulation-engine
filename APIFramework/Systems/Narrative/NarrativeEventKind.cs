@@ -18,4 +18,5 @@ public enum NarrativeEventKind
     SlippedAndFell,
     StarvedAlone,
     Died,
+    ChokeStarted,
 }

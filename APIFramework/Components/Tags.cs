@@ -178,3 +178,12 @@ public struct StructuralTag { }
 /// IWorldMutationApi.MoveEntity rejects moves on entities lacking this tag.</summary>
 public struct MutableTopologyTag { }
 #endregion
+
+#region Choking / Asphyxiation Tags
+/// <summary>
+/// Applied to an NPC when they are actively choking (bolus lodged in esophagus,
+/// cannot breathe). Removed when the NPC transitions to Deceased.
+/// Used to prevent re-triggering choke detection on an already-choking NPC.
+/// </summary>
+public struct IsChokingTag { }
+#endregion

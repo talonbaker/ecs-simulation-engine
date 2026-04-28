@@ -175,6 +175,7 @@ public sealed class MemoryRecordingSystem : ISystem
         NarrativeEventKind.SlippedAndFell    => true,
         NarrativeEventKind.StarvedAlone      => true,
         NarrativeEventKind.Died              => true,
+        NarrativeEventKind.ChokeStarted      => true,
         _                                    => false,
     };
 

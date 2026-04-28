@@ -698,5 +698,21 @@
     "deceasedFreezesPosition": true,
     // Whether to emit an invariant check when an NPC transitions to Deceased
     "emitDeathInvariantOnTransition": true
+  },
+  "choking": {
+    // Bolus size threshold (fraction of esophagus capacity, 0..1) above which choking is possible
+    "bolusSizeThreshold": 0.65,
+    // Energy threshold below which an NPC is considered distracted-tired
+    "energyThreshold": 30,
+    // Acute stress threshold at or above which an NPC is considered distracted-stressed
+    "stressThreshold": 60,
+    // Irritation drive threshold at or above which an NPC is considered frustrated-eating
+    "irritationThreshold": 70,
+    // Number of ticks the choking NPC remains Incapacitated before transition to Deceased
+    "incapacitationTicks": 180,
+    // Mood panic intensity set on choke (0..1 scale)
+    "panicMoodIntensity": 0.85,
+    // Dev kill-switch for choke-started narrative emission
+    "emitChokeStartedNarrative": true
   }
 }
