@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -48,6 +49,7 @@ public class DriveDynamicsSystem : ISystem
 
         foreach (var entity in em.Query<NpcTag>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;
             if (!entity.Has<SocialDrivesComponent>()) continue;
             if (!entity.Has<PersonalityComponent>())  continue;
 

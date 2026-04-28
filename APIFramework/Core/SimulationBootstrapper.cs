@@ -12,6 +12,7 @@ using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using APIFramework.Mutation;
+using APIFramework.Systems.LifeState;
 using System.Reflection;
 
 namespace APIFramework.Core;
@@ -304,6 +305,9 @@ public class SimulationBootstrapper
         Engine.AddSystem(
             new WorkloadInitializerSystem(WorkloadInitializerSystem.LoadCapacities()), SystemPhase.PreUpdate);
 
+        // Life state initialization — attaches LifeStateComponent to newly-spawned NPCs with State == Alive.
+        Engine.AddSystem(new LifeStateInitializerSystem(),                          SystemPhase.PreUpdate);
+
         // Task generation — spawns new task entities once per game-day at the configured hour.
         Engine.AddSystem(
             new TaskGeneratorSystem(Config.Workload, Clock, Random),               SystemPhase.PreUpdate);
@@ -399,6 +403,11 @@ public class SimulationBootstrapper
         // written its intent; the crack override wins for the following Dialog phase.
         Engine.AddSystem(
             new MaskCrackSystem(RoomMembership, NarrativeBus, Config.SocialMask),  SystemPhase.Cleanup);
+
+        // Life state transitions — processes queued state changes (Alive→Incapacitated→Deceased);
+        // runs after WorkloadSystem and MaskCrackSystem so all cognitive ticking is complete.
+        Engine.AddSystem(
+            new LifeStateTransitionSystem(NarrativeBus, EntityManager, Clock, Config), SystemPhase.Cleanup);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────

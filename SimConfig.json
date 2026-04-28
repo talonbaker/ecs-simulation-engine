@@ -685,5 +685,18 @@
     "maxCandidatesPerTick":          32,
     // tiles the avoidance flee target is pushed away from the threat
     "avoidStandoffDistance":         4
+  },
+
+  // ── Life state system ──────────────────────────────────────────────────────
+  "lifeState": {
+    // Default number of ticks an NPC stays Incapacitated before transitioning to Deceased.
+    // At 60 FPS / 20 game-ticks per second ≈ 9 seconds per game-tick, 180 ticks ≈ 3 game-minutes.
+    "defaultIncapacitatedTicks": 180,
+    // Whether Incapacitated NPCs can autonomously void their bladder
+    "incapacitatedAllowsBladderVoid": true,
+    // Whether a Deceased NPC's PositionComponent is frozen (does not change position)
+    "deceasedFreezesPosition": true,
+    // Whether to emit an invariant check when an NPC transitions to Deceased
+    "emitDeathInvariantOnTransition": true
   }
 }

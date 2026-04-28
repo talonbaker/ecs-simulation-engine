@@ -171,6 +171,10 @@ public sealed class MemoryRecordingSystem : ISystem
         NarrativeEventKind.MaskSlip          => true,
         NarrativeEventKind.OverdueTask       => true,
         NarrativeEventKind.TaskCompleted     => false,
+        NarrativeEventKind.Choked            => true,
+        NarrativeEventKind.SlippedAndFell    => true,
+        NarrativeEventKind.StarvedAlone      => true,
+        NarrativeEventKind.Died              => true,
         _                                    => false,
     };
 
