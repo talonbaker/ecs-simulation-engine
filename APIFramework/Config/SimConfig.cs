@@ -30,6 +30,7 @@ public class SimConfig
     public WorkloadConfig         Workload        { get; set; } = new();
     public SocialMaskConfig       SocialMask      { get; set; } = new();
     public PhysiologyGateConfig   PhysiologyGate  { get; set; } = new();
+    public LifeStateConfig        LifeState       { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1195,4 +1196,40 @@ public class SocialMaskConfig
 
     /// <summary>Minimum ticks between successive cracks for the same NPC. Default 1800.</summary>
     public int    SlipCooldownTicks            { get; set; } = 1800;
+}
+
+// ── Life state system ─────────────────────────────────────────────────────────
+
+/// <summary>
+/// Tuning knobs for LifeStateTransitionSystem — the layer that manages
+/// Alive → Incapacitated → Deceased transitions and the cause-of-death event surface.
+/// </summary>
+public class LifeStateConfig
+{
+    /// <summary>
+    /// Default number of ticks an NPC stays Incapacitated before transitioning to Deceased.
+    /// At 60 FPS / 20 game-ticks per second ≈ 9 seconds per game-tick, 180 ticks ≈ 3 game-minutes.
+    /// Default 180.
+    /// </summary>
+    public int DefaultIncapacitatedTicks { get; set; } = 180;
+
+    /// <summary>
+    /// Whether Incapacitated NPCs can autonomously void their bladder.
+    /// When true, BladderSystem bypasses the IsAlive guard for void (but UrinationSystem respects IsAlive for the trigger).
+    /// Default true.
+    /// </summary>
+    public bool IncapacitatedAllowsBladderVoid { get; set; } = true;
+
+    /// <summary>
+    /// Whether a Deceased NPC's PositionComponent is frozen (does not change position).
+    /// Used by MovementSystem and related pathfinding systems to decide if the corpse blocks movement.
+    /// Default true.
+    /// </summary>
+    public bool DeceasedFreezesPosition { get; set; } = true;
+
+    /// <summary>
+    /// Whether to emit an invariant check when an NPC transitions to Deceased.
+    /// Default true. Placeholder for 3.0.2+.
+    /// </summary>
+    public bool EmitDeathInvariantOnTransition { get; set; } = true;
 }
