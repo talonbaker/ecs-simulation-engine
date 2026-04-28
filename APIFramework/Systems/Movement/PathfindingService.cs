@@ -148,12 +148,23 @@ public sealed class PathfindingService
     private HashSet<(int, int)> BuildObstacleSet()
     {
         var set = new HashSet<(int, int)>();
+
+        // Add entities marked with ObstacleTag
         foreach (var e in _em.Query<ObstacleTag>())
         {
             if (!e.Has<PositionComponent>()) continue;
             var pos = e.Get<PositionComponent>();
             set.Add(((int)MathF.Round(pos.X), (int)MathF.Round(pos.Z)));
         }
+
+        // Add doors marked with LockedTag (locked doors are impassable)
+        foreach (var e in _em.Query<LockedTag>())
+        {
+            if (!e.Has<PositionComponent>()) continue;
+            var pos = e.Get<PositionComponent>();
+            set.Add(((int)MathF.Round(pos.X), (int)MathF.Round(pos.Z)));
+        }
+
         return set;
     }
 

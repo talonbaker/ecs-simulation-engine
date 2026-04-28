@@ -714,5 +714,32 @@
     "panicMoodIntensity": 0.85,
     // Dev kill-switch for choke-started narrative emission
     "emitChokeStartedNarrative": true
+  },
+  "slipAndFall": {
+    // Global multiplier on slip chance. Scales the product of (risk * speed * stress).
+    // Default 0.001 (very low baseline; high-risk stains at high speed are rare death).
+    "globalSlipChanceScale": 0.001,
+    // Acute stress level above which StressSlipMultiplier applies
+    "stressDangerThreshold": 60,
+    // Multiplier on slip chance when NPC's AcuteStress >= StressDangerThreshold
+    "stressSlipMultiplier": 2.0,
+    // Default fall risk level for broken items
+    "fallRiskBrokenItemDefault": 0.50,
+    // Default fall risk level for water stains
+    "fallRiskWaterDefault": 0.40,
+    // Default fall risk level for blood stains
+    "fallRiskBloodDefault": 0.60,
+    // Default fall risk level for oil stains
+    "fallRiskOilDefault": 0.85
+  },
+  "lockout": {
+    // Hour of the game-day (0..24) at which LockoutDetectionSystem runs
+    "lockoutCheckHour": 18.0,
+    // Hunger threshold (Satiation <= 100 - this value triggers lockout detection)
+    "lockoutHungerThreshold": 95,
+    // Game-days an NPC can survive locked in before starvation death
+    "starvationTicks": 5,
+    // Named anchor tag used to identify outdoor exits
+    "exitNamedAnchorTag": "outdoor"
   }
 }

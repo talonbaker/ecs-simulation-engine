@@ -427,6 +427,30 @@ public class SimulationBootstrapper
         // Runs at the very end of Cleanup phase (after LifeStateTransitionSystem).
         Engine.AddSystem(
             new ChokingCleanupSystem(), SystemPhase.Cleanup);
+
+        // Slip-and-fall detection — rolls hazard checks for NPCs on tiles with FallRiskComponent.
+        // Runs in Cleanup phase after MovementSystem (so NPCs have settled position) and
+        // before LifeStateTransitionSystem (so transition requests hit the queue this tick).
+        Engine.AddSystem(
+            new SlipAndFallSystem(
+                EntityManager,
+                Clock,
+                Config,
+                lifeStateTransition,
+                Random),
+            SystemPhase.Cleanup);
+
+        // Lockout detection — checks end-of-day reachability to exits and starvation status.
+        // Runs in PreUpdate phase, once per game-day (gated internally by hour check).
+        Engine.AddSystem(
+            new LockoutDetectionSystem(
+                EntityManager,
+                Clock,
+                Config,
+                Pathfinding,
+                lifeStateTransition,
+                Random),
+            SystemPhase.PreUpdate);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────

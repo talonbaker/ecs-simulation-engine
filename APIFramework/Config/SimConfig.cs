@@ -33,6 +33,8 @@ public class SimConfig
     public PhysiologyGateConfig   PhysiologyGate  { get; set; } = new();
     public LifeStateConfig        LifeState       { get; set; } = new();
     public ChokingConfig          Choking         { get; set; } = new();
+    public SlipAndFallConfig      SlipAndFall     { get; set; } = new();
+    public LockoutConfig          Lockout         { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1303,4 +1305,77 @@ public class ChokingConfig
     /// Default true.
     /// </summary>
     public bool EmitChokeStartedNarrative { get; set; } = true;
+}
+
+/// <summary>
+/// Configuration for the SlipAndFallSystem (WP-3.0.3).
+/// Controls fall-risk hazard detection and slip probability.
+/// </summary>
+public class SlipAndFallConfig
+{
+    /// <summary>
+    /// Global multiplier on slip chance. Scales the product of (risk * speed * stress).
+    /// Default 0.001 (very low baseline; high-risk stains at high speed are rare death).
+    /// </summary>
+    public float GlobalSlipChanceScale { get; set; } = 0.001f;
+
+    /// <summary>
+    /// Acute stress level above which StressSlipMultiplier applies.
+    /// Default 60.
+    /// </summary>
+    public int StressDangerThreshold { get; set; } = 60;
+
+    /// <summary>
+    /// Multiplier on slip chance when NPC's AcuteStress &gt;= StressDangerThreshold.
+    /// Default 2.0 (doubles slip chance under stress).
+    /// </summary>
+    public float StressSlipMultiplier { get; set; } = 2.0f;
+
+    /// <summary>
+    /// Default fall risk level for broken items (broken mug, shattered glass).
+    /// Default 0.50.
+    /// </summary>
+    public float FallRiskBrokenItemDefault { get; set; } = 0.50f;
+
+    /// <summary>Default fall risk level for water stains. Default 0.40.</summary>
+    public float FallRiskWaterDefault { get; set; } = 0.40f;
+
+    /// <summary>Default fall risk level for blood stains. Default 0.60.</summary>
+    public float FallRiskBloodDefault { get; set; } = 0.60f;
+
+    /// <summary>Default fall risk level for oil stains. Default 0.85.</summary>
+    public float FallRiskOilDefault { get; set; } = 0.85f;
+}
+
+/// <summary>
+/// Configuration for the LockoutDetectionSystem (WP-3.0.3).
+/// Controls door-lockout and starvation detection.
+/// </summary>
+public class LockoutConfig
+{
+    /// <summary>
+    /// Hour of the game-day (0..24) at which LockoutDetectionSystem runs.
+    /// Default 18.0 (6 PM — end of office day).
+    /// </summary>
+    public float LockoutCheckHour { get; set; } = 18.0f;
+
+    /// <summary>
+    /// Satiation threshold below which an NPC becomes "hungry" in the lockout sense.
+    /// LockoutDetectionSystem only triggers when Satiation &lt;= (100 - this value).
+    /// Default 95 (i.e., Hunger &gt;= 95).
+    /// </summary>
+    public int LockoutHungerThreshold { get; set; } = 95;
+
+    /// <summary>
+    /// Number of game-days an NPC can survive locked in before starvation death.
+    /// LockedInComponent.StarvationTickBudget counts down once per game-day.
+    /// Default 5 (5 game-days of lockout = death).
+    /// </summary>
+    public int StarvationTicks { get; set; } = 5;
+
+    /// <summary>
+    /// Named anchor tag used to identify outdoor exits (parking lot, smoking bench, etc.).
+    /// Default "outdoor".
+    /// </summary>
+    public string ExitNamedAnchorTag { get; set; } = "outdoor";
 }

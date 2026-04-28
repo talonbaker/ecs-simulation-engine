@@ -187,3 +187,12 @@ public struct MutableTopologyTag { }
 /// </summary>
 public struct IsChokingTag { }
 #endregion
+
+#region Death and Hazard Tags
+/// <summary>
+/// Applied to a door entity when it is locked. PathfindingService treats locked doors
+/// as obstacles (infinite cost), effectively blocking passage through that tile.
+/// Removed when the door is unlocked via IWorldMutationApi.DetachObstacle.
+/// </summary>
+public struct LockedTag { }
+#endregion
