@@ -3,6 +3,7 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using APIFramework.Mutation;
 
 /// <summary>
 /// AT-04: Drag wall from palette → ghost appears; valid placement → white tint → click commits via SpawnStructural.

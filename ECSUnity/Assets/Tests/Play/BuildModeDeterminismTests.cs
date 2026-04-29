@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
+using APIFramework.Mutation;
 
 /// <summary>
 /// AT-15: Scripted build sequence (place wall + lock door + move desk) on two fake

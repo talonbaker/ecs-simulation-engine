@@ -96,7 +96,7 @@ public class BuildPaletteCatalogJsonTests
         {
             if (entry["category"]?.ToString() == "NamedAnchor")
             {
-                bool unique = entry["uniqueInstance"]?.Value<bool>() ?? false;
+                bool unique = entry["uniqueInstance"]?.ToObject<bool>() ?? false;
                 string label = entry["label"]?.ToString() ?? "(unknown)";
                 Assert.IsTrue(unique,
                     $"NamedAnchor entry '{label}' must have uniqueInstance = true.");
