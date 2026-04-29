@@ -65,8 +65,11 @@ public sealed class EventLogClickThroughHandler : MonoBehaviour
             {
                 if (room?.Id == entry.Location)
                 {
-                    float cx = room.X + room.Width  * 0.5f;
-                    float cz = room.Z + room.Height * 0.5f;
+                    // RoomDto stores tile bounds in BoundsRect (X, Y, Width, Height).
+                    // The engine's tile Y maps to Unity world-space Z (floor plane is XZ).
+                    var b = room.BoundsRect;
+                    float cx = b.X + b.Width  * 0.5f;
+                    float cz = b.Y + b.Height * 0.5f;
                     return new Vector3(cx, 0f, cz);
                 }
             }
@@ -120,7 +123,7 @@ public sealed class EventLogClickThroughHandler : MonoBehaviour
 
         // Schedule destruction of the synthetic GameObject on the next frame
         // so the selection has been processed by then.
-        Destroy(go, delay: 0.1f);
+        Destroy(go, 0.1f);
     }
 
     // ── Test accessors ────────────────────────────────────────────────────────

@@ -88,9 +88,12 @@ public sealed class ConversationStreamRenderer : MonoBehaviour
             if (entity?.Social == null) continue;
             if (!entity.Physiology.HasPosition(entity)) continue;
 
-            // Determine if NPC is in a conversation by checking the dominant drive.
-            // At v0.4 schema, this is a proxy; full dialog stream integration deferred.
-            bool inConversation = entity.Drives?.Dominant == DominantDrive.Socialize;
+            // Determine if NPC is in a conversation. The v0.4 schema's DominantDrive
+            // enum is { None, Eat, Drink, Sleep, Defecate, Pee } — no Socialize value.
+            // Until WorldStateDto.dialog[] arrives we have no signal at this layer, so
+            // conversation rendering is a no-op. WP-3.1.E completion note flags this
+            // as deferred to WP-3.x.SocialProjection.
+            bool inConversation = false;
             if (!inConversation) continue;
 
             bool isHeated = false; // Would come from dialog register field.
