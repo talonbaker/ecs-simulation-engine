@@ -34,6 +34,15 @@ cp -f .build/APIFramework/APIFramework.pdb         "$OUTPUT/APIFramework.pdb" 2>
 cp -f .build/Warden.Contracts/Warden.Contracts.dll "$OUTPUT/Warden.Contracts.dll"
 cp -f .build/Warden.Telemetry/Warden.Telemetry.dll "$OUTPUT/Warden.Telemetry.dll"
 
+# System.Text.Json — used by Warden.Telemetry.TelemetrySerializer (active runtime
+# call) and as [JsonStringEnumConverter] attribute on WorldStateDto. Unity's Mono
+# runtime does not ship System.Text.Json, so we must supply it from the publish
+# output. System.Text.Encodings.Web is its only direct dep that Unity does not
+# already provide. Other transitive deps (System.Memory, System.Buffers, etc.)
+# live in Unity's Mono and would CONFLICT if copied — so do not copy them.
+cp -f .build/APIFramework/System.Text.Json.dll          "$OUTPUT/System.Text.Json.dll"
+cp -f .build/APIFramework/System.Text.Encodings.Web.dll "$OUTPUT/System.Text.Encodings.Web.dll"
+
 # DO NOT copy Newtonsoft.Json.dll — provided by com.unity.nuget.newtonsoft-json
 
 echo ""

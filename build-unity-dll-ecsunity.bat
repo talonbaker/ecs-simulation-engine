@@ -57,6 +57,15 @@ copy /Y ".build\Warden.Contracts\Warden.Contracts.dll"    "%OUTPUT%\Warden.Contr
 :: Warden.Telemetry — WARDEN builds only; remove for RETAIL distribution builds
 copy /Y ".build\Warden.Telemetry\Warden.Telemetry.dll"    "%OUTPUT%\Warden.Telemetry.dll"
 
+:: System.Text.Json — used by Warden.Telemetry.TelemetrySerializer (active runtime
+:: call) and as [JsonStringEnumConverter] attribute on WorldStateDto. Unity's Mono
+:: runtime does not ship System.Text.Json, so we must supply it from the publish
+:: output. System.Text.Encodings.Web is its only direct dep Unity does not provide.
+:: Other transitive deps (System.Memory, System.Buffers, etc.) live in Unity's Mono
+:: and would CONFLICT if copied — so do not copy them.
+copy /Y ".build\APIFramework\System.Text.Json.dll"          "%OUTPUT%\System.Text.Json.dll"
+copy /Y ".build\APIFramework\System.Text.Encodings.Web.dll" "%OUTPUT%\System.Text.Encodings.Web.dll"
+
 :: DO NOT copy Newtonsoft.Json.dll — provided by com.unity.nuget.newtonsoft-json in manifest.json
 
 echo.
