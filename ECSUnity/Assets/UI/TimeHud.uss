@@ -1,0 +1,49 @@
+/* Time HUD — CRT dark theme. WP-3.1.E. */
+
+.time-hud-root {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    translate: -50% 0;
+    background-color: rgba(26, 26, 34, 0.87);
+    border-color: #3CB371;
+    border-width: 1px;
+    padding: 6px 12px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.clock-label {
+    color: #3CB371;
+    font-size: 12px;
+    margin-right: 12px;
+}
+
+.speed-controls {
+    flex-direction: row;
+}
+
+.speed-btn {
+    background-color: #0d0d14;
+    color: #5a5a6a;
+    border-color: #2a2a35;
+    border-width: 1px;
+    padding: 4px 8px;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.speed-btn--active {
+    color: #3CB371;
+    border-color: #3CB371;
+}
+
+.skip-morning-btn {
+    background-color: #1a2a1a;
+    color: #3CB371;
+    border-color: #3CB371;
+    border-width: 1px;
+    padding: 4px 8px;
+    margin-left: 12px;
+    display: none;
+}

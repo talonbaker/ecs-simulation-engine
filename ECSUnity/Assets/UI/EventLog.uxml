@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!--
+        CDDA-style Event Log panel. WP-3.1.G.
+        Opens via notebook-icon button on the persistent HUD bar.
+        Populated at runtime by EventLogPanel.cs.
+    -->
+    <ui:VisualElement name="event-log-root" class="event-log-root">
+        <ui:VisualElement name="event-log-header" class="event-log-header">
+            <ui:Label class="event-log-title" text="EVENT LOG" />
+            <ui:VisualElement name="event-log-filters" class="event-log-filters">
+                <ui:DropdownField name="npc-filter-dropdown"  class="filter-control" label="NPC"  />
+                <ui:DropdownField name="kind-filter-dropdown" class="filter-control" label="Kind" />
+                <ui:VisualElement name="time-range-presets" class="time-range-presets">
+                    <ui:Button name="preset-1d"  class="time-preset-btn" text="1d"   />
+                    <ui:Button name="preset-7d"  class="time-preset-btn time-preset-btn--active" text="7d" />
+                    <ui:Button name="preset-30d" class="time-preset-btn" text="30d"  />
+                    <ui:Button name="preset-all" class="time-preset-btn" text="All"  />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:ScrollView name="event-log-scroll" class="event-log-scroll">
+            <ui:VisualElement name="event-log-list" class="event-log-list">
+                <!-- EventLogRow elements added at runtime by EventLogPanel.cs -->
+            </ui:VisualElement>
+        </ui:ScrollView>
+        <ui:Label name="event-log-footer" class="event-log-footer" text="Showing 0 / 0" />
+    </ui:VisualElement>
+</ui:UXML>
