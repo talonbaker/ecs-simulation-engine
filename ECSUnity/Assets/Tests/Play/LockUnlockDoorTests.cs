@@ -27,9 +27,9 @@ public class LockUnlockDoorTests
     [TearDown]
     public void TearDown()
     {
-        foreach (var go in Object.FindObjectsOfType<GameObject>())
+        foreach (var go in UnityEngine.Object.FindObjectsOfType<GameObject>())
             if (go.name.StartsWith("LockUnlock_"))
-                Object.Destroy(go);
+                UnityEngine.Object.Destroy(go);
     }
 
     [UnityTest]
@@ -70,6 +70,6 @@ public class LockUnlockDoorTests
         yield return null;
 
         Assert.IsFalse(ok, "Lock should return false without API.");
-        Object.Destroy(go);
+        UnityEngine.Object.Destroy(go);
     }
 }

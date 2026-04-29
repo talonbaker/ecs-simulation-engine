@@ -135,19 +135,19 @@ public sealed class SaveLoadPanel : MonoBehaviour
         Debug.Log("[SaveLoadPanel] Quick-loaded.");
     }
 
-    /// <summary>List all save slot names.</summary>
-    public List<string> GetSlotNames()
+    /// <summary>List all save slot names. Returns string[] (not List) so tests can use Array.Exists.</summary>
+    public string[] GetSlotNames()
     {
-        var result = new List<string>();
         string dir = SaveDirectory();
-        if (!Directory.Exists(dir)) return result;
+        if (!Directory.Exists(dir)) return Array.Empty<string>();
 
+        var result = new List<string>();
         foreach (string f in Directory.GetFiles(dir, "*.json"))
         {
             string name = Path.GetFileNameWithoutExtension(f);
             if (name != "_manifest") result.Add(name);
         }
-        return result;
+        return result.ToArray();
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -184,7 +184,7 @@ public sealed class SaveLoadPanel : MonoBehaviour
 
         // List existing slots.
         var slots = GetSlotNames();
-        GUI.Label(new Rect(x + 8f, iy, w - 16f, 20f), $"Slots ({slots.Count}):"); iy += 22f;
+        GUI.Label(new Rect(x + 8f, iy, w - 16f, 20f), $"Slots ({slots.Length}):"); iy += 22f;
         foreach (var s in slots)
         {
             if (iy > y + h - 50f) break;

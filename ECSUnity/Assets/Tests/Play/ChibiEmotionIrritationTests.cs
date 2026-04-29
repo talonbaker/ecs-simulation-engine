@@ -26,11 +26,16 @@ public class ChibiEmotionIrritationTests
     [TearDown]
     public void TearDown()
     {
-        foreach (var go in Object.FindObjectsOfType<GameObject>())
+        foreach (var go in UnityEngine.Object.FindObjectsOfType<GameObject>())
             if (go.name.StartsWith("ChibiIrrit_"))
-                Object.Destroy(go);
+                UnityEngine.Object.Destroy(go);
     }
 
+    // The schema (v0.4) exposes per-drive urgencies (EatUrgency, DrinkUrgency, ...),
+    // not a generic "Urgency"; PhysiologyStateDto has IsSleeping (not HasSleeping);
+    // and DominantDrive has no Rest value. ChibiEmotionPopulator's SleepZ path is
+    // entity.Physiology.IsSleeping || energy < 15 || energy < 25.
+    // Energy is on a 0..100 scale (engine SimConfig defaults like energyStart=90.0).
     private static EntityStateDto MakeEntity(float urgency, float energy, bool sleeping)
     {
         return new EntityStateDto
@@ -39,13 +44,12 @@ public class ChibiEmotionIrritationTests
             Name = "SleepyNpc",
             Drives = new DrivesStateDto
             {
-                Dominant = DominantDrive.Rest,
-                Urgency  = urgency,
+                EatUrgency = urgency,
             },
             Physiology = new PhysiologyStateDto
             {
                 Energy     = energy,
-                HasSleeping = sleeping,
+                IsSleeping = sleeping,
             },
         };
     }
@@ -53,45 +57,45 @@ public class ChibiEmotionIrritationTests
     [UnityTest]
     public IEnumerator Sleeping_ShowsSleepZ()
     {
-        var entity = MakeEntity(urgency: 0.1f, energy: 0.1f, sleeping: true);
+        var entity = MakeEntity(urgency: 0.1f, energy: 10f, sleeping: true);
         yield return null;
 
         var icon = _pop.TestComputeIcon(entity);
 
         Assert.AreEqual(IconKind.SleepZ, icon,
-            "HasSleeping=true should produce a SleepZ icon.");
+            "IsSleeping=true should produce a SleepZ icon.");
     }
 
     [UnityTest]
     public IEnumerator LowEnergy_ShowsSleepZ()
     {
-        // Energy < 0.25 triggers the SleepZ icon even when not explicitly sleeping.
-        var entity = MakeEntity(urgency: 0.1f, energy: 0.1f, sleeping: false);
+        // Energy below 25 triggers the SleepZ icon even when not explicitly sleeping.
+        var entity = MakeEntity(urgency: 0.1f, energy: 10f, sleeping: false);
         yield return null;
 
         var icon = _pop.TestComputeIcon(entity);
 
         Assert.AreEqual(IconKind.SleepZ, icon,
-            "Energy below 0.25 should produce a SleepZ icon.");
+            "Energy below 25 should produce a SleepZ icon.");
     }
 
     [UnityTest]
     public IEnumerator NormalEnergy_NoSleepZ()
     {
-        var entity = MakeEntity(urgency: 0.1f, energy: 0.8f, sleeping: false);
+        var entity = MakeEntity(urgency: 0.1f, energy: 80f, sleeping: false);
         yield return null;
 
         var icon = _pop.TestComputeIcon(entity);
 
         Assert.AreNotEqual(IconKind.SleepZ, icon,
-            "Normal energy (0.8) with no sleeping flag should not produce SleepZ.");
+            "Normal energy (80) with no sleeping flag should not produce SleepZ.");
     }
 
     [UnityTest]
     public IEnumerator BothSleepingAndHighUrgency_SleepZTakesPrecedence()
     {
         // Sleep state wins over urgency — the NPC is asleep and therefore not panicking.
-        var entity = MakeEntity(urgency: 0.9f, energy: 0.1f, sleeping: true);
+        var entity = MakeEntity(urgency: 0.9f, energy: 10f, sleeping: true);
         yield return null;
 
         var icon = _pop.TestComputeIcon(entity);

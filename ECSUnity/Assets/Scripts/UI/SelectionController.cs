@@ -119,4 +119,16 @@ public sealed class SelectionController : MonoBehaviour
     /// When true, input is not processed (e.g. build mode is active or a modal is open).
     /// </summary>
     public void SetBlockInput(bool blocked) => _blockInput = blocked;
+
+    /// <summary>
+    /// Test-only: simulate a double-click on the given selectable. Sets the selection
+    /// and fires <see cref="GlideRequested"/> with the entity's world position. Used
+    /// by AT-02 to verify the camera-glide signal without a real mouse path.
+    /// </summary>
+    public void SimulateDoubleClick(SelectableTag tag)
+    {
+        if (tag == null) return;
+        SetSelection(tag);
+        GlideRequested?.Invoke(tag.transform.position);
+    }
 }

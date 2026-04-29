@@ -140,4 +140,27 @@ public sealed class FrameRateMonitor : MonoBehaviour
         _secondAccumulator = 0f;
         _framesInSecond    = 0;
     }
+
+    // ── Test/perf-gate convenience API ───────────────────────────────────────
+
+    /// <summary>
+    /// Begin a fresh recording window. Equivalent to <see cref="ResetSamples"/>;
+    /// kept as its own name so tests read intentfully.
+    /// </summary>
+    public void StartRecording() => ResetSamples();
+
+    /// <summary>
+    /// End the recording window. No-op at v0.1 (samples remain available); reserved
+    /// for future "stop sampling" semantics if perf gates need to pause Update().
+    /// </summary>
+    public void StopRecording() { /* reserved */ }
+
+    /// <summary>Minimum FPS observed during the recording window.</summary>
+    public float MinFps  => SampleMin();
+
+    /// <summary>Mean FPS across the recording window.</summary>
+    public float MeanFps => SampleMean();
+
+    /// <summary>p99 (1st-percentile worst-case) FPS across the recording window.</summary>
+    public float P99Fps  => SampleP99();
 }

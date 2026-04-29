@@ -133,6 +133,20 @@ public sealed class TimeHudPanel : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Creative mode flag. Reads from / writes to <see cref="PlayerUIConfig.CreativeMode"/>.
+    /// Tests toggle this to verify creative-only buttons (skip-to-morning) appear.
+    /// </summary>
+    public bool CreativeMode
+    {
+        get => _uiConfig != null && _uiConfig.CreativeMode;
+        set
+        {
+            if (_uiConfig != null) _uiConfig.CreativeMode = value;
+            RefreshCreativeModeButtons();
+        }
+    }
+
     // ── Internal ──────────────────────────────────────────────────────────────
 
     private void RefreshClock()

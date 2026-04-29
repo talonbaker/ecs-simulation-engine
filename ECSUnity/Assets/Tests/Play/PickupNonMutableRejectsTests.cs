@@ -25,9 +25,9 @@ public class PickupNonMutableRejectsTests
     [TearDown]
     public void TearDown()
     {
-        foreach (var go in Object.FindObjectsOfType<GameObject>())
+        foreach (var go in UnityEngine.Object.FindObjectsOfType<GameObject>())
             if (go.name.StartsWith("PickupNonMut_"))
-                Object.Destroy(go);
+                UnityEngine.Object.Destroy(go);
     }
 
     [UnityTest]
