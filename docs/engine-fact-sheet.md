@@ -1,7 +1,7 @@
 ﻿# ECS Simulation Engine — Fact Sheet
 
 **SimVersion:** ECS Simulation Engine  v0.7.2
-**Generated:** 2026-04-28T04:43:33.8489342+00:00
+**Generated:** 2026-04-29T02:55:46.9636538+00:00
 **TelemetrySchema:** world-state.schema.json v0.1.0
 
 ## Registered Systems
@@ -69,8 +69,10 @@
 | 59 | `ChokingDetectionSystem` | `Cleanup` | 80 |
 | 60 | `LifeStateTransitionSystem` | `Cleanup` | 80 |
 | 61 | `ChokingCleanupSystem` | `Cleanup` | 80 |
+| 62 | `SlipAndFallSystem` | `Cleanup` | 80 |
+| 63 | `LockoutDetectionSystem` | `PreUpdate` | 0 |
 
-**Total:** 61 systems
+**Total:** 63 systems
 
 ## Component Types
 
@@ -119,6 +121,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `EsophagusTransitComponent` | `Progress: float`, `Speed: float`, `TargetEntityId: Guid`, `Position: int` |
 | `ExhaustedTag` | *(tag — no fields)* |
 | `FacingComponent` | `DirectionDeg: float`, `Source: FacingSource` |
+| `FallRiskComponent` | `RiskLevel: float` |
 | `FearfulTag` | *(tag — no fields)* |
 | `FoodDesireTag` | *(tag — no fields)* |
 | `FoodObjectComponent` | `Name: string`, `NutrientsPerBite: NutrientProfile`, `BitesRemaining: int`, `Toughness: float` |
@@ -144,6 +147,8 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `LightSourceTag` | *(tag — no fields)* |
 | `LiquidComponent` | `VolumeMl: float`, `Nutrients: NutrientProfile`, `LiquidType: string` |
 | `LoathingTag` | *(tag — no fields)* |
+| `LockedInComponent` | `FirstDetectedTick: Int64`, `StarvationTickBudget: int` |
+| `LockedTag` | *(tag — no fields)* |
 | `MemoryEntry` | `Id: string`, `Tick: Int64`, `Kind: NarrativeEventKind`, `ParticipantIds: IReadOnlyList`1`, `RoomId: string`, `Detail: string`, `Persistent: bool` |
 | `MetabolismComponent` | `Satiation: float`, `Hydration: float`, `BodyTemp: float`, `Energy: float`, `NutrientStores: NutrientProfile`, `SatiationDrainRate: float`, `HydrationDrainRate: float`, `SleepMetabolismMultiplier: float`, `Hunger: float`, `Thirst: float` |
 | `MoodComponent` | `Joy: float`, `Trust: float`, `Fear: float`, `Surprise: float`, `Sadness: float`, `Disgust: float`, `Anger: float`, `Anticipation: float`, `PanicLevel: float`, `HasAnyEmotion: bool`, `Valence: float` |
@@ -212,7 +217,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `WillpowerComponent` | `Current: int`, `Baseline: int` |
 | `WorkloadComponent` | `ActiveTasks: IReadOnlyList`1`, `Capacity: int`, `CurrentLoad: int` |
 
-**Total:** 133 component types
+**Total:** 136 component types
 
 ## SimConfig Keys
 
@@ -473,4 +478,15 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Choking.IncapacitationTicks` | `int` | `180` |
 | `Choking.PanicMoodIntensity` | `float` | `0.85` |
 | `Choking.EmitChokeStartedNarrative` | `bool` | `True` |
+| `SlipAndFall.GlobalSlipChanceScale` | `float` | `0.001` |
+| `SlipAndFall.StressDangerThreshold` | `int` | `60` |
+| `SlipAndFall.StressSlipMultiplier` | `float` | `2` |
+| `SlipAndFall.FallRiskBrokenItemDefault` | `float` | `0.5` |
+| `SlipAndFall.FallRiskWaterDefault` | `float` | `0.4` |
+| `SlipAndFall.FallRiskBloodDefault` | `float` | `0.6` |
+| `SlipAndFall.FallRiskOilDefault` | `float` | `0.85` |
+| `Lockout.LockoutCheckHour` | `float` | `18` |
+| `Lockout.LockoutHungerThreshold` | `int` | `95` |
+| `Lockout.StarvationTicks` | `int` | `5` |
+| `Lockout.ExitNamedAnchorTag` | `string` | `outdoor` |
 
