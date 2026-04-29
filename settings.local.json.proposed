@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(cd *)",
+      "Bash(ls)",
+      "Bash(ls *)",
+      "Bash(dir)",
+      "Bash(dir *)",
+      "Bash(pwd)",
+      "Bash(cat *)",
+      "Bash(type *)",
+      "Bash(echo *)",
+      "Bash(mkdir *)",
+      "Bash(touch *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(clear)",
+      "Bash(cls)",
+      "Bash(tee *)",
+
+      "Bash(git *)",
+
+      "Bash(dotnet *)",
+      "Bash(nuget *)",
+      "Bash(msbuild *)",
+
+      "Bash(npm *)",
+      "Bash(node *)",
+      "Bash(npx *)",
+      "Bash(yarn *)",
+      "Bash(pnpm *)",
+
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(pip *)",
+      "Bash(pip3 *)",
+
+      "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(find *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(diff *)",
+      "Bash(awk *)",
+      "Bash(sed *)",
+      "Bash(xargs *)",
+      "Bash(which *)",
+      "Bash(where *)",
+      "Bash(env)",
+      "Bash(printenv *)",
+
+      "Bash(timeout *)",
+      "Bash(pkill *)",
+      "Bash(kill *)",
+      "Bash(ps *)",
+
+      "Bash(code *)",
+      "Bash(explorer *)",
+      "Bash(start *)",
+      "Bash(open *)",
+
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Glob(*)",
+      "Grep(*)"
+    ],
+
+    "deny": [
+      "Bash(sudo *)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf ~/*)",
+      "Bash(rm -rf ./*)",
+      "Bash(rm -rf .)",
+      "Bash(rm -rf ..)",
+      "Bash(rm -rf C:*)",
+      "Bash(rm -rf /)",
+      "Bash(curl * | sh)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | sh)",
+      "Bash(wget * | bash)",
+      "Bash(format *)",
+      "Bash(dd *)",
+      "Bash(mkfs *)",
+      "Bash(shutdown *)",
+      "Bash(reboot *)"
+    ]
+  }
+}

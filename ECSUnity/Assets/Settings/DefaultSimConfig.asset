@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000010, type: 3}
+  m_Name: DefaultSimConfig
+  m_EditorClassIdentifier:
+  _configFilePath:
+  _ticksPerSecond: 50
+  _renderFrameRateTarget: 60
+  _performanceGateMinFps: 55
+  _performanceGateMeanFps: 58
+  _performanceGateP99Fps: 50
+  _cameraMinAltitude: 3
+  _cameraMaxAltitude: 5
+  _cameraPitchAngle: 50
+  _cameraPanSpeed: 5
+  _cameraRotateSpeed: 90
+  _cameraZoomSpeed: 2
+  _logTickRateEverySeconds: 10
