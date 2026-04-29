@@ -38,9 +38,9 @@ public class GhostPreviewValidPlacementTests
     [TearDown]
     public void TearDown()
     {
-        foreach (var go in Object.FindObjectsOfType<GameObject>())
+        foreach (var go in UnityEngine.Object.FindObjectsOfType<GameObject>())
             if (go.name.StartsWith("GhostValid_"))
-                Object.Destroy(go);
+                UnityEngine.Object.Destroy(go);
     }
 
     [UnityTest]

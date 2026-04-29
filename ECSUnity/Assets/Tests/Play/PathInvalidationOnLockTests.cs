@@ -29,9 +29,9 @@ public class PathInvalidationOnLockTests
     [TearDown]
     public void TearDown()
     {
-        foreach (var go in Object.FindObjectsOfType<GameObject>())
+        foreach (var go in UnityEngine.Object.FindObjectsOfType<GameObject>())
             if (go.name.StartsWith("PathInval_"))
-                Object.Destroy(go);
+                UnityEngine.Object.Destroy(go);
     }
 
     [UnityTest]

@@ -95,7 +95,12 @@ public sealed class SelectionCrtBlinkRenderer : MonoBehaviour
         if (_boxGo != null) Destroy(_boxGo);
     }
 
-    private void OnSelectionChanged(SelectableTag tag)
+    /// <summary>
+    /// Selection-change handler. Public so tests can drive it directly without
+    /// wiring a SelectionController; production code reaches it via the
+    /// SelectionController.SelectionChanged event subscription in Start().
+    /// </summary>
+    public void OnSelectionChanged(SelectableTag tag)
     {
         _tracked    = tag;
         _blinkTimer = 0f;

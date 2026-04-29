@@ -90,6 +90,21 @@ public sealed class SettingsPanel : MonoBehaviour
         Debug.Log($"[SettingsPanel] ColorBlind palette → {palette}");
     }
 
+    // ── Read-only accessors (used by tests) ──────────────────────────────────
+
+    /// <summary>Current master audio volume in [0..1].</summary>
+    public float MasterVolume => _uiConfig != null ? _uiConfig.MasterVolume : 0f;
+
+    /// <summary>True when creative mode is enabled.</summary>
+    public bool CreativeModeEnabled => _uiConfig != null && _uiConfig.CreativeMode;
+
+    /// <summary>True when soften mode is enabled.</summary>
+    public bool SoftenModeEnabled => _uiConfig != null && _uiConfig.SoftenMode;
+
+    /// <summary>Currently selected colour-blind palette.</summary>
+    public ColorBlindPalette CurrentColorBlindPalette =>
+        _uiConfig != null ? _uiConfig.ColorBlind : ColorBlindPalette.Default;
+
     // ── Internal ──────────────────────────────────────────────────────────────
 
     private void WireControls()

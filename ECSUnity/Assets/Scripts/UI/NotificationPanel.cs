@@ -91,6 +91,17 @@ public sealed class NotificationPanel : MonoBehaviour
     /// <summary>True when the email indicator is blinking.</summary>
     public bool IsEmailBlinking => _emailPending;
 
+    /// <summary>
+    /// Player picked up the phone — clears the ringing indicator. Tests assert that
+    /// after acknowledgement, <see cref="IsPhoneRinging"/> returns false.
+    /// </summary>
+    public void AcknowledgePhone()
+    {
+        _phonePending   = false;
+        _phoneRingTimer = 0f;
+        RefreshIndicators();
+    }
+
     // ── Internal ──────────────────────────────────────────────────────────────
 
     private void PollNewOrders()

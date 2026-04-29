@@ -28,12 +28,18 @@ public class ChibiEmotionPanicTests
     [TearDown]
     public void TearDown()
     {
-        foreach (var go in Object.FindObjectsOfType<GameObject>())
+        foreach (var go in UnityEngine.Object.FindObjectsOfType<GameObject>())
             if (go.name.StartsWith("ChibiPanic_"))
-                Object.Destroy(go);
+                UnityEngine.Object.Destroy(go);
     }
 
     // Helper: build a minimal EntityStateDto for the populator to evaluate.
+    // The schema (v0.4) exposes per-drive urgencies (EatUrgency, DrinkUrgency, ...),
+    // not a generic "Urgency"; PhysiologyStateDto has IsSleeping (not HasSleeping);
+    // and DominantDrive has no Work/Rest values. ChibiEmotionPopulator's Sweat path
+    // is keyed on EatUrgency >= 0.8 || DrinkUrgency >= 0.8.
+    // Energy is on a 0..100 scale (matches engine SimConfig defaults like
+    // energyStart=90.0); the SleepZ thresholds in the impl are raw 15 and 25.
     private static EntityStateDto MakeEntity(float urgency, float energy, bool sleeping)
     {
         return new EntityStateDto
@@ -42,13 +48,12 @@ public class ChibiEmotionPanicTests
             Name = "TestNpc",
             Drives = new DrivesStateDto
             {
-                Dominant = DominantDrive.Work,
-                Urgency  = urgency,
+                EatUrgency = urgency,
             },
             Physiology = new PhysiologyStateDto
             {
                 Energy     = energy,
-                HasSleeping = sleeping,
+                IsSleeping = sleeping,
             },
         };
     }
@@ -56,7 +61,7 @@ public class ChibiEmotionPanicTests
     [UnityTest]
     public IEnumerator LowUrgency_NoSweat()
     {
-        var entity = MakeEntity(urgency: 0.3f, energy: 0.8f, sleeping: false);
+        var entity = MakeEntity(urgency: 0.3f, energy: 80f, sleeping: false);
         yield return null;
 
         var icon = _pop.TestComputeIcon(entity);
@@ -68,7 +73,7 @@ public class ChibiEmotionPanicTests
     [UnityTest]
     public IEnumerator HighUrgency_ShowsSweat()
     {
-        var entity = MakeEntity(urgency: 0.9f, energy: 0.8f, sleeping: false);
+        var entity = MakeEntity(urgency: 0.9f, energy: 80f, sleeping: false);
         yield return null;
 
         var icon = _pop.TestComputeIcon(entity);
@@ -80,7 +85,7 @@ public class ChibiEmotionPanicTests
     [UnityTest]
     public IEnumerator ExactThreshold_0_8_ShowsSweat()
     {
-        var entity = MakeEntity(urgency: 0.8f, energy: 0.8f, sleeping: false);
+        var entity = MakeEntity(urgency: 0.8f, energy: 80f, sleeping: false);
         yield return null;
 
         var icon = _pop.TestComputeIcon(entity);
@@ -92,7 +97,7 @@ public class ChibiEmotionPanicTests
     [UnityTest]
     public IEnumerator JustBelow_0_8_NoSweat()
     {
-        var entity = MakeEntity(urgency: 0.79f, energy: 0.8f, sleeping: false);
+        var entity = MakeEntity(urgency: 0.79f, energy: 80f, sleeping: false);
         yield return null;
 
         var icon = _pop.TestComputeIcon(entity);

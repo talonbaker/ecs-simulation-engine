@@ -27,9 +27,9 @@ public class PickupMutableTopologyTests
     [TearDown]
     public void TearDown()
     {
-        foreach (var go in Object.FindObjectsOfType<GameObject>())
+        foreach (var go in UnityEngine.Object.FindObjectsOfType<GameObject>())
             if (go.name.StartsWith("PickupMut_"))
-                Object.Destroy(go);
+                UnityEngine.Object.Destroy(go);
     }
 
     [UnityTest]
@@ -66,6 +66,6 @@ public class PickupMutableTopologyTests
         yield return null;
 
         Assert.IsFalse(ok, "CommitPickup should return false when API is not set.");
-        Object.Destroy(go);
+        UnityEngine.Object.Destroy(go);
     }
 }
