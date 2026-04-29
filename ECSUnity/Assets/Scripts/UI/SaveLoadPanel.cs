@@ -84,10 +84,12 @@ public sealed class SaveLoadPanel : MonoBehaviour
 
         try
         {
-            // Serialize WorldStateDto to JSON.
+            // Serialize WorldStateDto to JSON. Use Newtonsoft.Json to match the rest
+            // of the project (WP-3.1.F precedent). System.Text.Json is not in Unity's
+            // Mono runtime nor in the ECSUnity.asmdef precompiled references.
             var dto   = _host?.WorldState;
             string json = dto != null
-                ? System.Text.Json.JsonSerializer.Serialize(dto)
+                ? Newtonsoft.Json.JsonConvert.SerializeObject(dto)
                 : "{}";
             File.WriteAllText(path, json);
             Debug.Log($"[SaveLoadPanel] Saved to {path}");

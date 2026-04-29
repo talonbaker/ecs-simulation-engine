@@ -233,8 +233,8 @@ public static class InlineProjector
             {
                 Id       = room.Id,
                 Name     = room.Name,
-                Category = (RoomCategory)(int)room.Category,
-                Floor    = (BuildingFloor)(int)room.Floor,
+                Category = (Warden.Contracts.Telemetry.RoomCategory)(int)room.Category,
+                Floor    = (Warden.Contracts.Telemetry.BuildingFloor)(int)room.Floor,
                 BoundsRect = new BoundsRectDto
                 {
                     X      = room.Bounds.X,

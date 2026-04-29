@@ -279,8 +279,10 @@ public sealed class BuildModeController : MonoBehaviour
 
         if (!Guid.TryParse(selectable.EntityId, out Guid entityId)) return;
 
+        BuildIntent intent = default;
+        string reason = "PickupController not assigned.";
         if (_pickup == null || !_pickup.TryPickup(entityId, selectable.DisplayName,
-                out BuildIntent intent, out string reason))
+                out intent, out reason))
         {
             Debug.Log($"[BuildModeController] Pickup rejected for {selectable.DisplayName}: {reason}");
             return;
@@ -299,13 +301,12 @@ public sealed class BuildModeController : MonoBehaviour
     {
         if (_host == null || _host.Engine == null) return;
 
-        // WorldMutationApi is constructed by SimulationBootstrapper; retrieve it via
-        // a service locator pattern. At v0.1 we construct it here if not available.
-        // TODO: when the engine exposes a service locator, retrieve it instead.
+        // EntityManager has no service locator at v0.1. Construct a fresh
+        // StructuralChangeBus here; this matches WP-3.1.D Assumption #2 fallback.
+        // When the engine exposes a service locator, retrieve the singleton instead.
         _mutationApi = new WorldMutationApi(
             _host.Engine,
-            _host.Engine.GetService<APIFramework.Systems.Spatial.StructuralChangeBus>()
-                ?? new APIFramework.Systems.Spatial.StructuralChangeBus());
+            new APIFramework.Systems.Spatial.StructuralChangeBus());
 
         _pickup?.SetMutationApi(_mutationApi);
         _doorLock?.SetDependencies(_host, _mutationApi);

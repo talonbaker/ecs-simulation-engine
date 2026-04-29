@@ -110,9 +110,13 @@ public sealed class NotificationPanel : MonoBehaviour
 
     private static bool IsOrderKind(ChronicleEventKind kind)
     {
-        // Order kinds: TaskCompleted, OverdueTask, ScheduleMissed — player-direct orders.
-        return kind == ChronicleEventKind.TaskCompleted
-            || kind == ChronicleEventKind.OverdueTask;
+        // ChronicleEventKind v0.4 has no TaskCompleted / OverdueTask members
+        // (the live values are SpilledSomething, BrokenItem, PublicArgument,
+        // PublicHumiliation, AffairRevealed, Promotion, Firing, KindnessInCrisis,
+        // Betrayal, DeathOrLeaving, Other). Until those order kinds are added to
+        // the schema, chronicle-driven order polling is a no-op; notifications
+        // can still be triggered manually via InjectOrderNotification.
+        return false;
     }
 
     private void AnimateIndicators()
