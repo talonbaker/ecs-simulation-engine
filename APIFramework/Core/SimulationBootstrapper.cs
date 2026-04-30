@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Bootstrap;
 using APIFramework.Components;
 using APIFramework.Config;
+using APIFramework.Mutation;
 using APIFramework.Systems;
 using APIFramework.Systems.Coupling;
 using APIFramework.Systems.Dialog;
@@ -11,7 +12,6 @@ using APIFramework.Systems.Movement;
 using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
-using APIFramework.Mutation;
 using APIFramework.Systems.LifeState;
 using System.Reflection;
 
@@ -162,9 +162,6 @@ public class SimulationBootstrapper
     /// <summary>Proximity event bus. Subscribe here to receive spatial signals.</summary>
     public ProximityEventBus    ProximityBus    { get; }
 
-    /// <summary>Structural change bus. Emitted when topology changes; subscribers invalidate caches.</summary>
-    public StructuralChangeBus  StructuralBus   { get; }
-
     /// <summary>Runtime room-membership map. Queried by social and behavior systems.</summary>
     public EntityRoomMembership RoomMembership  { get; }
 
@@ -181,6 +178,17 @@ public class SimulationBootstrapper
     /// <summary>Fractional drive accumulator shared by LightingToDriveCouplingSystem.</summary>
     public SocialDriveAccumulator DriveAccumulator { get; }
 
+    // ── Structural change services ────────────────────────────────────────────
+
+    /// <summary>Structural topology change bus. Subscribe to receive events when obstacles, doors, or room bounds change.</summary>
+    public StructuralChangeBus StructuralBus { get; }
+
+    /// <summary>Pathfinding cache keyed by (query, topologyVersion). Cleared on every structural change.</summary>
+    public PathfindingCache PathfindingCache { get; }
+
+    /// <summary>Public mutation API for runtime structural topology changes.</summary>
+    public IWorldMutationApi MutationApi { get; }
+
     // ── Narrative services ────────────────────────────────────────────────────
 
     /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
@@ -190,11 +198,6 @@ public class SimulationBootstrapper
 
     /// <summary>Global persistent narrative chronicle. Read by TelemetryProjector each tick.</summary>
     public ChronicleService Chronicle { get; }
-
-    // ── Pathfinding services ──────────────────────────────────────────────────
-
-    /// <summary>LRU cache for pathfinding queries. Keyed by (from, to, seed, topologyVersion).</summary>
-    public PathfindingCache PathfindingCacheService { get; }
 
     // ── Dialog services ───────────────────────────────────────────────────────
 
@@ -268,6 +271,10 @@ public class SimulationBootstrapper
         StructuralBus  = new StructuralChangeBus();
         RoomMembership = new EntityRoomMembership();
 
+        // Structural change services — bus and cache before PathfindingService
+        PathfindingCache = new PathfindingCache(Config.Movement.Pathfinding.CacheMaxEntries);
+        MutationApi      = new WorldMutationApi(EntityManager, StructuralBus);
+
         // Lighting services
         SunState = new SunStateService();
 
@@ -276,13 +283,12 @@ public class SimulationBootstrapper
         DriveAccumulator   = new SocialDriveAccumulator();
 
         // Movement services
-        PathfindingCacheService = new PathfindingCache(Config.Movement.Pathfinding.CacheMaxEntries);
         Pathfinding = new PathfindingService(
             EntityManager,
             Config.Spatial.WorldSize.Width,
             Config.Spatial.WorldSize.Height,
             Config.Movement,
-            PathfindingCacheService,
+            PathfindingCache,
             StructuralBus);
 
         // Chronicle services — created before Invariants so the check can be injected.
@@ -357,13 +363,13 @@ public class SimulationBootstrapper
     {
         var sys = Config.Systems;
 
-        // Spatial — sync index and room membership (Phase 5).
+        // Spatial — sync index, room membership, cache invalidation (Phase 5).
         // ProximityEvent moves to Lighting (Phase 7) so it fires after illumination is current.
         var syncSys = new SpatialIndexSyncSystem(SpatialIndex, StructuralBus);
         EntityManager.EntityDestroyed += syncSys.OnEntityDestroyed;
         Engine.AddSystem(syncSys,                                                                SystemPhase.Spatial);
         Engine.AddSystem(new RoomMembershipSystem(RoomMembership, ProximityBus, StructuralBus), SystemPhase.Spatial);
-        Engine.AddSystem(new PathfindingCacheInvalidationSystem(StructuralBus, PathfindingCacheService), SystemPhase.Spatial);
+        Engine.AddSystem(new PathfindingCacheInvalidationSystem(StructuralBus, PathfindingCache), SystemPhase.Spatial);
 
         // Lighting — sun position, source state machines, aperture beams, room illumination,
         // then proximity events (which now see current illumination).
@@ -383,7 +389,7 @@ public class SimulationBootstrapper
         Engine.AddSystem(Invariants,                                               SystemPhase.PreUpdate);
         // Structural tagging: one-shot system at boot that attaches StructuralTag to obstacles/walls/doors
         Engine.AddSystem(new StructuralTaggingSystem(),                            SystemPhase.PreUpdate);
-        // Schedule spawner: attach routines to NPCs that lack one (runs every tick, idempotent).
+        // Schedule spawner: attach routines to NPCs that lack one (runs every tick, idempotent)
         Engine.AddSystem(new ScheduleSpawnerSystem(),                              SystemPhase.PreUpdate);
 
         // Stress initialization — attaches StressComponent to newly-spawned NPCs that lack one.

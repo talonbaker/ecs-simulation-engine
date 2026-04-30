@@ -78,30 +78,23 @@ public class ChokingDetectionSystem : ISystem
     /// <param name="deltaTime">Tick delta in seconds (unused; the system runs strictly at tick granularity).</param>
     public void Update(EntityManager em, float deltaTime)
     {
-        foreach (var npc in em.Query<EsophagusTransitComponent>().OrderBy(e => e.Id))
+        // EsophagusTransitComponent lives on the BOLUS entity; TargetEntityId = the NPC swallowing it.
+        foreach (var bolus in em.Query<EsophagusTransitComponent>().OrderBy(e => e.Id))
         {
-            // Early returns: dead, already choking, no bolus in transit
+            var transit = bolus.Get<EsophagusTransitComponent>();
+            if (transit.TargetEntityId == Guid.Empty) continue;
+
+            var npc = em.GetAllEntities().FirstOrDefault(e => e.Id == transit.TargetEntityId);
+            if (npc == null) continue;
+
             if (!LifeStateGuard.IsAlive(npc)) continue;
-            if (npc.Has<IsChokingTag>()) continue;  // already choking; transition system handles countdown
+            if (npc.Has<IsChokingTag>()) continue;
 
-            var transit = npc.Get<EsophagusTransitComponent>();
-
-            // Compute bolus size. The transit component tracks a bolus entity by ID.
-            float bolusSize = 0f;
-            if (transit.TargetEntityId != Guid.Empty)
-            {
-                var bolusEntity = em.GetAllEntities().FirstOrDefault(e => e.Id == transit.TargetEntityId);
-                if (bolusEntity != null && bolusEntity.Has<BolusComponent>())
-                {
-                    var bolus = bolusEntity.Get<BolusComponent>();
-                    bolusSize = bolus.Volume;
-                }
-            }
-
-            // Below threshold: no choke risk
+            // Bolus toughness (chew resistance) lives on the bolus entity itself.
+            float bolusSize = bolus.Has<BolusComponent>() ? bolus.Get<BolusComponent>().Toughness : 0f;
             if (bolusSize < _cfg.BolusSizeThreshold) continue;
 
-            // Distraction check — at least one of three conditions must hold
+            // Distraction check on the NPC
             bool distracted =
                 (npc.Has<EnergyComponent>() && npc.Get<EnergyComponent>().Energy < _cfg.EnergyThreshold)
                 || (npc.Has<StressComponent>() && npc.Get<StressComponent>().AcuteLevel >= _cfg.StressThreshold)
@@ -111,7 +104,7 @@ public class ChokingDetectionSystem : ISystem
 
             // ── CHOKE FIRES ──────────────────────────────────────────────────────────
 
-            // 1. Attach choking markers
+            // 1. Attach choking markers to the NPC
             npc.Add(new IsChokingTag());
             npc.Add(new ChokingComponent
             {
@@ -143,8 +136,6 @@ public class ChokingDetectionSystem : ISystem
             }
 
             // 4. Enqueue transition to Incapacitated(Choked)
-            // The LifeStateTransitionSystem will set IncapacitatedTickBudget = _cfg.IncapacitationTicks
-            // and PendingDeathCause = Choked. On budget expiry, it transitions to Deceased(Choked).
             _transition.RequestTransition(npc.Id, LS.Incapacitated, CauseOfDeath.Choked);
         }
     }

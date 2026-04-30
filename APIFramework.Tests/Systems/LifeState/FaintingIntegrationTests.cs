@@ -134,12 +134,12 @@ public class FaintingIntegrationTests
         // Faint
         Tick(em, clock, detection, recovery, transitions, cleanup);
 
-        // Advance to recovery
+        // Advance to recovery (faintDuration-1 ticks: clock reaches recoveryTick on the next tick)
         int faintDuration = DefaultCfg().FaintDurationTicks;
-        for (int i = 0; i < faintDuration; i++)
+        for (int i = 0; i < faintDuration - 1; i++)
             Tick(em, clock, detection, recovery, transitions, cleanup);
 
-        // Recover tick
+        // Recover tick (clock == RecoveryTick here)
         Tick(em, clock, detection, recovery, transitions, cleanup);
 
         Assert.Equal(LS.Alive, npc.Get<LifeStateComponent>().State);
