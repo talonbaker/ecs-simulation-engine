@@ -102,8 +102,8 @@ public static class SceneBootstrapper
         cam.farClipPlane    = 1000f;
 
         // Free-fly camera — start directly above origin, angled down toward the NPC cluster.
-        cam.gameObject.GetComponent<CameraController>()
-            ?? cam.gameObject.AddComponent<CameraController>();
+        if (cam.gameObject.GetComponent<CameraController>() == null)
+            cam.gameObject.AddComponent<CameraController>();
 
         cam.transform.position = new Vector3(0f, 8f, -12f);
         cam.transform.rotation = Quaternion.Euler(25f, 0f, 0f);

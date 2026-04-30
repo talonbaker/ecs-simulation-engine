@@ -83,13 +83,12 @@ public sealed class WallFadeController : MonoBehaviour
         float fullAlpha   = _config != null ? _config.wallFullAlpha   : 1.0f;
         float fadeSeconds = _config != null ? _config.wallFadeSeconds : 0.18f;
 
-        // ── Raycast from camera → focus point ─────────────────────────────────
-        Vector3 camPos    = _cameraController.transform.position;
-        Vector3 focusPt   = _cameraController.FocusPoint;
-
-        // Focus is at ground level (Y = 0); we set a small Y to avoid a perfectly
-        // horizontal ray which could miss near-vertical walls.
-        focusPt.y = 0.01f;
+        // ── Raycast from camera toward the ground point below the look direction ──
+        Vector3 camPos  = _cameraController.transform.position;
+        // Project camera forward 20 units onto the ground plane as the ray target.
+        Vector3 fwd     = _cameraController.transform.forward;
+        Vector3 focusPt = camPos + fwd * 20f;
+        focusPt.y       = 0.01f;
 
         Vector3 dir      = focusPt - camPos;
         float   dist     = dir.magnitude;
