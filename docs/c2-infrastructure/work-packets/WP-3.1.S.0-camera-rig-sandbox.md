@@ -168,31 +168,60 @@ These are intentionally not done here. Author them as separate packets if they p
 
 ---
 
-## Completion-note template (for the Sonnet to fill in)
+## Completion protocol (REQUIRED — read before merging)
 
-```markdown
-# WP-3.1.S.0 — Completion Note
+### Visual verification: REQUIRED
 
-## Files changed
-- Assets/Prefabs/CameraRig.prefab (new)
-- Assets/_Sandbox/camera-rig.scene (new)
-- Assets/_Sandbox/camera-rig.md (new)
-- Assets/_Sandbox/_Sandbox.asmdef (new, if needed)
-- ECSUnity/Assets/Scripts/Camera/CameraController.cs ([Range] annotations only)
+This is a Track 2 (Unity) packet. xUnit tests are necessary but **not sufficient** — the visual layer must be verified by Talon in Unity Editor before PR is mergeable.
 
-## Inspector contract changes
-<copy the table from §"Inspector contracts" above; note any deviations>
+The Sonnet executor's pipeline:
 
-## Test recipe verified manually
-<Sonnet does not run this — Talon does, post-merge>
+1. Implement the spec — write the `[Range]` annotations on `CameraController.cs`, build `CameraRig.prefab`, compose `Assets/_Sandbox/camera-rig.scene` per spec, write `Assets/_Sandbox/camera-rig.md` test recipe.
+2. Add or update xUnit tests if any logic is added (this packet is mostly packaging — likely no new tests).
+3. Run `dotnet test` and `dotnet build`. Must be green.
+4. Stage all changes including the self-cleanup deletion (see below).
+5. Commit on the worktree's feature branch.
+6. Push the branch.
+7. Stop. Do **not** open a PR yet. Do **not** merge.
+8. The final line of the commit message must be: `READY FOR VISUAL VERIFICATION — run Assets/_Sandbox/camera-rig.md`.
 
-## Anomalies / things Talon should know
-<any surprises during extraction; e.g., the prefab system rejected the X reference, etc.>
+Talon's pipeline (after Sonnet's push):
 
-## Follow-up packet candidates
-- WP-3.1.S.0-INT (wire prefab into MainScene)
-- <any others discovered during this packet>
-```
+1. Open the Unity Editor on the feature branch.
+2. Run the test recipe at `Assets/_Sandbox/camera-rig.md`.
+3. If the recipe passes: open the PR, merge to `staging`.
+4. If the recipe fails: file the failure as PR review comments or as a follow-up packet. **Do not** ask the original Sonnet to iterate ad-hoc — failed visual recipes mean the spec was incomplete or the implementation diverged; either way, a fresh packet captures the fix cleanly.
+
+**The Sonnet executor must not push without confirming the test recipe is achievable** against what was actually built. If the recipe is infeasible (e.g., the prefab couldn't be serialized correctly), stop and document in the worktree before pushing.
+
+### Cost envelope (1-5-25 Claude army)
+
+Target: **$0.40** (90-minute timebox). This is the smallest possible Track 2 packet — it should not approach the $0.50–$1.20 upper band. If costs approach $0.80 without acceptance criteria nearing completion, **escalate to Talon** with a `WP-3.1.S.0-blocker.md` note in the worktree explaining what burned the budget.
+
+Unity-specific cost-discipline:
+- Don't open and close prefabs in the Editor repeatedly. Either author the prefab YAML directly (it's small) or build it in one shot from a one-off `EditorScript`.
+- The reference grid is the smallest geometry that exercises the camera. Don't elaborate it.
+
+### Self-cleanup on merge
+
+Before opening the PR (after Talon's visual verification passes), the executing Sonnet must:
+
+1. **Check downstream dependents** with this command from the repo root:
+   ```bash
+   git grep -l "WP-3.1.S.0" docs/c2-infrastructure/work-packets/ | grep -v "_completed" | grep -v "_PACKET-COMPLETION-PROTOCOL"
+   ```
+
+2. **Expected result:** the grep will return `WP-3.1.S.0-INT-camera-rig-into-mainscene.md` (the integration packet is a downstream dependent). Therefore: **leave the spec file in place**, and add a one-line status header to the top of this spec file:
+   ```markdown
+   > **STATUS:** SHIPPED to staging YYYY-MM-DD. Retained because pending packet `WP-3.1.S.0-INT` depends on this spec.
+   ```
+   Add `Self-cleanup: spec retained, dependents: WP-3.1.S.0-INT.` to the commit message.
+
+3. **Sandbox prefabs and sandbox scenes are NOT deleted** — they live in `Assets/Prefabs/CameraRig.prefab` and `Assets/_Sandbox/camera-rig.{scene,md}` indefinitely. Only the spec file itself is subject to cleanup.
+
+4. **Do not touch** files under `_completed/` or `_completed-specs/`.
+
+5. When `WP-3.1.S.0-INT` ships and is the last remaining dependent: that packet's executing Sonnet will delete `WP-3.1.S.0-camera-rig-sandbox.md` as part of its own cleanup pass.
 
 ---
 
