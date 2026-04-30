@@ -91,6 +91,11 @@ public sealed class CameraController : MonoBehaviour
         _input       = new CameraInputBindings();
         _constraints = new CameraConstraints();
 
+        // Sync constraints from Inspector values (defaults were never applied before).
+        _constraints.MinAltitude = _minAltitude;
+        _constraints.MaxAltitude = _maxAltitude;
+        _constraints.PitchAngle  = _pitchAngle;
+
         ApplyConfigFromAsset();
 
         _focusPoint = _startFocusPoint;
@@ -139,10 +144,10 @@ public sealed class CameraController : MonoBehaviour
             return;
 
         // Pan direction is relative to the current camera yaw.
-        // Right = sin(yaw), Forward = cos(yaw) (in XZ plane).
+        // At yaw=0: right=(1,0,0), forward=(0,0,1).
         float yawRad = _yaw * Mathf.Deg2Rad;
-        Vector3 right   = new Vector3( Mathf.Sin(yawRad),  0f, Mathf.Cos(yawRad));
-        Vector3 forward = new Vector3( Mathf.Cos(yawRad),  0f, -Mathf.Sin(yawRad));
+        Vector3 right   = new Vector3( Mathf.Cos(yawRad), 0f, -Mathf.Sin(yawRad));
+        Vector3 forward = new Vector3( Mathf.Sin(yawRad), 0f,  Mathf.Cos(yawRad));
 
         _focusPoint += (right   * inputX + forward * inputZ) * (_panSpeed * dt);
     }
@@ -163,7 +168,8 @@ public sealed class CameraController : MonoBehaviour
         if (!Mathf.Approximately(input, 0f))
         {
             // Positive zoom input = zoom in = lower altitude; negative = zoom out = higher.
-            _altitude -= input * _zoomSpeed * dt;
+            // No dt: scroll is a discrete event, not a continuous axis.
+            _altitude -= input * _zoomSpeed;
             _altitude  = _constraints.ClampAltitude(_altitude);
         }
     }
@@ -254,8 +260,8 @@ public sealed class CameraController : MonoBehaviour
     public void InjectPan(float x, float z, float dt)
     {
         float yawRad = _yaw * Mathf.Deg2Rad;
-        Vector3 right   = new Vector3( Mathf.Sin(yawRad), 0f,  Mathf.Cos(yawRad));
-        Vector3 forward = new Vector3( Mathf.Cos(yawRad), 0f, -Mathf.Sin(yawRad));
+        Vector3 right   = new Vector3( Mathf.Cos(yawRad), 0f, -Mathf.Sin(yawRad));
+        Vector3 forward = new Vector3( Mathf.Sin(yawRad), 0f,  Mathf.Cos(yawRad));
         _focusPoint += (right * x + forward * z) * (_panSpeed * dt);
         ApplyCameraTransform();
     }
