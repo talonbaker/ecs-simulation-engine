@@ -18,6 +18,30 @@ namespace APIFramework.Systems.LifeState;
 /// When transitioning to Deceased, emits a cause-of-death narrative event BEFORE state flips,
 /// allowing subscribers to see the deceased while still flagged as Alive.
 /// </summary>
+/// <remarks>
+/// SINGLE-WRITER RULE: this system is the sole writer of <see cref="LifeStateComponent"/> after
+/// <see cref="LifeStateInitializerSystem"/> attaches it. No other system may overwrite the
+/// component. <see cref="CauseOfDeathComponent"/> is likewise attached only here.
+///
+/// Phase: <see cref="SystemPhase.Cleanup"/>. Must run AFTER any producer that may call
+/// <see cref="RequestTransition"/> in the same tick (e.g. <see cref="ChokingDetectionSystem"/>,
+/// SlipAndFallSystem, LockoutDetectionSystem) and BEFORE <see cref="ChokingCleanupSystem"/>.
+///
+/// Determinism: queued requests are processed in ascending NpcId order. Within a tick, multiple
+/// requests targeting the same NPC dedupe by "later wins" (see <see cref="RequestTransition"/>).
+/// IncapacitatedTickBudget countdown happens inline after queue drain; budget expiry enqueues
+/// a Deceased transition that is drained by a single recursive <see cref="Update"/> call so the
+/// transition completes in the same tick.
+///
+/// Legal transitions:
+///  Alive → Incapacitated (with PendingDeathCause + IncapacitatedTickBudget)
+///  Alive → Deceased (sudden death)
+///  Incapacitated → Deceased (timeout or explicit request)
+///  Deceased is terminal — further requests are ignored.
+/// </remarks>
+/// <seealso cref="LifeStateInitializerSystem"/>
+/// <seealso cref="LifeStateGuard"/>
+/// <seealso cref="LifeStateTransitionRequest"/>
 public class LifeStateTransitionSystem : ISystem
 {
     private readonly List<LifeStateTransitionRequest> _queue = new();
@@ -26,6 +50,14 @@ public class LifeStateTransitionSystem : ISystem
     private readonly SimulationClock _clock;
     private readonly SimConfig _config;
 
+    /// <summary>
+    /// Constructs the life-state transition system.
+    /// </summary>
+    /// <param name="narrativeEventBus">Bus on which cause-of-death narrative candidates are raised.</param>
+    /// <param name="entityManager">Entity manager held for future use; queries flow through the manager passed to <see cref="Update"/>.</param>
+    /// <param name="clock">Simulation clock; supplies LastTransitionTick and DeathTick stamps.</param>
+    /// <param name="config">Simulation config; <see cref="SimConfig.LifeState"/>.DefaultIncapacitatedTicks seeds the countdown for new Incapacitated transitions.</param>
+    /// <exception cref="ArgumentNullException">Any dependency is null.</exception>
     public LifeStateTransitionSystem(
         NarrativeEventBus narrativeEventBus,
         EntityManager entityManager,
@@ -43,6 +75,9 @@ public class LifeStateTransitionSystem : ISystem
     /// If multiple requests target the same NPC in the same tick, later requests win (deterministic warning logged).
     /// The queue is drained each Cleanup tick in ascending NpcId order.
     /// </summary>
+    /// <param name="npcId">Guid of the NPC to transition.</param>
+    /// <param name="targetState">Desired new <see cref="Components.LifeState"/>.</param>
+    /// <param name="cause">Cause of death recorded with the transition (use <see cref="CauseOfDeath.Unknown"/> when not applicable).</param>
     public void RequestTransition(Guid npcId, Components.LifeState targetState, CauseOfDeath cause)
     {
         // Dedupe by npcId; later requests in the same tick win.
@@ -55,6 +90,13 @@ public class LifeStateTransitionSystem : ISystem
         _queue.Add(new LifeStateTransitionRequest(npcId, targetState, cause));
     }
 
+    /// <summary>
+    /// Drains the queued transition requests in ascending NpcId order, then ticks down
+    /// IncapacitatedTickBudget for any Incapacitated NPC. When a budget expires, a Deceased
+    /// transition is enqueued and processed via a single recursive call so it completes this tick.
+    /// </summary>
+    /// <param name="em">Entity manager used to look up NPCs and witnesses.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused; budget countdown is in ticks, not seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Process queue in deterministic order: ascending NpcId.
@@ -154,6 +196,9 @@ public class LifeStateTransitionSystem : ISystem
     /// Only alive NPCs can witness (Incapacitated cannot form memory; Deceased are already gone).
     /// Returns in deterministic order (ascending EntityIntId).
     /// </summary>
+    /// <param name="deceased">The NPC who is about to be flagged Deceased.</param>
+    /// <param name="em">Entity manager used to query NPCs.</param>
+    /// <returns>The Guid of the chosen witness, or <see cref="Guid.Empty"/> if no eligible witness is in range.</returns>
     private Guid FindClosestWitness(Entity deceased, EntityManager em)
     {
         if (!deceased.Has<ProximityComponent>()) return Guid.Empty;
@@ -194,6 +239,8 @@ public class LifeStateTransitionSystem : ISystem
     }
 
     /// <summary>Extract the integer ID from entity's Guid (stored in bytes 0-7 little-endian).</summary>
+    /// <param name="entity">The entity to extract the integer ID from.</param>
+    /// <returns>The first 4 bytes of the entity's Guid interpreted as a little-endian Int32.</returns>
     private static int GetEntityIntId(Entity entity)
     {
         var b = entity.Id.ToByteArray();
@@ -201,6 +248,8 @@ public class LifeStateTransitionSystem : ISystem
     }
 
     /// <summary>Map CauseOfDeath to the corresponding NarrativeEventKind.</summary>
+    /// <param name="cause">The cause to translate.</param>
+    /// <returns>A specific narrative kind (Choked, SlippedAndFell, StarvedAlone) or the generic <see cref="Narrative.NarrativeEventKind.Died"/> fallback.</returns>
     private static Narrative.NarrativeEventKind CauseToNarrativeKind(CauseOfDeath cause) => cause switch
     {
         CauseOfDeath.Choked => Narrative.NarrativeEventKind.Choked,

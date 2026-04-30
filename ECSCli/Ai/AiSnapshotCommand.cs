@@ -26,6 +26,13 @@ public static class AiSnapshotCommand
 {
     private const float DeltaTime = 1f / 60f;
 
+    /// <summary>
+    /// Builds the <c>snapshot</c> subcommand with its required <c>--out</c>
+    /// option and optional <c>--pretty</c> flag, wiring the handler that boots
+    /// the simulation, advances one tick, and writes a <c>WorldStateDto</c>
+    /// JSON file.
+    /// </summary>
+    /// <returns>The configured <see cref="Command"/> ready to be added to <see cref="AiCommand.Root"/>.</returns>
     public static Command Build()
     {
         var outOpt = new Option<FileInfo>(

@@ -42,6 +42,7 @@ public struct BlockedActionsComponent
     public IReadOnlyCollection<BlockedActionClass> Blocked =>
         (IReadOnlyCollection<BlockedActionClass>?)_blocked ?? _empty;
 
+    /// <summary>Constructs a blocked-actions component wrapping the given veto set.</summary>
     public BlockedActionsComponent(HashSet<BlockedActionClass> blocked)
     {
         _blocked = blocked;

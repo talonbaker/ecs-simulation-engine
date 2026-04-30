@@ -23,6 +23,10 @@ public struct ChokingComponent
     /// <summary>Always Choked at v0.1; reserved for future expansion when other choke-like causes land.</summary>
     public CauseOfDeath PendingCause;
 
+    /// <summary>
+    /// Returns a human-readable summary of the choking state for telemetry and logging.
+    /// </summary>
+    /// <returns>A formatted string showing start tick, remaining ticks, and bolus volume.</returns>
     public override string ToString() =>
         $"Choking (started: {ChokeStartTick}, remaining: {RemainingTicks}s, bolus: {BolusSize:F3}ml)";
 }

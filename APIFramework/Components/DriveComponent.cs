@@ -8,11 +8,17 @@ namespace APIFramework.Components;
 /// </summary>
 public enum DesireType
 {
+    /// <summary>No drive is currently dominant — entity is at rest.</summary>
     None,
+    /// <summary>Hunger is the dominant drive.</summary>
     Eat,
+    /// <summary>Thirst is the dominant drive.</summary>
     Drink,
+    /// <summary>Fatigue/sleepiness is the dominant drive.</summary>
     Sleep,
+    /// <summary>Bowel pressure is the dominant drive. Scored from ColonComponent.Fill; overrides all at BowelCriticalTag.</summary>
     Defecate,   // Scored from ColonComponent.Fill; overrides all at BowelCriticalTag
+    /// <summary>Bladder pressure is the dominant drive. Scored from BladderComponent.Fill; overrides all at BladderCriticalTag.</summary>
     Pee,        // Scored from BladderComponent.Fill; overrides all at BladderCriticalTag
     // Future: Socialise, Play, Flee, ...
 }
@@ -73,6 +79,7 @@ public struct DriveComponent
         }
     }
 
+    /// <summary>Debug-friendly summary of the dominant drive and all urgency scores.</summary>
     public override string ToString() =>
         $"Dominant: {Dominant}  (eat {EatUrgency:F2}  drink {DrinkUrgency:F2}  " +
         $"sleep {SleepUrgency:F2}  defecate {DefecateUrgency:F2}  pee {PeeUrgency:F2})";

@@ -6,14 +6,20 @@ using APIFramework.Core;
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Attaches <see cref="SocialMaskComponent"/> to every NPC that does not yet have one.
-/// Baseline mask strength is derived from personality: high Conscientiousness raises it,
-/// high Extraversion lowers it.
-///
-/// Phase: PreUpdate (0) — idempotent; runs before any system that reads SocialMaskComponent.
+/// PreUpdate phase. Attaches <see cref="SocialMaskComponent"/> to every NPC that
+/// does not yet have one, with baseline derived from personality: high Conscientiousness
+/// raises baseline; high Extraversion lowers it.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="PersonalityComponent"/>.<br/>
+/// Writes: <see cref="SocialMaskComponent"/> (idempotent — never overwritten).<br/>
+/// Phase: PreUpdate, before any system that reads <see cref="SocialMaskComponent"/>.
+/// </remarks>
 public sealed class MaskInitializerSystem : ISystem
 {
+    /// <summary>Per-tick idempotent attach pass; assigns each NPC a personality-shaped mask baseline.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<NpcTag>().ToList())

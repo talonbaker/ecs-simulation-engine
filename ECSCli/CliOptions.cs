@@ -28,6 +28,14 @@ public class CliOptions
 
     // ─────────────────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Parses a raw command-line argument vector into a populated
+    /// <see cref="CliOptions"/> instance. Unknown flags are reported to
+    /// <see cref="Console.Error"/> but do not cause exit; passing
+    /// <c>--help</c> or <c>-h</c> prints help and terminates the process.
+    /// </summary>
+    /// <param name="args">The raw argument vector as supplied to <c>Main</c>.</param>
+    /// <returns>An immutable <see cref="CliOptions"/> with each flag resolved.</returns>
     public static CliOptions Parse(string[] args)
     {
         float   timeScale      = 1.0f;

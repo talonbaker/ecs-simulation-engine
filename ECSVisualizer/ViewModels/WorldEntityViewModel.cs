@@ -26,6 +26,12 @@ public partial class WorldEntityViewModel : ObservableObject
 
     // ─────────────────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Refreshes this view model from the supplied entity: chooses a
+    /// food/liquid label, computes a nutritional summary, and updates rot
+    /// state. Called every UI tick by <see cref="MainViewModel"/>.
+    /// </summary>
+    /// <param name="entity">The world-item entity (food or liquid) to bind.</param>
     public void Update(Entity entity)
     {
         EntityId = entity.ShortId;

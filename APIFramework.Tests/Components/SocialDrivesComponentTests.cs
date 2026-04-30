@@ -3,6 +3,7 @@ using Xunit;
 
 namespace APIFramework.Tests.Components;
 
+/// <summary>Round-trip and invariant tests for <see cref="SocialDrivesComponent"/> — default zero state, <see cref="SocialDrivesComponent.Clamp0100"/> behavior, independent Current/Baseline storage on <see cref="DriveValue"/>, and accessibility of all eight drive fields.</summary>
 public class SocialDrivesComponentTests
 {
     [Fact]

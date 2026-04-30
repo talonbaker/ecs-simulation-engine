@@ -1,5 +1,6 @@
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -28,12 +29,24 @@ namespace APIFramework.Systems;
 ///   ChymeVolumeMl -= processed
 ///   residue   = processed × ResidueToLargeFraction → LargeIntestineComponent
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="SmallIntestineComponent"/>, <see cref="LargeIntestineComponent"/>,
+/// <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="SmallIntestineComponent"/> (chyme drain),
+/// <see cref="LargeIntestineComponent"/>.ContentVolumeMl (single writer of the residue handoff).<br/>
+/// Phase: Elimination, before <see cref="LargeIntestineSystem"/>.
+/// </remarks>
 public class SmallIntestineSystem : ISystem
 {
+    /// <summary>Per-tick chyme drain and residue-handoff pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<SmallIntestineComponent>().ToList())
         {
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: skip Deceased NPCs (Incapacitated still ticks)
+
             var si = entity.Get<SmallIntestineComponent>();
             if (si.IsEmpty) continue;
 

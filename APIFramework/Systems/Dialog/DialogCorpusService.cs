@@ -50,6 +50,9 @@ public sealed class DialogCorpusService
     public IReadOnlyList<PhraseFragment> AllFragments => _all;
 
     /// <summary>Returns all fragments matching the given register and context.</summary>
+    /// <param name="register">Vocabulary register (e.g. "casual", "formal").</param>
+    /// <param name="context">Dialog context (e.g. "greeting", "lashOut").</param>
+    /// <returns>Matching fragments, or an empty array when the bucket has no entries.</returns>
     public IReadOnlyList<PhraseFragment> QueryByRegisterAndContext(string register, string context)
         => _index.TryGetValue((register, context), out var list)
             ? list
@@ -58,6 +61,8 @@ public sealed class DialogCorpusService
     // ── Static factory helpers ────────────────────────────────────────────────
 
     /// <summary>Loads the corpus from a file path.</summary>
+    /// <param name="path">Absolute or CWD-relative path to the corpus JSON file.</param>
+    /// <returns>A new corpus service populated from the file.</returns>
     public static DialogCorpusService LoadFromFile(string path)
         => new(File.ReadAllText(path));
 
@@ -65,6 +70,8 @@ public sealed class DialogCorpusService
     /// Walks up from CWD (max 6 levels) and returns the first directory that
     /// contains <paramref name="relativePath"/>.  Returns null if not found.
     /// </summary>
+    /// <param name="relativePath">Relative path to search for at each ancestor directory.</param>
+    /// <returns>The full path to the first match, or null if none was found within 6 levels.</returns>
     public static string? FindCorpusFile(string relativePath)
     {
         var dir = Directory.GetCurrentDirectory();
@@ -96,14 +103,21 @@ public sealed class DialogCorpusService
 /// </summary>
 public sealed class PhraseFragment
 {
+    /// <summary>Stable identifier; used for tie-break ordering and per-listener history keys.</summary>
     public string Id             { get; set; } = string.Empty;
+    /// <summary>The phrase text spoken by an NPC.</summary>
     public string Text           { get; set; } = string.Empty;
+    /// <summary>Vocabulary register matched against the speaker's <c>PersonalityComponent</c>.</summary>
     public string Register       { get; set; } = string.Empty;
+    /// <summary>Dialog context (e.g. "greeting", "complaint") matched against the speaker's intent or drives.</summary>
     public string Context        { get; set; } = string.Empty;
 
+    /// <summary>Drive name → ordinal level ("low" / "mid" / "high") expected at speak time.</summary>
     public Dictionary<string, string> ValenceProfile { get; set; } = new();
 
+    /// <summary>Optional list of relationship-fit tags; null when not constrained.</summary>
     public string[]? RelationshipFit { get; set; }
 
+    /// <summary>Score weight that promotes more-distinctive fragments toward narrative recording.</summary>
     public int Noteworthiness { get; set; }
 }

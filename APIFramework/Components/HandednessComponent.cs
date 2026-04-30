@@ -7,5 +7,6 @@ namespace APIFramework.Components;
 /// </summary>
 public struct HandednessComponent
 {
+    /// <summary>The side of a hallway this NPC prefers to pass on. Stable for the NPC's lifetime.</summary>
     public HandednessSide Side;
 }

@@ -16,6 +16,18 @@ namespace APIFramework.Systems.Spatial;
 ///   - Fires RoomMembershipChanged on ProximityEventBus when the result changes.
 ///   - Detects room bounds changes and emits RoomBoundsChanged on StructuralChangeBus.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="RoomTag"/>+<see cref="RoomComponent"/> (room geometry) and
+/// <see cref="PositionComponent"/> on every other entity.
+/// Writes: the <see cref="EntityRoomMembership"/> map (single writer); emits
+/// <see cref="ProximityEventBus.RaiseRoomMembershipChanged"/> on transitions and
+/// <see cref="StructuralChangeKind.RoomBoundsChanged"/> on geometry changes.
+/// Ordering: must run after <see cref="SpatialIndexSyncSystem"/> so positions are current,
+/// and before <see cref="ProximityEventSystem"/> so it sees the current membership map.
+/// </remarks>
+/// <seealso cref="EntityRoomMembership"/>
+/// <seealso cref="ProximityEventBus"/>
+/// <seealso cref="StructuralChangeBus"/>
 public sealed class RoomMembershipSystem : ISystem
 {
     private readonly EntityRoomMembership _membership;
@@ -24,6 +36,12 @@ public sealed class RoomMembershipSystem : ISystem
     private readonly Dictionary<Entity, BoundsRect> _lastRoomBounds = new();
     private int _tick;
 
+    /// <summary>
+    /// Constructs the system.
+    /// </summary>
+    /// <param name="membership">Runtime entity-to-room map this system maintains.</param>
+    /// <param name="bus">Proximity event bus that receives <c>RoomMembershipChanged</c> events.</param>
+    /// <param name="structuralBus">Structural change bus that receives <c>RoomBoundsChanged</c> events.</param>
     public RoomMembershipSystem(EntityRoomMembership membership, ProximityEventBus bus, StructuralChangeBus structuralBus)
     {
         _membership = membership;
@@ -31,6 +49,11 @@ public sealed class RoomMembershipSystem : ISystem
         _structuralBus = structuralBus;
     }
 
+    /// <summary>
+    /// Per-tick update. Detects room bounds changes (emitting structural events), then
+    /// resolves containing-room membership for every positioned non-room entity and
+    /// emits proximity events on transitions.
+    /// </summary>
     public void Update(EntityManager em, float deltaTime)
     {
         _tick++;

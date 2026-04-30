@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -34,19 +35,34 @@ namespace APIFramework.Systems;
 /// Satiation/Hydration conversion stays here; the intestine pipeline is purely
 /// a volume-routing model that drives the defecation cycle.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="StomachComponent"/>, <see cref="SmallIntestineComponent"/>,
+/// <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="StomachComponent"/> (drain),
+/// <see cref="MetabolismComponent"/> (NutrientStores, Satiation, Hydration),
+/// <see cref="SmallIntestineComponent"/> (chyme residue).<br/>
+/// Phase: Transit, after <see cref="EsophagusSystem"/> deposits boluses into the stomach.
+/// </remarks>
 public class DigestionSystem : ISystem
 {
     private readonly DigestionSystemConfig _cfg;
 
+    /// <summary>Constructs the digestion system with its calorie/water conversion factors.</summary>
+    /// <param name="cfg">Digestion tuning (Satiation/Hydration conversion, residue fraction).</param>
     public DigestionSystem(DigestionSystemConfig cfg)
     {
         _cfg = cfg;
     }
 
+    /// <summary>Per-tick digestion pass; drains stomach, releases nutrients, hands residue to small intestine.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<StomachComponent>().ToList())
         {
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: skip Deceased NPCs (Incapacitated still ticks)
+
             var stomach = entity.Get<StomachComponent>();
             if (stomach.IsEmpty) continue;
 

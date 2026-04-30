@@ -6,8 +6,12 @@ namespace APIFramework.Components;
 /// </summary>
 public enum LifeState
 {
+    /// <summary>NPC is fully alive: cognition, volition, and physiology all tick normally.</summary>
     Alive = 0,
+    /// <summary>NPC is biologically alive but non-volitional (e.g. choking, knocked out).
+    /// Physiology continues, cognition is suspended; an IncapacitatedTickBudget counts down to Deceased.</summary>
     Incapacitated = 1,
+    /// <summary>NPC is dead and inert. Terminal state — no resurrection.</summary>
     Deceased = 2
 }
 
