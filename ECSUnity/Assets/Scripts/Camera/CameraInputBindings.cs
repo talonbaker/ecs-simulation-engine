@@ -34,9 +34,9 @@ public sealed class CameraInputBindings
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))  value -= 1f;
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) value += 1f;
 
-        // Middle-mouse drag (horizontal). Raw Mouse X is ~0.05/px; scale up to match keyboard.
+        // Middle-mouse drag (horizontal). Negated: drag right → view moves right (grab-style).
         if (Input.GetMouseButton(2))
-            value += Input.GetAxis("Mouse X") * MouseDragSensitivity;
+            value -= Input.GetAxis("Mouse X") * MouseDragSensitivity;
 
         return Mathf.Clamp(value, -1f, 1f);
     }
@@ -50,9 +50,9 @@ public sealed class CameraInputBindings
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))   value += 1f;
         if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) value -= 1f;
 
-        // Middle-mouse drag (vertical maps to forward/back)
+        // Middle-mouse drag (vertical). Negated: drag down → view moves down (grab-style).
         if (Input.GetMouseButton(2))
-            value += Input.GetAxis("Mouse Y") * MouseDragSensitivity;
+            value -= Input.GetAxis("Mouse Y") * MouseDragSensitivity;
 
         return Mathf.Clamp(value, -1f, 1f);
     }

@@ -48,7 +48,7 @@ public sealed class NpcDotRenderer : MonoBehaviour
 
     [SerializeField]
     [Tooltip("World-unit size of each NPC dot quad.")]
-    private float _dotSize = 0.3f;
+    private float _dotSize = 1.0f;
 
     [SerializeField]
     [Tooltip("World-unit height above the floor where NPC dots float.")]
@@ -171,10 +171,12 @@ public sealed class NpcDotRenderer : MonoBehaviour
     {
         // Assign world-space position. Engine X → Unity X, Engine Y → Unity Y, Engine Z → Unity Z.
         // NPCs are on the floor plane; we lift them by _dotHeight so they float above room quads.
+        // Engine coordinate system: X = horizontal, Y = depth (floor plan).
+        // Unity coordinate system: X = horizontal, Z = depth, Y = up.
         view.Go.transform.position = new Vector3(
             npc.Position.X,
             _dotHeight,
-            npc.Position.Z);
+            npc.Position.Y);
 
         // Scale is constant — set once at create, not per frame.
     }
