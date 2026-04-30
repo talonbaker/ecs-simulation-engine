@@ -1,5 +1,7 @@
 # WP-3.0.3 — Slip-and-Fall + Locked-In-and-Starved
 
+> **STATUS:** SHIPPED to staging 2026-04-30. Retained because pending packets depend on this spec: WP-3.0.5, WP-3.1.S.2, WP-3.2.0, WP-3.2.2, WP-3.2.4, WP-3.2.5.
+
 > **DO NOT DISPATCH UNTIL WP-3.0.0 AND WP-3.0.4 ARE MERGED.**
 > This packet calls `LifeStateTransitionSystem.RequestTransition` (WP-3.0.0) and reads the pathfinding service's reachability check that depends on the structural change bus + cache from WP-3.0.4. Both must be on `main` before dispatch. Fail-closed at build time otherwise.
 
