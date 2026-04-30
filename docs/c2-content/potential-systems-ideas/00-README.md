@@ -60,7 +60,12 @@ The two final docs are different:
 - [10 — Rituals, calendar, ceremony](10-rituals-calendar-ceremony.md). Birthdays, going-aways, anniversaries (Mark, Cubicle 12), the holiday party, the secret santa, the retirement.
 - [11 — Power, favors, and micro-tyranny](11-power-favors-micro-tyranny.md). Gatekeepers, the meeting canceller, the keyholder, the sympathy hire, the founder's-nephew gravity well.
 - [12 — Substance spectrum beyond coffee](12-substance-spectrum-beyond-coffee.md). Drinking on the job, prescription pills, the flask in the drawer, recovery exposure.
-- 13–18 are not yet written. (See the open task list — conversation edge cases, romance/attraction spectrum, fashion/visible body change, emergent culture, interaction matrix, vignettes.) The folder is being pushed mid-authoring at the user's request.
+- [13 — Conversation edge cases](13-conversation-edge-cases.md). Awkward silence, slow goodbye, greeting calibration, hijacking, topic minefields, interruption etiquette, the unspoken acknowledgment.
+- [14 — Romance and attraction spectrum](14-romance-attraction-spectrum.md). Unspoken tension, slow-burn arc, unrequited spectrum, post-divorce rebrand, accidental intimacy, age-gap, rejection aftermath, archetype mix.
+- [15 — Fashion and visible body change](15-fashion-and-visible-body-change.md). Ring axis, weight change, haircut event, makeup state, eyewear, visible health, seasonal, silhouette recalibration.
+- [16 — Emergent culture and inside jokes](16-emergent-culture-and-inside-jokes.md). Floor-culture calcification, callbacks, private inside jokes, floor memes, ritual genesis, scapegoating, folklore, cultural drift from turnover.
+- [17 — Interaction matrix](17-interaction-matrix.md). Cross-cluster substrate analysis (mask, knowledge, inhibitions, proximity bus); high-yield combinations; implementation ordering.
+- [18 — Extreme-end vignettes](18-extreme-end-vignettes.md). Five emergent-story sketches that bake several systems together: the 78-minute meeting, the Friday quit-attempt, the Newbie's first period, the conference-room cockroach, the long goodbye.
 
 ---
 
