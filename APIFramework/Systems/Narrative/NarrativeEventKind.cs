@@ -6,13 +6,21 @@ namespace APIFramework.Systems.Narrative;
 /// </summary>
 public enum NarrativeEventKind
 {
+    /// <summary>A drive value crossed an authored spike threshold within a tick.</summary>
     DriveSpike,
+    /// <summary>An NPC's willpower dropped to zero (or to the configured collapse floor), preventing further volitional action.</summary>
     WillpowerCollapse,
+    /// <summary>An NPC's willpower fell below the "low" threshold but has not yet collapsed.</summary>
     WillpowerLow,
+    /// <summary>Two NPCs began a conversation (entered conversation range with intent to dialog).</summary>
     ConversationStarted,
+    /// <summary>An NPC exited a room without completing the action they were performing in it.</summary>
     LeftRoomAbruptly,
+    /// <summary>An NPC's social mask cracked, leaking authentic mood/intent through the mask layer.</summary>
     MaskSlip,
+    /// <summary>A workload task passed its DeadlineTick without being completed.</summary>
     OverdueTask,
+    /// <summary>A workload task was completed (progress reached 100%).</summary>
     TaskCompleted,
 
     // ── Phase 3 — death and incapacitation events (WP-3.0.0) ─────────────────

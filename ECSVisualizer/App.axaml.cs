@@ -9,10 +9,23 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ECSVisualizer;
 
+/// <summary>
+/// Avalonia application root. Wires the dependency-injection container
+/// (simulation bootstrapper + view models) and creates the main window.
+/// </summary>
 public partial class App : Application
 {
+    /// <summary>
+    /// The DI service provider built during framework initialization. Null
+    /// before <see cref="OnFrameworkInitializationCompleted"/> has run.
+    /// </summary>
     public IServiceProvider? Services { get; private set; }
 
+    /// <summary>
+    /// Avalonia framework initialization hook. Builds the service provider,
+    /// eagerly resolves the simulation so it is ticking before any UI shows,
+    /// and assigns <see cref="MainWindow"/> with its <see cref="MainViewModel"/>.
+    /// </summary>
     public override void OnFrameworkInitializationCompleted()
     {
         var services = new ServiceCollection();

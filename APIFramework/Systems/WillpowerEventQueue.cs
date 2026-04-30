@@ -14,6 +14,8 @@ public class WillpowerEventQueue
     private readonly ConcurrentQueue<WillpowerEventSignal> _queue = new();
     private IReadOnlyList<WillpowerEventSignal> _lastDrainedBatch = System.Array.Empty<WillpowerEventSignal>();
 
+    /// <summary>Pushes a willpower-change signal onto the queue. Thread-safe.</summary>
+    /// <param name="signal">The suppression-tick or rest-tick signal to enqueue.</param>
     public void Enqueue(WillpowerEventSignal signal) => _queue.Enqueue(signal);
 
     /// <summary>
@@ -24,6 +26,7 @@ public class WillpowerEventQueue
     public IReadOnlyList<WillpowerEventSignal> LastDrainedBatch => _lastDrainedBatch;
 
     /// <summary>Removes and returns all pending signals. Called once per tick by WillpowerSystem.</summary>
+    /// <returns>All signals queued since the previous drain; never null.</returns>
     public List<WillpowerEventSignal> DrainAll()
     {
         var result = new List<WillpowerEventSignal>();

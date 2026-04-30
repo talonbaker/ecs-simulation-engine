@@ -4,8 +4,24 @@ using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
+/// <summary>
+/// Legacy desire-tag mapper that toggles <see cref="FoodDesireTag"/> and
+/// <see cref="WaterDesireTag"/> from <see cref="HungerTag"/>/<see cref="ThirstTag"/>.
+/// </summary>
+/// <remarks>
+/// Reads: <see cref="MetabolismComponent"/>, <see cref="HungerTag"/>,
+/// <see cref="ThirstTag"/>, <see cref="FoodObjectComponent"/>,
+/// <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="FoodDesireTag"/>, <see cref="WaterDesireTag"/>.<br/>
+/// Not registered in <see cref="APIFramework.Core.SimulationBootstrapper"/>'s pipeline —
+/// kept for legacy/test scaffolding. <see cref="BrainSystem"/> is the production
+/// drive-selector.
+/// </remarks>
 public class DesireSystem : ISystem
 {
+    /// <summary>Per-tick desire-tag toggle pass. No-op when paused (deltaTime &lt;= 0).</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         if (deltaTime <= 0) return; // Stop if the simulation is paused!

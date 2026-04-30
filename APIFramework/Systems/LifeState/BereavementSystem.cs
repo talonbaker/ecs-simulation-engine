@@ -37,6 +37,8 @@ namespace APIFramework.Systems.LifeState;
 ///
 /// WP-3.0.2: Deceased-Entity Handling + Bereavement.
 /// </summary>
+/// <seealso cref="BereavementByProximitySystem"/>
+/// <seealso cref="CorpseSpawnerSystem"/>
 public sealed class BereavementSystem : ISystem
 {
     private readonly EntityManager    _em;
@@ -44,6 +46,13 @@ public sealed class BereavementSystem : ISystem
     private readonly SimulationClock  _clock;
     private readonly BereavementConfig _cfg;
 
+    /// <summary>
+    /// Subscribes to <see cref="NarrativeEventBus.OnCandidateEmitted"/> to react to death events.
+    /// </summary>
+    /// <param name="narrativeBus">Bus from which death events are received and on which BereavementImpact is published.</param>
+    /// <param name="em">Entity manager — used to resolve participants by EntityIntId.</param>
+    /// <param name="clock">Simulation clock — supplies <c>CurrentTick</c> for emitted candidates.</param>
+    /// <param name="cfg">Bereavement config — supplies witness/colleague intensity values.</param>
     public BereavementSystem(
         NarrativeEventBus  narrativeBus,
         EntityManager      em,
@@ -154,6 +163,11 @@ public sealed class BereavementSystem : ISystem
         }
     }
 
+    /// <summary>
+    /// No per-tick work — this system is purely event-driven via the narrative bus subscription.
+    /// </summary>
+    /// <param name="em">Entity manager (unused).</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime) { /* event-driven; no per-tick work */ }
 
     // ── Utility ───────────────────────────────────────────────────────────────

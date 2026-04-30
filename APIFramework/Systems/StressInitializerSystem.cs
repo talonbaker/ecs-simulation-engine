@@ -10,35 +10,49 @@ namespace APIFramework.Systems;
 
 // ── Deserialization DTOs ──────────────────────────────────────────────────────
 
+/// <summary>Top-level deserialization shape for archetype-stress-baselines.json.</summary>
 internal sealed class StressBaselinesDto
 {
+    /// <summary>Per-archetype baseline entries.</summary>
     public StressBaselineEntryDto[] Archetypes { get; set; } = Array.Empty<StressBaselineEntryDto>();
 }
 
+/// <summary>Single archetype baseline entry deserialized from JSON.</summary>
 internal sealed class StressBaselineEntryDto
 {
+    /// <summary>Archetype identifier the baseline applies to.</summary>
     public string ArchetypeId  { get; set; } = "";
+    /// <summary>Starting <see cref="StressComponent.ChronicLevel"/> (0–100) for the archetype.</summary>
     public double ChronicLevel { get; set; } = 0;
 }
 
 // ── System ────────────────────────────────────────────────────────────────────
 
 /// <summary>
-/// Attaches <see cref="StressComponent"/> to every NPC that has
-/// <see cref="NpcArchetypeComponent"/> but no stress state yet.
-/// Sets ChronicLevel from the archetype-stress-baselines.json lookup; AcuteLevel starts at 0.
-/// Phase: PreUpdate — runs before any system that reads stress state.
-/// Idempotent: entities that already have <see cref="StressComponent"/> are skipped.
+/// PreUpdate phase. Attaches <see cref="StressComponent"/> to every NPC that has
+/// <see cref="NpcArchetypeComponent"/> but no stress state yet. Sets
+/// <see cref="StressComponent.ChronicLevel"/> from the archetype baselines lookup;
+/// AcuteLevel starts at 0.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="NpcArchetypeComponent"/>.<br/>
+/// Writes: <see cref="StressComponent"/> (single writer at attach time; idempotent).<br/>
+/// Phase: PreUpdate, before any system that reads stress state.
+/// </remarks>
 public class StressInitializerSystem : ISystem
 {
     private readonly IReadOnlyDictionary<string, double> _baselines;
 
+    /// <summary>Constructs the initializer with a pre-loaded baselines dictionary.</summary>
+    /// <param name="baselines">Map of archetype id → starting ChronicLevel (0–100).</param>
     public StressInitializerSystem(IReadOnlyDictionary<string, double> baselines)
     {
         _baselines = baselines;
     }
 
+    /// <summary>Per-tick idempotent attach pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<NpcTag>().ToList())

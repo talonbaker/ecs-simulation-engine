@@ -12,8 +12,11 @@ public struct FridgeComponent
     /// <summary>Number of banana servings remaining. 0 = fridge empty → Billy starves.</summary>
     public int FoodCount;
 }
+/// <summary>Marks a sink world-object entity. NPCs use sinks to drink water.</summary>
 public struct SinkComponent    { }
+/// <summary>Marks a toilet world-object entity. NPCs use toilets to defecate or urinate.</summary>
 public struct ToiletComponent  { }
+/// <summary>Marks a bed world-object entity. NPCs use beds to sleep.</summary>
 public struct BedComponent     { }
 
 // ── StoredTag ─────────────────────────────────────────────────────────────────
@@ -34,6 +37,8 @@ public struct ContainerComponent
     /// <summary>IDs of entities currently stored in this container.</summary>
     public List<Guid> Contents;
 
+    /// <summary>Number of items currently stored. Returns 0 when <see cref="Contents"/> is null.</summary>
     public readonly int  Count   => Contents?.Count ?? 0;
+    /// <summary>True when no items are stored in the container.</summary>
     public readonly bool IsEmpty => Count == 0;
 }

@@ -32,4 +32,11 @@ public struct ChokingComponent
     /// Reserved for future scenario types that use a similar component (e.g. foreign-body aspiration).
     /// </summary>
     public CauseOfDeath PendingCause;
+
+    /// <summary>
+    /// Returns a human-readable summary of the choking state for telemetry and logging.
+    /// </summary>
+    /// <returns>A formatted string showing start tick, remaining ticks, and bolus volume.</returns>
+    public override string ToString() =>
+        $"Choking (started: {ChokeStartTick}, remaining: {RemainingTicks}s, bolus: {BolusSize:F3}ml)";
 }

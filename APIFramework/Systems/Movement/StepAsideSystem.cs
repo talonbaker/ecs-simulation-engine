@@ -15,6 +15,13 @@ namespace APIFramework.Systems.Movement;
 /// is part of this tick's position update.
 /// NPCs in non-hallway rooms (breakroom, open areas) are not affected.
 /// </summary>
+/// <remarks>
+/// Phase: World (60), registered after <see cref="MovementSpeedModifierSystem"/> and
+/// before <see cref="MovementSystem"/> so the perpendicular shift is part of this tick's
+/// position update. Reads <c>MovementComponent</c>, <c>PositionComponent</c>,
+/// <c>HandednessComponent</c>, <c>PathComponent</c>, <c>RoomComponent</c>;
+/// writes <c>PositionComponent</c>. Skips non-Alive NPCs.
+/// </remarks>
 public sealed class StepAsideSystem : ISystem
 {
     private readonly ISpatialIndex        _index;
@@ -24,6 +31,12 @@ public sealed class StepAsideSystem : ISystem
 
     private const float HeadOnCosThreshold = 0.866f; // cos(30°)
 
+    /// <summary>
+    /// Stores spatial-index, room-membership, and tuning references used per tick.
+    /// </summary>
+    /// <param name="index">Spatial index — used to query nearby movement candidates.</param>
+    /// <param name="rooms">Room-membership lookup — used to filter for hallway rooms.</param>
+    /// <param name="cfg">Movement config — supplies <c>StepAsideRadius</c> and <c>StepAsideShift</c>.</param>
     public StepAsideSystem(ISpatialIndex index, EntityRoomMembership rooms, MovementConfig cfg)
     {
         _index           = index;
@@ -32,6 +45,12 @@ public sealed class StepAsideSystem : ISystem
         _stepAsideShift  = cfg.StepAsideShift;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Detects head-on hallway encounters and applies a perpendicular
+    /// position shift (based on each NPC's handedness) to both NPCs in the pair.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for movement-capable entities.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         var processed = new HashSet<(Guid, Guid)>(); // avoid processing each pair twice

@@ -55,7 +55,10 @@ public static class LifeStateGuard
     /// Incapacitated and Deceased entities.
     /// Entities without <see cref="LifeStateComponent"/> pass through (return <c>true</c>).
     /// </summary>
-    public static bool IsAlive(Entity entity)
+    /// <param name="npc">The entity to check; may be a non-NPC entity (pass-through).</param>
+    /// <returns>True if the entity has no <see cref="LifeStateComponent"/> or its state is <see cref="Components.LifeState.Alive"/>; false for Incapacitated or Deceased.</returns>
+    /// <seealso cref="IsBiologicallyTicking"/>
+    public static bool IsAlive(Entity npc)
     {
         if (!entity.Has<LifeStateComponent>()) return true;
         return entity.Get<LifeStateComponent>().State == LifeState.Alive;
@@ -69,7 +72,10 @@ public static class LifeStateGuard
     /// NPC is incapacitated (e.g. a choking NPC's esophagus still advances).
     /// Entities without <see cref="LifeStateComponent"/> pass through (return <c>true</c>).
     /// </summary>
-    public static bool IsBiologicallyTicking(Entity entity)
+    /// <param name="npc">The entity to check; may be a non-NPC entity (pass-through).</param>
+    /// <returns>True if the entity has no <see cref="LifeStateComponent"/> or its state is <see cref="Components.LifeState.Alive"/> or <see cref="Components.LifeState.Incapacitated"/>; false only for Deceased.</returns>
+    /// <seealso cref="IsAlive"/>
+    public static bool IsBiologicallyTicking(Entity npc)
     {
         if (!entity.Has<LifeStateComponent>()) return true;
         return entity.Get<LifeStateComponent>().State != LifeState.Deceased;

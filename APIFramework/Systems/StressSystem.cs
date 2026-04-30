@@ -19,6 +19,18 @@ namespace APIFramework.Systems;
 /// Loop closure: when AcuteLevel ≥ stressedTagThreshold, one extra SuppressionTick lands in
 /// WillpowerEventQueue each tick. WillpowerSystem picks it up next tick (Cognition=30).
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="StressComponent"/>, <see cref="PersonalityComponent"/>,
+/// <see cref="SocialDrivesComponent"/>, <see cref="WorkloadComponent"/> + per-task
+/// <see cref="OverdueTag"/>, <see cref="WillpowerEventQueue.LastDrainedBatch"/>,
+/// <see cref="NarrativeEventBus"/> candidates, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="StressComponent"/> (single writer of acute/chronic levels and
+/// daily counters), <see cref="StressedTag"/>, <see cref="OverwhelmedTag"/>,
+/// <see cref="BurningOutTag"/>; enqueues amplification SuppressionTicks on
+/// <see cref="WillpowerEventQueue"/>.<br/>
+/// Phase: Cleanup, after <see cref="WillpowerSystem"/> (Cognition) and
+/// <see cref="Narrative.NarrativeEventDetector"/> (Narrative).
+/// </remarks>
 public class StressSystem : ISystem
 {
     private readonly StressConfig        _cfg;
@@ -35,6 +47,14 @@ public class StressSystem : ISystem
 
     private readonly EntityManager _em;
 
+    /// <summary>Constructs the stress system and subscribes to the narrative bus for conflict signals.</summary>
+    /// <param name="cfg">Stress tuning (gains, thresholds, decay, neuroticism scale).</param>
+    /// <param name="workloadCfg">Workload tuning (used for overdue-task stress gain).</param>
+    /// <param name="clock">Simulation clock; provides DayNumber for per-day chronic update.</param>
+    /// <param name="queue">Willpower event queue; provides LastDrainedBatch and receives amplification events.</param>
+    /// <param name="narrativeBus">Bus subscribed to for LeftRoomAbruptly conflict signals.</param>
+    /// <param name="em">Entity manager used to look up task entities by Guid.</param>
+    /// <param name="bereavementCfg">Optional bereavement tuning; defaults to a fresh <see cref="BereavementConfig"/> when null.</param>
     public StressSystem(StressConfig cfg, WorkloadConfig workloadCfg, SimulationClock clock,
         WillpowerEventQueue queue, NarrativeEventBus narrativeBus,
         EntityManager em, BereavementConfig? bereavementCfg = null)
@@ -57,6 +77,9 @@ public class StressSystem : ISystem
         }
     }
 
+    /// <summary>Per-tick stress accumulation and tag-update pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Snapshot and clear the pending conflict set for this tick.

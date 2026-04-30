@@ -17,15 +17,51 @@ namespace APIFramework.Systems;
 /// and push a SuppressionTick into WillpowerEventQueue when a candidate is
 /// actively suppressed.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="SocialDrivesComponent"/>, <see cref="WillpowerComponent"/>,
+/// <see cref="InhibitionsComponent"/>, <see cref="PersonalityComponent"/>, <see cref="PositionComponent"/>,
+/// <see cref="ProximityComponent"/>, <see cref="CurrentScheduleBlockComponent"/>,
+/// <see cref="WorkloadComponent"/>, <see cref="TaskComponent"/>, <see cref="RoomComponent"/>;
+/// queries the <see cref="ISpatialIndex"/> and <see cref="EntityRoomMembership"/>.
+/// Writes:
+///   <list type="bullet">
+///     <item><description><see cref="IntendedActionComponent"/> — single writer of this component each tick.</description></item>
+///     <item><description><see cref="MovementTargetComponent"/> — added/removed depending on the chosen action.</description></item>
+///     <item><description>Enqueues <see cref="WillpowerEventKind.SuppressionTick"/> signals on the
+///         <see cref="WillpowerEventQueue"/> when a near-winning candidate was held back by inhibition.</description></item>
+///     <item><description>Spawns and despawns ephemeral "flee target" entities when an Avoid action is selected.</description></item>
+///   </list>
+/// Ordering: must run after <see cref="DriveDynamicsSystem"/> (so drive Currents are fresh) and
+/// before <see cref="WillpowerSystem"/> (which drains suppression signals enqueued here).
+/// </remarks>
+/// <seealso cref="IntendedActionComponent"/>
+/// <seealso cref="DriveDynamicsSystem"/>
+/// <seealso cref="WillpowerSystem"/>
 public sealed class ActionSelectionSystem : ISystem
 {
-    // ── Candidate source tags (for diagnostics) ───────────────────────────────
+    /// <summary>
+    /// Diagnostic tag identifying which enumerator produced a candidate.
+    /// Drive candidates come from <see cref="DriveTable"/>; Schedule from the active routine
+    /// block; Idle is the always-present fallback; Workload from the NPC's active tasks.
+    /// </summary>
     private enum CandidateSource { Drive = 0, Schedule = 1, Idle = 2, Workload = 3 }
 
-    // ── Drive ordinals (deterministic sort key) ───────────────────────────────
+    /// <summary>
+    /// Canonical ordering of the eight social drives. Used as a stable sort key when the
+    /// candidate list exceeds <c>MaxCandidatesPerTick</c> so the truncated set is deterministic.
+    /// </summary>
     private enum DriveOrdinal { Belonging = 0, Status = 1, Affection = 2, Irritation = 3, Attraction = 4, Trust = 5, Suspicion = 6, Loneliness = 7 }
 
-    // ── Static drive-to-candidate mapping (code change needed to alter) ────────
+    /// <summary>
+    /// One row of the static drive→action mapping table. Encodes which drive can produce
+    /// which kind of action, the inhibition class that suppresses it, the dialog context
+    /// (when applicable), and whether the action requires a nearby target NPC.
+    /// </summary>
+    /// <param name="Ordinal">Source drive (deterministic sort key).</param>
+    /// <param name="InhibClass">Inhibition class that opposes this candidate; <c>null</c> means no inhibition.</param>
+    /// <param name="Kind">The kind of <see cref="IntendedActionComponent"/> that would be produced.</param>
+    /// <param name="Context">Dialog context written into <see cref="IntendedActionComponent"/> for dialog-kind actions.</param>
+    /// <param name="NeedsTarget">When <c>true</c>, one candidate is emitted per nearby NPC. When <c>false</c>, exactly one is emitted.</param>
     private readonly record struct DriveEntry(
         DriveOrdinal   Ordinal,
         InhibitionClass? InhibClass,
@@ -33,6 +69,11 @@ public sealed class ActionSelectionSystem : ISystem
         DialogContextValue Context,
         bool           NeedsTarget);  // true = multiplied by proximity targets
 
+    /// <summary>
+    /// Static drive→candidate mapping. Each <see cref="DriveEntry"/> describes one way a
+    /// drive can manifest as an action. Editing this table is a code change — runtime tuning
+    /// only affects weights via <see cref="ActionSelectionConfig"/>.
+    /// </summary>
     private static readonly DriveEntry[] DriveTable =
     {
         new(DriveOrdinal.Irritation,  InhibitionClass.Confrontation,         IntendedActionKind.Dialog,  DialogContextValue.LashOut,    true),
@@ -49,17 +90,29 @@ public sealed class ActionSelectionSystem : ISystem
         new(DriveOrdinal.Status,      InhibitionClass.PublicEmotion,         IntendedActionKind.Dialog,  DialogContextValue.Acknowledge,true),
     };
 
-    // ── Internal candidate record ─────────────────────────────────────────────
+    /// <summary>
+    /// Internal scoring record for one candidate action. Built during enumeration,
+    /// optionally re-weighted by personality, and finally consumed by <see cref="PickWinner"/>.
+    /// </summary>
     private struct Candidate
     {
+        /// <summary>Action kind that would be written into <see cref="IntendedActionComponent"/>.</summary>
         public IntendedActionKind Kind;
+        /// <summary>Dialog context (applicable when <see cref="Kind"/> is Dialog).</summary>
         public DialogContextValue Context;
+        /// <summary>Target NPC's int id (low-32-bit Guid counter); 0 when no target.</summary>
         public int             TargetEntityId;   // WillpowerSystem.EntityIntId
+        /// <summary>Target's full Guid; <see cref="Guid.Empty"/> when no target.</summary>
         public Guid            TargetEntityGuid;
+        /// <summary>Sort key — 0–7 for drive entries, 97 for Workload, 98 for Schedule, 99 for Idle.</summary>
         public int             DriveOrdinal;
+        /// <summary>Raw drive Current at enumeration time. Used by <see cref="EmitSuppressionEvent"/>.</summary>
         public int             SourceDriveCurrent;
+        /// <summary>Maximum matching inhibition strength, normalized to 0–1.</summary>
         public double          Inhibition;       // max matching inhibition strength / 100
+        /// <summary>Final scoring weight before tie-break jitter is applied.</summary>
         public double          Weight;
+        /// <summary>Diagnostic source tag.</summary>
         public CandidateSource Source;
     }
 
@@ -76,6 +129,18 @@ public sealed class ActionSelectionSystem : ISystem
     // Flee-target entities: NPC → ephemeral entity positioned at flee point.
     private readonly Dictionary<Entity, Entity> _fleeTargets = new();
 
+    /// <summary>
+    /// Constructs the system.
+    /// </summary>
+    /// <param name="spatial">Spatial index used to query nearby NPCs by tile radius.</param>
+    /// <param name="rooms">Room-membership map; supplies the NPC's current room for ambient illumination.</param>
+    /// <param name="willpowerQueue">Queue into which suppression signals are pushed; drained by <see cref="WillpowerSystem"/>.</param>
+    /// <param name="rng">Seeded RNG for tie-break jitter; preserves replay determinism.</param>
+    /// <param name="cfg">Action-selection tuning — thresholds, scaling factors, candidate cap.</param>
+    /// <param name="scheduleCfg">Schedule tuning — anchor distance threshold and base weight.</param>
+    /// <param name="em">Entity manager — used to spawn/destroy flee-target entities and resolve Guids.</param>
+    /// <param name="workloadCfg">Optional workload tuning — supplies <c>WorkActionBaseWeight</c> for work candidates.
+    /// Falls back to <see cref="WorkloadConfig"/> defaults when null.</param>
     public ActionSelectionSystem(
         ISpatialIndex        spatial,
         EntityRoomMembership rooms,
@@ -96,6 +161,15 @@ public sealed class ActionSelectionSystem : ISystem
         _em             = em;
     }
 
+    /// <summary>
+    /// Per-tick update. For every alive NPC with social drives:
+    /// enumerates drive candidates, optionally adds a Schedule candidate (at the active
+    /// routine block's anchor) and a Workload candidate (highest-priority active task when
+    /// scheduled <c>AtDesk</c>), always adds the Idle fallback, applies personality nudges,
+    /// caps to <c>MaxCandidatesPerTick</c>, picks a winner with seeded jitter, writes
+    /// <see cref="IntendedActionComponent"/> and updates <see cref="MovementTargetComponent"/>.
+    /// Stale flee-target entities for NPCs whose intent no longer is Avoid are cleaned up.
+    /// </summary>
     public void Update(EntityManager em, float deltaTime)
     {
         // Process NPCs in deterministic order (ascending EntityIntId).
@@ -310,6 +384,17 @@ public sealed class ActionSelectionSystem : ISystem
 
     // ── Candidate enumeration ─────────────────────────────────────────────────
 
+    /// <summary>
+    /// Walks <see cref="DriveTable"/> and emits one or more candidates per drive whose
+    /// Current exceeds <c>DriveCandidateThreshold</c>. Target-needing entries fan out across
+    /// all <paramref name="nearby"/> NPCs; non-target entries emit a single candidate.
+    /// </summary>
+    /// <param name="drives">Source NPC's social drives.</param>
+    /// <param name="wp">Source NPC's willpower component (Current normalized to 0–1).</param>
+    /// <param name="inhibs">Source NPC's inhibitions, scanned by class for matching strengths.</param>
+    /// <param name="nearby">Deterministically-ordered list of nearby NPCs (excludes self).</param>
+    /// <param name="observabilityFactor">Combined ambient-light + witness-count factor in [0, 1].</param>
+    /// <param name="out_candidates">Output list — candidates are appended.</param>
     private void EnumerateCandidates(
         SocialDrivesComponent drives,
         WillpowerComponent    wp,
@@ -344,6 +429,20 @@ public sealed class ActionSelectionSystem : ISystem
         }
     }
 
+    /// <summary>
+    /// Builds a single <see cref="Candidate"/> from a drive entry, applying approach→avoid
+    /// inversion when the action is an Approach, the target stake exceeds
+    /// <c>InversionStakeThreshold</c>, inhibition exceeds <c>InversionInhibitionThreshold</c>,
+    /// and willpower leakage cannot overcome the inversion barrier.
+    /// </summary>
+    /// <param name="candidates">Output list to which the new candidate is appended.</param>
+    /// <param name="entry">Drive table row driving this candidate.</param>
+    /// <param name="push">Drive Current normalized to 0–1.</param>
+    /// <param name="inhibition">Maximum opposing inhibition strength normalized to 0–1.</param>
+    /// <param name="willpower">NPC willpower Current normalized to 0–1.</param>
+    /// <param name="observabilityFactor">Ambient-light × witness-count factor in [0, 1].</param>
+    /// <param name="sourceDriveCurrent">Raw drive Current (0–100), preserved for suppression analysis.</param>
+    /// <param name="target">Target NPC, or <c>null</c> for non-target candidates.</param>
     private void AddCandidate(
         List<Candidate>     candidates,
         DriveEntry          entry,
@@ -390,6 +489,11 @@ public sealed class ActionSelectionSystem : ISystem
 
     // ── Winner selection ──────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Picks the highest-weight candidate, adding a tiny seeded jitter so equal weights
+    /// break deterministically across two replays with the same seed but different ordering.
+    /// Returns a default Idle candidate if the list is empty.
+    /// </summary>
     private Candidate PickWinner(List<Candidate> candidates)
     {
         if (candidates.Count == 0)
@@ -413,6 +517,15 @@ public sealed class ActionSelectionSystem : ISystem
 
     // ── Suppression event emission ────────────────────────────────────────────
 
+    /// <summary>
+    /// Finds the highest-raw-push loser whose drive came within <c>SuppressionEpsilon</c> of
+    /// beating the winner but was held back by inhibition, and pushes a
+    /// <see cref="WillpowerEventKind.SuppressionTick"/> for it onto <see cref="_willpowerQueue"/>.
+    /// </summary>
+    /// <param name="npc">The NPC whose action was just selected.</param>
+    /// <param name="winner">The chosen candidate (excluded from the loser scan).</param>
+    /// <param name="candidates">All candidates considered this tick.</param>
+    /// <param name="wp">NPC willpower component (currently unused but kept for symmetry / future extension).</param>
     private void EmitSuppressionEvent(
         Entity          npc,
         Candidate       winner,
@@ -458,6 +571,18 @@ public sealed class ActionSelectionSystem : ISystem
 
     // ── Movement / flee target helpers ────────────────────────────────────────
 
+    /// <summary>
+    /// Spawns (or replaces) the ephemeral entity that an Avoid-acting NPC will path toward.
+    /// The entity is positioned <c>AvoidStandoffDistance</c> tiles away from the avoidance
+    /// target, in the opposite direction. Always destroys the previous flee entity for the
+    /// same NPC first so the pathfinder picks up a fresh goal.
+    /// </summary>
+    /// <param name="npc">The avoiding NPC.</param>
+    /// <param name="targetGuid">Guid of the entity being avoided.</param>
+    /// <param name="npcPos">The NPC's current world-space position.</param>
+    /// <param name="npcTileX">NPC's tile X (currently unused, kept for symmetry).</param>
+    /// <param name="npcTileY">NPC's tile Y (currently unused, kept for symmetry).</param>
+    /// <returns>The newly created flee-target entity, registered with the spatial index.</returns>
     private Entity SetupFleeEntity(Entity npc, Guid targetGuid, PositionComponent npcPos,
                                    int npcTileX, int npcTileY)
     {
@@ -494,6 +619,10 @@ public sealed class ActionSelectionSystem : ISystem
         return fleeEntity;
     }
 
+    /// <summary>
+    /// Unregisters and destroys the flee entity associated with <paramref name="npc"/>, if any,
+    /// and removes the bookkeeping entry. No-op when the NPC has no active flee target.
+    /// </summary>
     private void CleanFleeTarget(Entity npc)
     {
         if (!_fleeTargets.TryGetValue(npc, out var flee)) return;
@@ -502,6 +631,10 @@ public sealed class ActionSelectionSystem : ISystem
         _fleeTargets.Remove(npc);
     }
 
+    /// <summary>
+    /// Linear scan of <see cref="EntityManager.GetAllEntities"/> for an entity with the
+    /// given Guid. Returns <c>null</c> when not found (e.g. entity has been destroyed).
+    /// </summary>
     private Entity? FindEntityByGuid(Guid guid)
     {
         foreach (var e in _em.GetAllEntities())
@@ -511,6 +644,11 @@ public sealed class ActionSelectionSystem : ISystem
 
     // ── Drive readers ─────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Returns the <c>Current</c> value of the drive identified by <paramref name="key"/>.
+    /// Centralized so the enumeration loop can index into <see cref="SocialDrivesComponent"/>
+    /// by ordinal without per-call switch fanout in the hot path.
+    /// </summary>
     private static int ReadDrive(SocialDrivesComponent d, DriveOrdinal key) => key switch
     {
         DriveOrdinal.Belonging  => d.Belonging.Current,
@@ -524,6 +662,11 @@ public sealed class ActionSelectionSystem : ISystem
         _                       => 0
     };
 
+    /// <summary>
+    /// Returns the maximum strength (normalized to 0–1) of inhibitions in the given class
+    /// carried by <paramref name="inhibs"/>. Returns 0 when <paramref name="inhibClass"/> is
+    /// <c>null</c> or no matching inhibition exists.
+    /// </summary>
     private static double MaxInhibition(InhibitionsComponent inhibs, InhibitionClass? inhibClass)
     {
         if (inhibClass == null) return 0.0;

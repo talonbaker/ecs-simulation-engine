@@ -6,8 +6,12 @@ namespace APIFramework.Components;
 /// </summary>
 public enum BuildingFloor
 {
+    /// <summary>Subterranean floor.</summary>
     Basement = 0,
+    /// <summary>Ground/first floor.</summary>
     First    = 1,
+    /// <summary>Top floor of the building.</summary>
     Top      = 2,
+    /// <summary>Outside the building (e.g. parking lot, sidewalk).</summary>
     Exterior = 3,
 }

@@ -12,6 +12,10 @@ public struct PersonalMemoryComponent
 {
     private IReadOnlyList<MemoryEntry>? _recent;
 
+    /// <summary>
+    /// Bounded list of the most recent memory entries, newest last.
+    /// Empty when the struct was default-initialised.
+    /// </summary>
     public IReadOnlyList<MemoryEntry> Recent
     {
         readonly get => _recent ?? Array.Empty<MemoryEntry>();

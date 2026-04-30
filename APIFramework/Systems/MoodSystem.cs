@@ -37,12 +37,29 @@ namespace APIFramework.Systems;
 ///   GriefTag     → BrainSystem heavily suppresses all drive urgency scores
 ///   AngryTag     → MetabolismSystem raises drain rates (stress physiology)
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="MoodComponent"/>, <see cref="MetabolismComponent"/>,
+/// <see cref="EnergyComponent"/>, <see cref="DriveComponent"/>,
+/// <see cref="HungerTag"/>, <see cref="ThirstTag"/>, <see cref="IrritableTag"/>,
+/// <see cref="ConsumedRottenFoodTag"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="MoodComponent"/> (single writer), all Plutchik intensity tags
+/// (Serene/Joyful/Ecstatic, Accepting/Trusting/Admiring, Apprehensive/Fearful/Terror,
+/// Distracted/Surprised/Amazed, Pensive/Sad/Grief, Bored/Disgust/Loathing,
+/// Annoyed/Angry/Raging, Interested/Anticipating/Vigilant); consumes
+/// <see cref="ConsumedRottenFoodTag"/>.<br/>
+/// Phase: Cognition, before <see cref="BrainSystem"/>.
+/// </remarks>
 public class MoodSystem : ISystem
 {
     private readonly MoodSystemConfig _cfg;
 
+    /// <summary>Constructs the mood system with its tuning.</summary>
+    /// <param name="cfg">Mood tuning (decay rates, gain rates, intensity thresholds).</param>
     public MoodSystem(MoodSystemConfig cfg) => _cfg = cfg;
 
+    /// <summary>Per-tick emotion update; decays all emotions, applies gains, then refreshes intensity tags.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<MoodComponent>())

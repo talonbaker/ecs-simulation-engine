@@ -10,7 +10,10 @@ namespace APIFramework.Bootstrap;
 /// </summary>
 public sealed class NamePoolDto
 {
+    /// <summary>Schema version string declared by the JSON file (informational only).</summary>
     public string   SchemaVersion { get; set; } = "";
+
+    /// <summary>Pool of first names available for cast generation; sampled without replacement at spawn time.</summary>
     public string[] FirstNames    { get; set; } = Array.Empty<string>();
 }
 
@@ -31,6 +34,8 @@ public static class NamePoolLoader
     /// Loads a name pool from the given <paramref name="path"/>.
     /// Throws <see cref="InvalidOperationException"/> if the file is missing or malformed.
     /// </summary>
+    /// <param name="path">Absolute or relative path to a name-pool JSON file.</param>
+    /// <returns>The deserialised <see cref="NamePoolDto"/>.</returns>
     public static NamePoolDto Load(string path)
     {
         if (!File.Exists(path))
@@ -45,6 +50,7 @@ public static class NamePoolLoader
     /// Returns the cached default pool (loaded once from the standard path on first access),
     /// or <c>null</c> if the file cannot be located.
     /// </summary>
+    /// <returns>The cached <see cref="NamePoolDto"/>, or <c>null</c> if no file was discovered.</returns>
     public static NamePoolDto? LoadDefault() => _default.Value;
 
     /// <summary>
@@ -52,6 +58,7 @@ public static class NamePoolLoader
     /// <c>docs/c2-content/cast/name-pool.json</c>.
     /// Returns <c>null</c> if not found within 8 directory levels.
     /// </summary>
+    /// <returns>The discovered absolute path, or <c>null</c> when no candidate exists.</returns>
     public static string? FindDefault()
     {
         var dir = new DirectoryInfo(Directory.GetCurrentDirectory());

@@ -20,6 +20,14 @@ namespace APIFramework.Systems.Spatial;
 /// Events are batched during the tick and fired at end-of-tick in entity-id-ascending order.
 /// This gives consumers a consistent snapshot rather than a mid-tick partial view.
 /// </summary>
+/// <remarks>
+/// Reads <c>PositionComponent</c>, <c>ProximityComponent</c>, and the <see cref="EntityRoomMembership"/>
+/// snapshot. Writes nothing to the entity world — only publishes events on
+/// <see cref="ProximityEventBus"/>. Skips non-Alive observers.
+/// Note: registered in <see cref="APIFramework.Bootstrap.SystemPhase.Lighting"/> (not Spatial)
+/// in <see cref="APIFramework.Core.SimulationBootstrapper"/> so it fires after illumination
+/// is current and visibility checks are correct.
+/// </remarks>
 public sealed class ProximityEventSystem : ISystem
 {
     private readonly ISpatialIndex        _index;
@@ -45,6 +53,12 @@ public sealed class ProximityEventSystem : ISystem
 
     private readonly record struct PendingEvent(Entity Observer, Entity Target, EventKind Kind);
 
+    /// <summary>
+    /// Stores spatial-index, bus, and membership references used per tick.
+    /// </summary>
+    /// <param name="index">Cell-based spatial index — used for radius queries.</param>
+    /// <param name="bus">Bus on which proximity events are published.</param>
+    /// <param name="membership">Room-membership lookup used to bucket targets into ROOM vs VISIBLE.</param>
     public ProximityEventSystem(ISpatialIndex index, ProximityEventBus bus, EntityRoomMembership membership)
     {
         _index      = index;
@@ -52,6 +66,12 @@ public sealed class ProximityEventSystem : ISystem
         _membership = membership;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Recomputes per-NPC neighbor buckets, diffs them against the
+    /// previous tick, and publishes the resulting batch of events in entity-id-ascending order.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for proximity-capable entities.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         _tick++;

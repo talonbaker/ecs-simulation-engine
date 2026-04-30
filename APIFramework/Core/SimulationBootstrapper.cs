@@ -38,13 +38,36 @@ namespace APIFramework.Core;
 /// SYSTEM PIPELINE (phase → execution order within phase)
 /// ────────────────────────────────────────────────────────
 ///  PreUpdate   (0)  InvariantSystem           — catch/clamp impossible state values
+///  PreUpdate   (0)  StructuralTaggingSystem   — one-shot: tag obstacles/walls/doors at boot
+///  PreUpdate   (0)  ScheduleSpawnerSystem     — attach default routines to scheduleless NPCs
+///  PreUpdate   (0)  StressInitializerSystem   — attach StressComponent to fresh NPCs
+///  PreUpdate   (0)  MaskInitializerSystem     — attach SocialMaskComponent (personality baseline)
+///  PreUpdate   (0)  WorkloadInitializerSystem — attach WorkloadComponent (per-archetype capacity)
+///  PreUpdate   (0)  LifeStateInitializerSystem— attach LifeStateComponent = Alive
+///  PreUpdate   (0)  TaskGeneratorSystem       — spawn day's task batch at configured hour
+///  PreUpdate   (0)  LockoutDetectionSystem    — Phase 3: end-of-day exit reachability + starvation
+///  Spatial     (5)  SpatialIndexSyncSystem    — keep spatial index in sync with positions
+///  Spatial     (5)  RoomMembershipSystem      — derive per-NPC room residency
+///  Spatial     (5)  PathfindingCacheInvalidationSystem — clear cache on structural change
+///  Lighting    (7)  SunSystem                 — advance sun phase / day-phase boundary
+///  Lighting    (7)  LightSourceStateSystem    — flicker/dying state machines
+///  Lighting    (7)  ApertureBeamSystem        — compute aperture beams from sun + clock
+///  Lighting    (7)  IlluminationAccumulationSystem — combine source + aperture per room
+///  Lighting    (7)  ProximityEventSystem      — emit proximity signals against current illumination
+///  Coupling    (8)  LightingToDriveCouplingSystem — accumulate lighting → drive deltas
 ///  Physiology  (10) MetabolismSystem          — drain satiation / hydration
 ///  Physiology  (10) EnergySystem              — drain/restore energy + sleepiness
 ///  Physiology  (10) BladderFillSystem         — fill bladder at constant rate
 ///  Condition   (20) BiologicalConditionSystem — set hunger/thirst/irritable tags
+///  Condition   (20) ScheduleSystem            — resolve active block before ActionSelection reads it
 ///  Cognition   (30) MoodSystem                — decay emotions; apply Plutchik intensity tags
 ///  Cognition   (30) BrainSystem               — score drives (incl. circadian, colon, bladder); pick dominant
 ///  Cognition   (30) PhysiologyGateSystem      — write BlockedActionsComponent; inhibitions veto biology
+///  Cognition   (30) DriveDynamicsSystem       — decay/circadian-modulate social drives
+///  Cognition   (30) ActionSelectionSystem     — enumerate candidates, pick winner, write IntendedAction
+///  Cognition   (30) WillpowerSystem           — apply suppression cost / regen
+///  Cognition   (30) RelationshipLifecycleSystem — relationship intensity / lifecycle
+///  Cognition   (30) SocialMaskSystem          — drift mask in public, decay in private
 ///  Behavior    (40) FeedingSystem             — act if Eat is dominant (skipped if Eat blocked)
 ///  Behavior    (40) DrinkingSystem            — act if Drink is dominant
 ///  Behavior    (40) SleepSystem               — toggle IsSleeping based on dominant desire
@@ -70,14 +93,67 @@ namespace APIFramework.Core;
 ///  Cleanup     (80) LifeStateTransitionSystem — drain transition queue; tick down Incapacitated budgets
 ///  Cleanup     (80) ChokingCleanupSystem      — remove IsChokingTag from Deceased NPCs (WP-3.0.1)
 ///  Cleanup     (80) FaintingCleanupSystem     — remove IsFaintingTag from recovered Alive NPCs (WP-3.0.6)
+///  World       (60) PathfindingTriggerSystem  — kick off A* requests for movement intents
+///  World       (60) MovementSpeedModifierSystem — derive per-NPC speed multiplier
+///  World       (60) StepAsideSystem           — perpendicular shift on near-miss
+///  World       (60) MovementSystem            — advance positions along paths
+///  World       (60) FacingSystem              — update facing from proximity signals
+///  World       (60) IdleMovementSystem        — jitter/posture for idle NPCs
+///  Narrative   (70) NarrativeEventDetector    — emit narrative candidates this tick
+///  Narrative   (70) PersistenceThresholdDetector — promote candidates to chronicle entries
+///  Narrative   (70) MemoryRecordingSystem     — route candidates to per-pair / personal memory buffers
+///  Dialog      (80) DialogContextDecisionSystem    — choose context, queue dialog attempts
+///  Dialog      (80) DialogFragmentRetrievalSystem  — pick fragments from corpus
+///  Dialog      (80) DialogCalcifySystem            — promote/decalcify catchphrases
+///  Cleanup     (90) StressSystem              — accumulate acute/chronic stress, apply tags
+///  Cleanup     (90) WorkloadSystem            — advance task progress; detect completion / overdue
+///  Cleanup     (90) MaskCrackSystem           — Phase 3: emit MaskCrack when pressure exceeds threshold
+///  Cleanup     (90) ChokingDetectionSystem    — Phase 3: bolus + distraction → enqueue Incapacitated
+///  Cleanup     (90) LifeStateTransitionSystem — Phase 3: Alive → Incapacitated → Deceased
+///  Cleanup     (90) ChokingCleanupSystem      — Phase 3: clear choke tags after death
+///  Cleanup     (90) SlipAndFallSystem         — Phase 3: roll fall-risk hazards on settled positions
 /// </summary>
 public class SimulationBootstrapper
 {
+    /// <summary>
+    /// The phased system runner. Frontends call <c>Engine.Update(deltaTime)</c>
+    /// every frame to advance the simulation. Built and fully populated by the constructor;
+    /// systems are added in <see cref="RegisterSystems"/>.
+    /// </summary>
     public SimulationEngine    Engine              { get; }
+
+    /// <summary>
+    /// Authoritative entity store. Created entities are owned here for the lifetime
+    /// of the simulation. Pass the same instance to test code that wants to query
+    /// or assert on world state.
+    /// </summary>
     public EntityManager       EntityManager       { get; }
+
+    /// <summary>
+    /// Game clock. <c>Clock.TimeScale</c> is initialized from
+    /// <see cref="WorldConfig.DefaultTimeScale"/>; the GUI's time-scale slider
+    /// multiplies on top of this.
+    /// </summary>
     public SimulationClock     Clock               { get; }
+
+    /// <summary>
+    /// Loaded SimConfig instance. Shared by reference with every system, so
+    /// <see cref="ApplyConfig"/> can hot-reload values in place without
+    /// recreating systems.
+    /// </summary>
     public SimConfig           Config              { get; }
+
+    /// <summary>
+    /// Invariant enforcement system. Receives the chronicle so it can verify
+    /// the chronicle ↔ entity-tree agreement check each tick.
+    /// </summary>
     public InvariantSystem     Invariants          { get; }
+
+    /// <summary>
+    /// Single-writer queue for willpower deltas. Multiple systems push events;
+    /// only <see cref="WillpowerSystem"/> drains and applies them.
+    /// </summary>
+    /// <remarks>Single-writer rule preserves determinism under multi-system suppression events.</remarks>
     public WillpowerEventQueue WillpowerEvents     { get; }
 
     /// <summary>
@@ -180,6 +256,29 @@ public class SimulationBootstrapper
     /// </summary>
     public IReadOnlyList<Entity>? SeededRelationships { get; private set; }
 
+    /// <summary>
+    /// Primary constructor — accepts any <see cref="IConfigProvider"/>.
+    /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
+    /// Builds every service singleton, registers every system, then either loads
+    /// the world from <paramref name="worldDefinitionPath"/> or spawns the default
+    /// 10×10 apartment via <see cref="SpawnWorld"/>.
+    /// </summary>
+    /// <param name="configProvider">Config source — typically a <see cref="FileConfigProvider"/> in production.</param>
+    /// <param name="humanCount">
+    /// How many human entities to spawn on startup when no world definition is given.
+    /// Default is <see cref="DefaultHumanCount"/> (100 — full stress-test world).
+    /// Pass 1 for isolated single-entity tests; pass 0 to spawn no humans
+    /// (useful for world-object-only unit tests).
+    /// </param>
+    /// <param name="seed">
+    /// RNG seed for deterministic replay. Two runs with the same seed, config, and
+    /// command log produce byte-identical telemetry streams. Defaults to 0.
+    /// </param>
+    /// <param name="worldDefinitionPath">
+    /// Optional path to a world-definition.json. When supplied, the world is loaded
+    /// via <see cref="WorldDefinitionLoader"/> and the cast is generated through
+    /// <see cref="CastGenerator.SpawnAll"/>; <paramref name="humanCount"/> is ignored.
+    /// </param>
     public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
     {
         Config          = configProvider.GetConfig();
@@ -267,6 +366,15 @@ public class SimulationBootstrapper
     public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
         : this(new FileConfigProvider(configPath), humanCount, seed, worldDefinitionPath) { }
 
+    /// <summary>
+    /// Wires every simulation system into <see cref="Engine"/> in execution order.
+    /// Phase ordering and per-system rationale are documented inline (do not add
+    /// XML comments to the inline blocks below — they are implementation detail).
+    /// </summary>
+    /// <remarks>
+    /// Called once from the constructor. Re-running it would double-register systems.
+    /// See the class summary for the full pipeline.
+    /// </remarks>
     private void RegisterSystems()
     {
         var sys = Config.Systems;
@@ -476,6 +584,12 @@ public class SimulationBootstrapper
     /// </summary>
     public const int DefaultHumanCount = 100;
 
+    /// <summary>
+    /// Spawns the default 10×10 apartment — a humanCount-sized human grid plus
+    /// fixed-position fridge, sink, bed, and toilet world objects. Used when no
+    /// world definition file was supplied.
+    /// </summary>
+    /// <param name="humanCount">How many humans to lay out on the grid.</param>
     private void SpawnWorld(int humanCount)
     {
         // ── Living entities ───────────────────────────────────────────────────
@@ -503,9 +617,11 @@ public class SimulationBootstrapper
     }
 
     /// <summary>
-    /// Spreads <paramref name="count"/> humans evenly on a rectangular grid.
-    /// For count = 1 the single entity lands at centre (5, 5).
+    /// Spreads <paramref name="count"/> humans evenly on a rectangular grid
+    /// inside the 10×10 default world. For count = 1 the single entity lands
+    /// at centre (5, 5) and is named "Billy".
     /// </summary>
+    /// <param name="count">Number of humans to spawn. Values ≤ 0 are a no-op.</param>
     private void SpawnHumanGrid(int count)
     {
         if (count <= 0) return;
@@ -540,6 +656,16 @@ public class SimulationBootstrapper
         }
     }
 
+    /// <summary>
+    /// Creates a single static world object — Identity, Position, and a default
+    /// instance of <typeparamref name="TTag"/> as the marker component (e.g.
+    /// <see cref="SinkComponent"/>, <see cref="BedComponent"/>, …).
+    /// </summary>
+    /// <typeparam name="TTag">Marker component type identifying the object kind.</typeparam>
+    /// <param name="name">Human-readable name written to the entity's <see cref="IdentityComponent"/>.</param>
+    /// <param name="x">World X coordinate (tiles).</param>
+    /// <param name="y">World Y coordinate (tiles, vertical).</param>
+    /// <param name="z">World Z coordinate (tiles).</param>
     private void SpawnWorldObject<TTag>(string name, float x, float y, float z)
         where TTag : struct
     {
@@ -560,6 +686,7 @@ public class SimulationBootstrapper
     ///   var snap = sim.Capture();
     ///   Console.WriteLine(snap.Clock.TimeDisplay);
     /// </summary>
+    /// <returns>An immutable snapshot of the current simulation state.</returns>
     public SimulationSnapshot Capture() => SimulationSnapshot.Capture(this);
 
     // ── Hot-reload ────────────────────────────────────────────────────────────
@@ -577,6 +704,12 @@ public class SimulationBootstrapper
     /// the main loop) and the Avalonia GUI (DispatcherTimer on the UI thread) already
     /// satisfy this requirement.
     /// </summary>
+    /// <param name="newCfg">Freshly loaded config whose primitive values are merged into the live <see cref="Config"/>.</param>
+    /// <remarks>
+    /// Only flat (value-type) properties are merged. Nested object identities are
+    /// preserved — see <see cref="MergeFlat{T}"/>. Entity starting values
+    /// (e.g. <c>EnergyStart</c>) take effect for entities spawned AFTER the reload.
+    /// </remarks>
     public void ApplyConfig(SimConfig newCfg)
     {
         var changes = new List<string>();
@@ -632,6 +765,10 @@ public class SimulationBootstrapper
     /// Reference-type properties (nested objects) are intentionally skipped —
     /// they must be merged separately to preserve object identity.
     /// </summary>
+    /// <typeparam name="T">Reference type of the config object being merged.</typeparam>
+    /// <param name="src">Newly loaded config object whose primitive values are read.</param>
+    /// <param name="dst">Live config object whose primitive values are mutated in place.</param>
+    /// <param name="changes">Sink for "Type.Prop  old → new" change descriptions, one per modified property.</param>
     private static void MergeFlat<T>(T src, T dst, List<string> changes) where T : class
     {
         if (src == null || dst == null) return;

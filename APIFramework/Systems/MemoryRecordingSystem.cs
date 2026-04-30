@@ -21,11 +21,34 @@ namespace APIFramework.Systems;
 /// Phase: Narrative (70) — after NarrativeEventDetector and PersistenceThresholdDetector;
 /// before TelemetryProjector snapshots state.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NarrativeEventCandidate"/> instances pushed through
+/// <see cref="NarrativeEventBus.OnCandidateEmitted"/>; existing
+/// <see cref="RelationshipMemoryComponent"/> / <see cref="PersonalMemoryComponent"/> buffers;
+/// <see cref="RelationshipTag"/>+<see cref="RelationshipComponent"/> when locating pair entities.
+/// Writes: <see cref="RelationshipMemoryComponent"/> on relationship entities and
+/// <see cref="PersonalMemoryComponent"/> on participant entities (single writer of both);
+/// may auto-spawn a relationship entity carrying <see cref="RelationshipTag"/> + a default
+/// <see cref="RelationshipComponent"/> when none exists for an emitted pair.
+/// Ordering: subscribes at construction; effective work runs whenever upstream Narrative
+/// systems (e.g. <c>NarrativeEventDetector</c>, <c>PersistenceThresholdDetector</c>)
+/// publish candidates within the same tick. The system's own <see cref="Update"/> is a no-op.
+/// </remarks>
+/// <seealso cref="NarrativeEventBus"/>
+/// <seealso cref="NarrativeEventCandidate"/>
+/// <seealso cref="MemoryEntry"/>
 public sealed class MemoryRecordingSystem : ISystem
 {
     private readonly EntityManager _em;
     private readonly MemoryConfig  _cfg;
 
+    /// <summary>
+    /// Subscribes the routing handler to the supplied <paramref name="bus"/>.
+    /// </summary>
+    /// <param name="bus">Narrative event bus to subscribe to.</param>
+    /// <param name="em">Entity manager — used to lookup participants and to create
+    /// relationship entities on demand.</param>
+    /// <param name="cfg">Memory tuning — supplies per-buffer capacity caps.</param>
     public MemoryRecordingSystem(NarrativeEventBus bus, EntityManager em, MemoryConfig cfg)
     {
         _em  = em;
@@ -33,6 +56,11 @@ public sealed class MemoryRecordingSystem : ISystem
         bus.OnCandidateEmitted += OnCandidateEmitted;
     }
 
+    /// <summary>
+    /// No-op. All work happens in the bus subscription <c>OnCandidateEmitted</c>.
+    /// The system implements <see cref="ISystem"/> only so the engine can register it
+    /// inside the Narrative phase for ordering.
+    /// </summary>
     public void Update(EntityManager em, float deltaTime) { }
 
     // ── Candidate routing ─────────────────────────────────────────────────────

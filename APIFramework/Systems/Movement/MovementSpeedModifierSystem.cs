@@ -15,15 +15,30 @@ namespace APIFramework.Systems.Movement;
 ///              - affection.Current  * affectionLossPerPoint
 ///              - (100 - energy)     * lowEnergyLossPerPoint
 /// </summary>
+/// <remarks>
+/// Phase: World (60), registered between <see cref="PathfindingTriggerSystem"/> and
+/// <see cref="StepAsideSystem"/>. Reads <c>SocialDrivesComponent</c> and
+/// <c>EnergyComponent</c>; writes <c>MovementComponent.SpeedModifier</c>.
+/// Skips non-Alive NPCs.
+/// </remarks>
 public sealed class MovementSpeedModifierSystem : ISystem
 {
     private readonly MovementSpeedModifierConfig _cfg;
 
+    /// <summary>
+    /// Captures the speed-modifier sub-config from <paramref name="cfg"/>.
+    /// </summary>
+    /// <param name="cfg">Movement config — its <c>SpeedModifier</c> sub-section is used.</param>
     public MovementSpeedModifierSystem(MovementConfig cfg)
     {
         _cfg = cfg.SpeedModifier;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Computes and writes the speed multiplier for every NPC.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for movement-capable entities.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<MovementComponent>())

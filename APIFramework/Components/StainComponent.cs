@@ -12,6 +12,7 @@ public struct StainComponent
     /// <summary>Visual / gameplay weight; 0 (tiny dot) to 100 (large puddle).</summary>
     public int    Magnitude        { get; set; }
 
+    /// <summary>SimulationClock.CurrentTick at which the stain was spawned.</summary>
     public long   CreatedAtTick    { get; set; }
 
     /// <summary>Id of the <c>ChronicleEntry</c> that spawned this stain. Used by invariant check.</summary>

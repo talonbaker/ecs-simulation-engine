@@ -110,6 +110,10 @@ public struct MoodComponent
     public readonly float Valence =>
         (Joy + Trust + Anticipation) - (Fear + Sadness + Disgust + Anger);
 
+    /// <summary>
+    /// Returns a compact one-line summary of all eight Plutchik intensities for diagnostics and logs.
+    /// </summary>
+    /// <returns>Space-separated emotion:intensity pairs, each rounded to integer.</returns>
     public override string ToString() =>
         $"Joy:{Joy:F0} Trust:{Trust:F0} Fear:{Fear:F0} Surprise:{Surprise:F0} " +
         $"Sadness:{Sadness:F0} Disgust:{Disgust:F0} Anger:{Anger:F0} Anticipation:{Anticipation:F0}";

@@ -17,6 +17,17 @@ namespace APIFramework.Systems.Spatial;
 ///
 /// Tile coordinates: (int)(Math.Round(pos.X)), (int)(Math.Round(pos.Z)).
 /// </summary>
+/// <remarks>
+/// Reads: every entity carrying <see cref="PositionComponent"/> and (optionally) <see cref="StructuralTag"/>.
+/// Writes: the singleton <see cref="ISpatialIndex"/> via Register/Update/Unregister
+/// (single writer of the spatial index), plus emissions on <see cref="StructuralChangeBus"/>
+/// for entities that bear <see cref="StructuralTag"/>.
+/// Ordering: must run before <see cref="RoomMembershipSystem"/> and any other consumer that
+/// queries the spatial index in the same tick.
+/// </remarks>
+/// <seealso cref="ISpatialIndex"/>
+/// <seealso cref="StructuralChangeBus"/>
+/// <seealso cref="RoomMembershipSystem"/>
 public sealed class SpatialIndexSyncSystem : ISystem
 {
     private readonly ISpatialIndex _index;
@@ -26,6 +37,12 @@ public sealed class SpatialIndexSyncSystem : ISystem
     private readonly Dictionary<Entity, (int x, int y)> _lastPos = new();
     private long _tickCounter = 0;
 
+    /// <summary>
+    /// Constructs the system.
+    /// </summary>
+    /// <param name="index">The singleton spatial index this system owns synchronization for.</param>
+    /// <param name="structuralBus">Bus on which Added/Moved/Removed events are emitted for
+    /// <see cref="StructuralTag"/> entities so cache-dependent subscribers can invalidate.</param>
     public SpatialIndexSyncSystem(ISpatialIndex index, StructuralChangeBus structuralBus)
     {
         _index = index;
@@ -62,6 +79,11 @@ public sealed class SpatialIndexSyncSystem : ISystem
         }
     }
 
+    /// <summary>
+    /// Per-tick scan: for every <see cref="PositionComponent"/> entity, register on first sight,
+    /// update the index when the rounded tile position changes, and emit the corresponding
+    /// <see cref="StructuralChangeKind"/> event when the entity bears <see cref="StructuralTag"/>.
+    /// </summary>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<PositionComponent>())
