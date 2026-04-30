@@ -1,35 +1,28 @@
-using APIFramework.Components;
-
 namespace APIFramework.Components;
 
 /// <summary>
-/// Attached to an NPC entity for the duration of a choking episode.
-/// Added by <see cref="APIFramework.Systems.LifeState.ChokingDetectionSystem"/> at the moment of choke.
-/// Removed by <see cref="APIFramework.Systems.LifeState.ChokingCleanupSystem"/> when the NPC dies.
-///
-/// The canonical countdown lives in <see cref="LifeStateComponent.IncapacitatedTickBudget"/>;
-/// this component mirrors it for convenient querying by other systems (e.g. a future
-/// rescue-mechanic system) without having to cross-reference both components.
-///
-/// WP-3.0.1: Choking-on-Food Scenario.
+/// Attached to an NPC when they are actively choking. Mirrors state from LifeStateComponent
+/// for convenience (other systems can check Has{ChokingComponent} without inspecting
+/// LifeStateComponent fields). Removed when the NPC transitions to Deceased.
 /// </summary>
 public struct ChokingComponent
 {
-    /// <summary>SimulationClock.CurrentTick at the moment the choke was triggered.</summary>
+    /// <summary>SimulationClock.CurrentTick when the choke began.</summary>
     public long ChokeStartTick;
 
-    /// <summary>Ticks remaining before the NPC dies (mirrors LifeStateComponent.IncapacitatedTickBudget).</summary>
+    /// <summary>
+    /// Counts down each tick while State == Incapacitated. Mirror of LifeStateComponent.IncapacitatedTickBudget
+    /// for clarity. The canonical countdown is owned by LifeStateComponent; this field
+    /// is for read convenience.
+    /// </summary>
     public int RemainingTicks;
 
-    /// <summary>
-    /// Toughness (0..1) of the bolus that triggered the choke.
-    /// Stored for telemetry and scenario tuning (completion-note tables, archetype follow-up).
-    /// </summary>
+    /// <summary>The size of the bolus that triggered the choke. Used for telemetry and tuning.</summary>
     public float BolusSize;
 
-    /// <summary>
-    /// Cause that will be registered when death occurs. Always <see cref="CauseOfDeath.Choked"/> at v0.1.
-    /// Reserved for future scenario types that use a similar component (e.g. foreign-body aspiration).
-    /// </summary>
+    /// <summary>Always Choked at v0.1; reserved for future expansion when other choke-like causes land.</summary>
     public CauseOfDeath PendingCause;
+
+    public override string ToString() =>
+        $"Choking (started: {ChokeStartTick}, remaining: {RemainingTicks}s, bolus: {BolusSize:F3}ml)";
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using APIFramework.Components;
 using APIFramework.Core;
-using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems.Spatial;
 
@@ -15,42 +14,61 @@ namespace APIFramework.Systems.Spatial;
 ///   - When multiple rooms overlap, picks the one with the smallest area (most-specific wins).
 ///   - Caches the result in EntityRoomMembership.
 ///   - Fires RoomMembershipChanged on ProximityEventBus when the result changes.
+///   - Detects room bounds changes and emits RoomBoundsChanged on StructuralChangeBus.
 /// </summary>
-/// <remarks>
-/// Reads <c>PositionComponent</c>, <c>RoomComponent</c>; writes to <see cref="EntityRoomMembership"/>
-/// and publishes <see cref="RoomMembershipChanged"/> events. Single-writer rule for
-/// <see cref="EntityRoomMembership"/>: only this system updates membership during the simulation.
-/// </remarks>
 public sealed class RoomMembershipSystem : ISystem
 {
     private readonly EntityRoomMembership _membership;
     private readonly ProximityEventBus    _bus;
+    private readonly StructuralChangeBus  _structuralBus;
+    private readonly Dictionary<Entity, BoundsRect> _lastRoomBounds = new();
     private int _tick;
 
-    /// <summary>
-    /// Stores membership and bus references used per tick.
-    /// </summary>
-    /// <param name="membership">Service to update with the per-tick room assignments.</param>
-    /// <param name="bus">Bus on which transition events are published.</param>
-    public RoomMembershipSystem(EntityRoomMembership membership, ProximityEventBus bus)
+    public RoomMembershipSystem(EntityRoomMembership membership, ProximityEventBus bus, StructuralChangeBus structuralBus)
     {
         _membership = membership;
         _bus        = bus;
+        _structuralBus = structuralBus;
     }
 
-    /// <summary>
-    /// Per-tick entry point. Resolves the containing room for every positioned entity and
-    /// publishes any transition events.
-    /// </summary>
-    /// <param name="em">Entity manager — queried for rooms and positioned entities.</param>
-    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         _tick++;
 
-        // Snapshot rooms once per tick; sorted by area ascending so the first match wins
-        var rooms = em.Query<RoomTag>()
+        // Check for room bounds changes and emit events
+        var roomEntities = em.Query<RoomTag>()
             .Where(re => re.Has<RoomComponent>())
+            .ToList();
+
+        foreach (var roomEntity in roomEntities)
+        {
+            var room = roomEntity.Get<RoomComponent>();
+
+            if (_lastRoomBounds.TryGetValue(roomEntity, out var lastBounds))
+            {
+                if (!lastBounds.Equals(room.Bounds))
+                {
+                    // Bounds changed — emit event
+                    _structuralBus.Emit(
+                        StructuralChangeKind.RoomBoundsChanged,
+                        roomEntity.Id,
+                        0, 0,
+                        0, 0,
+                        roomEntity.Id,
+                        _tick
+                    );
+                    _lastRoomBounds[roomEntity] = room.Bounds;
+                }
+            }
+            else
+            {
+                // First time seeing this room — just cache the bounds
+                _lastRoomBounds[roomEntity] = room.Bounds;
+            }
+        }
+
+        // Snapshot rooms once per tick; sorted by area ascending so the first match wins
+        var rooms = roomEntities
             .Select(re => (entity: re, room: re.Get<RoomComponent>()))
             .OrderBy(r => r.room.Bounds.Area)
             .ThenBy(r => r.entity.Id)   // deterministic tiebreak on equal area
@@ -60,7 +78,6 @@ public sealed class RoomMembershipSystem : ISystem
         foreach (var entity in em.Query<PositionComponent>().OrderBy(e => e.Id))
         {
             if (entity.Has<RoomTag>()) continue;
-            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: preserve deceased NPC's last room membership; WP-3.0.2 manages corpse moves
 
             var pos = entity.Get<PositionComponent>();
             int tx = (int)Math.Round(pos.X);

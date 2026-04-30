@@ -9,9 +9,10 @@ using APIFramework.Systems.Dialog;
 using APIFramework.Systems.Lighting;
 using APIFramework.Systems.Movement;
 using APIFramework.Systems.Chronicle;
-using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
+using APIFramework.Mutation;
+using APIFramework.Systems.LifeState;
 using System.Reflection;
 
 namespace APIFramework.Core;
@@ -58,18 +59,6 @@ namespace APIFramework.Core;
 ///  Elimination (55) ColonSystem               — apply DefecationUrgeTag / BowelCriticalTag
 ///  Elimination (55) BladderSystem             — apply UrinationUrgeTag / BladderCriticalTag
 ///  World       (60) RotSystem                 — age food entities; apply RotTag at threshold
-///  Narrative   (70) CorpseSpawnerSystem       — bus subscriber; attaches CorpseTag on death events (WP-3.0.2)
-///  Narrative   (70) BereavementSystem         — bus subscriber; witness + colleague grief cascade (WP-3.0.2)
-///  Cleanup     (80) StressSystem              — accumulate cortisol-like stress
-///  Cleanup     (80) WorkloadSystem            — advance task progress; detect completion/overdue
-///  Cleanup     (80) MaskCrackSystem           — detect social mask cracks after intent is locked
-///  Cleanup     (80) BereavementByProximitySystem — per-tick; NPC enters corpse's room (WP-3.0.2)
-///  Cleanup     (80) FaintingDetectionSystem   — detect Fear>=threshold; enqueue Incapacitated (WP-3.0.6)
-///  Cleanup     (80) FaintingRecoverySystem    — queue Alive recovery when RecoveryTick reached (WP-3.0.6)
-///  Cleanup     (80) ChokingDetectionSystem    — detect choke events; enqueue incapacitation (WP-3.0.1)
-///  Cleanup     (80) LifeStateTransitionSystem — drain transition queue; tick down Incapacitated budgets
-///  Cleanup     (80) ChokingCleanupSystem      — remove IsChokingTag from Deceased NPCs (WP-3.0.1)
-///  Cleanup     (80) FaintingCleanupSystem     — remove IsFaintingTag from recovered Alive NPCs (WP-3.0.6)
 /// </summary>
 public class SimulationBootstrapper
 {
@@ -97,6 +86,9 @@ public class SimulationBootstrapper
     /// <summary>Proximity event bus. Subscribe here to receive spatial signals.</summary>
     public ProximityEventBus    ProximityBus    { get; }
 
+    /// <summary>Structural change bus. Emitted when topology changes; subscribers invalidate caches.</summary>
+    public StructuralChangeBus  StructuralBus   { get; }
+
     /// <summary>Runtime room-membership map. Queried by social and behavior systems.</summary>
     public EntityRoomMembership RoomMembership  { get; }
 
@@ -123,6 +115,11 @@ public class SimulationBootstrapper
     /// <summary>Global persistent narrative chronicle. Read by TelemetryProjector each tick.</summary>
     public ChronicleService Chronicle { get; }
 
+    // ── Pathfinding services ──────────────────────────────────────────────────
+
+    /// <summary>LRU cache for pathfinding queries. Keyed by (from, to, seed, topologyVersion).</summary>
+    public PathfindingCache PathfindingCacheService { get; }
+
     // ── Dialog services ───────────────────────────────────────────────────────
 
     /// <summary>
@@ -133,13 +130,6 @@ public class SimulationBootstrapper
 
     /// <summary>Queue shared between DialogContextDecisionSystem and DialogFragmentRetrievalSystem.</summary>
     public PendingDialogQueue PendingDialogQueue { get; }
-
-    /// <summary>
-    /// Single-writer life-state transition system. Scenario systems (choking, slip-and-fall, etc.)
-    /// call <see cref="LifeStateTransitionSystem.RequestTransition"/> to kill or incapacitate an NPC.
-    /// Exposed so tests and future scenario systems can push requests without constructing their own instance.
-    /// </summary>
-    public LifeStateTransitionSystem LifeStateTransitions { get; private set; } = null!;
 
     /// <summary>
     /// Primary constructor — accepts any IConfigProvider.
@@ -192,6 +182,7 @@ public class SimulationBootstrapper
         // Spatial services — instantiated before RegisterSystems so systems can receive them
         SpatialIndex   = new GridSpatialIndex(Config.Spatial);
         ProximityBus   = new ProximityEventBus();
+        StructuralBus  = new StructuralChangeBus();
         RoomMembership = new EntityRoomMembership();
 
         // Lighting services
@@ -202,11 +193,14 @@ public class SimulationBootstrapper
         DriveAccumulator   = new SocialDriveAccumulator();
 
         // Movement services
+        PathfindingCacheService = new PathfindingCache(Config.Movement.Pathfinding.CacheMaxEntries);
         Pathfinding = new PathfindingService(
             EntityManager,
             Config.Spatial.WorldSize.Width,
             Config.Spatial.WorldSize.Height,
-            Config.Movement);
+            Config.Movement,
+            PathfindingCacheService,
+            StructuralBus);
 
         // Chronicle services — created before Invariants so the check can be injected.
         Chronicle = new ChronicleService(Config.Chronicle.MaxEntries);
@@ -273,10 +267,11 @@ public class SimulationBootstrapper
 
         // Spatial — sync index and room membership (Phase 5).
         // ProximityEvent moves to Lighting (Phase 7) so it fires after illumination is current.
-        var syncSys = new SpatialIndexSyncSystem(SpatialIndex);
+        var syncSys = new SpatialIndexSyncSystem(SpatialIndex, StructuralBus);
         EntityManager.EntityDestroyed += syncSys.OnEntityDestroyed;
-        Engine.AddSystem(syncSys,                                                SystemPhase.Spatial);
-        Engine.AddSystem(new RoomMembershipSystem(RoomMembership, ProximityBus), SystemPhase.Spatial);
+        Engine.AddSystem(syncSys,                                                                SystemPhase.Spatial);
+        Engine.AddSystem(new RoomMembershipSystem(RoomMembership, ProximityBus, StructuralBus), SystemPhase.Spatial);
+        Engine.AddSystem(new PathfindingCacheInvalidationSystem(StructuralBus, PathfindingCacheService), SystemPhase.Spatial);
 
         // Lighting — sun position, source state machines, aperture beams, room illumination,
         // then proximity events (which now see current illumination).
@@ -294,6 +289,8 @@ public class SimulationBootstrapper
 
         // PreUpdate — invariant enforcement; always first
         Engine.AddSystem(Invariants,                                               SystemPhase.PreUpdate);
+        // Structural tagging: one-shot system at boot that attaches StructuralTag to obstacles/walls/doors
+        Engine.AddSystem(new StructuralTaggingSystem(),                            SystemPhase.PreUpdate);
         // Schedule spawner: attach routines to NPCs that lack one (runs every tick, idempotent).
         Engine.AddSystem(new ScheduleSpawnerSystem(),                              SystemPhase.PreUpdate);
 
@@ -308,9 +305,8 @@ public class SimulationBootstrapper
         Engine.AddSystem(
             new WorkloadInitializerSystem(WorkloadInitializerSystem.LoadCapacities()), SystemPhase.PreUpdate);
 
-        // Life-state initialization — attaches LifeStateComponent(Alive) to every NPC.
-        // Runs last in PreUpdate so all other initializers have already fired.
-        Engine.AddSystem(new LifeStateInitializerSystem(),                         SystemPhase.PreUpdate);
+        // Life state initialization — attaches LifeStateComponent to newly-spawned NPCs with State == Alive.
+        Engine.AddSystem(new LifeStateInitializerSystem(),                          SystemPhase.PreUpdate);
 
         // Task generation — spawns new task entities once per game-day at the configured hour.
         Engine.AddSystem(
@@ -383,12 +379,6 @@ public class SimulationBootstrapper
         // Memory recording — subscribes to the bus and routes candidates to per-pair/personal buffers.
         Engine.AddSystem(new MemoryRecordingSystem(NarrativeBus, EntityManager, Config.Memory), SystemPhase.Narrative);
 
-        // Corpse spawner (WP-3.0.2) — bus subscriber; attaches CorpseTag + CorpseComponent on death events.
-        Engine.AddSystem(new CorpseSpawnerSystem(NarrativeBus, EntityManager),                 SystemPhase.Narrative);
-
-        // Bereavement (WP-3.0.2) — bus subscriber; witness + colleague immediate impact on death events.
-        Engine.AddSystem(new BereavementSystem(NarrativeBus, EntityManager, Clock, Config.Bereavement), SystemPhase.Narrative);
-
         // Dialog — after Narrative so final drive state is visible
         if (CorpusService != null)
         {
@@ -403,7 +393,7 @@ public class SimulationBootstrapper
         // Cleanup — stress accumulation; runs after WillpowerSystem (Cognition) and
         // NarrativeEventDetector (Narrative) so all tick state has settled.
         Engine.AddSystem(
-            new StressSystem(Config.Stress, Config.Workload, Clock, WillpowerEvents, NarrativeBus, EntityManager, Config.Bereavement), SystemPhase.Cleanup);
+            new StressSystem(Config.Stress, Config.Workload, Clock, WillpowerEvents, NarrativeBus, EntityManager), SystemPhase.Cleanup);
 
         // Workload system — advances task progress, detects completion and overdue.
         Engine.AddSystem(
@@ -414,57 +404,53 @@ public class SimulationBootstrapper
         Engine.AddSystem(
             new MaskCrackSystem(RoomMembership, NarrativeBus, Config.SocialMask),  SystemPhase.Cleanup);
 
-        // Life-state transitions — drains the transition request queue and ticks down
-        // IncapacitatedTickBudgets. Must run LAST in Cleanup so all scenario detection
-        // systems have had their chance to enqueue requests before the queue is drained.
-        // Registered here (before AddSystem) so scenario systems below can receive the reference.
-        LifeStateTransitions = new LifeStateTransitionSystem(
-            NarrativeBus, EntityManager, Clock, Config.LifeState, RoomMembership);
+        // Create a single LifeStateTransitionSystem instance for both choking and life-state management.
+        var lifeStateTransition = new LifeStateTransitionSystem(NarrativeBus, EntityManager, Clock, Config);
 
-        // Bereavement by proximity (WP-3.0.2) — Cleanup; per-tick check for NPCs entering a corpse's room.
-        // Runs before LifeStateTransitions so new deaths this tick become corpses next tick (CorpseTag
-        // is attached by CorpseSpawnerSystem synchronously on the bus event, which fires from
-        // LifeStateTransitionSystem, which runs at end of Cleanup — so new corpse entities from this
-        // tick are available starting next tick, which is correct for this proximity system).
-        Engine.AddSystem(
-            new BereavementByProximitySystem(RoomMembership, Config.Bereavement),             SystemPhase.Cleanup);
-
-        // Fainting detection (WP-3.0.6) — Cleanup, BEFORE LifeStateTransitions.
-        // Iterates Alive NPCs, detects Fear >= FearThreshold, and enqueues
-        // incapacitation requests (with FaintDurationTicks+1 budget) so fainting
-        // can never expire into death before FaintingRecoverySystem acts.
-        Engine.AddSystem(
-            new FaintingDetectionSystem(
-                LifeStateTransitions, NarrativeBus, Clock, RoomMembership, Config.Fainting),
-            SystemPhase.Cleanup);
-
-        // Fainting recovery (WP-3.0.6) — Cleanup, BEFORE LifeStateTransitions.
-        // Watches fainted NPCs for RecoveryTick and queues the Alive recovery.
-        // Must run BEFORE LifeStateTransitions so the recovery is drained in the same tick
-        // it is queued (before the budget-expiry death check runs on remaining Incapacitated NPCs).
-        Engine.AddSystem(
-            new FaintingRecoverySystem(
-                LifeStateTransitions, NarrativeBus, Clock, Config.Fainting),
-            SystemPhase.Cleanup);
-
-        // Choking detection (WP-3.0.1) — Cleanup, BEFORE LifeStateTransitions.
-        // Iterates esophageal transit boluses, detects choke conditions, and enqueues
-        // incapacitation requests for LifeStateTransitions to drain below.
+        // Choking detection — identifies choking conditions (bolus + distraction) and enqueues transition to Incapacitated.
+        // Runs after EsophagusSystem (in Transit) so the bolus has had its chance to advance,
+        // and before LifeStateTransitionSystem so the request reaches the queue this tick.
         Engine.AddSystem(
             new ChokingDetectionSystem(
-                LifeStateTransitions, NarrativeBus, EntityManager, Clock, RoomMembership, Config.Choking),
-                                                                                   SystemPhase.Cleanup);
+                lifeStateTransition,
+                NarrativeBus,
+                Clock,
+                Config.Choking,
+                EntityManager),
+            SystemPhase.Cleanup);
 
-        // LifeStateTransitions — drains all scenario requests enqueued above.
-        Engine.AddSystem(LifeStateTransitions,                                     SystemPhase.Cleanup);
+        // Life state transitions — processes queued state changes (Alive→Incapacitated→Deceased);
+        // runs after WorkloadSystem and MaskCrackSystem so all cognitive ticking is complete.
+        Engine.AddSystem(lifeStateTransition, SystemPhase.Cleanup);
 
-        // Choking cleanup (WP-3.0.1) — AFTER LifeStateTransitions so the Deceased flip
-        // has occurred before we remove IsChokingTag/ChokingComponent from dead NPCs.
-        Engine.AddSystem(new ChokingCleanupSystem(),                               SystemPhase.Cleanup);
+        // Choking cleanup — removes IsChokingTag and ChokingComponent when NPC transitions to Deceased.
+        // Runs at the very end of Cleanup phase (after LifeStateTransitionSystem).
+        Engine.AddSystem(
+            new ChokingCleanupSystem(), SystemPhase.Cleanup);
 
-        // Fainting cleanup (WP-3.0.6) — AFTER LifeStateTransitions so the Alive flip
-        // has occurred before we remove IsFaintingTag/FaintingComponent from recovered NPCs.
-        Engine.AddSystem(new FaintingCleanupSystem(),                              SystemPhase.Cleanup);
+        // Slip-and-fall detection — rolls hazard checks for NPCs on tiles with FallRiskComponent.
+        // Runs in Cleanup phase after MovementSystem (so NPCs have settled position) and
+        // before LifeStateTransitionSystem (so transition requests hit the queue this tick).
+        Engine.AddSystem(
+            new SlipAndFallSystem(
+                EntityManager,
+                Clock,
+                Config,
+                lifeStateTransition,
+                Random),
+            SystemPhase.Cleanup);
+
+        // Lockout detection — checks end-of-day reachability to exits and starvation status.
+        // Runs in PreUpdate phase, once per game-day (gated internally by hour check).
+        Engine.AddSystem(
+            new LockoutDetectionSystem(
+                EntityManager,
+                Clock,
+                Config,
+                Pathfinding,
+                lifeStateTransition,
+                Random),
+            SystemPhase.PreUpdate);
     }
 
     // ── Human count ───────────────────────────────────────────────────────────

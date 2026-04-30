@@ -68,33 +68,12 @@ public struct MoodComponent
     /// <summary>Forward-directed emotion toward upcoming rewards or goals. Low = interest, High = vigilance.</summary>
     public float Anticipation;
 
-    // ── Choking / acute-panic (WP-3.0.1) ────────────────────────────────────
-
     /// <summary>
-    /// Acute panic level (0..1) set by <see cref="APIFramework.Systems.LifeState.ChokingDetectionSystem"/>
-    /// at the moment of a choke event. MoodSystem decays this toward 0 each tick
-    /// at <see cref="APIFramework.Config.MoodSystemConfig.NegativeDecayRate"/> per game-second (follow-up:
-    /// add explicit PanicDecayRate to MoodSystemConfig if tuning is needed).
-    ///
-    /// While <c>PanicLevel &gt; 0</c>, the NPC is in a panic state. The Incapacitated
-    /// life-state guard in FacingSystem already freezes facing; this field provides a
-    /// queryable hook for future systems (UI animations, witness reactions, etc.).
+    /// Panic intensity — an acute fear response to immediate threat. Separate from the baseline Fear
+    /// emotion, Panic is a spike that freezes behavior (e.g., choking event). Values 0–100.
+    /// Set to peak intensity on choke; decays via MoodSystem's decay rules.
     /// </summary>
     public float PanicLevel;
-
-    // ── Bereavement / grief (WP-3.0.2) ───────────────────────────────────────
-
-    /// <summary>
-    /// Bereavement grief intensity (0–100), applied by
-    /// <see cref="APIFramework.Systems.LifeState.BereavementSystem"/> at the moment a
-    /// death event is received. Uses the same 0–100 scale as the eight primary Plutchik
-    /// emotions; MoodSystem decays this toward 0 each tick at
-    /// <see cref="APIFramework.Config.MoodSystemConfig.NegativeDecayRate"/> per game-second.
-    ///
-    /// Distinct from the structural <see cref="Sadness"/> field so that bereavement grief
-    /// can be set and tracked independently of hunger/thirst-driven sadness.
-    /// </summary>
-    public float GriefLevel;
 
     // ── Convenience ───────────────────────────────────────────────────────────
 
@@ -110,7 +89,6 @@ public struct MoodComponent
     public readonly float Valence =>
         (Joy + Trust + Anticipation) - (Fear + Sadness + Disgust + Anger);
 
-    /// <summary>Debug-friendly summary of all eight Plutchik intensity values.</summary>
     public override string ToString() =>
         $"Joy:{Joy:F0} Trust:{Trust:F0} Fear:{Fear:F0} Surprise:{Surprise:F0} " +
         $"Sadness:{Sadness:F0} Disgust:{Disgust:F0} Anger:{Anger:F0} Anticipation:{Anticipation:F0}";

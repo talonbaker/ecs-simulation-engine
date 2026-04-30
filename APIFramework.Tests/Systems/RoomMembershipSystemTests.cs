@@ -15,7 +15,8 @@ public class RoomMembershipSystemTests
         var em         = new EntityManager();
         var membership = new EntityRoomMembership();
         var bus        = new ProximityEventBus();
-        var sys        = new RoomMembershipSystem(membership, bus);
+        var structBus  = new StructuralChangeBus();
+        var sys        = new RoomMembershipSystem(membership, bus, structBus);
         return (em, membership, bus, sys);
     }
 

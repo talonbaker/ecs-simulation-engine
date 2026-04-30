@@ -1,235 +1,200 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Narrative;
-using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
-/// Detects when an NPC is at risk of choking on a food bolus currently in
-/// esophageal transit, and fires the incapacitation pipeline.
+/// Detects choking conditions and triggers the incapacitation sequence.
 ///
-/// DETECTION CONTRACT
-/// ──────────────────
-/// All three conditions must hold simultaneously:
-///   1. A bolus with BolusComponent.Toughness ≥ BolusSizeThreshold is in transit
-///      toward this NPC (EsophagusTransitComponent.TargetEntityId matches the NPC).
-///   2. The NPC is Alive and does not already have IsChokingTag.
-///   3. At least one distraction condition is true:
-///        EnergyComponent.Energy < EnergyThreshold
-///        OR StressComponent.AcuteLevel >= StressThreshold
-///        OR SocialDrivesComponent.Irritation.Current >= IrritationThreshold.
+/// Each tick, iterates NPCs with EsophagusTransitComponent and checks if they are
+/// choking: bolus size above threshold AND at least one of three distraction conditions
+/// (low energy, high stress, high irritation).
 ///
-/// ON CHOKE DETECTION
-/// ──────────────────
-///   1. IsChokingTag is attached to the NPC.
-///   2. ChokingComponent is attached (mirrors the tick budget and bolus toughness).
-///   3. MoodComponent.PanicLevel is set to ChokingConfig.PanicMoodIntensity.
-///   4. Optionally a ChokeStarted narrative candidate is raised on the NarrativeEventBus
-///      so that witnesses record the onset of the episode (not just the death).
-///   5. LifeStateTransitionSystem.RequestTransition is called with
-///      (Incapacitated, Choked, incapacitationTicksOverride = ChokingConfig.IncapacitationTicks).
+/// On choke detection:
+/// 1. Attaches IsChokingTag and ChokingComponent to the NPC.
+/// 2. Sets MoodComponent.PanicLevel to panicMoodIntensity (panic freezes facing).
+/// 3. Emits ChokeStarted narrative with the NPC and any witness in conversation range.
+/// 4. Calls LifeStateTransitionSystem.RequestTransition(npc, Incapacitated, Choked).
 ///
-/// PHASE ORDERING
-/// ──────────────
-/// Cleanup phase, registered BEFORE LifeStateTransitionSystem so the incapacitation
-/// request is drained and applied in the same tick the choke is detected.
-/// ChokingCleanupSystem runs AFTER LifeStateTransitionSystem to remove the tag once dead.
-///
-/// WP-3.0.1: Choking-on-Food Scenario.
+/// Deterministic: iterates in OrderBy(e.Id) order. All thresholds are scalar comparisons.
+/// Single-shot: IsAlive + !Has{IsChokingTag} guards prevent re-triggering.
 /// </summary>
-/// <seealso cref="ChokingCleanupSystem"/>
-/// <seealso cref="LifeStateTransitionSystem"/>
-public sealed class ChokingDetectionSystem : ISystem
+public class ChokingDetectionSystem : ISystem
 {
     private readonly LifeStateTransitionSystem _transition;
-    private readonly NarrativeEventBus         _narrativeBus;
-    private readonly EntityManager             _em;
-    private readonly SimulationClock           _clock;
-    private readonly EntityRoomMembership      _roomMembership;
-    private readonly ChokingConfig             _cfg;
+    private readonly NarrativeEventBus _narrative;
+    private readonly SimulationClock _clock;
+    private readonly ChokingConfig _cfg;
+    private readonly EntityManager _em;
 
-    /// <summary>
-    /// Stores the dependencies used per tick.
-    /// </summary>
-    /// <param name="transition">Single-writer life-state transition system that drains choke incapacitation requests.</param>
-    /// <param name="narrativeBus">Bus on which ChokeStarted candidates are emitted before the state flip.</param>
-    /// <param name="em">Entity manager — used to resolve transit-target NPCs and witness candidates.</param>
-    /// <param name="clock">Simulation clock — supplies <c>CurrentTick</c>.</param>
-    /// <param name="roomMembership">Room-membership lookup used to stamp <c>RoomId</c> on emitted candidates.</param>
-    /// <param name="cfg">Choking config — bolus and distraction thresholds, panic intensity, narrative toggle.</param>
     public ChokingDetectionSystem(
         LifeStateTransitionSystem transition,
-        NarrativeEventBus         narrativeBus,
-        EntityManager             em,
-        SimulationClock           clock,
-        EntityRoomMembership      roomMembership,
-        ChokingConfig             cfg)
+        NarrativeEventBus narrative,
+        SimulationClock clock,
+        ChokingConfig cfg,
+        EntityManager em)
     {
-        _transition     = transition;
-        _narrativeBus   = narrativeBus;
-        _em             = em;
-        _clock          = clock;
-        _roomMembership = roomMembership;
-        _cfg            = cfg;
+        _transition = transition ?? throw new ArgumentNullException(nameof(transition));
+        _narrative = narrative ?? throw new ArgumentNullException(nameof(narrative));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _cfg = cfg ?? throw new ArgumentNullException(nameof(cfg));
+        _em = em ?? throw new ArgumentNullException(nameof(em));
     }
 
-    /// <summary>
-    /// Per-tick entry point. Walks every esophageal transit and triggers the choking pipeline
-    /// for any NPC whose distraction conditions hold while a tough bolus is in transit.
-    /// </summary>
-    /// <param name="em">Entity manager — queried for boluses and consumer NPCs.</param>
-    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
-        // Iterate food boluses currently in esophageal transit.
-        foreach (var bolus in em.Query<EsophagusTransitComponent>().ToList())
+        foreach (var npc in em.Query<EsophagusTransitComponent>().OrderBy(e => e.Id))
         {
-            if (!bolus.Has<BolusComponent>()) continue;
-            var bolusData = bolus.Get<BolusComponent>();
+            // Early returns: dead, already choking, no bolus in transit
+            if (!LifeStateGuard.IsAlive(npc)) continue;
+            if (npc.Has<IsChokingTag>()) continue;  // already choking; transition system handles countdown
 
-            // 1. Only tough boluses can trigger choking.
-            if (bolusData.Toughness < _cfg.BolusSizeThreshold) continue;
+            var transit = npc.Get<EsophagusTransitComponent>();
 
-            // 2. Find the consumer NPC via the transit target reference.
-            var transit = bolus.Get<EsophagusTransitComponent>();
-            var npc     = FindEntityByGuid(em, transit.TargetEntityId);
-            if (npc is null)                  continue;
-            if (!LifeStateGuard.IsAlive(npc)) continue; // must be Alive
-            if (npc.Has<IsChokingTag>())      continue; // already choking — don't re-trigger
+            // Compute bolus size. The transit component tracks a bolus entity by ID.
+            float bolusSize = 0f;
+            if (transit.TargetEntityId != Guid.Empty)
+            {
+                var bolusEntity = em.GetAllEntities().FirstOrDefault(e => e.Id == transit.TargetEntityId);
+                if (bolusEntity != null && bolusEntity.Has<BolusComponent>())
+                {
+                    var bolus = bolusEntity.Get<BolusComponent>();
+                    bolusSize = bolus.Volume;
+                }
+            }
 
-            // 3. Distraction check — at least one physiological/psychological condition must hold.
-            bool distracted = false;
+            // Below threshold: no choke risk
+            if (bolusSize < _cfg.BolusSizeThreshold) continue;
 
-            if (npc.Has<EnergyComponent>())
-                distracted |= npc.Get<EnergyComponent>().Energy < _cfg.EnergyThreshold;
-
-            if (!distracted && npc.Has<StressComponent>())
-                distracted |= npc.Get<StressComponent>().AcuteLevel >= _cfg.StressThreshold;
-
-            if (!distracted && npc.Has<SocialDrivesComponent>())
-                distracted |= npc.Get<SocialDrivesComponent>().Irritation.Current >= _cfg.IrritationThreshold;
+            // Distraction check — at least one of three conditions must hold
+            bool distracted =
+                (npc.Has<EnergyComponent>() && npc.Get<EnergyComponent>().Energy < _cfg.EnergyThreshold)
+                || (npc.Has<StressComponent>() && npc.Get<StressComponent>().AcuteLevel >= _cfg.StressThreshold)
+                || (npc.Has<SocialDrivesComponent>() && npc.Get<SocialDrivesComponent>().Irritation.Current >= _cfg.IrritationThreshold);
 
             if (!distracted) continue;
 
-            // ── Choke triggered ──────────────────────────────────────────────────
+            // ── CHOKE FIRES ──────────────────────────────────────────────────────────
 
-            // Step 4: Attach IsChokingTag so other systems can gate on it.
+            // 1. Attach choking markers
             npc.Add(new IsChokingTag());
-
-            // Step 5: Attach ChokingComponent — mirrors IncapacitatedTickBudget for convenient
-            // querying by future systems (rescue mechanic, UI animations, witness reactions).
             npc.Add(new ChokingComponent
             {
-                ChokeStartTick = _clock.CurrentTick,
+                ChokeStartTick = (long)_clock.TotalTime,
                 RemainingTicks = _cfg.IncapacitationTicks,
-                BolusSize      = bolusData.Toughness,
-                PendingCause   = CauseOfDeath.Choked,
+                BolusSize = bolusSize,
+                PendingCause = CauseOfDeath.Choked
             });
 
-            // Step 6: Spike MoodComponent.PanicLevel (0..1 scale; decays each tick via MoodSystem).
+            // 2. Set panic mood (existing mood system applies decay)
             if (npc.Has<MoodComponent>())
             {
-                var mood        = npc.Get<MoodComponent>();
-                mood.PanicLevel = _cfg.PanicMoodIntensity;
+                var mood = npc.Get<MoodComponent>();
+                mood.PanicLevel = MathF.Max(mood.PanicLevel, _cfg.PanicMoodIntensity);
                 npc.Add(mood);
             }
 
-            // Step 7: Optionally emit ChokeStarted narrative candidate before incapacitation so
-            // MemoryRecordingSystem records the onset of the episode while participants are Alive.
+            // 3. Emit narrative BEFORE transition request (so subscribers see Alive at this instant)
             if (_cfg.EmitChokeStartedNarrative)
             {
-                int?   witnessIntId = FindClosestWitnessIntId(npc);
-                string? locationId  = GetRoomId(npc);
-
-                int[] participants = witnessIntId.HasValue
-                    ? new[] { EntityIntId(npc), witnessIntId.Value }
-                    : new[] { EntityIntId(npc) };
-
-                _narrativeBus.RaiseCandidate(new NarrativeEventCandidate(
-                    Tick:           _clock.CurrentTick,
-                    Kind:           NarrativeEventKind.ChokeStarted,
+                var participants = FindParticipantsWithWitness(npc, em);
+                _narrative.RaiseCandidate(new NarrativeEventCandidate(
+                    Tick: (long)_clock.TotalTime,
+                    Kind: NarrativeEventKind.ChokeStarted,
                     ParticipantIds: participants,
-                    RoomId:         locationId,
-                    Detail:         $"NPC {npc.Id} began choking on {bolusData.FoodType} (toughness {bolusData.Toughness:F2})."
+                    RoomId: null,
+                    Detail: "started choking"
                 ));
             }
 
-            // Step 8: Enqueue incapacitation with per-cause tick budget.
-            // LifeStateTransitionSystem drains this queue later in the same Cleanup tick.
-            _transition.RequestTransition(
-                npc.Id,
-                LifeState.Incapacitated,
-                CauseOfDeath.Choked,
-                _cfg.IncapacitationTicks);
+            // 4. Enqueue transition to Incapacitated(Choked)
+            // The LifeStateTransitionSystem will set IncapacitatedTickBudget = _cfg.IncapacitationTicks
+            // and PendingDeathCause = Choked. On budget expiry, it transitions to Deceased(Choked).
+            _transition.RequestTransition(npc.Id, Components.LifeState.Incapacitated, CauseOfDeath.Choked);
         }
     }
-
-    // ── Witness selection ─────────────────────────────────────────────────────
 
     /// <summary>
-    /// Returns the EntityIntId of the nearest Alive NPC within the choking NPC's
-    /// conversation range, or null if none are nearby. Deterministic: smallest
-    /// EntityIntId wins on tie — consistent across identical runs.
+    /// Returns a participant list for the ChokeStarted narrative event.
+    /// Includes the choking NPC and, if present, the closest alive NPC in conversation range.
     /// </summary>
-    private int? FindClosestWitnessIntId(Entity choking)
+    private int[] FindParticipantsWithWitness(Entity choker, EntityManager em)
     {
-        if (!choking.Has<PositionComponent>()) return null;
+        // Find closest alive NPC in conversation range
+        Guid? witness = FindClosestWitness(choker, em);
 
-        var pos   = choking.Get<PositionComponent>();
-        int range = choking.Has<ProximityComponent>()
-            ? choking.Get<ProximityComponent>().ConversationRangeTiles
-            : ProximityComponent.Default.ConversationRangeTiles;
+        // Convert Guid to entity serial number for the participant list
+        List<int> participants = new();
 
-        int? bestIntId = null;
-        int  lowestId  = int.MaxValue;
+        // Add choker
+        var chokerIntId = ExtractEntityIntId(choker.Id);
+        participants.Add((int)chokerIntId);
 
-        foreach (var candidate in _em.Query<NpcTag>().ToList())
+        // Add witness if present
+        if (witness.HasValue)
         {
-            if (candidate.Id == choking.Id)       continue;
-            if (!LifeStateGuard.IsAlive(candidate)) continue;
-            if (!candidate.Has<PositionComponent>()) continue;
-
-            var   cPos = candidate.Get<PositionComponent>();
-            float dx   = cPos.X - pos.X;
-            float dz   = cPos.Z - pos.Z;
-            float dist = MathF.Sqrt(dx * dx + dz * dz);
-
-            if (dist <= range)
-            {
-                int id = EntityIntId(candidate);
-                if (id < lowestId) { lowestId = id; bestIntId = id; }
-            }
+            var witnessIntId = ExtractEntityIntId(witness.Value);
+            participants.Add((int)witnessIntId);
         }
 
-        return bestIntId;
+        return participants.ToArray();
     }
 
-    // ── Utility ───────────────────────────────────────────────────────────────
-
-    private static Entity? FindEntityByGuid(EntityManager em, Guid id)
+    /// <summary>
+    /// Returns the EntityId of the closest alive NPC in conversation range, or null if none.
+    /// Deterministic: iterates witnesses in ascending EntityIntId order and returns the first.
+    /// </summary>
+    private Guid? FindClosestWitness(Entity choker, EntityManager em)
     {
-        foreach (var e in em.GetAllEntities())
+        if (!choker.Has<ProximityComponent>()) return null;
+        if (!choker.Has<PositionComponent>()) return null;
+
+        var conversationRange = choker.Get<ProximityComponent>().ConversationRangeTiles;
+        var chokerPos = choker.Get<PositionComponent>();
+        var witnesses = new List<Guid>();
+
+        // Iterate all NPCs in conversation range
+        foreach (var npc in em.Query<NpcTag>())
         {
-            if (e.Id == id) return e;
+            if (npc.Id == choker.Id) continue;  // skip self
+            if (!LifeStateGuard.IsAlive(npc)) continue;  // only alive NPCs can witness
+            if (!npc.Has<PositionComponent>()) continue;
+
+            var npcPos = npc.Get<PositionComponent>();
+            float dist = MathF.Sqrt(
+                MathF.Pow(npcPos.X - chokerPos.X, 2) +
+                MathF.Pow(npcPos.Z - chokerPos.Z, 2)
+            );
+
+            if (dist <= conversationRange)
+                witnesses.Add(npc.Id);
         }
-        return null;
+
+        // Return in deterministic order (ascending EntityIntId)
+        if (witnesses.Count == 0) return null;
+
+        witnesses.Sort((a, b) =>
+        {
+            var aIntId = ExtractEntityIntId(a);
+            var bIntId = ExtractEntityIntId(b);
+            return aIntId.CompareTo(bIntId);
+        });
+
+        return witnesses[0];
     }
 
-    private string? GetRoomId(Entity entity)
+    /// <summary>
+    /// Extracts the entity's internal integer ID from its Guid for deterministic ordering.
+    /// Matches the pattern used in WillpowerSystem.
+    /// </summary>
+    private static long ExtractEntityIntId(Guid id)
     {
-        var room = _roomMembership.GetRoom(entity);
-        if (room is null)                    return null;
-        if (!room.Has<RoomComponent>())      return null;
-        return room.Get<RoomComponent>().Id;
-    }
-
-    private static int EntityIntId(Entity entity)
-    {
-        var b = entity.Id.ToByteArray();
-        return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
+        var bytes = id.ToByteArray();
+        return BitConverter.ToInt64(bytes, 0);
     }
 }

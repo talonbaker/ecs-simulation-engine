@@ -1,42 +1,36 @@
-using System.Linq;
 using APIFramework.Components;
+using APIFramework.Core;
 
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
-/// Removes <see cref="IsChokingTag"/> and <see cref="ChokingComponent"/> from NPCs
-/// that have transitioned to <see cref="LifeState.Deceased"/> as a result of choking.
+/// Cleans up choking state when an NPC transitions to Deceased.
 ///
-/// Runs last in Cleanup phase — AFTER <see cref="LifeStateTransitionSystem"/> — so
-/// the Deceased state flip has already been applied when this system checks it.
-/// The NPC is dead; the choking-specific components are no longer needed.
+/// Runs at the very end of the Cleanup phase (after LifeStateTransitionSystem).
+/// Iterates NPCs with IsChokingTag and removes the tag and ChokingComponent
+/// if the NPC has just transitioned to Deceased.
 ///
-/// Design note: only removes on Deceased (not on rescue/recovery). If a rescue mechanic
-/// is added in a future work packet, it should remove these components via its own path
-/// at rescue time, before this system would see them on a Deceased entity.
-///
-/// WP-3.0.1: Choking-on-Food Scenario.
+/// The deceased NPC no longer "is choking" — they have died of choking,
+/// which is recorded by CauseOfDeathComponent.
 /// </summary>
-/// <seealso cref="ChokingDetectionSystem"/>
-public sealed class ChokingCleanupSystem : ISystem
+public class ChokingCleanupSystem : ISystem
 {
-    /// <summary>
-    /// Per-tick entry point. Strips choking tags and components from any NPC that has
-    /// already transitioned to <see cref="LifeState.Deceased"/>.
-    /// </summary>
-    /// <param name="em">Entity manager — queried for entities tagged <c>IsChokingTag</c>.</param>
-    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
-        foreach (var entity in em.Query<IsChokingTag>().ToList())
+        // Iterate all choking NPCs and check for Deceased state
+        var chokingNpcs = em.Query<IsChokingTag>().ToList();
+
+        foreach (var npc in chokingNpcs)
         {
-            if (!entity.Has<LifeStateComponent>()) continue;
-            if (entity.Get<LifeStateComponent>().State != LifeState.Deceased) continue;
+            if (!npc.Has<LifeStateComponent>()) continue;
 
-            entity.Remove<IsChokingTag>();
-
-            if (entity.Has<ChokingComponent>())
-                entity.Remove<ChokingComponent>();
+            var state = npc.Get<LifeStateComponent>().State;
+            if (state == Components.LifeState.Deceased)
+            {
+                // Remove the choking markers — the deceased no longer "is choking"
+                npc.Remove<IsChokingTag>();
+                npc.Remove<ChokingComponent>();
+            }
         }
     }
 }

@@ -21,23 +21,11 @@ namespace APIFramework.Systems;
 /// Phase: Narrative (70) — after NarrativeEventDetector and PersistenceThresholdDetector;
 /// before TelemetryProjector snapshots state.
 /// </summary>
-/// <remarks>
-/// Reads: <see cref="NarrativeEventCandidate"/> events from <see cref="NarrativeEventBus"/>,
-/// <see cref="RelationshipMemoryComponent"/>, <see cref="PersonalMemoryComponent"/>.<br/>
-/// Writes: <see cref="RelationshipMemoryComponent"/> on per-pair relationship entities,
-/// <see cref="PersonalMemoryComponent"/> on individual NPCs; auto-creates relationship
-/// entities when needed.<br/>
-/// Phase: Narrative.
-/// </remarks>
 public sealed class MemoryRecordingSystem : ISystem
 {
     private readonly EntityManager _em;
     private readonly MemoryConfig  _cfg;
 
-    /// <summary>Constructs the memory recorder and subscribes to the narrative event bus.</summary>
-    /// <param name="bus">Bus to subscribe for candidate events.</param>
-    /// <param name="em">Entity manager used to look up relationship/NPC entities by id.</param>
-    /// <param name="cfg">Memory tuning (per-pair and per-personal capacity bounds).</param>
     public MemoryRecordingSystem(NarrativeEventBus bus, EntityManager em, MemoryConfig cfg)
     {
         _em  = em;
@@ -45,9 +33,6 @@ public sealed class MemoryRecordingSystem : ISystem
         bus.OnCandidateEmitted += OnCandidateEmitted;
     }
 
-    /// <summary>No-op tick. Routing is event-driven via the bus subscription set in the constructor.</summary>
-    /// <param name="em">Entity manager backing this tick (unused).</param>
-    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime) { }
 
     // ── Candidate routing ─────────────────────────────────────────────────────
@@ -186,24 +171,11 @@ public sealed class MemoryRecordingSystem : ISystem
         NarrativeEventKind.MaskSlip          => true,
         NarrativeEventKind.OverdueTask       => true,
         NarrativeEventKind.TaskCompleted     => false,
-
-        // Phase 3 — death events (WP-3.0.0). Death is always persistent.
         NarrativeEventKind.Choked            => true,
         NarrativeEventKind.SlippedAndFell    => true,
         NarrativeEventKind.StarvedAlone      => true,
         NarrativeEventKind.Died              => true,
-
-        // Phase 3 — scenario-level events (WP-3.0.1). Witnesses remember the start of a choke episode.
         NarrativeEventKind.ChokeStarted      => true,
-
-        // Phase 3 — bereavement events (WP-3.0.2). Colleagues permanently remember grief impact.
-        NarrativeEventKind.BereavementImpact => true,
-
-        // Phase 3 — fainting events (WP-3.0.6).
-        // Witnesses remember seeing someone faint; waking up is not a standalone persistent memory.
-        NarrativeEventKind.Fainted               => true,
-        NarrativeEventKind.RegainedConsciousness => false,
-
         _                                    => false,
     };
 

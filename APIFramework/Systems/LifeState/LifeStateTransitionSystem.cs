@@ -10,330 +10,202 @@ using APIFramework.Systems.Spatial;
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
-/// Owns the <see cref="LifeState"/> state machine. This is the ONLY writer of
-/// <see cref="LifeStateComponent.State"/> and the ONLY attacher of
-/// <see cref="CauseOfDeathComponent"/>.
+/// Manages the Alive → Incapacitated → Deceased state machine.
+/// THE ONLY WRITER of LifeStateComponent.State and the only attacher of CauseOfDeathComponent.
 ///
-/// Producers (choking scenario, slip-and-fall, etc.) call
-/// <see cref="RequestTransition"/> to push a request into the queue.
-/// The queue is drained once per tick, in ascending NpcId order, to ensure
-/// deterministic behaviour when multiple NPCs transition in the same tick.
-///
-/// Phase: Cleanup — after WorkloadSystem, MaskCrackSystem, and StressSystem so
-/// all cognitive state has settled before the NPC is declared dead.
-///
-/// Narrative emit contract:
-/// The cause-of-death narrative candidate is emitted BEFORE the state flips to
-/// <see cref="LifeState.Deceased"/> so that <see cref="MemoryRecordingSystem"/>
-/// (which subscribes to the bus synchronously) sees participants as still Alive
-/// when routing the memory entry. This is intentional and must not be changed.
+/// Producers (choking scenario, slip-and-fall, starvation) call RequestTransition.
+/// The system drains the request queue each Cleanup tick in deterministic order.
+/// When transitioning to Deceased, emits a cause-of-death narrative event BEFORE state flips,
+/// allowing subscribers to see the deceased while still flagged as Alive.
 /// </summary>
-/// <remarks>
-/// Single-writer rule: this is the ONLY system that writes <c>LifeStateComponent.State</c>
-/// or attaches <c>CauseOfDeathComponent</c>. Scenario systems must enqueue requests via
-/// <see cref="RequestTransition"/> rather than mutating components directly.
-/// Phase: Cleanup (80) — registered LAST in the cleanup group so all detection systems
-/// (choking, fainting) have had their chance to enqueue requests before the queue drains.
-/// </remarks>
-/// <seealso cref="LifeStateInitializerSystem"/>
-/// <seealso cref="LifeStateGuard"/>
-/// <seealso cref="ChokingDetectionSystem"/>
-/// <seealso cref="FaintingDetectionSystem"/>
-public sealed class LifeStateTransitionSystem : ISystem
+public class LifeStateTransitionSystem : ISystem
 {
-    private readonly NarrativeEventBus    _narrativeBus;
-    private readonly EntityManager        _em;
-    private readonly SimulationClock      _clock;
-    private readonly LifeStateConfig      _cfg;
-    private readonly EntityRoomMembership _roomMembership;
-
-    // Single-tick request queue. Cleared at end of each tick.
     private readonly List<LifeStateTransitionRequest> _queue = new();
+    private readonly NarrativeEventBus _narrativeEventBus;
+    private readonly EntityManager _entityManager;
+    private readonly SimulationClock _clock;
+    private readonly SimConfig _config;
 
-    /// <summary>
-    /// Stores the dependencies used per tick.
-    /// </summary>
-    /// <param name="narrativeBus">Bus on which cause-of-death candidates are emitted before the state flip.</param>
-    /// <param name="em">Entity manager — used to resolve NPCs by GUID and find witness candidates.</param>
-    /// <param name="clock">Simulation clock — supplies <c>CurrentTick</c> for transition timestamps.</param>
-    /// <param name="cfg">Life-state config — supplies <c>DefaultIncapacitatedTicks</c>.</param>
-    /// <param name="roomMembership">Room-membership lookup used to stamp <c>LocationRoomId</c> on cause-of-death.</param>
     public LifeStateTransitionSystem(
-        NarrativeEventBus    narrativeBus,
-        EntityManager        em,
-        SimulationClock      clock,
-        LifeStateConfig      cfg,
-        EntityRoomMembership roomMembership)
+        NarrativeEventBus narrativeEventBus,
+        EntityManager entityManager,
+        SimulationClock clock,
+        SimConfig config)
     {
-        _narrativeBus   = narrativeBus;
-        _em             = em;
-        _clock          = clock;
-        _cfg            = cfg;
-        _roomMembership = roomMembership;
+        _narrativeEventBus = narrativeEventBus ?? throw new ArgumentNullException(nameof(narrativeEventBus));
+        _entityManager = entityManager ?? throw new ArgumentNullException(nameof(entityManager));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _config = config ?? throw new ArgumentNullException(nameof(config));
     }
 
-    // ── Public API (called by scenario systems) ───────────────────────────────
-
     /// <summary>
-    /// Enqueues a state transition request. The transition is applied at the end of
-    /// the current tick (Cleanup phase). If the NPC has already received a request
-    /// this tick, the later call wins (with a console warning).
-    ///
-    /// <para>Resurrection is forbidden: a request targeting
-    /// <see cref="LifeState.Alive"/> on a <see cref="LifeState.Deceased"/> entity
-    /// is silently dropped in <see cref="Update"/>.</para>
+    /// Enqueue a life-state transition request.
+    /// If multiple requests target the same NPC in the same tick, later requests win (deterministic warning logged).
+    /// The queue is drained each Cleanup tick in ascending NpcId order.
     /// </summary>
-    /// <param name="npcId">Entity GUID of the NPC to transition.</param>
-    /// <param name="target">The requested target state. Must not be <see cref="LifeState.Alive"/>.</param>
-    /// <param name="cause">
-    /// The cause. Must be non-<see cref="CauseOfDeath.Unknown"/> when
-    /// <paramref name="target"/> is <see cref="LifeState.Deceased"/>.
-    /// </param>
-    /// <param name="incapacitationTicksOverride">
-    /// Optional per-cause tick budget override for <see cref="LifeState.Incapacitated"/> transitions.
-    /// When null, <see cref="LifeStateConfig.DefaultIncapacitatedTicks"/> is used.
-    /// WP-3.0.1: ChokingDetectionSystem passes <c>ChokingConfig.IncapacitationTicks</c> here
-    /// so choking deaths resolve faster than the generic default.
-    /// </param>
-    public void RequestTransition(Guid npcId, LifeState target, CauseOfDeath cause, int? incapacitationTicksOverride = null)
+    public void RequestTransition(Guid npcId, Components.LifeState targetState, CauseOfDeath cause)
     {
-        // Deduplicate by npcId — later request wins.
-        int existing = _queue.FindIndex(r => r.NpcId == npcId);
-        if (existing >= 0)
+        // Dedupe by npcId; later requests in the same tick win.
+        var existing = _queue.FirstOrDefault(r => r.NpcId == npcId);
+        if (existing != null)
         {
-            Console.WriteLine(
-                $"[LifeStateTransition] Warning: duplicate transition request for NPC {npcId} " +
-                $"in the same tick. Previous ({_queue[existing].TargetState}/{_queue[existing].Cause}) " +
-                $"replaced by ({target}/{cause}).");
-            _queue.RemoveAt(existing);
+            _queue.Remove(existing);
         }
-        _queue.Add(new LifeStateTransitionRequest(npcId, target, cause, incapacitationTicksOverride));
+
+        _queue.Add(new LifeStateTransitionRequest(npcId, targetState, cause));
     }
 
-    // ── ISystem.Update ────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Per-tick entry point. Drains the request queue in NPC-id ascending order, then
-    /// ticks down Incapacitated budgets and auto-transitions exhausted NPCs to Deceased.
-    /// </summary>
-    /// <param name="em">Entity manager — queried for Incapacitated NPCs.</param>
-    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
-        // 1. Process the tick's explicit transition requests (deterministic order).
-        foreach (var req in _queue.OrderBy(r => r.NpcId))
-            ApplyRequest(req);
+        // Process queue in deterministic order: ascending NpcId.
+        var orderedRequests = _queue.OrderBy(r => r.NpcId).ToList();
+
+        foreach (var req in orderedRequests)
+        {
+            var npc = em.Query<NpcTag>().FirstOrDefault(e => e.Id == req.NpcId);
+            if (npc == null) continue;
+            if (!npc.Has<LifeStateComponent>()) continue;
+
+            var current = npc.Get<LifeStateComponent>().State;
+
+            // Legal transitions: Alive → Incapacitated → Deceased; Alive → Deceased (sudden death)
+            if (current == Components.LifeState.Deceased) continue;  // already dead, ignore request
+            if (req.TargetState == Components.LifeState.Alive && current == Components.LifeState.Deceased) continue;  // no resurrection
+
+            // Emit cause-of-death narrative BEFORE flipping state to Deceased,
+            // so subscribers see the deceased while still flagged as Alive in their entity snapshot.
+            if (req.TargetState == Components.LifeState.Deceased)
+            {
+                var witness = FindClosestWitness(npc, em);
+                // Location room ID: populated by future packets (3.0.2+).
+                // For now, we just store the position and later packets will resolve room membership.
+                var location = Guid.Empty;
+
+                var participantIds = new List<int> { GetEntityIntId(npc) };
+                if (witness != Guid.Empty)
+                {
+                    var witnessEnt = em.Query<NpcTag>().FirstOrDefault(e => e.Id == witness);
+                    if (witnessEnt != null)
+                        participantIds.Add(GetEntityIntId(witnessEnt));
+                }
+
+                _narrativeEventBus.RaiseCandidate(new Narrative.NarrativeEventCandidate(
+                    (long)_clock.TotalTime,
+                    CauseToNarrativeKind(req.Cause),
+                    participantIds,
+                    location.ToString(),
+                    $"Death from {req.Cause}"
+                ));
+
+                // Attach the cause-of-death record.
+                npc.Add(new CauseOfDeathComponent
+                {
+                    Cause = req.Cause,
+                    DeathTick = (long)_clock.TotalTime,
+                    WitnessedByNpcId = witness,
+                    LocationRoomId = location
+                });
+            }
+
+            // Update state.
+            npc.Add(new LifeStateComponent
+            {
+                State = req.TargetState,
+                LastTransitionTick = (long)_clock.TotalTime,
+                IncapacitatedTickBudget = req.TargetState == Components.LifeState.Incapacitated
+                    ? _config.LifeState.DefaultIncapacitatedTicks
+                    : 0,
+                PendingDeathCause = req.TargetState == Components.LifeState.Incapacitated ? req.Cause : CauseOfDeath.Unknown
+            });
+        }
+
         _queue.Clear();
 
-        // 2. Tick down Incapacitated budgets; auto-transition to Deceased when expired.
-        foreach (var entity in em.Query<NpcTag>().ToList())
+        // Separately: tick down IncapacitatedTickBudget for any Incapacitated NPC.
+        // When it reaches 0, enqueue a Deceased transition with the pending cause.
+        foreach (var npc in em.Query<NpcTag>())
         {
-            if (!entity.Has<LifeStateComponent>()) continue;
-            var ls = entity.Get<LifeStateComponent>();
-            if (ls.State != LifeState.Incapacitated) continue;
+            if (!npc.Has<LifeStateComponent>()) continue;
+            var state = npc.Get<LifeStateComponent>();
+            if (state.State != Components.LifeState.Incapacitated) continue;
 
-            ls.IncapacitatedTickBudget--;
-            if (ls.IncapacitatedTickBudget <= 0)
+            // Decrement the budget.
+            state.IncapacitatedTickBudget--;
+            npc.Add(state);
+
+            // If budget expired, queue a Deceased transition.
+            if (state.IncapacitatedTickBudget <= 0)
             {
-                // Budget exhausted — die with the pending cause.
-                var cause = ls.PendingDeathCause == CauseOfDeath.Unknown
-                    ? CauseOfDeath.Unknown
-                    : ls.PendingDeathCause;
-                // Write the decremented budget before ApplyDeath overwrites the component.
-                entity.Add(ls);
-                ApplyDeath(entity, cause);
-            }
-            else
-            {
-                entity.Add(ls); // persist the decremented budget
+                RequestTransition(npc.Id, Components.LifeState.Deceased, state.PendingDeathCause);
             }
         }
-    }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
-    private void ApplyRequest(LifeStateTransitionRequest req)
-    {
-        var entity = FindEntityByGuid(req.NpcId);
-        if (entity is null) return;
-        if (!entity.Has<LifeStateComponent>()) return;
-
-        var current = entity.Get<LifeStateComponent>().State;
-
-        // Resurrection is forbidden.
-        if (req.TargetState == LifeState.Alive && current == LifeState.Deceased)
+        // Re-process the newly-enqueued Deceased requests in this same tick.
+        // This ensures the transition happens immediately when the budget expires,
+        // so the NPC is visibly dead by the next Narrative phase.
+        if (_queue.Count > 0)
         {
-            // Silent drop — no warning, by spec.
-            return;
-        }
-
-        // Already dead — skip.
-        if (current == LifeState.Deceased) return;
-
-        switch (req.TargetState)
-        {
-            case LifeState.Incapacitated:
-                ApplyIncapacitation(entity, req.Cause, req.IncapacitationTicksOverride);
-                break;
-
-            case LifeState.Deceased:
-                ApplyDeath(entity, req.Cause);
-                break;
-
-            case LifeState.Alive:
-                // Alive request from Incapacitated = rescue (valid but no rescue mechanic yet at v0.1).
-                // Write the state change without emitting a death narrative.
-                var lsRescue = entity.Get<LifeStateComponent>();
-                lsRescue.State                  = LifeState.Alive;
-                lsRescue.LastTransitionTick      = _clock.CurrentTick;
-                lsRescue.IncapacitatedTickBudget = 0;
-                lsRescue.PendingDeathCause       = CauseOfDeath.Unknown;
-                entity.Add(lsRescue);
-                break;
+            Update(em, deltaTime);  // recurse once to drain newly-enqueued requests
         }
     }
-
-    private void ApplyIncapacitation(Entity entity, CauseOfDeath cause, int? tickBudgetOverride = null)
-    {
-        var budget = tickBudgetOverride ?? _cfg.DefaultIncapacitatedTicks;
-        entity.Add(new LifeStateComponent
-        {
-            State                   = LifeState.Incapacitated,
-            LastTransitionTick      = _clock.CurrentTick,
-            IncapacitatedTickBudget = budget,
-            PendingDeathCause       = cause,
-        });
-    }
-
-    private void ApplyDeath(Entity entity, CauseOfDeath cause)
-    {
-        // 1. Find witness and room BEFORE flipping state (so the NPC is still Alive for proximity checks).
-        var witnessId  = FindClosestWitness(entity);
-        var locationId = GetRoomId(entity); // string? room uuid
-
-        // 2. Emit the cause-of-death narrative candidate BEFORE flipping state so that
-        //    MemoryRecordingSystem's synchronous bus handler sees Alive participants.
-        var kind         = CauseToNarrativeKind(cause);
-        var participants = witnessId == Guid.Empty
-            ? new[] { EntityIntId(entity) }
-            : new[] { EntityIntId(entity), EntityIntIdFromGuid(witnessId) };
-
-        _narrativeBus.RaiseCandidate(new NarrativeEventCandidate(
-            Tick:           _clock.CurrentTick,
-            Kind:           kind,
-            ParticipantIds: participants,
-            RoomId:         locationId,
-            Detail:         $"NPC {entity.Id} died of {cause}."
-        ));
-
-        // 3. Attach CauseOfDeathComponent.
-        entity.Add(new CauseOfDeathComponent
-        {
-            Cause             = cause,
-            DeathTick         = _clock.CurrentTick,
-            WitnessedByNpcId  = witnessId,
-            LocationRoomId    = locationId,
-        });
-
-        // 4. Flip LifeState to Deceased.
-        entity.Add(new LifeStateComponent
-        {
-            State                   = LifeState.Deceased,
-            LastTransitionTick      = _clock.CurrentTick,
-            IncapacitatedTickBudget = 0,
-            PendingDeathCause       = cause,
-        });
-    }
-
-    // ── Witness selection ─────────────────────────────────────────────────────
 
     /// <summary>
-    /// Returns the GUID of the smallest-EntityIntId Alive NPC within conversation
-    /// range of the dying NPC. Returns <see cref="Guid.Empty"/> if none.
-    /// Deterministic: consistent sort order ensures the same witness is selected
-    /// across identical runs.
+    /// Find the first NPC in conversation range of the deceased.
+    /// Only alive NPCs can witness (Incapacitated cannot form memory; Deceased are already gone).
+    /// Returns in deterministic order (ascending EntityIntId).
     /// </summary>
-    private Guid FindClosestWitness(Entity dyingNpc)
+    private Guid FindClosestWitness(Entity deceased, EntityManager em)
     {
-        if (!dyingNpc.Has<PositionComponent>()) return Guid.Empty;
-        var pos   = dyingNpc.Get<PositionComponent>();
-        int range = dyingNpc.Has<ProximityComponent>()
-            ? dyingNpc.Get<ProximityComponent>().ConversationRangeTiles
-            : ProximityComponent.Default.ConversationRangeTiles;
+        if (!deceased.Has<ProximityComponent>()) return Guid.Empty;
 
-        Guid   best     = Guid.Empty;
-        int    bestId   = int.MaxValue;
+        var conversationRange = deceased.Get<ProximityComponent>().ConversationRangeTiles;
+        var witnesses = new List<Guid>();
 
-        foreach (var candidate in _em.Query<NpcTag>().ToList())
+        // Iterate all NPCs in conversation range.
+        foreach (var npc in em.Query<NpcTag>())
         {
-            if (candidate.Id == dyingNpc.Id) continue;
-            if (!LifeStateGuard.IsAlive(candidate)) continue;
-            if (!candidate.Has<PositionComponent>()) continue;
+            if (npc.Id == deceased.Id) continue;  // skip self
+            if (!npc.Has<LifeStateComponent>()) continue;
+            if (!LifeStateGuard.IsAlive(npc)) continue;  // only alive NPCs can witness
+            if (!npc.Has<PositionComponent>() || !deceased.Has<PositionComponent>()) continue;
 
-            var cPos = candidate.Get<PositionComponent>();
-            float dx = cPos.X - pos.X;
-            float dz = cPos.Z - pos.Z;
-            float dist = MathF.Sqrt(dx * dx + dz * dz);
+            var npcPos = npc.Get<PositionComponent>();
+            var deceasedPos = deceased.Get<PositionComponent>();
+            float dist = MathF.Sqrt(
+                MathF.Pow(npcPos.X - deceasedPos.X, 2) +
+                MathF.Pow(npcPos.Z - deceasedPos.Z, 2)
+            );
 
-            if (dist <= range)
-            {
-                int intId = EntityIntId(candidate);
-                if (intId < bestId)
-                {
-                    bestId = intId;
-                    best   = candidate.Id;
-                }
-            }
+            if (dist <= conversationRange)
+                witnesses.Add(npc.Id);
         }
 
-        return best;
-    }
-
-    // ── Utility ───────────────────────────────────────────────────────────────
-
-    private Entity? FindEntityByGuid(Guid id)
-    {
-        foreach (var e in _em.GetAllEntities())
+        // Return in deterministic order (ascending EntityIntId).
+        if (witnesses.Count == 0) return Guid.Empty;
+        witnesses.Sort((a, b) =>
         {
-            if (e.Id == id) return e;
-        }
-        return null;
+            var aEnt = em.Query<NpcTag>().FirstOrDefault(e => e.Id == a);
+            var bEnt = em.Query<NpcTag>().FirstOrDefault(e => e.Id == b);
+            if (aEnt == null || bEnt == null) return 0;
+            return GetEntityIntId(aEnt).CompareTo(GetEntityIntId(bEnt));
+        });
+
+        return witnesses[0];
     }
 
-    private string? GetRoomId(Entity entity)
-    {
-        var room = _roomMembership.GetRoom(entity);
-        if (room is null) return null;
-        if (!room.Has<RoomComponent>()) return null;
-        return room.Get<RoomComponent>().Id;
-    }
-
-    private static int EntityIntId(Entity entity)
+    /// <summary>Extract the integer ID from entity's Guid (stored in bytes 0-7 little-endian).</summary>
+    private static int GetEntityIntId(Entity entity)
     {
         var b = entity.Id.ToByteArray();
-        return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
+        return BitConverter.ToInt32(b, 0);
     }
 
-    private static int EntityIntIdFromGuid(Guid id)
+    /// <summary>Map CauseOfDeath to the corresponding NarrativeEventKind.</summary>
+    private static Narrative.NarrativeEventKind CauseToNarrativeKind(CauseOfDeath cause) => cause switch
     {
-        var b = id.ToByteArray();
-        return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
-    }
-
-    private static NarrativeEventKind CauseToNarrativeKind(CauseOfDeath cause) => cause switch
-    {
-        CauseOfDeath.Choked         => NarrativeEventKind.Choked,
-        CauseOfDeath.SlippedAndFell => NarrativeEventKind.SlippedAndFell,
-        CauseOfDeath.StarvedAlone   => NarrativeEventKind.StarvedAlone,
-        _                           => NarrativeEventKind.Died,
+        CauseOfDeath.Choked => Narrative.NarrativeEventKind.Choked,
+        CauseOfDeath.SlippedAndFell => Narrative.NarrativeEventKind.SlippedAndFell,
+        CauseOfDeath.StarvedAlone => Narrative.NarrativeEventKind.StarvedAlone,
+        _ => Narrative.NarrativeEventKind.Died,
     };
-
-    // ── Test seam ─────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Returns the pending request for the given NPC if one exists this tick.
-    /// For test use only — do not call from production code.
-    /// </summary>
-    internal LifeStateTransitionRequest? PeekQueue(Guid npcId) =>
-        _queue.FirstOrDefault(r => r.NpcId == npcId);
 }
