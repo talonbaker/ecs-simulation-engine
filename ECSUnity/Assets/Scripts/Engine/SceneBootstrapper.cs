@@ -32,51 +32,51 @@ public static class SceneBootstrapper
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
     {
-        // Exit early if the scene already has an EngineHost (e.g. the committed MainScene).
-        if (Object.FindObjectOfType<EngineHost>() != null)
-            return;
+        var host = Object.FindObjectOfType<EngineHost>();
 
-        Debug.Log("[SceneBootstrapper] Bootstrapping ECSUnity scene...");
+        if (host == null)
+        {
+            Debug.Log("[SceneBootstrapper] Bootstrapping ECSUnity scene...");
 
-        // ── Engine host ───────────────────────────────────────────────────────
+            // ── Engine host ───────────────────────────────────────────────────
 
-        var hostGo   = new GameObject("EngineHost");
-        var host     = hostGo.AddComponent<EngineHost>();
+            var hostGo  = new GameObject("EngineHost");
+            host        = hostGo.AddComponent<EngineHost>();
 
-        // Create a default config asset in memory (no file I/O).
-        var configAsset = ScriptableObject.CreateInstance<SimConfigAsset>();
-        var configField = typeof(EngineHost).GetField("_configAsset",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        configField?.SetValue(host, configAsset);
+            var configAsset = ScriptableObject.CreateInstance<SimConfigAsset>();
+            var configField = typeof(EngineHost).GetField("_configAsset",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            configField?.SetValue(host, configAsset);
 
-        // Point at the StreamingAssets office-starter world.
-        var pathField = typeof(EngineHost).GetField("_worldDefinitionPath",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        pathField?.SetValue(host, "office-starter.json");
+            var pathField = typeof(EngineHost).GetField("_worldDefinitionPath",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            pathField?.SetValue(host, "office-starter.json");
 
-        // ── Renderers ─────────────────────────────────────────────────────────
+            // ── Performance monitor ───────────────────────────────────────────
 
-        var renderGo  = new GameObject("Renderers");
-        var roomRend  = renderGo.AddComponent<RoomRectangleRenderer>();
-        var npcRend   = renderGo.AddComponent<NpcDotRenderer>();
+            var monitorGo = new GameObject("FrameRateMonitor");
+            monitorGo.AddComponent<FrameRateMonitor>();
 
-        SetPrivateField(roomRend, "_engineHost", host);
-        SetPrivateField(npcRend,  "_engineHost", host);
+            // ── Camera + Light ────────────────────────────────────────────────
 
-        // ── Performance monitor (always on) ──────────────────────────────────
+            SetupCamera(host, configAsset);
+            SetupDirectionalLight();
 
-        var monitorGo = new GameObject("FrameRateMonitor");
-        monitorGo.AddComponent<FrameRateMonitor>();
+            Debug.Log("[SceneBootstrapper] Scene bootstrapped: EngineHost + Renderers + Camera + Light.");
+        }
 
-        // ── Camera ────────────────────────────────────────────────────────────
-
-        SetupCamera(host, configAsset);
-
-        // ── Light ─────────────────────────────────────────────────────────────
-
-        SetupDirectionalLight();
-
-        Debug.Log("[SceneBootstrapper] Scene bootstrapped: EngineHost + Renderers + Camera + Light.");
+        // ── Renderers — always ensure they exist, even in the pre-wired MainScene.
+        // The committed scene has an EngineHost but renderers were not added as
+        // GameObjects, so nothing renders without this fallback.
+        if (Object.FindObjectOfType<RoomRectangleRenderer>() == null)
+        {
+            var renderGo = new GameObject("Renderers");
+            var roomRend = renderGo.AddComponent<RoomRectangleRenderer>();
+            var npcRend  = renderGo.AddComponent<NpcDotRenderer>();
+            SetPrivateField(roomRend, "_engineHost", host);
+            SetPrivateField(npcRend,  "_engineHost", host);
+            Debug.Log("[SceneBootstrapper] Added renderers to scene.");
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
