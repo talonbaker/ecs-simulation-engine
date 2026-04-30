@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems.Dialog;
@@ -15,6 +16,12 @@ namespace APIFramework.Systems.Dialog;
 /// 2. Otherwise, fall back to the existing heuristic: probabilistic gate + drive-to-context map.
 ///    This preserves all WP-1.10.A tests for scenarios that don't exercise action-selection.
 /// </summary>
+/// <remarks>
+/// Phase: Dialog (75), registered FIRST in the dialog group. Reads <c>IntendedActionComponent</c>,
+/// <c>SocialDrivesComponent</c>, in-range pair set maintained from the proximity bus; writes the
+/// <see cref="PendingDialogQueue"/> consumed by <see cref="DialogFragmentRetrievalSystem"/>.
+/// Skips non-Alive speakers and listeners.
+/// </remarks>
 public sealed class DialogContextDecisionSystem : ISystem
 {
     private readonly PendingDialogQueue _queue;
@@ -24,6 +31,14 @@ public sealed class DialogContextDecisionSystem : ISystem
     // Bidirectional in-range pairs; maintained via ProximityEventBus subscriptions.
     private readonly HashSet<(Entity Speaker, Entity Listener)> _inRange = new();
 
+    /// <summary>
+    /// Subscribes to conversation-range entry/exit events to maintain the in-range pair set
+    /// and stores the dependencies used per tick.
+    /// </summary>
+    /// <param name="queue">Queue this system populates each tick.</param>
+    /// <param name="bus">Proximity event bus — supplies conversation-range membership signals.</param>
+    /// <param name="cfg">Dialog config — supplies attempt probability and drive thresholds.</param>
+    /// <param name="rng">Deterministic RNG used for the heuristic-fallback probability gate.</param>
     public DialogContextDecisionSystem(
         PendingDialogQueue queue,
         ProximityEventBus  bus,
@@ -46,6 +61,12 @@ public sealed class DialogContextDecisionSystem : ISystem
         };
     }
 
+    /// <summary>
+    /// Per-tick entry point. Clears the pending queue then enqueues new pairs from the
+    /// in-range pair set, using either the intent-driven path or the heuristic fallback.
+    /// </summary>
+    /// <param name="em">Entity manager (unused — pairs come from the in-range set).</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         _queue.Clear();
@@ -58,6 +79,8 @@ public sealed class DialogContextDecisionSystem : ISystem
         {
             if (!speaker.Has<NpcTag>())  continue;
             if (!listener.Has<NpcTag>()) continue;
+            if (!LifeStateGuard.IsAlive(speaker))  continue;  // WP-3.0.0: skip non-Alive NPCs
+            if (!LifeStateGuard.IsAlive(listener)) continue;
 
             // Path 1: IntendedActionComponent with Dialog intent.
             if (!processedSpeakers.Contains(speaker) &&

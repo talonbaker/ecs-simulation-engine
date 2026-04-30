@@ -1,30 +1,41 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Spawns a water entity into the esophagus when drinking is the dominant drive.
-/// This is the drinking counterpart to FeedingSystem.
-///
-/// Previously this logic lived inside BiologicalConditionSystem, which mixed
-/// condition-tagging (observation) with water-spawning (action). Separating them
-/// means each system has a single, readable responsibility.
-///
-/// Pipeline position: 5 of 8 — after BrainSystem has picked the dominant drive,
-/// before InteractionSystem.
+/// Behavior phase. Spawns a water entity (with <see cref="LiquidComponent"/> +
+/// <see cref="EsophagusTransitComponent"/>) when <see cref="DesireType.Drink"/> is the
+/// dominant drive, the throat is clear, and the queued hydration is below the cap.
+/// Counterpart to <see cref="FeedingSystem"/>.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="MetabolismComponent"/>, <see cref="DriveComponent"/>,
+/// <see cref="StomachComponent"/>, <see cref="DehydratedTag"/>,
+/// <see cref="EsophagusTransitComponent"/> (throat-busy check), <see cref="LifeStateComponent"/>.<br/>
+/// Writes: spawns new water transit entities only — does not mutate existing components on the drinker.<br/>
+/// Phase: Behavior, after <see cref="BrainSystem"/> has picked the dominant drive and
+/// before <see cref="EsophagusSystem"/> moves the resulting transit entity.
+/// </remarks>
 public class DrinkingSystem : ISystem
 {
     private readonly DrinkingSystemConfig _cfg;
 
+    /// <summary>Constructs the drinking system with its tuning.</summary>
+    /// <param name="cfg">Drinking tuning (water profile, queue caps, esophagus speed).</param>
     public DrinkingSystem(DrinkingSystemConfig cfg) => _cfg = cfg;
 
+    /// <summary>Per-tick action pass; spawns water transit entities for thirsty NPCs whose dominant drive is Drink.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<MetabolismComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip Incapacitated/Deceased NPCs
+
             // Only act if the brain has selected Drink as the dominant drive
             if (!entity.Has<DriveComponent>()) continue;
             if (entity.Get<DriveComponent>().Dominant != DesireType.Drink) continue;

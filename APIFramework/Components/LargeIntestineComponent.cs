@@ -25,6 +25,7 @@ namespace APIFramework.Components;
 /// </summary>
 public struct LargeIntestineComponent
 {
+    /// <summary>Working capacity in millilitres; <see cref="Fill"/> is normalised against this.</summary>
     public const float MaxVolumeMl = 300f;
 
     /// <summary>Volume of waste currently in the large intestine (ml).</summary>
@@ -53,9 +54,12 @@ public struct LargeIntestineComponent
 
     // ── Derived ───────────────────────────────────────────────────────────────
 
+    /// <summary>Normalised fill 0.0 – 1.0 against <see cref="MaxVolumeMl"/>.</summary>
     public readonly float Fill    => ContentVolumeMl / MaxVolumeMl;
+    /// <summary>True when no content remains in the large intestine.</summary>
     public readonly bool  IsEmpty => ContentVolumeMl <= 0f;
 
+    /// <summary>Debug-friendly fill-percentage and volume summary.</summary>
     public override string ToString() =>
         $"LargeIntestine: {Fill:P0} ({ContentVolumeMl:F1}/{MaxVolumeMl}ml)";
 }

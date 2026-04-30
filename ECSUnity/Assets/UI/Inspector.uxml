@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <!--
+        Inspector panel root.
+        Three-tier NPC/object/room inspector — WP-3.1.E AT-04/05/06.
+        Content inside inspector-content is populated at runtime by InspectorPanel.cs.
+    -->
+    <ui:VisualElement name="inspector-root" class="inspector-root">
+        <ui:VisualElement name="inspector-header" class="inspector-header">
+            <ui:Label name="inspector-title" class="inspector-title" text="Inspector" />
+            <ui:VisualElement name="inspector-tier-tabs" class="tier-tabs">
+                <ui:Button name="tab-glance"  class="tier-tab tier-tab--active" text="GLANCE" />
+                <ui:Button name="tab-drill"   class="tier-tab"                  text="DRILL"  />
+                <ui:Button name="tab-deep"    class="tier-tab"                  text="DEEP"   />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:ScrollView name="inspector-content" class="inspector-content">
+            <!-- Populated procedurally at runtime -->
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

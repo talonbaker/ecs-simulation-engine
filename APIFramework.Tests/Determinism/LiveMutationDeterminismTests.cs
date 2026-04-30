@@ -30,7 +30,7 @@ public class LiveMutationDeterminismTests
             Em          = new EntityManager();
             Bus         = new StructuralChangeBus();
             Cache       = new PathfindingCache(512);
-            Pathfinding = new PathfindingService(Em, 64, 64, new MovementConfig(), Bus, Cache);
+            Pathfinding = new PathfindingService(Em, 64, 64, new MovementConfig(), Cache, Bus);
             Api         = new WorldMutationApi(Em, Bus);
             Bus.Subscribe(_ => Cache.Clear());
 

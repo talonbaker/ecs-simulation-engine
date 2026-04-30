@@ -14,7 +14,7 @@ namespace APIFramework.Tests.Systems.Movement;
 public class RegressionMovementDeterminismTests
 {
     private static PathfindingService MakeServiceNoBusNoCache(EntityManager em)
-        => new PathfindingService(em, 32, 32, new MovementConfig());
+        => new PathfindingService(em, 32, 32, new MovementConfig(), new PathfindingCache(512), new APIFramework.Systems.Spatial.StructuralChangeBus());
 
     [Fact]
     public void ComputePath_NoBusNoCache_SameSeed_ProducesIdenticalPaths()

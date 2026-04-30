@@ -1,0 +1,268 @@
+{
+  "schemaVersion": "0.1.0",
+  "worldId": "office-starter",
+  "name": "The Office (Starter)",
+  "seed": 19990101,
+
+  "floors": [
+    { "id": "floor-basement", "name": "Basement",    "floorEnum": "basement"  },
+    { "id": "floor-first",    "name": "First Floor", "floorEnum": "first"     },
+    { "id": "floor-top",      "name": "Top Floor",   "floorEnum": "top"       },
+    { "id": "floor-exterior", "name": "Exterior",    "floorEnum": "exterior"  }
+  ],
+
+  "rooms": [
+    {
+      "id": "first-floor-breakroom",
+      "name": "First-Floor Breakroom",
+      "category": "breakroom",
+      "floorId": "floor-first",
+      "bounds": { "x": 2, "y": 2, "width": 15, "height": 12 },
+      "initialIllumination": { "ambientLevel": 55, "colorTemperatureK": 3800 },
+      "namedAnchorTag": "the-microwave",
+      "description": "The microwave has a smell. The smell is older than three of the current employees. Cleaning it is a passive-aggressive volunteer rotation.",
+      "smellTag": "old-microwave",
+      "notesAttached": [
+        "PLEASE LABEL YOUR FOOD.",
+        "WHOSE TUPPERWARE IS THIS???"
+      ]
+    },
+    {
+      "id": "first-floor-cubicle-grid-east",
+      "name": "First-Floor Cubicle Grid (East)",
+      "category": "cubicleGrid",
+      "floorId": "floor-first",
+      "bounds": { "x": 20, "y": 2, "width": 25, "height": 20 },
+      "initialIllumination": { "ambientLevel": 70, "colorTemperatureK": 4000 },
+      "namedAnchorTag": "the-window",
+      "description": "The north window. The one everyone gathers at when there's a delivery, weather, or anything else worth seeing. The good gossip spot.",
+      "smellTag": "stale-carpet"
+    },
+    {
+      "id": "first-floor-cubicle-grid-west",
+      "name": "First-Floor Cubicle Grid (West)",
+      "category": "cubicleGrid",
+      "floorId": "floor-first",
+      "bounds": { "x": 2, "y": 16, "width": 16, "height": 18 },
+      "initialIllumination": { "ambientLevel": 68, "colorTemperatureK": 4000 }
+    },
+    {
+      "id": "first-floor-it-closet",
+      "name": "IT Closet / Server Room",
+      "category": "itCloset",
+      "floorId": "floor-first",
+      "bounds": { "x": 47, "y": 2, "width": 10, "height": 9 },
+      "initialIllumination": { "ambientLevel": 85, "colorTemperatureK": 5500 },
+      "namedAnchorTag": "the-it-closet",
+      "description": "Greg lives here, mostly. The lights are off because the LEDs are enough. Smells like dust burning off heatsinks.",
+      "smellTag": "hot-heatsinks"
+    },
+    {
+      "id": "first-floor-supply-closet",
+      "name": "Supply Closet",
+      "category": "supplyCloset",
+      "floorId": "floor-first",
+      "bounds": { "x": 47, "y": 13, "width": 10, "height": 9 },
+      "initialIllumination": { "ambientLevel": 48, "colorTemperatureK": 3800 },
+      "namedAnchorTag": "the-supply-closet",
+      "description": "Calls itself a supply closet. Is actually a graveyard of obsolete office equipment going back to the late 1990s. Three printers nobody knows how to use.",
+      "smellTag": "old-plastic"
+    },
+    {
+      "id": "top-floor-conference-room",
+      "name": "Top-Floor Conference Room",
+      "category": "conferenceRoom",
+      "floorId": "floor-top",
+      "bounds": { "x": 2, "y": 102, "width": 28, "height": 18 },
+      "initialIllumination": { "ambientLevel": 78, "colorTemperatureK": 4500 },
+      "namedAnchorTag": "the-conference-room",
+      "description": "Has a TV nobody can connect to. The HDMI cable goes somewhere mysterious. Important meetings happen here despite the TV problem.",
+      "notesAttached": [
+        "HDMI CABLE IS IN THE CABINET (it is not in the cabinet)"
+      ]
+    },
+    {
+      "id": "basement-shipping",
+      "name": "Basement Shipping / Loading Dock",
+      "category": "loadingDock",
+      "floorId": "floor-basement",
+      "bounds": { "x": 2, "y": 202, "width": 50, "height": 25 },
+      "initialIllumination": { "ambientLevel": 62, "colorTemperatureK": 4000 },
+      "smellTag": "cardboard-machine-oil"
+    },
+    {
+      "id": "exterior-parking-lot",
+      "name": "Parking Lot",
+      "category": "parkingLot",
+      "floorId": "floor-exterior",
+      "bounds": { "x": 2, "y": 302, "width": 65, "height": 30 },
+      "initialIllumination": { "ambientLevel": 90, "colorTemperatureK": 6500 },
+      "namedAnchorTag": "the-parking-lot",
+      "description": "Assigned spots. People do not respect the assignments. There have been incidents."
+    }
+  ],
+
+  "lightSources": [
+    {
+      "id": "ls-breakroom-strip",
+      "kind": "breakroomStrip",
+      "state": "flickering",
+      "intensity": 58,
+      "colorTemperatureK": 3800,
+      "position": { "x": 9, "y": 8 },
+      "roomId": "first-floor-breakroom"
+    },
+    {
+      "id": "ls-cubicle-east-1",
+      "kind": "overheadFluorescent",
+      "state": "on",
+      "intensity": 75,
+      "colorTemperatureK": 4000,
+      "position": { "x": 28, "y": 8 },
+      "roomId": "first-floor-cubicle-grid-east"
+    },
+    {
+      "id": "ls-cubicle-east-2",
+      "kind": "overheadFluorescent",
+      "state": "on",
+      "intensity": 75,
+      "colorTemperatureK": 4000,
+      "position": { "x": 38, "y": 14 },
+      "roomId": "first-floor-cubicle-grid-east"
+    },
+    {
+      "id": "ls-cubicle-west-1",
+      "kind": "overheadFluorescent",
+      "state": "on",
+      "intensity": 70,
+      "colorTemperatureK": 4000,
+      "position": { "x": 8, "y": 22 },
+      "roomId": "first-floor-cubicle-grid-west"
+    },
+    {
+      "id": "ls-it-closet-led",
+      "kind": "serverLed",
+      "state": "on",
+      "intensity": 85,
+      "colorTemperatureK": 5500,
+      "position": { "x": 52, "y": 6 },
+      "roomId": "first-floor-it-closet"
+    },
+    {
+      "id": "ls-supply-closet",
+      "kind": "overheadFluorescent",
+      "state": "on",
+      "intensity": 50,
+      "colorTemperatureK": 3800,
+      "position": { "x": 52, "y": 17 },
+      "roomId": "first-floor-supply-closet"
+    },
+    {
+      "id": "ls-conference-track",
+      "kind": "conferenceTrack",
+      "state": "on",
+      "intensity": 80,
+      "colorTemperatureK": 4500,
+      "position": { "x": 15, "y": 111 },
+      "roomId": "top-floor-conference-room"
+    },
+    {
+      "id": "ls-basement-overhead",
+      "kind": "overheadFluorescent",
+      "state": "on",
+      "intensity": 62,
+      "colorTemperatureK": 4000,
+      "position": { "x": 27, "y": 214 },
+      "roomId": "basement-shipping"
+    }
+  ],
+
+  "lightApertures": [
+    {
+      "id": "ap-first-floor-north-window",
+      "position": { "x": 32, "y": 2 },
+      "roomId": "first-floor-cubicle-grid-east",
+      "facing": "north",
+      "areaSqTiles": 6.0
+    },
+    {
+      "id": "ap-top-floor-conference-east",
+      "position": { "x": 28, "y": 111 },
+      "roomId": "top-floor-conference-room",
+      "facing": "east",
+      "areaSqTiles": 4.0
+    }
+  ],
+
+  "npcSlots": [
+    {
+      "id": "slot-breakroom-venter",
+      "roomId": "first-floor-breakroom",
+      "x": 9,
+      "y": 8,
+      "archetypeHint": "the-vent"
+    },
+    {
+      "id": "slot-cubicle-east-hermit",
+      "roomId": "first-floor-cubicle-grid-east",
+      "x": 25,
+      "y": 8,
+      "archetypeHint": "the-hermit"
+    },
+    {
+      "id": "slot-cubicle-east-climber",
+      "roomId": "first-floor-cubicle-grid-east",
+      "x": 38,
+      "y": 14,
+      "archetypeHint": "the-climber"
+    },
+    {
+      "id": "slot-it-closet-hermit",
+      "roomId": "first-floor-it-closet",
+      "x": 52,
+      "y": 6,
+      "archetypeHint": "the-hermit"
+    },
+    {
+      "id": "slot-conference-boss",
+      "roomId": "top-floor-conference-room",
+      "x": 15,
+      "y": 111,
+      "archetypeHint": "the-boss"
+    },
+    {
+      "id": "slot-parking-cynic",
+      "roomId": "exterior-parking-lot",
+      "x": 30,
+      "y": 315,
+      "archetypeHint": "the-cynic"
+    }
+  ],
+
+  "objectsAtAnchors": [
+    {
+      "id": "obj-floppy-box",
+      "roomId": "first-floor-supply-closet",
+      "description": "A cardboard box of 3.5-inch floppy disks. The handwritten label says 'Q3 1998 Backups. DO NOT ERASE.'",
+      "physicalState": "present-degraded"
+    },
+    {
+      "id": "obj-mystery-tupperware",
+      "roomId": "first-floor-breakroom",
+      "description": "A sealed Tupperware container pushed to the back of the fridge. Contents unidentifiable. No label. Has been here over a year.",
+      "physicalState": "present-greatly-degraded"
+    },
+    {
+      "id": "obj-parking-sign",
+      "roomId": "exterior-parking-lot",
+      "description": "A hand-laminated sign zip-tied to the parking barrier: NO FIGHTING IN THE PARKING LOT — ASSIGNED SPOTS ARE ASSIGNED.",
+      "physicalState": "present"
+    },
+    {
+      "id": "obj-cubicle-12-dust",
+      "roomId": "first-floor-cubicle-grid-east",
+      "description": "The dust on Mark's old desk at Cubicle 12. Nobody has touched it since he left. The dust says more than people do.",
+      "physicalState": "present"
+    }
+  ]
+}

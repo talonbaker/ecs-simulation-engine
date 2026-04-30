@@ -4,18 +4,30 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Phase: Cleanup (80) — runs after ActionSelectionSystem (Cognition=30) has decided intents.
-/// Per tick, for each NPC with WorkloadComponent:
-///   1. Recomputes CurrentLoad.
-///   2. Advances progress on the task the NPC intends to Work on.
-///   3. Detects task completion (Progress ≥ 1.0) and emits TaskCompleted.
-///   4. Detects newly overdue tasks and emits OverdueTask (once per transition).
+/// Cleanup phase. Per tick, for each NPC with <see cref="WorkloadComponent"/>:
+/// recomputes CurrentLoad, advances <see cref="TaskComponent"/>.Progress on the task
+/// the NPC intends to Work on, detects task completion (Progress ≥ 1.0) and emits
+/// <see cref="NarrativeEventKind.TaskCompleted"/>, and detects newly overdue tasks
+/// emitting <see cref="NarrativeEventKind.OverdueTask"/> exactly once per transition.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="WorkloadComponent"/>,
+/// <see cref="IntendedActionComponent"/>, <see cref="TaskComponent"/>,
+/// <see cref="EnergyComponent"/>, <see cref="HungryTag"/>,
+/// <see cref="DehydratedTag"/>, <see cref="BladderCriticalTag"/>,
+/// <see cref="StressedTag"/>, <see cref="OverwhelmedTag"/>,
+/// <see cref="PersonalityComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="WorkloadComponent"/> (current load and active list),
+/// <see cref="TaskComponent"/> Progress and QualityLevel, <see cref="OverdueTag"/>;
+/// destroys completed task entities and emits narrative candidates.<br/>
+/// Phase: Cleanup, after <see cref="ActionSelectionSystem"/>.
+/// </remarks>
 public class WorkloadSystem : ISystem
 {
     private readonly WorkloadConfig    _cfg;
@@ -23,6 +35,11 @@ public class WorkloadSystem : ISystem
     private readonly NarrativeEventBus _bus;
     private readonly EntityManager     _em;
 
+    /// <summary>Constructs the workload system.</summary>
+    /// <param name="cfg">Workload tuning (progress rate, quality decay/recovery, biases).</param>
+    /// <param name="clock">Simulation clock providing tick time for deadline comparison.</param>
+    /// <param name="bus">Narrative bus that receives TaskCompleted/OverdueTask candidates.</param>
+    /// <param name="em">Entity manager used to look up and destroy task entities.</param>
     public WorkloadSystem(WorkloadConfig cfg, SimulationClock clock,
         NarrativeEventBus bus, EntityManager em)
     {
@@ -32,12 +49,16 @@ public class WorkloadSystem : ISystem
         _em    = em;
     }
 
+    /// <summary>Per-tick workload pass; advances progress, detects completion/overdue, removes finished tasks.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         long now = (long)_clock.TotalTime;
 
         foreach (var npc in em.Query<NpcTag>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(npc)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!npc.Has<WorkloadComponent>()) continue;
 
             var wl = npc.Get<WorkloadComponent>();

@@ -4,9 +4,11 @@ using APIFramework.Systems.Spatial;
 namespace APIFramework.Systems.Movement;
 
 /// <summary>
-/// Subscribes to StructuralChangeBus and clears PathfindingCache on every emission.
-/// Registered for lifecycle reasons only — no per-tick work. The actual clear
-/// happens as a side-effect of bus emissions during producing systems' ticks.
+/// System that listens to StructuralChangeBus and clears the pathfinding cache
+/// whenever topology changes.
+///
+/// v0.1 implementation: clears the entire cache on any structural change.
+/// Future: region-scoped eviction (drop only entries whose bounding box overlaps the change).
 /// </summary>
 public sealed class PathfindingCacheInvalidationSystem : ISystem
 {
@@ -18,5 +20,8 @@ public sealed class PathfindingCacheInvalidationSystem : ISystem
         bus.Subscribe(_ => _cache.Clear());
     }
 
-    public void Update(EntityManager em, float deltaTime) { }
+    public void Update(EntityManager em, float deltaTime)
+    {
+        // Nothing to do per-tick; work happens via bus subscription.
+    }
 }

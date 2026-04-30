@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -23,16 +24,29 @@ namespace APIFramework.Systems;
 ///
 /// Pipeline position: 7 of 10 — after action systems, before InteractionSystem.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="EnergyComponent"/>, <see cref="DriveComponent"/>,
+/// <see cref="BlockedActionsComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="EnergyComponent"/>.IsSleeping (single writer).<br/>
+/// Phase: Behavior, after <see cref="BrainSystem"/>.
+/// </remarks>
 public class SleepSystem : ISystem
 {
     private readonly SleepSystemConfig _cfg;
 
+    /// <summary>Constructs the sleep system with its tuning.</summary>
+    /// <param name="cfg">Sleep tuning (WakeThreshold for the sleepiness floor).</param>
     public SleepSystem(SleepSystemConfig cfg) => _cfg = cfg;
 
+    /// <summary>Per-tick sleep-state toggle pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<EnergyComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip Incapacitated/Deceased NPCs
+
             // Only entities that the brain evaluates are eligible for sleep
             if (!entity.Has<DriveComponent>()) continue;
 

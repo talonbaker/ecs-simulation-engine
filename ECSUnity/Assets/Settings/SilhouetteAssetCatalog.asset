@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000000, type: 3}
+  m_Name: SilhouetteAssetCatalog
+  m_EditorClassIdentifier: SilhouetteAssetCatalog
+  _bodyMaterial: {fileID: 0}
+  _hairMaterial: {fileID: 0}
+  _headwearMaterial: {fileID: 0}
+  _itemMaterial: {fileID: 0}
+  _bodySprites:
+  - Height: short
+    Build: slight
+    Sprite: {fileID: 0}
+  - Height: short
+    Build: average
+    Sprite: {fileID: 0}
+  - Height: short
+    Build: stocky
+    Sprite: {fileID: 0}
+  - Height: average
+    Build: slight
+    Sprite: {fileID: 0}
+  - Height: average
+    Build: average
+    Sprite: {fileID: 0}
+  - Height: average
+    Build: stocky
+    Sprite: {fileID: 0}
+  - Height: tall
+    Build: slight
+    Sprite: {fileID: 0}
+  - Height: tall
+    Build: average
+    Sprite: {fileID: 0}
+  - Height: tall
+    Build: stocky
+    Sprite: {fileID: 0}
+  _hairSprites:
+  - Hair: bald
+    Sprite: {fileID: 0}
+  - Hair: short
+    Sprite: {fileID: 0}
+  - Hair: medium
+    Sprite: {fileID: 0}
+  - Hair: long
+    Sprite: {fileID: 0}
+  - Hair: distinctive
+    Sprite: {fileID: 0}
+  _headwearSprites:
+  - Kind: hat
+    Sprite: {fileID: 0}
+  - Kind: cap
+    Sprite: {fileID: 0}
+  - Kind: glasses
+    Sprite: {fileID: 0}
+  - Kind: glasses+cap
+    Sprite: {fileID: 0}
+  _itemSprites:
+  - Kind: clipboard
+    Sprite: {fileID: 0}
+  - Kind: coffee-mug
+    Sprite: {fileID: 0}
+  - Kind: lanyard
+    Sprite: {fileID: 0}
+  - Kind: phone
+    Sprite: {fileID: 0}
+  - Kind: cigarette
+    Sprite: {fileID: 0}
+  - Kind: folder
+    Sprite: {fileID: 0}
+  - Kind: purse-on-shoulder
+    Sprite: {fileID: 0}
+  - Kind: pager
+    Sprite: {fileID: 0}
+  - Kind: tie
+    Sprite: {fileID: 0}

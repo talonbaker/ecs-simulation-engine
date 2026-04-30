@@ -9,9 +9,11 @@ namespace APIFramework.Systems.Spatial;
 ///   - Has ObstacleTag
 ///   - Has AnchorObjectComponent and PositionComponent and is not an NPC
 ///
+/// Also attaches MutableTopologyTag to all non-NPC StructuralTag entities so they
+/// can be moved at runtime via IWorldMutationApi.
+///
 /// Note: WallComponent and DoorComponent do not exist in v0.1; when they are added,
-/// extend the predicate here. The completion note documents which predicates were used.
-/// A follow-up data packet can switch to per-template "structural: true" flags.
+/// extend the predicate here.
 /// </summary>
 public sealed class StructuralTaggingSystem : ISystem
 {
@@ -36,6 +38,13 @@ public sealed class StructuralTaggingSystem : ISystem
             if (entity.Has<NpcTag>() || entity.Has<HumanTag>()) continue;
             if (!entity.Has<StructuralTag>())
                 entity.Add(default(StructuralTag));
+        }
+
+        // Attach MutableTopologyTag to movable structural entities (non-NPCs)
+        foreach (var entity in em.Query<StructuralTag>())
+        {
+            if (!entity.Has<NpcTag>() && !entity.Has<MutableTopologyTag>())
+                entity.Add(default(MutableTopologyTag));
         }
     }
 }

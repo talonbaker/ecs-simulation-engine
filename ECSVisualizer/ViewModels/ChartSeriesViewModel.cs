@@ -20,11 +20,17 @@ public sealed class ChartSeriesViewModel
     private int _count;    // number of valid samples (0 → Capacity)
 
     // ── Public metadata ───────────────────────────────────────────────────────
+    /// <summary>Short display label shown at the top-left of the chart (e.g. "SATIATION").</summary>
     public string Label    { get; }
+    /// <summary>Hex color string (e.g. "#30D158") used to draw the line.</summary>
     public string ColorHex { get; }
+    /// <summary>Lower bound of the Y-axis scale.</summary>
     public double Min      { get; }
+    /// <summary>Upper bound of the Y-axis scale.</summary>
     public double Max      { get; }
+    /// <summary>Maximum number of samples retained in the ring buffer.</summary>
     public int    Capacity => _ring.Length;
+    /// <summary>Number of samples currently stored (grows up to <see cref="Capacity"/>).</summary>
     public int    Count    => _count;
 
     /// <summary>Most recent value pushed (displayed in top-right of chart).</summary>
@@ -35,6 +41,10 @@ public sealed class ChartSeriesViewModel
 
     // ─────────────────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Creates a new chart series with a fixed-size ring buffer, display
+    /// label, line color, and Y-axis range.
+    /// </summary>
     /// <param name="label">   Short display label ("SATIATION", "FPS", …).</param>
     /// <param name="colorHex">Hex color for the chart line, e.g. "#30D158".</param>
     /// <param name="min">     Y-axis minimum (typically 0).</param>
@@ -56,6 +66,7 @@ public sealed class ChartSeriesViewModel
     /// Add a new sample. If the buffer is full the oldest sample is silently evicted.
     /// Fires Refreshed after writing.
     /// </summary>
+    /// <param name="value">The new sample to append.</param>
     public void Push(double value)
     {
         _ring[_writePos] = value;
@@ -71,6 +82,8 @@ public sealed class ChartSeriesViewModel
     /// Copies the last <paramref name="n"/> samples (oldest first) into
     /// <paramref name="dest"/>.  <paramref name="n"/> must be ≤ Count.
     /// </summary>
+    /// <param name="dest">Destination buffer; must be at least <paramref name="n"/> elements long.</param>
+    /// <param name="n">Number of samples to copy in chronological order.</param>
     public void CopyOrderedTo(double[] dest, int n)
     {
         if (n <= 0) return;

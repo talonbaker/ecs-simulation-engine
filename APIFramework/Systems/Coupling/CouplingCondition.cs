@@ -9,13 +9,29 @@ namespace APIFramework.Systems.Coupling;
 /// </summary>
 public readonly struct CouplingMatchContext
 {
+    /// <summary>Lowercase RoomCategory enum name for the NPC's current room, or null if outside rooms.</summary>
     public readonly string? RoomCategory;
+    /// <summary>Lowercase LightState enum name of the room's dominant light source, or null.</summary>
     public readonly string? DominantSourceState;
+    /// <summary>Lowercase LightKind enum name of the room's dominant light source, or null.</summary>
     public readonly string? DominantSourceKind;
+    /// <summary>The room's accumulated AmbientLevel (0–100).</summary>
     public readonly int     AmbientLevel;
+    /// <summary>Lowercase DayPhase enum name resolved from <see cref="APIFramework.Systems.Lighting.SunStateService"/>.</summary>
     public readonly string  DayPhase;
+    /// <summary>True if any aperture in the room is currently emitting a beam.</summary>
     public readonly bool    ApertureBeamPresent;
 
+    /// <summary>
+    /// Captures the per-NPC lighting context resolved by
+    /// <see cref="LightingToDriveCouplingSystem"/> for this tick.
+    /// </summary>
+    /// <param name="roomCategory">Lowercase RoomCategory enum name, or null.</param>
+    /// <param name="dominantSourceState">Lowercase LightState enum name, or null.</param>
+    /// <param name="dominantSourceKind">Lowercase LightKind enum name, or null.</param>
+    /// <param name="ambientLevel">Room AmbientLevel (0–100).</param>
+    /// <param name="dayPhase">Lowercase DayPhase enum name.</param>
+    /// <param name="apertureBeamPresent">Whether at least one aperture in the room emits a beam.</param>
     public CouplingMatchContext(
         string? roomCategory,
         string? dominantSourceState,
@@ -64,6 +80,7 @@ public class CouplingCondition
     /// <summary>
     /// Returns true if the context satisfies every non-null clause in this condition.
     /// </summary>
+    /// <param name="ctx">The per-NPC match context resolved this tick.</param>
     public bool Matches(in CouplingMatchContext ctx)
     {
         if (RoomCategoryAny is { Count: > 0 })

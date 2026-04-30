@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!--
+        Notification panel: phone ring indicator, fax tray count, email blink.
+        WP-3.1.E AT-09.
+    -->
+    <ui:VisualElement name="notification-root" class="notification-root">
+        <ui:VisualElement name="phone-indicator" class="notif-indicator">
+            <ui:Label name="phone-label"  text="TEL"  class="notif-label"  />
+            <ui:Label name="phone-status" text="    " class="notif-status" />
+        </ui:VisualElement>
+        <ui:VisualElement name="fax-indicator" class="notif-indicator">
+            <ui:Label name="fax-label" text="FAX" class="notif-label"  />
+            <ui:Label name="fax-count" text="0"   class="notif-status" />
+        </ui:VisualElement>
+        <ui:VisualElement name="email-indicator" class="notif-indicator">
+            <ui:Label name="email-label" text="MAIL" class="notif-label"  />
+            <ui:Label name="email-blink" text="   "  class="notif-status" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

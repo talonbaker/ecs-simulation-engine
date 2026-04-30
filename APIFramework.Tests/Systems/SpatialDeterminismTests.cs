@@ -58,10 +58,11 @@ public class SpatialDeterminismTests
         var em  = new EntityManager();
 
         var idx        = new GridSpatialIndex(4, 128, 128);
-        var sync       = new SpatialIndexSyncSystem(idx);
+        var structBus  = new StructuralChangeBus();
+        var sync       = new SpatialIndexSyncSystem(idx, structBus);
         var membership = new EntityRoomMembership();
         var bus        = new ProximityEventBus();
-        var roomSys    = new RoomMembershipSystem(membership, bus);
+        var roomSys    = new RoomMembershipSystem(membership, bus, structBus);
         var proxSys    = new ProximityEventSystem(idx, bus, membership);
         em.EntityDestroyed += sync.OnEntityDestroyed;
 

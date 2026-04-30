@@ -68,6 +68,20 @@ public struct MoodComponent
     /// <summary>Forward-directed emotion toward upcoming rewards or goals. Low = interest, High = vigilance.</summary>
     public float Anticipation;
 
+    /// <summary>
+    /// Panic intensity — an acute fear response to immediate threat. Separate from the baseline Fear
+    /// emotion, Panic is a spike that freezes behavior (e.g., choking event). Values 0–100.
+    /// Set to peak intensity on choke; decays via MoodSystem's decay rules.
+    /// </summary>
+    public float PanicLevel;
+
+    /// <summary>
+    /// Grief intensity — a sustained sorrow response to learning of or witnessing death.
+    /// Separate from the baseline Sadness emotion. Values 0–100.
+    /// Set by BereavementSystem when an NPC learns of a death; decays via MoodSystem's decay rules.
+    /// </summary>
+    public float GriefLevel;
+
     // ── Convenience ───────────────────────────────────────────────────────────
 
     /// <summary>True if any emotion is above a negligible threshold (not emotionally neutral).</summary>
@@ -82,6 +96,10 @@ public struct MoodComponent
     public readonly float Valence =>
         (Joy + Trust + Anticipation) - (Fear + Sadness + Disgust + Anger);
 
+    /// <summary>
+    /// Returns a compact one-line summary of all eight Plutchik intensities for diagnostics and logs.
+    /// </summary>
+    /// <returns>Space-separated emotion:intensity pairs, each rounded to integer.</returns>
     public override string ToString() =>
         $"Joy:{Joy:F0} Trust:{Trust:F0} Fear:{Fear:F0} Surprise:{Surprise:F0} " +
         $"Sadness:{Sadness:F0} Disgust:{Disgust:F0} Anger:{Anger:F0} Anticipation:{Anticipation:F0}";

@@ -20,7 +20,7 @@ public class PathfindingServiceCacheMissOnTopologyChangeTests
         var em    = new EntityManager();
         var bus   = new StructuralChangeBus();
         var cache = new PathfindingCache(512);
-        var svc   = new PathfindingService(em, 32, 32, new MovementConfig(), bus, cache);
+        var svc   = new PathfindingService(em, 32, 32, new MovementConfig(), cache, bus);
         var api   = new WorldMutationApi(em, bus);
 
         // Wire invalidation subscriber
@@ -47,7 +47,7 @@ public class PathfindingServiceCacheMissOnTopologyChangeTests
         var em    = new EntityManager();
         var bus   = new StructuralChangeBus();
         var cache = new PathfindingCache(512);
-        var svc   = new PathfindingService(em, 32, 32, new MovementConfig(), bus, cache);
+        var svc   = new PathfindingService(em, 32, 32, new MovementConfig(), cache, bus);
         var api   = new WorldMutationApi(em, bus);
 
         bus.Subscribe(_ => cache.Clear());

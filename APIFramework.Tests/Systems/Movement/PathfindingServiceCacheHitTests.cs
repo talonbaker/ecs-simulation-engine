@@ -17,7 +17,7 @@ public class PathfindingServiceCacheHitTests
     {
         var bus   = new StructuralChangeBus();
         var cache = new PathfindingCache(512);
-        var svc   = new PathfindingService(em, w, h, new MovementConfig(), bus, cache);
+        var svc   = new PathfindingService(em, w, h, new MovementConfig(), cache, bus);
         return (svc, cache);
     }
 

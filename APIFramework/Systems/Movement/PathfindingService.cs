@@ -13,56 +13,70 @@ namespace APIFramework.Systems.Movement;
 /// Seeded tie-break noise ensures two NPCs taking the same trip with different
 /// seeds trace slightly different routes (the "natural paths" quality goal).
 ///
-/// When a StructuralChangeBus and PathfindingCache are provided, identical queries
-/// against the same topology version hit the cache. The cache is cleared by
-/// PathfindingCacheInvalidationSystem on every structural change emission.
+/// v0.1: Caches queries by (fromX, fromY, toX, toY, seed, topologyVersion).
+/// Cache is invalidated (cleared) whenever the topology changes (via StructuralChangeBus).
 /// </summary>
+/// <remarks>
+/// Not an <c>ISystem</c> — this is a pure service held by <see cref="Core.SimulationBootstrapper"/>.
+/// Reads: <see cref="ObstacleTag"/>, <see cref="LockedTag"/>, <see cref="RoomTag"/>+<see cref="RoomComponent"/>,
+/// and <see cref="PositionComponent"/> when scanning for obstacles and doorways.
+/// Writes: nothing — only fills the supplied <see cref="PathfindingCache"/>.
+/// Consumed by <see cref="PathfindingTriggerSystem"/> each tick when an NPC needs a fresh route.
+/// </remarks>
+/// <seealso cref="PathfindingCache"/>
+/// <seealso cref="PathfindingTriggerSystem"/>
+/// <seealso cref="StructuralChangeBus"/>
 public sealed class PathfindingService
 {
-    private readonly EntityManager       _em;
-    private readonly int                 _worldWidth;
-    private readonly int                 _worldHeight;
-    private readonly float               _doorwayDiscount;
-    private readonly float               _tieBreakNoiseScale;
-    private readonly StructuralChangeBus? _bus;
-    private readonly PathfindingCache?    _cache;
+    private readonly EntityManager _em;
+    private readonly int           _worldWidth;
+    private readonly int           _worldHeight;
+    private readonly float         _doorwayDiscount;
+    private readonly float         _tieBreakNoiseScale;
+    private readonly PathfindingCache _cache;
+    private readonly StructuralChangeBus _bus;
 
     private static readonly (int dx, int dy)[] Directions = { (0, -1), (0, 1), (-1, 0), (1, 0) };
 
-    public PathfindingService(EntityManager em, int worldWidth, int worldHeight, MovementConfig cfg,
-        StructuralChangeBus? bus = null, PathfindingCache? cache = null)
+    /// <summary>
+    /// Constructs the service.
+    /// </summary>
+    /// <param name="em">Entity manager scanned each query for obstacles, locked doors, and rooms.</param>
+    /// <param name="worldWidth">Grid width in tiles. Coordinates outside <c>[0, worldWidth)</c> are rejected.</param>
+    /// <param name="worldHeight">Grid height in tiles. Coordinates outside <c>[0, worldHeight)</c> are rejected.</param>
+    /// <param name="cfg">Movement tuning; supplies <c>Pathfinding.DoorwayDiscount</c> and
+    /// <c>Pathfinding.TieBreakNoiseScale</c>.</param>
+    /// <param name="cache">LRU cache shared with the bootstrapper. Hits short-circuit the A* search.</param>
+    /// <param name="bus">Structural change bus; its <c>TopologyVersion</c> participates in the cache key.</param>
+    public PathfindingService(EntityManager em, int worldWidth, int worldHeight, MovementConfig cfg, PathfindingCache cache, StructuralChangeBus bus)
     {
         _em                 = em;
         _worldWidth         = worldWidth;
         _worldHeight        = worldHeight;
         _doorwayDiscount    = cfg.Pathfinding.DoorwayDiscount;
         _tieBreakNoiseScale = cfg.Pathfinding.TieBreakNoiseScale;
-        _bus                = bus;
         _cache              = cache;
+        _bus                = bus;
     }
 
     /// <summary>
     /// Returns the tile waypoints from start (exclusive) to goal (inclusive).
     /// Returns an empty list when start == goal or no path exists.
     /// The same (from, to, seed) triple always produces the same path.
-    /// Cache hit and cache miss return identical values for identical inputs at the same topology version.
+    /// Uses the pathfinding cache; cache hits are invisible to the caller.
     /// </summary>
     public IReadOnlyList<(int X, int Y)> ComputePath(int fromX, int fromY, int toX, int toY, int seed)
     {
         if (fromX == toX && fromY == toY)
             return Array.Empty<(int, int)>();
 
-        if (_bus != null && _cache != null)
-        {
-            var key = new PathQueryKey(fromX, fromY, toX, toY, seed, _bus.TopologyVersion);
-            if (_cache.TryGet(key, out var cached)) return cached;
+        var key = new PathQueryKey(fromX, fromY, toX, toY, seed, _bus.TopologyVersion);
+        if (_cache.TryGet(key, out var cached))
+            return cached;
 
-            var computed = ComputePathUncached(fromX, fromY, toX, toY, seed);
-            _cache.Put(key, computed);
-            return computed;
-        }
-
-        return ComputePathUncached(fromX, fromY, toX, toY, seed);
+        var path = ComputePathUncached(fromX, fromY, toX, toY, seed);
+        _cache.Put(key, path);
+        return path;
     }
 
     private IReadOnlyList<(int X, int Y)> ComputePathUncached(int fromX, int fromY, int toX, int toY, int seed)
@@ -148,12 +162,23 @@ public sealed class PathfindingService
     private HashSet<(int, int)> BuildObstacleSet()
     {
         var set = new HashSet<(int, int)>();
+
+        // Add entities marked with ObstacleTag
         foreach (var e in _em.Query<ObstacleTag>())
         {
             if (!e.Has<PositionComponent>()) continue;
             var pos = e.Get<PositionComponent>();
             set.Add(((int)MathF.Round(pos.X), (int)MathF.Round(pos.Z)));
         }
+
+        // Add doors marked with LockedTag (locked doors are impassable)
+        foreach (var e in _em.Query<LockedTag>())
+        {
+            if (!e.Has<PositionComponent>()) continue;
+            var pos = e.Get<PositionComponent>();
+            set.Add(((int)MathF.Round(pos.X), (int)MathF.Round(pos.Z)));
+        }
+
         return set;
     }
 

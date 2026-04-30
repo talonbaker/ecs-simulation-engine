@@ -20,7 +20,7 @@ public class PathfindingServiceDeterminismHoldsTests
         var em    = new EntityManager();
         var bus   = new StructuralChangeBus();
         var cache = new PathfindingCache(512);
-        var svc   = new PathfindingService(em, 32, 32, new MovementConfig(), bus, cache);
+        var svc   = new PathfindingService(em, 32, 32, new MovementConfig(), cache, bus);
 
         // First call: cache miss → computes and stores
         var miss = svc.ComputePath(0, 0, 15, 15, seed: 7);
@@ -40,7 +40,7 @@ public class PathfindingServiceDeterminismHoldsTests
         var em    = new EntityManager();
         var bus   = new StructuralChangeBus();
         var cache = new PathfindingCache(512);
-        var svc   = new PathfindingService(em, 32, 32, new MovementConfig(), bus, cache);
+        var svc   = new PathfindingService(em, 32, 32, new MovementConfig(), cache, bus);
 
         var first = svc.ComputePath(3, 4, 12, 8, seed: 99).ToList();
 
@@ -59,7 +59,7 @@ public class PathfindingServiceDeterminismHoldsTests
         var em    = new EntityManager();
         var bus   = new StructuralChangeBus();
         var cache = new PathfindingCache(512);
-        var svc   = new PathfindingService(em, 32, 32, new MovementConfig(), bus, cache);
+        var svc   = new PathfindingService(em, 32, 32, new MovementConfig(), cache, bus);
 
         var pathA = svc.ComputePath(0, 0, 10, 10, seed: 1);
         var pathB = svc.ComputePath(0, 0, 10, 10, seed: 99999);

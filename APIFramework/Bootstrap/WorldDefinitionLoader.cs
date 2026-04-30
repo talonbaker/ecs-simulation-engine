@@ -22,8 +22,23 @@ namespace APIFramework.Bootstrap;
 /// Fail-closed: any validation error throws <see cref="WorldDefinitionInvalidException"/>.
 /// No retry, no self-healing, no fallback.
 /// </summary>
+/// <remarks>
+/// The pipeline is: world.json → schema validation → <see cref="WorldDefinitionDto"/>
+/// → enum parsing → entity creation via <c>EntityTemplates</c>. NPC slots are emitted as
+/// marker entities for <see cref="CastGenerator"/> to consume in a subsequent pass.
+/// </remarks>
+/// <seealso cref="CastGenerator"/>
+/// <seealso cref="WorldDefinitionInvalidException"/>
 public static class WorldDefinitionLoader
 {
+    /// <summary>
+    /// Loads, validates, and instantiates the world definition at <paramref name="path"/>.
+    /// </summary>
+    /// <param name="path">Absolute or relative path to a world-definition JSON file.</param>
+    /// <param name="entityManager">Entity manager to create rooms, lights, slots, and objects in.</param>
+    /// <param name="rng">Seeded RNG (currently unused by the loader itself but reserved for future randomised placement).</param>
+    /// <returns>A <see cref="LoadResult"/> with per-category counts and the seed read from JSON.</returns>
+    /// <exception cref="WorldDefinitionInvalidException">Thrown if the file fails schema validation or references unknown enum values.</exception>
     public static LoadResult LoadFromFile(string path, EntityManager entityManager, SeededRandom rng)
     {
         var json = File.ReadAllText(path);
