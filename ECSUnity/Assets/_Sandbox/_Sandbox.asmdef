@@ -1,7 +1,9 @@
 {
     "name": "_Sandbox",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "ECSUnity"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
