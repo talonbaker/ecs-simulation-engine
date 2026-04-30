@@ -69,15 +69,14 @@ public class BuildModeDeterminismTests
             return Guid.NewGuid(); // new GUID each time — doesn't affect log comparison
         }
 
-        public bool MoveEntity(Guid entityId, int newTileX, int newTileY)
+        public void MoveEntity(Guid entityId, int newTileX, int newTileY)
         {
             _log.Add($"Move|{entityId}|{newTileX}|{newTileY}");
-            return true;
         }
 
-        public bool DespawnStructural(Guid entityId)         { _log.Add($"Despawn|{entityId}"); return true; }
+        public void DespawnStructural(Guid entityId)         { _log.Add($"Despawn|{entityId}"); }
         public void AttachObstacle(Guid entityId)            { _log.Add($"Attach|{entityId}"); }
         public void DetachObstacle(Guid entityId)            { _log.Add($"Detach|{entityId}"); }
-        public bool ChangeRoomBounds(Guid roomId, APIFramework.Components.BoundsRect b) { _log.Add($"Bounds|{roomId}"); return true; }
+        public void ChangeRoomBounds(Guid roomId, APIFramework.Components.BoundsRect b) { _log.Add($"Bounds|{roomId}"); }
     }
 }
