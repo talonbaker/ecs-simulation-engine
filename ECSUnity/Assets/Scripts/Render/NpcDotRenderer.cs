@@ -171,12 +171,12 @@ public sealed class NpcDotRenderer : MonoBehaviour
     {
         // Assign world-space position. Engine X → Unity X, Engine Y → Unity Y, Engine Z → Unity Z.
         // NPCs are on the floor plane; we lift them by _dotHeight so they float above room quads.
-        // Engine coordinate system: X = horizontal, Y = depth (floor plan).
-        // Unity coordinate system: X = horizontal, Z = depth, Y = up.
+        // Engine: X = tile column, Z = tile row (Y is always 0 = floor level).
+        // Unity: X = horizontal, Z = depth. Map engine Z → Unity Z.
         view.Go.transform.position = new Vector3(
             npc.Position.X,
             _dotHeight,
-            npc.Position.Y);
+            npc.Position.Z);
 
         // Scale is constant — set once at create, not per frame.
     }
