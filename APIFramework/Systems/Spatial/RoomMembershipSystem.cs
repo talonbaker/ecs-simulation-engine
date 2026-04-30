@@ -14,22 +14,58 @@ namespace APIFramework.Systems.Spatial;
 ///   - When multiple rooms overlap, picks the one with the smallest area (most-specific wins).
 ///   - Caches the result in EntityRoomMembership.
 ///   - Fires RoomMembershipChanged on ProximityEventBus when the result changes.
+///
+/// When a StructuralChangeBus is provided:
+///   - Emits RoomBoundsChanged when a room entity's Bounds change.
+///   - NPC room transitions do NOT emit on the structural bus — they are proximity-level,
+///     not topology-level. This is a critical guardrail enforced here.
 /// </summary>
 public sealed class RoomMembershipSystem : ISystem
 {
     private readonly EntityRoomMembership _membership;
-    private readonly ProximityEventBus    _bus;
+    private readonly ProximityEventBus    _proximityBus;
+    private readonly StructuralChangeBus? _structuralBus;
+
+    // room entity → last-seen Bounds; used to detect room bounds changes
+    private readonly Dictionary<Entity, BoundsRect> _lastRoomBounds = new();
+
     private int _tick;
 
-    public RoomMembershipSystem(EntityRoomMembership membership, ProximityEventBus bus)
+    public RoomMembershipSystem(EntityRoomMembership membership, ProximityEventBus proximityBus,
+        StructuralChangeBus? structuralBus = null)
     {
-        _membership = membership;
-        _bus        = bus;
+        _membership    = membership;
+        _proximityBus  = proximityBus;
+        _structuralBus = structuralBus;
     }
 
     public void Update(EntityManager em, float deltaTime)
     {
         _tick++;
+
+        // Check for room bounds changes before membership resolution
+        if (_structuralBus != null)
+        {
+            foreach (var roomEntity in em.Query<RoomTag>())
+            {
+                if (!roomEntity.Has<RoomComponent>()) continue;
+                var current = roomEntity.Get<RoomComponent>().Bounds;
+
+                if (_lastRoomBounds.TryGetValue(roomEntity, out var prev))
+                {
+                    if (prev != current)
+                    {
+                        _lastRoomBounds[roomEntity] = current;
+                        _structuralBus.Emit(StructuralChangeKind.RoomBoundsChanged, roomEntity.Id,
+                            prev.X, prev.Y, current.X, current.Y, roomEntity.Id, _tick);
+                    }
+                }
+                else
+                {
+                    _lastRoomBounds[roomEntity] = current;
+                }
+            }
+        }
 
         // Snapshot rooms once per tick; sorted by area ascending so the first match wins
         var rooms = em.Query<RoomTag>()
@@ -64,7 +100,8 @@ public sealed class RoomMembershipSystem : ISystem
 
             if (!ReferenceEquals(oldRoom, newRoom))
             {
-                _bus.RaiseRoomMembershipChanged(new RoomMembershipChanged(entity, oldRoom, newRoom, _tick));
+                // NPC room transitions fire on ProximityEventBus only — never on structural bus
+                _proximityBus.RaiseRoomMembershipChanged(new RoomMembershipChanged(entity, oldRoom, newRoom, _tick));
             }
         }
     }

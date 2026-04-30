@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems.Movement;
 
@@ -11,36 +12,61 @@ namespace APIFramework.Systems.Movement;
 /// Computes paths that avoid ObstacleTag entities and prefer doorway tiles.
 /// Seeded tie-break noise ensures two NPCs taking the same trip with different
 /// seeds trace slightly different routes (the "natural paths" quality goal).
+///
+/// When a StructuralChangeBus and PathfindingCache are provided, identical queries
+/// against the same topology version hit the cache. The cache is cleared by
+/// PathfindingCacheInvalidationSystem on every structural change emission.
 /// </summary>
 public sealed class PathfindingService
 {
-    private readonly EntityManager _em;
-    private readonly int           _worldWidth;
-    private readonly int           _worldHeight;
-    private readonly float         _doorwayDiscount;
-    private readonly float         _tieBreakNoiseScale;
+    private readonly EntityManager       _em;
+    private readonly int                 _worldWidth;
+    private readonly int                 _worldHeight;
+    private readonly float               _doorwayDiscount;
+    private readonly float               _tieBreakNoiseScale;
+    private readonly StructuralChangeBus? _bus;
+    private readonly PathfindingCache?    _cache;
 
     private static readonly (int dx, int dy)[] Directions = { (0, -1), (0, 1), (-1, 0), (1, 0) };
 
-    public PathfindingService(EntityManager em, int worldWidth, int worldHeight, MovementConfig cfg)
+    public PathfindingService(EntityManager em, int worldWidth, int worldHeight, MovementConfig cfg,
+        StructuralChangeBus? bus = null, PathfindingCache? cache = null)
     {
         _em                 = em;
         _worldWidth         = worldWidth;
         _worldHeight        = worldHeight;
         _doorwayDiscount    = cfg.Pathfinding.DoorwayDiscount;
         _tieBreakNoiseScale = cfg.Pathfinding.TieBreakNoiseScale;
+        _bus                = bus;
+        _cache              = cache;
     }
 
     /// <summary>
     /// Returns the tile waypoints from start (exclusive) to goal (inclusive).
     /// Returns an empty list when start == goal or no path exists.
     /// The same (from, to, seed) triple always produces the same path.
+    /// Cache hit and cache miss return identical values for identical inputs at the same topology version.
     /// </summary>
     public IReadOnlyList<(int X, int Y)> ComputePath(int fromX, int fromY, int toX, int toY, int seed)
     {
         if (fromX == toX && fromY == toY)
             return Array.Empty<(int, int)>();
 
+        if (_bus != null && _cache != null)
+        {
+            var key = new PathQueryKey(fromX, fromY, toX, toY, seed, _bus.TopologyVersion);
+            if (_cache.TryGet(key, out var cached)) return cached;
+
+            var computed = ComputePathUncached(fromX, fromY, toX, toY, seed);
+            _cache.Put(key, computed);
+            return computed;
+        }
+
+        return ComputePathUncached(fromX, fromY, toX, toY, seed);
+    }
+
+    private IReadOnlyList<(int X, int Y)> ComputePathUncached(int fromX, int fromY, int toX, int toY, int seed)
+    {
         var obstacles = BuildObstacleSet();
         var doorways  = BuildDoorwaySet();
 

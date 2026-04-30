@@ -28,8 +28,9 @@ public class SimConfig
     public ScheduleConfig         Schedule        { get; set; } = new();
     public MemoryConfig           Memory          { get; set; } = new();
     public WorkloadConfig         Workload        { get; set; } = new();
-    public SocialMaskConfig       SocialMask      { get; set; } = new();
-    public PhysiologyGateConfig   PhysiologyGate  { get; set; } = new();
+    public SocialMaskConfig       SocialMask       { get; set; } = new();
+    public PhysiologyGateConfig   PhysiologyGate   { get; set; } = new();
+    public StructuralChangeConfig StructuralChange { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -805,6 +806,39 @@ public class MovementPathfindingConfig
 
     /// <summary>Scale of seeded hash noise used to break A* f-cost ties (produces path variety).</summary>
     public float TieBreakNoiseScale { get; set; } = 0.1f;
+
+    /// <summary>Maximum number of path queries held in the LRU cache. Default 512.</summary>
+    public int CacheMaxEntries { get; set; } = 512;
+
+    /// <summary>
+    /// Cache eviction strategy. "wipeOnChange" (default) clears the entire cache on any
+    /// structural change. Future: "regionScoped" evicts only entries whose tile range
+    /// overlaps the changed bounding box.
+    /// </summary>
+    public string CacheEvictionStrategy { get; set; } = "wipeOnChange";
+
+    /// <summary>When true, logs cache hit rate to console every tick. Dev-only telemetry.</summary>
+    public bool LogCacheHitRateEveryTick { get; set; } = false;
+
+    /// <summary>
+    /// When LogCacheHitRateEveryTick is enabled, warns if the observed hit rate
+    /// falls below this fraction. Default 0.50.
+    /// </summary>
+    public float WarnIfCacheHitRateBelow { get; set; } = 0.50f;
+}
+
+// ── Structural change config ───────────────────────────────────────────────────
+
+public class StructuralChangeConfig
+{
+    /// <summary>
+    /// Axiomatic: NPC movement never emits structural change events.
+    /// Documented here for clarity; must never be set true.
+    /// </summary>
+    public bool EmitOnNpcMovement { get; set; } = false;
+
+    /// <summary>When true, RoomMembershipSystem emits RoomBoundsChanged on room resize. Default true.</summary>
+    public bool EmitOnRoomBoundsChange { get; set; } = true;
 }
 
 // ── Spatial systems ───────────────────────────────────────────────────────────

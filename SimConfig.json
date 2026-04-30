@@ -329,9 +329,19 @@
       "maxMultiplier":          2.0
     },
     "pathfinding": {
-      "doorwayDiscount":    1.0,
-      "tieBreakNoiseScale": 0.1
+      "doorwayDiscount":         1.0,
+      "tieBreakNoiseScale":      0.1,
+      "cacheMaxEntries":         512,
+      "cacheEvictionStrategy":   "wipeOnChange",
+      "logCacheHitRateEveryTick": false,
+      "warnIfCacheHitRateBelow": 0.50
     }
+  },
+
+  // ── Structural change ──────────────────────────────────────────────────────
+  "structuralChange": {
+    "emitOnNpcMovement":      false,
+    "emitOnRoomBoundsChange": true
   },
 
   // ── Spatial engine ─────────────────────────────────────────────────────────
