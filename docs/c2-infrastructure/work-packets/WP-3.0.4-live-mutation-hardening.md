@@ -1,8 +1,12 @@
 # WP-3.0.4 — Live-Mutation Hardening (Topology-Dirty Signal + Pathfinding Cache)
 
+> **DISPATCH AUTHORISED, 2026-04-30.** Phase 3.0.0 / 3.0.1 / 3.0.2 / 3.0.6 are merged. This packet's stated dependencies (WP-1.1.A, WP-1.3.A, WP-1.7.A) all shipped in Phase 1. The packet is **first in the Track 1 dispatch queue** per `docs/PHASE-3-REALITY-CHECK.md`. No revisions to the spec below — dispatch as-is.
+>
+> **Gate for downstream:** WP-3.0.3 (slip-and-fall) consumes this packet's `IWorldMutationApi` and `StructuralChangeBus`. Several WP-3.2.x packets (sound bus, physics, chores) also benefit from `IWorldMutationApi` for live entity mutation. Land this first; the rest of Track 1 cascades.
+
 **Tier:** Sonnet
 **Depends on:** WP-1.1.A (spatial layer), WP-1.3.A (movement quality / pathfinding), WP-1.7.A (world definition)
-**Parallel-safe with:** WP-3.0.0 (death foundation — disjoint file surface; only `SimulationBootstrapper.cs` overlap, "keep both" merge; `Tags.cs` exclusive to this packet, neither modifies the other's components)
+**Parallel-safe with:** WP-3.0.0 (death foundation — disjoint file surface; only `SimulationBootstrapper.cs` overlap, "keep both" merge; `Tags.cs` exclusive to this packet, neither modifies the other's components). Also parallel-safe with all Track 2 sandbox packets (WP-3.1.S.x) — no Unity-side files touched.
 **Timebox:** 120 minutes
 **Budget:** $0.50
 
