@@ -17,6 +17,7 @@ public class SimConfig
     public SystemsConfig          Systems        { get; set; } = new();
     public SocialSystemConfig     Social         { get; set; } = new();
     public SpatialConfig          Spatial        { get; set; } = new();
+    public StructuralChangeConfig StructuralChange { get; set; } = new();
     public LightingConfig         Lighting       { get; set; } = new();
     public MovementConfig         Movement       { get; set; } = new();
     public NarrativeConfig        Narrative      { get; set; } = new();
@@ -30,6 +31,10 @@ public class SimConfig
     public WorkloadConfig         Workload        { get; set; } = new();
     public SocialMaskConfig       SocialMask      { get; set; } = new();
     public PhysiologyGateConfig   PhysiologyGate  { get; set; } = new();
+    public LifeStateConfig        LifeState       { get; set; } = new();
+    public ChokingConfig          Choking         { get; set; } = new();
+    public SlipAndFallConfig      SlipAndFall     { get; set; } = new();
+    public LockoutConfig          Lockout         { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -805,6 +810,29 @@ public class MovementPathfindingConfig
 
     /// <summary>Scale of seeded hash noise used to break A* f-cost ties (produces path variety).</summary>
     public float TieBreakNoiseScale { get; set; } = 0.1f;
+
+    /// <summary>Maximum number of entries in the pathfinding cache (LRU eviction).</summary>
+    public int CacheMaxEntries { get; set; } = 512;
+
+    /// <summary>Cache eviction strategy ("wipeOnChange" or future "regionScoped").</summary>
+    public string CacheEvictionStrategy { get; set; } = "wipeOnChange";
+
+    /// <summary>Log cache hit rate statistics every tick (dev-only telemetry).</summary>
+    public bool LogCacheHitRateEveryTick { get; set; } = false;
+
+    /// <summary>Warn if observed cache hit rate falls below this threshold (when telemetry is on).</summary>
+    public float WarnIfCacheHitRateBelow { get; set; } = 0.50f;
+}
+
+// ── Structural change system ──────────────────────────────────────────────────
+
+public class StructuralChangeConfig
+{
+    /// <summary>Emit StructuralChangeEvent when an NPC moves (should always be false; documented for clarity).</summary>
+    public bool EmitOnNpcMovement { get; set; } = false;
+
+    /// <summary>Emit StructuralChangeEvent when a room's bounds change.</summary>
+    public bool EmitOnRoomBoundsChange { get; set; } = true;
 }
 
 // ── Spatial systems ───────────────────────────────────────────────────────────
@@ -1195,4 +1223,159 @@ public class SocialMaskConfig
 
     /// <summary>Minimum ticks between successive cracks for the same NPC. Default 1800.</summary>
     public int    SlipCooldownTicks            { get; set; } = 1800;
+}
+
+// ── Life state system ─────────────────────────────────────────────────────────
+
+/// <summary>
+/// Tuning knobs for LifeStateTransitionSystem — the layer that manages
+/// Alive → Incapacitated → Deceased transitions and the cause-of-death event surface.
+/// </summary>
+public class LifeStateConfig
+{
+    /// <summary>
+    /// Default number of ticks an NPC stays Incapacitated before transitioning to Deceased.
+    /// At 60 FPS / 20 game-ticks per second ≈ 9 seconds per game-tick, 180 ticks ≈ 3 game-minutes.
+    /// Default 180.
+    /// </summary>
+    public int DefaultIncapacitatedTicks { get; set; } = 180;
+
+    /// <summary>
+    /// Whether Incapacitated NPCs can autonomously void their bladder.
+    /// When true, BladderSystem bypasses the IsAlive guard for void (but UrinationSystem respects IsAlive for the trigger).
+    /// Default true.
+    /// </summary>
+    public bool IncapacitatedAllowsBladderVoid { get; set; } = true;
+
+    /// <summary>
+    /// Whether a Deceased NPC's PositionComponent is frozen (does not change position).
+    /// Used by MovementSystem and related pathfinding systems to decide if the corpse blocks movement.
+    /// Default true.
+    /// </summary>
+    public bool DeceasedFreezesPosition { get; set; } = true;
+
+    /// <summary>
+    /// Whether to emit an invariant check when an NPC transitions to Deceased.
+    /// Default true. Placeholder for 3.0.2+.
+    /// </summary>
+    public bool EmitDeathInvariantOnTransition { get; set; } = true;
+}
+
+public class ChokingConfig
+{
+    /// <summary>
+    /// Bolus size threshold (fraction of esophagus capacity, 0..1) above which choking is possible.
+    /// Default 0.65 (65% of esophagus).
+    /// </summary>
+    public float BolusSizeThreshold { get; set; } = 0.65f;
+
+    /// <summary>
+    /// Energy threshold below which an NPC is considered "distracted-tired" (one choke trigger).
+    /// Default 30.
+    /// </summary>
+    public int EnergyThreshold { get; set; } = 30;
+
+    /// <summary>
+    /// Acute stress threshold at or above which an NPC is considered "distracted-stressed" (one choke trigger).
+    /// Default 60.
+    /// </summary>
+    public int StressThreshold { get; set; } = 60;
+
+    /// <summary>
+    /// Irritation drive threshold at or above which an NPC is considered "frustrated-eating" (one choke trigger).
+    /// Default 70.
+    /// </summary>
+    public int IrritationThreshold { get; set; } = 70;
+
+    /// <summary>
+    /// Number of ticks the choking NPC remains Incapacitated before transitioning to Deceased(Choked).
+    /// ~3 game-minutes at current tick rate. Default 180.
+    /// This value overrides LifeStateConfig.DefaultIncapacitatedTicks for choke-specific incapacitation.
+    /// </summary>
+    public int IncapacitationTicks { get; set; } = 180;
+
+    /// <summary>
+    /// Mood panic intensity set on choke (0..1 scale). The existing mood system applies decay.
+    /// Default 0.85 (85% peak panic).
+    /// </summary>
+    public float PanicMoodIntensity { get; set; } = 0.85f;
+
+    /// <summary>
+    /// Dev kill-switch for choke-started narrative emission. Always true in production.
+    /// Default true.
+    /// </summary>
+    public bool EmitChokeStartedNarrative { get; set; } = true;
+}
+
+/// <summary>
+/// Configuration for the SlipAndFallSystem (WP-3.0.3).
+/// Controls fall-risk hazard detection and slip probability.
+/// </summary>
+public class SlipAndFallConfig
+{
+    /// <summary>
+    /// Global multiplier on slip chance. Scales the product of (risk * speed * stress).
+    /// Default 0.001 (very low baseline; high-risk stains at high speed are rare death).
+    /// </summary>
+    public float GlobalSlipChanceScale { get; set; } = 0.001f;
+
+    /// <summary>
+    /// Acute stress level above which StressSlipMultiplier applies.
+    /// Default 60.
+    /// </summary>
+    public int StressDangerThreshold { get; set; } = 60;
+
+    /// <summary>
+    /// Multiplier on slip chance when NPC's AcuteStress &gt;= StressDangerThreshold.
+    /// Default 2.0 (doubles slip chance under stress).
+    /// </summary>
+    public float StressSlipMultiplier { get; set; } = 2.0f;
+
+    /// <summary>
+    /// Default fall risk level for broken items (broken mug, shattered glass).
+    /// Default 0.50.
+    /// </summary>
+    public float FallRiskBrokenItemDefault { get; set; } = 0.50f;
+
+    /// <summary>Default fall risk level for water stains. Default 0.40.</summary>
+    public float FallRiskWaterDefault { get; set; } = 0.40f;
+
+    /// <summary>Default fall risk level for blood stains. Default 0.60.</summary>
+    public float FallRiskBloodDefault { get; set; } = 0.60f;
+
+    /// <summary>Default fall risk level for oil stains. Default 0.85.</summary>
+    public float FallRiskOilDefault { get; set; } = 0.85f;
+}
+
+/// <summary>
+/// Configuration for the LockoutDetectionSystem (WP-3.0.3).
+/// Controls door-lockout and starvation detection.
+/// </summary>
+public class LockoutConfig
+{
+    /// <summary>
+    /// Hour of the game-day (0..24) at which LockoutDetectionSystem runs.
+    /// Default 18.0 (6 PM — end of office day).
+    /// </summary>
+    public float LockoutCheckHour { get; set; } = 18.0f;
+
+    /// <summary>
+    /// Satiation threshold below which an NPC becomes "hungry" in the lockout sense.
+    /// LockoutDetectionSystem only triggers when Satiation &lt;= (100 - this value).
+    /// Default 95 (i.e., Hunger &gt;= 95).
+    /// </summary>
+    public int LockoutHungerThreshold { get; set; } = 95;
+
+    /// <summary>
+    /// Number of game-days an NPC can survive locked in before starvation death.
+    /// LockedInComponent.StarvationTickBudget counts down once per game-day.
+    /// Default 5 (5 game-days of lockout = death).
+    /// </summary>
+    public int StarvationTicks { get; set; } = 5;
+
+    /// <summary>
+    /// Named anchor tag used to identify outdoor exits (parking lot, smoking bench, etc.).
+    /// Default "outdoor".
+    /// </summary>
+    public string ExitNamedAnchorTag { get; set; } = "outdoor";
 }

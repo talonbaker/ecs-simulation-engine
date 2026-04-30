@@ -3,6 +3,7 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Movement;
+using APIFramework.Systems.Spatial;
 using Xunit;
 
 namespace APIFramework.Tests.Systems.Movement;
@@ -13,7 +14,11 @@ namespace APIFramework.Tests.Systems.Movement;
 public class PathfindingServiceTests
 {
     private static PathfindingService MakeService(EntityManager em, int w = 32, int h = 32)
-        => new PathfindingService(em, w, h, new MovementConfig());
+    {
+        var cache = new PathfindingCache(512);
+        var bus = new StructuralChangeBus();
+        return new PathfindingService(em, w, h, new MovementConfig(), cache, bus);
+    }
 
     // AT-02: Finds shortest path on a clean grid
     [Fact]
@@ -127,7 +132,9 @@ public class PathfindingServiceTests
     {
         var em  = new EntityManager();
         var cfg = new MovementConfig { Pathfinding = new MovementPathfindingConfig { DoorwayDiscount = 1.0f, TieBreakNoiseScale = 0f } };
-        var svc = new PathfindingService(em, 32, 32, cfg);
+        var cache = new PathfindingCache(512);
+        var bus = new StructuralChangeBus();
+        var svc = new PathfindingService(em, 32, 32, cfg, cache, bus);
 
         // Room A: x=[0..4], y=[0..4]
         // Room B: x=[5..9], y=[0..4]

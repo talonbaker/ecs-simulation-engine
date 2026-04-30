@@ -49,7 +49,8 @@ public class MovementDeterminismTests
         var em  = new EntityManager();
         var idx = new GridSpatialIndex(4, 64, 64);
 
-        var syncSys = new SpatialIndexSyncSystem(idx);
+        var structBus = new StructuralChangeBus();
+        var syncSys = new SpatialIndexSyncSystem(idx, structBus);
         em.EntityDestroyed += syncSys.OnEntityDestroyed;
 
         var membership = new EntityRoomMembership();
@@ -57,9 +58,10 @@ public class MovementDeterminismTests
         var cfg        = new MovementConfig();
         var movCfg     = new MovementConfig();
 
-        var roomSys  = new RoomMembershipSystem(membership, bus);
+        var roomSys  = new RoomMembershipSystem(membership, bus, structBus);
         var proxSys  = new ProximityEventSystem(idx, bus, membership);
-        var pathSvc  = new PathfindingService(em, 64, 64, cfg);
+        var cache = new PathfindingCache(512);
+        var pathSvc  = new PathfindingService(em, 64, 64, cfg, cache, structBus);
         var trigSys  = new PathfindingTriggerSystem(pathSvc);
         var speedSys = new MovementSpeedModifierSystem(movCfg);
         var stepSys  = new StepAsideSystem(idx, membership, movCfg);

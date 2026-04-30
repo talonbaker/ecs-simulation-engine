@@ -14,4 +14,9 @@ public enum NarrativeEventKind
     MaskSlip,
     OverdueTask,
     TaskCompleted,
+    Choked,
+    SlippedAndFell,
+    StarvedAlone,
+    Died,
+    ChokeStarted,
 }
