@@ -22,7 +22,8 @@
       "Bash(dotnet clean *)",
       "Bash(pkill -9 testhost)",
       "Bash(pkill -9 dotnet)",
-      "Bash(timeout 120 bash -c 'while ! dotnet test --no-build 2>&1 | grep -q \"Test Run\"; do sleep 5; done')"
+      "Bash(timeout 120 bash -c 'while ! dotnet test --no-build 2>&1 | grep -q \"Test Run\"; do sleep 5; done')",
+      "Bash(git show *)"
     ]
   }
 }
