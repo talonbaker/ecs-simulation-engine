@@ -36,12 +36,13 @@ cp -f .build/Warden.Telemetry/Warden.Telemetry.dll "$OUTPUT/Warden.Telemetry.dll
 
 # System.Text.Json — used by Warden.Telemetry.TelemetrySerializer (active runtime
 # call) and as [JsonStringEnumConverter] attribute on WorldStateDto. Unity's Mono
-# runtime does not ship System.Text.Json, so we must supply it from the publish
-# output. System.Text.Encodings.Web is its only direct dep that Unity does not
-# already provide. Other transitive deps (System.Memory, System.Buffers, etc.)
-# live in Unity's Mono and would CONFLICT if copied — so do not copy them.
-cp -f .build/APIFramework/System.Text.Json.dll          "$OUTPUT/System.Text.Json.dll"
-cp -f .build/APIFramework/System.Text.Encodings.Web.dll "$OUTPUT/System.Text.Encodings.Web.dll"
+# runtime does not ship these; supply them from the publish output.
+# DO NOT copy System.Memory, System.Buffers, System.Numerics.Vectors — those live
+# in Unity's Mono and would conflict if duplicated.
+cp -f .build/APIFramework/System.Text.Json.dll                     "$OUTPUT/System.Text.Json.dll"
+cp -f .build/APIFramework/System.Text.Encodings.Web.dll            "$OUTPUT/System.Text.Encodings.Web.dll"
+cp -f .build/APIFramework/System.Runtime.CompilerServices.Unsafe.dll "$OUTPUT/System.Runtime.CompilerServices.Unsafe.dll"
+cp -f .build/APIFramework/Microsoft.Bcl.AsyncInterfaces.dll        "$OUTPUT/Microsoft.Bcl.AsyncInterfaces.dll"
 
 # DO NOT copy Newtonsoft.Json.dll — provided by com.unity.nuget.newtonsoft-json
 
