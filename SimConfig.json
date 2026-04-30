@@ -330,8 +330,18 @@
     },
     "pathfinding": {
       "doorwayDiscount":    1.0,
-      "tieBreakNoiseScale": 0.1
+      "tieBreakNoiseScale": 0.1,
+      "cacheMaxEntries":    512,
+      "cacheEvictionStrategy": "wipeOnChange",
+      "logCacheHitRateEveryTick": false,
+      "warnIfCacheHitRateBelow": 0.5
     }
+  },
+
+  // ── Structural change system ───────────────────────────────────────────────
+  "structuralChange": {
+    "emitOnNpcMovement":     false,
+    "emitOnRoomBoundsChange": true
   },
 
   // ── Spatial engine ─────────────────────────────────────────────────────────
@@ -756,5 +766,61 @@
     "maxCandidatesPerTick":          32,
     // tiles the avoidance flee target is pushed away from the threat
     "avoidStandoffDistance":         4
+  },
+
+  // ── Life state system ──────────────────────────────────────────────────────
+  "lifeState": {
+    // Default number of ticks an NPC stays Incapacitated before transitioning to Deceased.
+    // At 60 FPS / 20 game-ticks per second ≈ 9 seconds per game-tick, 180 ticks ≈ 3 game-minutes.
+    "defaultIncapacitatedTicks": 180,
+    // Whether Incapacitated NPCs can autonomously void their bladder
+    "incapacitatedAllowsBladderVoid": true,
+    // Whether a Deceased NPC's PositionComponent is frozen (does not change position)
+    "deceasedFreezesPosition": true,
+    // Whether to emit an invariant check when an NPC transitions to Deceased
+    "emitDeathInvariantOnTransition": true
+  },
+  "choking": {
+    // Bolus size threshold (fraction of esophagus capacity, 0..1) above which choking is possible
+    "bolusSizeThreshold": 0.65,
+    // Energy threshold below which an NPC is considered distracted-tired
+    "energyThreshold": 30,
+    // Acute stress threshold at or above which an NPC is considered distracted-stressed
+    "stressThreshold": 60,
+    // Irritation drive threshold at or above which an NPC is considered frustrated-eating
+    "irritationThreshold": 70,
+    // Number of ticks the choking NPC remains Incapacitated before transition to Deceased
+    "incapacitationTicks": 180,
+    // Mood panic intensity set on choke (0..1 scale)
+    "panicMoodIntensity": 0.85,
+    // Dev kill-switch for choke-started narrative emission
+    "emitChokeStartedNarrative": true
+  },
+  "slipAndFall": {
+    // Global multiplier on slip chance. Scales the product of (risk * speed * stress).
+    // Default 0.001 (very low baseline; high-risk stains at high speed are rare death).
+    "globalSlipChanceScale": 0.001,
+    // Acute stress level above which StressSlipMultiplier applies
+    "stressDangerThreshold": 60,
+    // Multiplier on slip chance when NPC's AcuteStress >= StressDangerThreshold
+    "stressSlipMultiplier": 2.0,
+    // Default fall risk level for broken items
+    "fallRiskBrokenItemDefault": 0.50,
+    // Default fall risk level for water stains
+    "fallRiskWaterDefault": 0.40,
+    // Default fall risk level for blood stains
+    "fallRiskBloodDefault": 0.60,
+    // Default fall risk level for oil stains
+    "fallRiskOilDefault": 0.85
+  },
+  "lockout": {
+    // Hour of the game-day (0..24) at which LockoutDetectionSystem runs
+    "lockoutCheckHour": 18.0,
+    // Hunger threshold (Satiation <= 100 - this value triggers lockout detection)
+    "lockoutHungerThreshold": 95,
+    // Game-days an NPC can survive locked in before starvation death
+    "starvationTicks": 5,
+    // Named anchor tag used to identify outdoor exits
+    "exitNamedAnchorTag": "outdoor"
   }
 }
