@@ -9,7 +9,7 @@ when something else (or nothing) is clicked.
 None — the scene already has the cube and sphere placed.
 
 ## Test (every run)
-1. Open Assets/_Sandbox/selection-outline.scene.
+1. Open Assets/_Sandbox/selection-outline.unity.
 2. Press Play.
 3. Move the camera so both the cube and the sphere are clearly visible.
 4. Click the cube. Expect: cyan outline appears around the cube.
