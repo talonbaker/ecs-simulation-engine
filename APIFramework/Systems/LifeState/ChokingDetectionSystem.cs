@@ -24,6 +24,19 @@ namespace APIFramework.Systems.LifeState;
 /// Deterministic: iterates in OrderBy(e.Id) order. All thresholds are scalar comparisons.
 /// Single-shot: IsAlive + !Has{IsChokingTag} guards prevent re-triggering.
 /// </summary>
+/// <remarks>
+/// Phase: <see cref="SystemPhase.Cleanup"/>. Registered before <see cref="LifeStateTransitionSystem"/>
+/// in the same phase so the enqueued transition request is drained in this same tick.
+/// Reads: <see cref="EsophagusTransitComponent"/>, <see cref="BolusComponent"/>, <see cref="EnergyComponent"/>,
+/// <see cref="StressComponent"/>, <see cref="SocialDrivesComponent"/>, <see cref="MoodComponent"/>,
+/// <see cref="ProximityComponent"/>, <see cref="PositionComponent"/>, <see cref="LifeStateComponent"/>.
+/// Writes: attaches <see cref="IsChokingTag"/> and <see cref="ChokingComponent"/>; mutates
+/// <see cref="MoodComponent.PanicLevel"/>; emits a ChokeStarted narrative candidate; enqueues
+/// a transition via <see cref="LifeStateTransitionSystem.RequestTransition"/>. Does not write
+/// <see cref="LifeStateComponent"/> directly — only <see cref="LifeStateTransitionSystem"/> may.
+/// </remarks>
+/// <seealso cref="LifeStateTransitionSystem"/>
+/// <seealso cref="ChokingCleanupSystem"/>
 public class ChokingDetectionSystem : ISystem
 {
     private readonly LifeStateTransitionSystem _transition;
@@ -32,6 +45,15 @@ public class ChokingDetectionSystem : ISystem
     private readonly ChokingConfig _cfg;
     private readonly EntityManager _em;
 
+    /// <summary>
+    /// Constructs the choking detection system with all required dependencies.
+    /// </summary>
+    /// <param name="transition">Life-state transition system; receives Incapacitated requests when a choke fires.</param>
+    /// <param name="narrative">Narrative event bus; receives ChokeStarted candidates.</param>
+    /// <param name="clock">Simulation clock; supplies the current tick stamped onto markers and events.</param>
+    /// <param name="cfg">Choking thresholds and tuning values (bolus size, distraction triggers, panic intensity, incapacitation tick budget).</param>
+    /// <param name="em">Entity manager used for cross-entity lookups (bolus by id, witnesses).</param>
+    /// <exception cref="ArgumentNullException">Any dependency is null.</exception>
     public ChokingDetectionSystem(
         LifeStateTransitionSystem transition,
         NarrativeEventBus narrative,
@@ -46,6 +68,12 @@ public class ChokingDetectionSystem : ISystem
         _em = em ?? throw new ArgumentNullException(nameof(em));
     }
 
+    /// <summary>
+    /// Iterates NPCs in transit, evaluates the choke condition, and on trigger attaches markers,
+    /// spikes panic mood, emits a ChokeStarted narrative event, and enqueues an Incapacitated transition.
+    /// </summary>
+    /// <param name="em">Entity manager (typically the same instance held in this system).</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused; the system runs strictly at tick granularity).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var npc in em.Query<EsophagusTransitComponent>().OrderBy(e => e.Id))
@@ -123,6 +151,9 @@ public class ChokingDetectionSystem : ISystem
     /// Returns a participant list for the ChokeStarted narrative event.
     /// Includes the choking NPC and, if present, the closest alive NPC in conversation range.
     /// </summary>
+    /// <param name="choker">The NPC who has just started choking.</param>
+    /// <param name="em">Entity manager used to find alive witnesses.</param>
+    /// <returns>An array of entity integer IDs; always contains the choker, plus optionally one witness.</returns>
     private int[] FindParticipantsWithWitness(Entity choker, EntityManager em)
     {
         // Find closest alive NPC in conversation range
@@ -149,6 +180,9 @@ public class ChokingDetectionSystem : ISystem
     /// Returns the EntityId of the closest alive NPC in conversation range, or null if none.
     /// Deterministic: iterates witnesses in ascending EntityIntId order and returns the first.
     /// </summary>
+    /// <param name="choker">The NPC who has just started choking.</param>
+    /// <param name="em">Entity manager used to query NPCs.</param>
+    /// <returns>The Guid of the chosen witness, or null when no eligible witness is in range.</returns>
     private Guid? FindClosestWitness(Entity choker, EntityManager em)
     {
         if (!choker.Has<ProximityComponent>()) return null;
@@ -192,6 +226,8 @@ public class ChokingDetectionSystem : ISystem
     /// Extracts the entity's internal integer ID from its Guid for deterministic ordering.
     /// Matches the pattern used in WillpowerSystem.
     /// </summary>
+    /// <param name="id">The Guid to extract the integer ID from.</param>
+    /// <returns>The first 8 bytes of the Guid interpreted as a little-endian Int64.</returns>
     private static long ExtractEntityIntId(Guid id)
     {
         var bytes = id.ToByteArray();
