@@ -79,10 +79,11 @@ public sealed class SimulationSnapshot
         );
 
         // ── Living entities ───────────────────────────────────────────────────
+        // Query NpcTag so cast-generator NPCs (which have no MetabolismComponent) are included.
         var living = new List<EntitySnapshot>();
-        foreach (var e in em.Query<MetabolismComponent>())
+        foreach (var e in em.Query<NpcTag>())
         {
-            var meta   = e.Get<MetabolismComponent>();
+            var meta   = e.Has<MetabolismComponent>() ? e.Get<MetabolismComponent>() : default;
             var drives = e.Has<DriveComponent>()          ? e.Get<DriveComponent>()          : default;
             var energy = e.Has<EnergyComponent>()         ? e.Get<EnergyComponent>()         : default;
             var si      = e.Has<SmallIntestineComponent>() ? e.Get<SmallIntestineComponent>() : default;
