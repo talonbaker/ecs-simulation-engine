@@ -68,6 +68,13 @@ public struct MoodComponent
     /// <summary>Forward-directed emotion toward upcoming rewards or goals. Low = interest, High = vigilance.</summary>
     public float Anticipation;
 
+    /// <summary>
+    /// Panic intensity — an acute fear response to immediate threat. Separate from the baseline Fear
+    /// emotion, Panic is a spike that freezes behavior (e.g., choking event). Values 0–100.
+    /// Set to peak intensity on choke; decays via MoodSystem's decay rules.
+    /// </summary>
+    public float PanicLevel;
+
     // ── Convenience ───────────────────────────────────────────────────────────
 
     /// <summary>True if any emotion is above a negligible threshold (not emotionally neutral).</summary>

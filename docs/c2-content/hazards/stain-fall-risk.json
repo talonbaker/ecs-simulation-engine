@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "0.1.0",
+  "stainKindFallRisk": [
+    { "kind": "water", "fallRiskLevel": 0.40 },
+    { "kind": "blood", "fallRiskLevel": 0.60 },
+    { "kind": "oil", "fallRiskLevel": 0.85 },
+    { "kind": "coffee", "fallRiskLevel": 0.30 },
+    { "kind": "vomit", "fallRiskLevel": 0.55 },
+    { "kind": "urine", "fallRiskLevel": 0.45 },
+    { "kind": "broken-glass", "fallRiskLevel": 0.70 }
+  ]
+}

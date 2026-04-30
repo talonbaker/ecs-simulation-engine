@@ -5,6 +5,7 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Spatial;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -108,6 +109,8 @@ public sealed class ActionSelectionSystem : ISystem
 
         foreach (var npc in npcs)
         {
+            if (!LifeStateGuard.IsAlive(npc)) continue;
+
             var drives   = npc.Get<SocialDrivesComponent>();
             var wp       = npc.Has<WillpowerComponent>()    ? npc.Get<WillpowerComponent>()    : new WillpowerComponent(50, 50);
             var inhibs   = npc.Has<InhibitionsComponent>()  ? npc.Get<InhibitionsComponent>()  : default;
