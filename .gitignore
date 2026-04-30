@@ -221,6 +221,11 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
+# Unity package manifests must be tracked — the rule above is for NuGet, not UPM
+!ECSUnity/Packages/manifest.json
+!ECSUnity/Packages/packages-lock.json
+!UnityVisualizer/Packages/manifest.json
+!UnityVisualizer/Packages/packages-lock.json
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files

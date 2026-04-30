@@ -18,6 +18,11 @@ namespace APIFramework.Systems.Lighting;
 ///
 /// Results stored in an internal cache; IlluminationAccumulationSystem reads them via GetBeamState.
 /// </summary>
+/// <remarks>
+/// Reads <see cref="SunStateService"/> and <c>LightApertureComponent</c>; writes only to its
+/// internal <c>_beamStates</c> cache. Must run AFTER <see cref="SunSystem"/> (so the sun
+/// state is fresh) and BEFORE <see cref="IlluminationAccumulationSystem"/>.
+/// </remarks>
 public sealed class ApertureBeamSystem : ISystem
 {
     private readonly SunStateService _sunService;
@@ -28,6 +33,11 @@ public sealed class ApertureBeamSystem : ISystem
     // Facing directions in degrees (north=0, east=90, south=180, west=270)
     private static readonly double[] FacingDeg = { 0.0, 90.0, 180.0, 270.0 };
 
+    /// <summary>
+    /// Stores the sun-state and clock references used per tick.
+    /// </summary>
+    /// <param name="sunService">Singleton sun-state service — provides azimuth and elevation.</param>
+    /// <param name="clock">Simulation clock — used to compute beam color temperature from day fraction.</param>
     public ApertureBeamSystem(SunStateService sunService, SimulationClock clock)
     {
         _sunService = sunService;
@@ -41,6 +51,12 @@ public sealed class ApertureBeamSystem : ISystem
     public ApertureBeamState? GetBeamState(Entity entity) =>
         _beamStates.TryGetValue(entity, out var s) ? s : null;
 
+    /// <summary>
+    /// Per-tick entry point. Recomputes beam state for every aperture and caches the
+    /// results for <see cref="IlluminationAccumulationSystem"/> to consume.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for apertures.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused; computation is clock-based).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         _beamStates.Clear();
@@ -59,6 +75,10 @@ public sealed class ApertureBeamSystem : ISystem
     }
 
     /// <summary>Pure beam computation — exposed for unit tests.</summary>
+    /// <param name="sun">Current sun position.</param>
+    /// <param name="aperture">Aperture geometry and facing.</param>
+    /// <param name="colorTemperatureK">Color temperature to stamp on the result.</param>
+    /// <returns>The beam state, or null if the aperture admits no light at this sun position.</returns>
     public static ApertureBeamState? ComputeBeam(
         SunStateRecord      sun,
         LightApertureComponent aperture,

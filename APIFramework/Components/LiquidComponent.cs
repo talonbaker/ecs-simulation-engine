@@ -21,6 +21,7 @@ public struct LiquidComponent
     /// <summary>Human-readable liquid label ("Water", "Milk", "Coffee", etc.).</summary>
     public string LiquidType;
 
+    /// <summary>Debug-friendly liquid-type/volume/water summary.</summary>
     public override string ToString() =>
         $"{LiquidType} ({VolumeMl:F0}ml | Water: {Nutrients.Water:F0}ml)";
 }

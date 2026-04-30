@@ -24,6 +24,11 @@ namespace ECSCli.Ai;
 /// </summary>
 public static class AiDescribeCommand
 {
+    /// <summary>
+    /// Builds the <c>describe</c> subcommand with its required <c>--out</c>
+    /// option and wires the handler that writes the Markdown fact sheet.
+    /// </summary>
+    /// <returns>The configured <see cref="Command"/> ready to be added to <see cref="AiCommand.Root"/>.</returns>
     public static Command Build()
     {
         var outOpt = new Option<FileInfo>(

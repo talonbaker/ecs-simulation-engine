@@ -3,7 +3,21 @@ using System;
 namespace APIFramework.Components;
 
 /// <summary>Vocabulary register — constrains dialogue generation style without prescribing lines.</summary>
-public enum VocabularyRegister { Formal, Casual, Crass, Clipped, Academic, Folksy }
+public enum VocabularyRegister
+{
+    /// <summary>Polite, structured, professional speech.</summary>
+    Formal,
+    /// <summary>Everyday relaxed speech.</summary>
+    Casual,
+    /// <summary>Coarse, vulgar, blunt speech.</summary>
+    Crass,
+    /// <summary>Terse, low-syllable, business-like speech.</summary>
+    Clipped,
+    /// <summary>Erudite, jargon-heavy, intellectual speech.</summary>
+    Academic,
+    /// <summary>Warm, idiomatic, regional/folk speech.</summary>
+    Folksy
+}
 
 /// <summary>
 /// Stable-for-the-save personality state.
@@ -13,12 +27,18 @@ public enum VocabularyRegister { Formal, Casual, Crass, Clipped, Academic, Folks
 /// </summary>
 public struct PersonalityComponent
 {
+    /// <summary>Big Five Openness, –2..+2 (clamped on assign).</summary>
     public int Openness;
+    /// <summary>Big Five Conscientiousness, –2..+2 (clamped on assign).</summary>
     public int Conscientiousness;
+    /// <summary>Big Five Extraversion, –2..+2 (clamped on assign).</summary>
     public int Extraversion;
+    /// <summary>Big Five Agreeableness, –2..+2 (clamped on assign).</summary>
     public int Agreeableness;
+    /// <summary>Big Five Neuroticism, –2..+2 (clamped on assign).</summary>
     public int Neuroticism;
 
+    /// <summary>Vocabulary register that constrains dialogue style.</summary>
     public VocabularyRegister VocabularyRegister;
 
     private string? _currentMood;
@@ -35,6 +55,10 @@ public struct PersonalityComponent
             : value ?? string.Empty;
     }
 
+    /// <summary>
+    /// Constructs a personality. Big Five values are clamped to [–2, +2];
+    /// <paramref name="currentMood"/> is truncated to 32 characters.
+    /// </summary>
     public PersonalityComponent(
         int openness, int conscientiousness, int extraversion,
         int agreeableness, int neuroticism,

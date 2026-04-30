@@ -41,6 +41,10 @@ public class EntityManager
     // CreateEntity(Guid) are unaffected.
     private long _idCounter = 0;
 
+    /// <summary>
+    /// Read-only view of every entity currently owned by this manager,
+    /// in insertion (creation) order.
+    /// </summary>
     public IReadOnlyList<Entity> Entities => _entities;
 
     /// <summary>
@@ -89,6 +93,13 @@ public class EntityManager
         return entity;
     }
 
+    /// <summary>
+    /// Removes <paramref name="entity"/> from the manager and from every component
+    /// index bucket it occupied. The <see cref="EntityDestroyed"/> event fires first,
+    /// before any index mutation, so subscribers can still observe the entity's
+    /// components while cleaning up external state (e.g. spatial index entries).
+    /// </summary>
+    /// <param name="entity">The entity to destroy.</param>
     public void DestroyEntity(Entity entity)
     {
         EntityDestroyed?.Invoke(entity);

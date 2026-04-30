@@ -27,12 +27,20 @@ public class SimulationEngine
     private readonly List<SystemRegistration> _registrations = new();
     private List<SystemRegistration>?         _orderedCache;
 
+    /// <summary>The <see cref="Core.EntityManager"/> this engine ticks systems against.</summary>
     public EntityManager    EntityManager { get; private set; }
+
+    /// <summary>The <see cref="SimulationClock"/> advanced once per <see cref="Update"/> call.</summary>
     public SimulationClock  Clock         { get; private set; }
 
     /// <summary>Read-only view of all registrations (for diagnostics/tooling).</summary>
     public IReadOnlyList<SystemRegistration> Registrations => _registrations;
 
+    /// <summary>
+    /// Creates a new simulation engine bound to an existing entity manager and clock.
+    /// </summary>
+    /// <param name="entityManager">The entity manager that owns the simulation's entities.</param>
+    /// <param name="clock">The simulation clock to advance on every <see cref="Update"/>.</param>
     public SimulationEngine(EntityManager entityManager, SimulationClock clock)
     {
         EntityManager = entityManager;
@@ -58,6 +66,14 @@ public class SimulationEngine
 
     // ── Tick ─────────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Advances the simulation by one tick: ticks <see cref="Clock"/> with the given
+    /// real-time delta, then runs every registered system in ascending
+    /// <see cref="SystemPhase"/> order, passing the scaled (game-time) delta.
+    /// The phase-sorted execution list is cached and rebuilt only when
+    /// <see cref="AddSystem(ISystem, SystemPhase)"/> is called.
+    /// </summary>
+    /// <param name="realDeltaTime">Elapsed real (wall-clock) seconds since the previous tick.</param>
     public void Update(float realDeltaTime)
     {
         // Advance the clock; all systems receive game-time so their math is

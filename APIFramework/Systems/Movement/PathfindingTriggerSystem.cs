@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems.Movement;
 
@@ -10,16 +11,32 @@ namespace APIFramework.Systems.Movement;
 /// PathfindingService, and writes a PathComponent to the NPC.
 /// Also removes stale PathComponents when MovementTargetComponent is absent.
 /// </summary>
+/// <remarks>
+/// Phase: World (60), registered FIRST in the movement quality pipeline. Reads
+/// <c>MovementTargetComponent</c>, <c>PositionComponent</c>; writes <c>PathComponent</c>.
+/// Skips non-Alive NPCs.
+/// </remarks>
 public sealed class PathfindingTriggerSystem : ISystem
 {
     private readonly PathfindingService                _pathfinder;
     private readonly Dictionary<Entity, Guid>          _lastTargets = new();
 
+    /// <summary>
+    /// Stores the pathfinder used to compute paths each tick.
+    /// </summary>
+    /// <param name="pathfinder">Singleton pathfinding service.</param>
     public PathfindingTriggerSystem(PathfindingService pathfinder)
     {
         _pathfinder = pathfinder;
     }
 
+    /// <summary>
+    /// Per-tick entry point. For each movement-targeted NPC whose target changed since the
+    /// last tick, recomputes the path; for any NPC that lost its target, strips the
+    /// <c>PathComponent</c>.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for movement targets and positioned entities.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // --- Build a position cache (only when at least one path needs recomputing) ---
@@ -27,6 +44,7 @@ public sealed class PathfindingTriggerSystem : ISystem
 
         foreach (var entity in em.Query<MovementTargetComponent>())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!entity.Has<PositionComponent>()) continue;
 
             var mt = entity.Get<MovementTargetComponent>();

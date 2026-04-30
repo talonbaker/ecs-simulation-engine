@@ -363,3 +363,58 @@ A stressed NPC walking through a hazard is more likely to slip:
 - **The plague-week starvation case.** A locked-in NPC during the plague week (when nobody comes to work) — the existing lockout system handles it correctly (no exit + hunger-100 → starvation), assuming the building auto-locks when nobody's present. Couples to a future "after-hours building lockdown" mechanic.
 - **Stain decay over time.** Stains currently persist indefinitely per `WP-1.9.A`. A future packet may decay fall-risk over time (oil eventually wears off; blood is removed by janitorial). Not in scope.
 - **Player-visible UI.** Diegetic per the design philosophy — visible stain on the floor (the host renders it), visible lock indicator on the door (the host renders it). Notifications about a death come through the bereavement system 3.0.2 ships. UX/UI bible-driven; 3.1.E.
+
+
+---
+
+## Completion protocol (REQUIRED — read before merging)
+
+### Visual verification: NOT NEEDED
+
+This is a Track 1 (engine) packet. All verification is handled by the xUnit test suite. Once `dotnet test` returns green for `APIFramework.Tests` (and any other affected test project), the packet is ready to push and PR. **No Unity Editor steps required.**
+
+The Sonnet executor's pipeline:
+
+1. Implement the spec.
+2. Add or update xUnit tests to cover all acceptance criteria.
+3. Run `dotnet test` from the repo root. Must be green.
+4. Run `dotnet build` to confirm no warnings introduced.
+5. Stage all changes including the self-cleanup deletion (see below).
+6. Commit on the worktree's feature branch.
+7. Push the branch and open a PR against `staging`.
+8. Stop. Do **not** merge. Talon merges after review.
+
+If a test fails or compile fails, fix the underlying cause. Do **not** skip tests, do **not** mark expected-failures, do **not** push a red branch.
+
+### Cost envelope (1-5-25 Claude army)
+
+Target: **$0.50–$1.20** per packet wall-time on the orchestrator. Timebox is stated above in the packet header. If the executing Sonnet observes its own cost approaching the upper bound without nearing acceptance criteria, **escalate to Talon** by stopping work and committing a `WP-X-blocker.md` note to the worktree explaining what burned the budget. Do not silently exceed the envelope.
+
+Cost-discipline rules of thumb:
+- Read reference files at most once per session — cache content in working memory rather than re-reading.
+- Run `dotnet test` against the focused subset (`--filter`) during iteration; full suite only at the end.
+- If a refactor is pulling far more files than the spec named, stop and re-read the spec; the spec may be wrong about scope.
+
+### Self-cleanup on merge
+
+The active `docs/c2-infrastructure/work-packets/` directory should contain only **pending** packets. Shipped packets are deleted, not archived to `_completed-specs/` (Talon's convention from 2026-04-30 forward).
+
+Before opening the PR, the executing Sonnet must:
+
+1. **Check downstream dependents** with this command from the repo root:
+   ```bash
+   git grep -l "<THIS-PACKET-ID>" docs/c2-infrastructure/work-packets/ | grep -v "_completed" | grep -v "_PACKET-COMPLETION-PROTOCOL"
+   ```
+   Replace `<THIS-PACKET-ID>` with this packet's identifier (e.g., `WP-3.0.4`).
+
+2. **If the grep returns no results** (no other pending packet references this one): include `git rm docs/c2-infrastructure/work-packets/<this-packet-filename>.md` in the staging set. The deletion ships in the same commit as the implementation. Add the line `Self-cleanup: spec file deleted, no pending dependents.` to the commit message.
+
+3. **If the grep returns one or more pending packets**: leave the spec file in place. Add a one-line status header to the top of this spec file (immediately under the H1):
+   ```markdown
+   > **STATUS:** SHIPPED to staging YYYY-MM-DD. Retained because pending packets depend on this spec: <list>.
+   ```
+   Add the line `Self-cleanup: spec retained, dependents: <list>.` to the commit message.
+
+4. **Do not touch** files under `_completed/` or `_completed-specs/` — those are historical artifacts from earlier phases.
+
+5. The git history (commit message + PR body) is the historical record. The spec file itself is ephemeral once shipped without dependents.

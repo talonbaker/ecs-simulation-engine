@@ -12,6 +12,7 @@ public struct RelationshipMemoryComponent
 {
     private IReadOnlyList<MemoryEntry>? _recent;
 
+    /// <summary>Bounded list of the most recent memory entries on this relationship, newest last.</summary>
     public IReadOnlyList<MemoryEntry> Recent
     {
         readonly get => _recent ?? Array.Empty<MemoryEntry>();

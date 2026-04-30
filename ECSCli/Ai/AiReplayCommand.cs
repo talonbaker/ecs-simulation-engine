@@ -40,6 +40,13 @@ public static class AiReplayCommand
     // Deterministic anchor for capturedAt — avoids wall-clock divergence.
     private static readonly DateTimeOffset Epoch = DateTimeOffset.UnixEpoch;
 
+    /// <summary>
+    /// Builds the <c>replay</c> subcommand with its required <c>--seed</c>,
+    /// <c>--duration</c>, and <c>--out</c> options (plus optional
+    /// <c>--commands</c> and <c>--world-definition</c>) and wires the handler
+    /// that produces deterministic JSONL telemetry.
+    /// </summary>
+    /// <returns>The configured <see cref="Command"/> ready to be added to <see cref="AiCommand.Root"/>.</returns>
     public static Command Build()
     {
         var seedOpt = new Option<int>(

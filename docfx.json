@@ -1,0 +1,30 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": ["**/*.csproj"],
+          "exclude": ["**/obj/**", "**/bin/**", "**/*.Tests.csproj"]
+        }
+      ],
+      "dest": "api",
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false
+    }
+  ],
+  "build": {
+    "content": [
+      { "files": ["api/**.yml", "api/index.md"] },
+      { "files": ["docs/wiki/**.md"], "dest": "wiki" },
+      { "files": ["*.md"] }
+    ],
+    "resource": [{ "files": ["images/**"] }],
+    "dest": "_site",
+    "globalMetadata": {
+      "_appName": "ECS Simulation Engine",
+      "_appTitle": "ECS Simulation Engine",
+      "_enableSearch": true
+    },
+    "template": ["default", "modern"]
+  }
+}

@@ -12,6 +12,20 @@ namespace APIFramework.Bootstrap;
 /// initial relationship matrix.  All sampling goes through <see cref="SeededRandom"/>
 /// for replay-determinism.
 /// </summary>
+/// <remarks>
+/// This is the second half of the data-driven boot pipeline. After
+/// <see cref="WorldDefinitionLoader"/> reads <c>world.json</c> and produces
+/// <see cref="NpcSlotTag"/> marker entities, <see cref="SpawnAll"/> walks those
+/// markers, resolves each one against an <see cref="ArchetypeDto"/> from
+/// <see cref="ArchetypeCatalog"/>, samples drives/personality/inhibitions/silhouette
+/// from the configured ranges, and emits a fully-formed NPC entity.
+/// <see cref="SeedRelationships"/> then layers archetype-driven and configured
+/// relationship patterns on top, producing relationship entities tagged with
+/// <c>RelationshipTag</c> and a <c>RelationshipComponent</c>.
+/// </remarks>
+/// <seealso cref="ArchetypeCatalog"/>
+/// <seealso cref="WorldDefinitionLoader"/>
+/// <seealso cref="CastGeneratorConfig"/>
 public static class CastGenerator
 {
     // ── Public entry points ───────────────────────────────────────────────────
@@ -21,10 +35,15 @@ public static class CastGenerator
     /// <paramref name="em"/>.  Slot entities are destroyed after spawning.
     /// Returns the list of spawned NPC entities in iteration order.
     /// </summary>
+    /// <param name="catalog">Archetype catalog used to resolve each slot's <c>ArchetypeHint</c>.</param>
+    /// <param name="em">Entity manager containing the slot entities and receiving the new NPCs.</param>
+    /// <param name="rng">Seeded RNG for deterministic sampling of all archetype ranges.</param>
+    /// <param name="config">Cast-generator tuning (drive ranges, jitter, relationship counts).</param>
     /// <param name="namePool">
     /// Optional explicit name pool. When <c>null</c>, <see cref="NamePoolLoader.LoadDefault"/>
     /// is called. If no pool is available names are not assigned.
     /// </param>
+    /// <returns>The newly spawned NPC entities in slot iteration order.</returns>
     public static IReadOnlyList<Entity> SpawnAll(
         ArchetypeCatalog    catalog,
         EntityManager       em,
@@ -73,6 +92,12 @@ public static class CastGenerator
     /// <paramref name="slot"/>.  Does NOT destroy the slot entity — call <see cref="SpawnAll"/>
     /// for the full boot path.
     /// </summary>
+    /// <param name="archetype">Archetype to sample drives/personality/inhibitions/silhouette from.</param>
+    /// <param name="slot">Slot component supplying the spawn position (X, Y) in tile space.</param>
+    /// <param name="em">Entity manager that receives the new NPC.</param>
+    /// <param name="rng">Seeded RNG used for all sampling.</param>
+    /// <param name="config">Cast-generator tuning (elevated/depressed/neutral drive ranges, jitter).</param>
+    /// <returns>The newly created NPC entity, populated via <c>EntityTemplates.WithCastSpawn</c>.</returns>
     public static Entity SpawnNpc(
         ArchetypeDto        archetype,
         NpcSlotComponent    slot,
@@ -158,6 +183,12 @@ public static class CastGenerator
     /// archetype hints and the cast-bible starting sketch.
     /// Returns the relationship entities created.
     /// </summary>
+    /// <param name="npcs">NPC entities (typically the result of <see cref="SpawnAll"/>) to wire relationships between.</param>
+    /// <param name="catalog">Archetype catalog used to resolve each NPC's <c>RelationshipSpawnHints</c>.</param>
+    /// <param name="em">Entity manager that receives the relationship entities.</param>
+    /// <param name="rng">Seeded RNG for partner selection and intensity sampling.</param>
+    /// <param name="config">Cast-generator tuning supplying per-pattern counts and intensity range.</param>
+    /// <returns>All relationship entities created during this call, in creation order.</returns>
     public static IReadOnlyList<Entity> SeedRelationships(
         IReadOnlyList<Entity> npcs,
         ArchetypeCatalog      catalog,

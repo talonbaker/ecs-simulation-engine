@@ -10,9 +10,10 @@ public class SpatialIndexSyncSystemTests
 {
     private static (EntityManager em, GridSpatialIndex idx, SpatialIndexSyncSystem sys) Setup()
     {
-        var em  = new EntityManager();
-        var idx = new GridSpatialIndex(4, 128, 128);
-        var sys = new SpatialIndexSyncSystem(idx);
+        var em      = new EntityManager();
+        var idx     = new GridSpatialIndex(4, 128, 128);
+        var structBus = new StructuralChangeBus();
+        var sys     = new SpatialIndexSyncSystem(idx, structBus);
         em.EntityDestroyed += sys.OnEntityDestroyed;
         return (em, idx, sys);
     }

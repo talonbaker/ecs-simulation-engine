@@ -46,11 +46,16 @@ public struct BladderComponent
 
     // ── Derived ───────────────────────────────────────────────────────────────
 
+    /// <summary>Normalised fill 0.0 (empty) – 1.0 (at <see cref="CapacityMl"/>).</summary>
     public readonly float Fill       => CapacityMl > 0f ? VolumeML / CapacityMl : 0f;
+    /// <summary>True when <see cref="VolumeML"/> ≥ <see cref="UrgeThresholdMl"/>.</summary>
     public readonly bool  HasUrge    => VolumeML >= UrgeThresholdMl;
+    /// <summary>True when <see cref="VolumeML"/> ≥ <see cref="CapacityMl"/>.</summary>
     public readonly bool  IsCritical => VolumeML >= CapacityMl;
+    /// <summary>True when no urine remains in the bladder.</summary>
     public readonly bool  IsEmpty    => VolumeML <= 0f;
 
+    /// <summary>Debug-friendly volume/threshold/state summary.</summary>
     public override string ToString() =>
         $"Bladder: {VolumeML:F1}ml (urge at {UrgeThresholdMl:F0}ml, cap {CapacityMl:F0}ml)" +
         (IsCritical ? " CRITICAL" : HasUrge ? " URGE" : "");

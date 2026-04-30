@@ -3,6 +3,7 @@ using Xunit;
 
 namespace APIFramework.Tests.Components;
 
+/// <summary>Construction and invariant tests for <see cref="PersonalityComponent"/> — Big Five clamping to [-2, +2], CurrentMood truncation at 32 chars, and <see cref="VocabularyRegister"/> default and round-trip.</summary>
 public class PersonalityComponentTests
 {
     [Fact]

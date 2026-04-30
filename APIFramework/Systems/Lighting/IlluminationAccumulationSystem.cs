@@ -20,12 +20,26 @@ namespace APIFramework.Systems.Lighting;
 ///
 /// Writes the result back to RoomComponent.Illumination in place.
 /// </summary>
+/// <remarks>
+/// Reads <c>RoomComponent</c>, <c>LightSourceComponent</c>, <c>LightApertureComponent</c>,
+/// <see cref="LightSourceStateSystem"/> effective intensities, and
+/// <see cref="ApertureBeamSystem"/> beam states. Writes <c>RoomComponent.Illumination</c>.
+/// Must run AFTER <see cref="LightSourceStateSystem"/> and <see cref="ApertureBeamSystem"/>;
+/// must run BEFORE <see cref="APIFramework.Systems.Coupling.LightingToDriveCouplingSystem"/>
+/// so coupling sees fresh illumination.
+/// </remarks>
 public sealed class IlluminationAccumulationSystem : ISystem
 {
     private readonly LightSourceStateSystem _sourceStates;
     private readonly ApertureBeamSystem     _beamSystem;
     private readonly LightingConfig         _cfg;
 
+    /// <summary>
+    /// Stores references to the upstream lighting systems and tuning config.
+    /// </summary>
+    /// <param name="sourceStates">Provides per-source effective intensity for the current tick.</param>
+    /// <param name="beamSystem">Provides per-aperture beam state for the current tick.</param>
+    /// <param name="cfg">Lighting tuning — supplies <c>SourceRangeBase</c> for falloff.</param>
     public IlluminationAccumulationSystem(
         LightSourceStateSystem sourceStates,
         ApertureBeamSystem     beamSystem,
@@ -36,6 +50,12 @@ public sealed class IlluminationAccumulationSystem : ISystem
         _cfg          = cfg;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Sums source and aperture contributions for every room
+    /// and writes the result back to <c>RoomComponent.Illumination</c>.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for rooms, light sources, and apertures.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Collect sources and apertures once per tick

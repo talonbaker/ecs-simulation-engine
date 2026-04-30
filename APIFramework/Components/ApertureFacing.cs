@@ -6,9 +6,14 @@ namespace APIFramework.Components;
 /// </summary>
 public enum ApertureFacing
 {
+    /// <summary>Aperture mounted on the north wall.</summary>
     North   = 0,
+    /// <summary>Aperture mounted on the east wall.</summary>
     East    = 1,
+    /// <summary>Aperture mounted on the south wall.</summary>
     South   = 2,
+    /// <summary>Aperture mounted on the west wall.</summary>
     West    = 3,
+    /// <summary>Aperture mounted overhead (skylight).</summary>
     Ceiling = 4,
 }

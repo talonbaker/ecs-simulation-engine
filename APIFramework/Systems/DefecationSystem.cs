@@ -1,34 +1,32 @@
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Acts when Defecate is the dominant drive — empties the colon.
-///
-/// PIPELINE POSITION
-/// ─────────────────
-///   Behavior (40) — after BrainSystem scores drives, before Elimination systems fill the colon.
-///
-/// MECHANICS
-/// ─────────
-/// When Dominant == Defecate, the entity finds a "bathroom" (abstracted away entirely
-/// at this simulation scale) and empties the colon. StoolVolumeMl resets to 0.
-/// DefecationUrgeTag and BowelCriticalTag are cleared by ColonSystem next tick once
-/// the volume drops below their thresholds.
-///
-/// FUTURE WORK
-/// ───────────
-/// - Add a DefecationDuration so emptying takes game-time instead of being instant.
-/// - Require a bathroom entity in range before allowing defecation.
-/// - Apply a small Joy/Relief spike to MoodComponent after a successful defecation.
+/// Behavior phase. Acts when <see cref="DesireType.Defecate"/> is the dominant drive —
+/// empties the colon by zeroing <see cref="ColonComponent"/>.StoolVolumeMl. Skipped
+/// when blocked by a publicEmotion <see cref="BlockedActionsComponent"/> entry.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="DriveComponent"/>, <see cref="ColonComponent"/>,
+/// <see cref="BlockedActionsComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="ColonComponent"/>.StoolVolumeMl (zeroes it on action).<br/>
+/// Phase: Behavior, after <see cref="BrainSystem"/> scores drives and before
+/// <see cref="LargeIntestineSystem"/> refills the colon.
+/// </remarks>
 public class DefecationSystem : ISystem
 {
+    /// <summary>Per-tick action pass; empties the colon for any NPC whose dominant drive is Defecate.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<DriveComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip Incapacitated/Deceased NPCs (autonomous trigger only)
+
             var drives = entity.Get<DriveComponent>();
             if (drives.Dominant != DesireType.Defecate) continue;
             if (!entity.Has<ColonComponent>()) continue;
