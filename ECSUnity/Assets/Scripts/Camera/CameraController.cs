@@ -43,7 +43,7 @@ public sealed class CameraController : MonoBehaviour
 
     [Header("Pan")]
     [Tooltip("World-units per second.")]
-    [SerializeField] private float _panSpeed = 5f;
+    [SerializeField] private float _panSpeed = 20f;
 
     [Header("Rotate")]
     [Tooltip("Degrees per second.")]
@@ -51,11 +51,11 @@ public sealed class CameraController : MonoBehaviour
 
     [Header("Zoom")]
     [Tooltip("World-units per scroll step.")]
-    [SerializeField] private float _zoomSpeed = 2f;
+    [SerializeField] private float _zoomSpeed = 5f;
 
     [Header("Constraints")]
-    [SerializeField] private float _minAltitude = 3f;
-    [SerializeField] private float _maxAltitude = 5f;
+    [SerializeField] private float _minAltitude = 5f;
+    [SerializeField] private float _maxAltitude = 50f;
     [SerializeField] private float _pitchAngle  = 50f;
 
     [Header("Start position")]

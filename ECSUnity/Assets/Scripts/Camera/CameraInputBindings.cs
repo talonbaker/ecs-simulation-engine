@@ -19,6 +19,10 @@ using UnityEngine;
 /// </summary>
 public sealed class CameraInputBindings
 {
+    // Raw Mouse X/Y axis gives ~0.05 per pixel. This multiplier scales it up
+    // so middle-click drag feels roughly as fast as keyboard pan at speed 1.
+    private const float MouseDragSensitivity = 5f;
+
     // ── Pan ───────────────────────────────────────────────────────────────────
 
     /// <summary>Returns a [−1, +1] pan X axis from keyboard/mouse input this frame.</summary>
@@ -30,9 +34,9 @@ public sealed class CameraInputBindings
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))  value -= 1f;
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) value += 1f;
 
-        // Middle-mouse drag (horizontal)
+        // Middle-mouse drag (horizontal). Raw Mouse X is ~0.05/px; scale up to match keyboard.
         if (Input.GetMouseButton(2))
-            value += Input.GetAxis("Mouse X");
+            value += Input.GetAxis("Mouse X") * MouseDragSensitivity;
 
         return Mathf.Clamp(value, -1f, 1f);
     }
@@ -48,7 +52,7 @@ public sealed class CameraInputBindings
 
         // Middle-mouse drag (vertical maps to forward/back)
         if (Input.GetMouseButton(2))
-            value += Input.GetAxis("Mouse Y");
+            value += Input.GetAxis("Mouse Y") * MouseDragSensitivity;
 
         return Mathf.Clamp(value, -1f, 1f);
     }
