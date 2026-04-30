@@ -252,7 +252,7 @@ public sealed class BuildModeController : MonoBehaviour
         int tileX = Mathf.RoundToInt(worldPos.x);
         int tileY = Mathf.RoundToInt(worldPos.z);
 
-        Guid spawned = _mutationApi.SpawnStructural(_currentIntent.TemplateId, tileX, tileY);
+        Guid spawned = _mutationApi.SpawnStructural(tileX, tileY);
         if (spawned == Guid.Empty)
             Debug.LogWarning($"[BuildModeController] SpawnStructural returned empty — placement failed.");
         else
