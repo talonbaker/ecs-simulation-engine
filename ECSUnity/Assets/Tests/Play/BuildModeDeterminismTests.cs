@@ -43,8 +43,7 @@ public class BuildModeDeterminismTests
         var api = new LoggingFakeApi(log);
 
         // Step 1: Place a wall.
-        var templateId = new Guid("00000010-0000-0000-0000-000000000001");
-        api.SpawnStructural(templateId, 5, 5);
+        api.SpawnStructural(5, 5);
 
         // Step 2: Lock a door.
         var doorId = new Guid("aaaa0001-0000-0000-0000-000000000001");
@@ -64,9 +63,9 @@ public class BuildModeDeterminismTests
         private readonly List<string> _log;
         public LoggingFakeApi(List<string> log) => _log = log;
 
-        public Guid SpawnStructural(Guid templateId, int tileX, int tileY)
+        public Guid SpawnStructural(int tileX, int tileY)
         {
-            _log.Add($"Spawn|{templateId}|{tileX}|{tileY}");
+            _log.Add($"Spawn|{tileX}|{tileY}");
             return Guid.NewGuid(); // new GUID each time — doesn't affect log comparison
         }
 
@@ -77,8 +76,8 @@ public class BuildModeDeterminismTests
         }
 
         public bool DespawnStructural(Guid entityId)         { _log.Add($"Despawn|{entityId}"); return true; }
-        public bool AttachObstacle(Guid entityId)            { _log.Add($"Attach|{entityId}"); return true; }
-        public bool DetachObstacle(Guid entityId)            { _log.Add($"Detach|{entityId}"); return true; }
+        public void AttachObstacle(Guid entityId)            { _log.Add($"Attach|{entityId}"); }
+        public void DetachObstacle(Guid entityId)            { _log.Add($"Detach|{entityId}"); }
         public bool ChangeRoomBounds(Guid roomId, APIFramework.Components.BoundsRect b) { _log.Add($"Bounds|{roomId}"); return true; }
     }
 }
