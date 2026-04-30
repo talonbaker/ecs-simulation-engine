@@ -59,8 +59,10 @@ public static class SceneBootstrapper
 
             // ── Camera + Light ────────────────────────────────────────────────
 
-            SetupCamera(host, configAsset);
+            SetupCamera();
             SetupDirectionalLight();
+
+            SpawnDebugQuads();
 
             Debug.Log("[SceneBootstrapper] Scene bootstrapped: EngineHost + Renderers + Camera + Light.");
         }
@@ -81,7 +83,7 @@ public static class SceneBootstrapper
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private static void SetupCamera(EngineHost host, SimConfigAsset configAsset)
+    private static void SetupCamera()
     {
         Camera cam = Camera.main;
 
@@ -99,17 +101,42 @@ public static class SceneBootstrapper
         cam.nearClipPlane   = 0.3f;
         cam.farClipPlane    = 1000f;
 
-        // Add CameraController if not already present.
-        var controller = cam.gameObject.GetComponent<CameraController>()
-                      ?? cam.gameObject.AddComponent<CameraController>();
+        // Free-fly camera — start directly above origin, angled down toward the NPC cluster.
+        cam.gameObject.GetComponent<CameraController>()
+            ?? cam.gameObject.AddComponent<CameraController>();
 
-        // Optionally wire the host so the controller can read HostConfig.
-        SetPrivateField(controller, "_engineHost", host);
+        cam.transform.position = new Vector3(0f, 8f, -12f);
+        cam.transform.rotation = Quaternion.Euler(25f, 0f, 0f);
+    }
 
-        // Position camera for office-starter layout (roughly 60x60 tile world).
-        // Start looking at the centre of the first floor at the default altitude.
-        var startFocus  = new UnityEngine.Vector3(30f, 0f, 20f);
-        SetPrivateField(controller, "_startFocusPoint", startFocus);
+    private static void SpawnDebugQuads()
+    {
+        // Three brightly-lit reference quads placed directly in front of the starting
+        // camera position. If these are not visible, there is a renderer / shader problem.
+        var mat = new Material(Shader.Find("Unlit/Color"));
+
+        var positions = new[]
+        {
+            new Vector3(-1.5f, 1f, 0f),
+            new Vector3( 0f,   1f, 0f),
+            new Vector3( 1.5f, 1f, 0f),
+        };
+        var colors = new[] { Color.red, Color.green, Color.cyan };
+
+        for (int i = 0; i < 3; i++)
+        {
+            var go  = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            go.name = $"DebugQuad_{i}";
+            go.transform.position   = positions[i];
+            go.transform.localScale = Vector3.one * 1.5f;
+
+            Object.Destroy(go.GetComponent<Collider>());
+
+            var m = new Material(mat) { color = colors[i] };
+            go.GetComponent<Renderer>().material = m;
+        }
+
+        Object.Destroy(mat);
     }
 
     private static void SetupDirectionalLight()
