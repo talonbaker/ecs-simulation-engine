@@ -77,22 +77,20 @@ public sealed class CameraInputBindings
     // ── Zoom ──────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Returns a zoom delta for this frame.
-    /// Positive = zoom in (lower altitude), negative = zoom out (higher altitude).
-    /// Already scaled so one scroll tick = a comfortable step.
+    /// Discrete scroll-wheel zoom delta. Caller should NOT multiply by dt.
+    /// Positive = zoom in (lower altitude). Returns ±1 per notch (±0.1 raw * 10).
     /// </summary>
-    public float Zoom()
+    public float ZoomScroll() => Input.GetAxis("Mouse ScrollWheel") * 10f;
+
+    /// <summary>
+    /// Continuous keyboard zoom input [−1, +1]. Caller should multiply by dt.
+    /// Positive = zoom in (lower altitude).
+    /// </summary>
+    public float ZoomKeys()
     {
         float value = 0f;
-
-        // Scroll wheel — Unity's "Mouse ScrollWheel" axis gives ±0.1 per notch.
-        // Multiply to get a usable step size.
-        value += Input.GetAxis("Mouse ScrollWheel") * 10f;
-
-        // Keyboard
         if (Input.GetKey(KeyCode.KeypadPlus)  || Input.GetKey(KeyCode.Equals)) value += 1f;
         if (Input.GetKey(KeyCode.KeypadMinus) || Input.GetKey(KeyCode.Minus))  value -= 1f;
-
         return value;
     }
 

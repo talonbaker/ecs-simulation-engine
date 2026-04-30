@@ -50,12 +50,14 @@ public sealed class CameraController : MonoBehaviour
     [SerializeField] private float _rotateSpeed = 90f;
 
     [Header("Zoom")]
-    [Tooltip("World-units per scroll step.")]
-    [SerializeField] private float _zoomSpeed = 5f;
+    [Tooltip("World-units per scroll notch (discrete, no dt).")]
+    [SerializeField] private float _zoomSpeed = 20f;
+    [Tooltip("World-units per second when zoom key is held.")]
+    [SerializeField] private float _zoomKeySpeed = 100f;
 
     [Header("Constraints")]
-    [SerializeField] private float _minAltitude = 5f;
-    [SerializeField] private float _maxAltitude = 50f;
+    [SerializeField] private float _minAltitude = 2f;
+    [SerializeField] private float _maxAltitude = 500f;
     [SerializeField] private float _pitchAngle  = 50f;
 
     [Header("Start position")]
@@ -152,13 +154,17 @@ public sealed class CameraController : MonoBehaviour
 
     private void HandleZoom(float dt)
     {
-        float input = _input.Zoom();
-        if (!Mathf.Approximately(input, 0f))
-        {
-            // Positive zoom input = zoom in = lower altitude; negative = zoom out = higher.
-            _altitude -= input * _zoomSpeed * dt;
-            _altitude  = _constraints.ClampAltitude(_altitude);
-        }
+        // Scroll wheel: discrete event — each notch gives a fixed altitude jump, no dt scaling.
+        float scroll = _input.ZoomScroll();
+        if (!Mathf.Approximately(scroll, 0f))
+            _altitude -= scroll * _zoomSpeed;
+
+        // Keyboard +/−: held key — scale by dt for frame-rate independence.
+        float keys = _input.ZoomKeys();
+        if (!Mathf.Approximately(keys, 0f))
+            _altitude -= keys * _zoomKeySpeed * dt;
+
+        _altitude = _constraints.ClampAltitude(_altitude);
     }
 
     private void HandleRecenter()

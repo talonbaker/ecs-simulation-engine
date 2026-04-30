@@ -85,12 +85,29 @@ public sealed class NpcDotRenderer : MonoBehaviour
         _mainCamera = Camera.main;
     }
 
+    private int _debugFrames = 0;
+
     private void Update()
     {
-        if (_engineHost == null) return;
+        if (_engineHost == null) { Debug.LogWarning("[NpcDotRenderer] _engineHost is null"); return; }
 
         var worldState = _engineHost.WorldState;
-        if (worldState == null) return;
+        if (worldState == null) { Debug.LogWarning("[NpcDotRenderer] WorldState is null"); return; }
+
+        // Log entity counts for the first 3 frames to diagnose visibility.
+        if (_debugFrames < 3)
+        {
+            int withPos = 0;
+            foreach (var e in worldState.Entities)
+                if (e.Position.HasPosition) withPos++;
+            Debug.Log($"[NpcDotRenderer] Entities: {worldState.Entities.Count}, HasPosition: {withPos}");
+            if (withPos > 0)
+            {
+                var first = worldState.Entities.Find(e => e.Position.HasPosition);
+                Debug.Log($"[NpcDotRenderer] First positioned entity '{first.Name}' at ({first.Position.X:F1}, {first.Position.Y:F1}, {first.Position.Z:F1})");
+            }
+            _debugFrames++;
+        }
 
         SyncNpcs(worldState.Entities);
     }
