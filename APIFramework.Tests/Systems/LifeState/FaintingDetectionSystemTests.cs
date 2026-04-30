@@ -8,6 +8,8 @@ using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.LifeState;
 
 /// <summary>
@@ -44,14 +46,15 @@ public class FaintingDetectionSystemTests
         Entity npc)
     Build(
         float fear      = 90f,           // above threshold by default
-        LifeState state = LifeState.Alive,
+        LS state = LS.Alive,
         bool  alreadyFainting = false)
     {
         var em         = new EntityManager();
         var bus        = new NarrativeEventBus();
         var clock      = new SimulationClock();
         var membership = new EntityRoomMembership();
-        var transitions = new LifeStateTransitionSystem(bus, em, clock, DefaultLifeStateCfg(), membership);
+        var config     = new SimConfig { LifeState = DefaultLifeStateCfg() };
+        var transitions = new LifeStateTransitionSystem(bus, em, clock, config);
 
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
@@ -152,7 +155,7 @@ public class FaintingDetectionSystemTests
     [Fact]
     public void AT05_DeceasedNpc_Fear100_NoFaint()
     {
-        var (em, bus, clock, membership, transitions, npc) = Build(fear: 100f, state: LifeState.Deceased);
+        var (em, bus, clock, membership, transitions, npc) = Build(fear: 100f, state: LS.Deceased);
         MakeSys(transitions, bus, clock, membership).Update(em, 1f);
 
         Assert.False(npc.Has<IsFaintingTag>());
@@ -163,7 +166,7 @@ public class FaintingDetectionSystemTests
     [Fact]
     public void AT06_IncapacitatedNpc_Fear100_NoFaint()
     {
-        var (em, bus, clock, membership, transitions, npc) = Build(fear: 100f, state: LifeState.Incapacitated);
+        var (em, bus, clock, membership, transitions, npc) = Build(fear: 100f, state: LS.Incapacitated);
         MakeSys(transitions, bus, clock, membership).Update(em, 1f);
 
         Assert.False(npc.Has<IsFaintingTag>());
@@ -209,6 +212,6 @@ public class FaintingDetectionSystemTests
         MakeSys(transitions, bus, clock, membership).Update(em, 1f);
         transitions.Update(em, 1f);
 
-        Assert.Equal(LifeState.Incapacitated, npc.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Incapacitated, npc.Get<LifeStateComponent>().State);
     }
 }

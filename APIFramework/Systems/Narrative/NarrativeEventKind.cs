@@ -32,4 +32,10 @@ public enum NarrativeEventKind
     Died,
     /// <summary>An NPC began choking (incapacitation has just started). Emitted by ChokingDetectionSystem before the LifeStateTransition request is enqueued, so subscribers see the choker still flagged Alive.</summary>
     ChokeStarted,
+    /// <summary>An NPC fainted from extreme fear. Emitted by FaintingDetectionSystem before the incapacitation request is enqueued, so subscribers see the NPC still flagged Alive.</summary>
+    Fainted,
+    /// <summary>A fainted NPC regained consciousness and returned to Alive state. Emitted by FaintingRecoverySystem before the state transition is applied.</summary>
+    RegainedConsciousness,
+    /// <summary>An NPC experienced bereavement (learned of or witnessed the death of someone with whom they had a relationship). Emitted by BereavementSystem to record grief impact.</summary>
+    BereavementImpact,
 }

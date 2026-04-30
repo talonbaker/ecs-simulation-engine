@@ -7,6 +7,8 @@ using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.LifeState;
 
 /// <summary>
@@ -48,7 +50,7 @@ public class BereavementSystemTests
         return (em, bus, clock);
     }
 
-    private static Entity MakeNpc(EntityManager em, LifeState state = LifeState.Alive)
+    private static Entity MakeNpc(EntityManager em, LS state = LS.Alive)
     {
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
@@ -85,7 +87,7 @@ public class BereavementSystemTests
     public void AT04_DeathWithWitness_IncrementsWitnessedDeathEventsToday()
     {
         var (em, bus, clock) = BaseWorld();
-        var deceased = MakeNpc(em, LifeState.Deceased);
+        var deceased = MakeNpc(em, LS.Deceased);
         var witness  = MakeNpc(em);
 
         _ = new BereavementSystem(bus, em, clock, DefaultCfg());
@@ -106,7 +108,7 @@ public class BereavementSystemTests
     public void AT05_DeathWithWitness_GriefLevel_AtLeastWitnessGriefIntensity()
     {
         var (em, bus, clock) = BaseWorld();
-        var deceased = MakeNpc(em, LifeState.Deceased);
+        var deceased = MakeNpc(em, LS.Deceased);
         var witness  = MakeNpc(em);
 
         _ = new BereavementSystem(bus, em, clock, DefaultCfg());
@@ -125,7 +127,7 @@ public class BereavementSystemTests
     public void AT05_GriefLevel_UsesMax_DoesNotLowerExistingHighGrief()
     {
         var (em, bus, clock) = BaseWorld();
-        var deceased = MakeNpc(em, LifeState.Deceased);
+        var deceased = MakeNpc(em, LS.Deceased);
         var witness  = MakeNpc(em);
 
         // Pre-existing grief higher than WitnessGriefIntensity (80)
@@ -151,7 +153,7 @@ public class BereavementSystemTests
     public void AT06_Colleague_AboveThreshold_IncrementsBereavementEventsToday()
     {
         var (em, bus, clock) = BaseWorld();
-        var deceased  = MakeNpc(em, LifeState.Deceased);
+        var deceased  = MakeNpc(em, LS.Deceased);
         var colleague = MakeNpc(em);
         MakeRelationship(em, deceased, colleague, intensity: 50); // 50 >= 20 (threshold)
 
@@ -173,7 +175,7 @@ public class BereavementSystemTests
     public void AT07_Colleague_BelowThreshold_NoBereavementEffect()
     {
         var (em, bus, clock) = BaseWorld();
-        var deceased  = MakeNpc(em, LifeState.Deceased);
+        var deceased  = MakeNpc(em, LS.Deceased);
         var colleague = MakeNpc(em);
         MakeRelationship(em, deceased, colleague, intensity: 10); // 10 < 20 (threshold)
 
@@ -196,7 +198,7 @@ public class BereavementSystemTests
     public void AT08_Colleague_GriefLevel_ScaledByIntensityFraction()
     {
         var (em, bus, clock) = BaseWorld();
-        var deceased  = MakeNpc(em, LifeState.Deceased);
+        var deceased  = MakeNpc(em, LS.Deceased);
         var colleague = MakeNpc(em);
         MakeRelationship(em, deceased, colleague, intensity: 50); // fraction = 0.5
 
@@ -211,7 +213,7 @@ public class BereavementSystemTests
             RoomId:         null,
             Detail:         "test"));
 
-        float expected = cfg.ColleagueBereavementGriefIntensity * (50 / 100f);
+        float expected = (float)(cfg.ColleagueBereavementGriefIntensity * (50 / 100f));
         Assert.Equal(expected, colleague.Get<MoodComponent>().GriefLevel, precision: 3);
     }
 
@@ -221,7 +223,7 @@ public class BereavementSystemTests
     public void AT09_Colleague_BereavementImpact_NarrativeEmitted()
     {
         var (em, bus, clock) = BaseWorld();
-        var deceased  = MakeNpc(em, LifeState.Deceased);
+        var deceased  = MakeNpc(em, LS.Deceased);
         var colleague = MakeNpc(em);
         MakeRelationship(em, deceased, colleague, intensity: 50);
 
@@ -248,7 +250,7 @@ public class BereavementSystemTests
     public void AT10_Witness_NotDoubleCounted_NoBereavementImpactForWitness()
     {
         var (em, bus, clock) = BaseWorld();
-        var deceased = MakeNpc(em, LifeState.Deceased);
+        var deceased = MakeNpc(em, LS.Deceased);
         var witness  = MakeNpc(em);
 
         // Relationship exists between the deceased and witness, intensity above threshold

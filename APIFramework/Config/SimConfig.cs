@@ -81,6 +81,12 @@ public class SimConfig
     /// <summary>End-of-day lockout detection (door reachability, starvation budget).</summary>
     public LockoutConfig          Lockout         { get; set; } = new();
 
+    /// <summary>Bereavement stress gains and proximity-bereavement tuning.</summary>
+    public BereavementConfig      Bereavement     { get; set; } = new();
+
+    /// <summary>Fainting duration, fear threshold, and narrative emission tuning.</summary>
+    public FaintingConfig         Fainting        { get; set; } = new();
+
     // ── Loading ───────────────────────────────────────────────────────────────
 
     // Newtonsoft.Json settings:
@@ -1637,4 +1643,68 @@ public class LockoutConfig
     /// Default "outdoor".
     /// </summary>
     public string ExitNamedAnchorTag { get; set; } = "outdoor";
+}
+
+// ── Bereavement system ────────────────────────────────────────────────────
+
+/// <summary>
+/// Configuration for bereavement-driven stress and proximity-bereavement mechanics (WP-3.0.2).
+/// Controls stress gains from witnessing death / learning of death, and proximity-encounter tuning.
+/// </summary>
+public class BereavementConfig
+{
+    /// <summary>Acute stress gained per witnessed death event (before neuroticism scaling). Default 5.0.</summary>
+    public double WitnessedDeathStressGain { get; set; } = 5.0;
+
+    /// <summary>Acute stress gained per bereavement event (learned of death, before neuroticism scaling). Default 3.0.</summary>
+    public double BereavementStressGain { get; set; } = 3.0;
+
+    /// <summary>Minimum relationship intensity required for proximity-bereavement stress to apply. Default 20.</summary>
+    public int ProximityBereavementMinIntensity { get; set; } = 20;
+
+    /// <summary>Acute stress applied as one-shot when NPC encounters corpse of someone they had a relationship with. Default 8.0.</summary>
+    public double ProximityBereavementStressGain { get; set; } = 8.0;
+
+    /// <summary>Minimum relationship intensity required for bereavement system to apply grief. Default 25.</summary>
+    public int BereavementMinIntensity { get; set; } = 25;
+
+    /// <summary>Grief intensity set on witness when learning of a colleague's death. Default 40.0.</summary>
+    public double ColleagueBereavementGriefIntensity { get; set; } = 40.0;
+
+    /// <summary>Maximum grief intensity applied based on relationship intensity to deceased. Default 60.0.</summary>
+    public double WitnessGriefIntensity { get; set; } = 60.0;
+}
+
+// ── Fainting system ──────────────────────────────────────────────────────
+
+/// <summary>
+/// Configuration for the fainting system (WP-3.0.6). Controls fear thresholds,
+/// incapacitation duration, and narrative emission.
+/// </summary>
+public class FaintingConfig
+{
+    /// <summary>
+    /// Fear mood level at or above which fainting becomes possible.
+    /// Default 70 (high fear state required).
+    /// </summary>
+    public float FearThreshold { get; set; } = 70f;
+
+    /// <summary>
+    /// Number of ticks a fainted NPC remains Incapacitated before recovery.
+    /// At current tick rate (~20 ticks/game-second), 180 ticks ≈ 9 seconds real-time / ~3 game-minutes.
+    /// Default 180.
+    /// </summary>
+    public int FaintDurationTicks { get; set; } = 180;
+
+    /// <summary>
+    /// Whether to emit FaintedNow narrative when an NPC faints.
+    /// Default true.
+    /// </summary>
+    public bool EmitFaintedNarrative { get; set; } = true;
+
+    /// <summary>
+    /// Whether to emit RegainedConsciousness narrative when an NPC recovers from fainting.
+    /// Default true.
+    /// </summary>
+    public bool EmitRegainedConsciousnessNarrative { get; set; } = true;
 }

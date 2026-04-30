@@ -5,6 +5,7 @@ using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Spatial;
 
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>

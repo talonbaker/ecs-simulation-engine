@@ -8,6 +8,8 @@ using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.LifeState;
 
 /// <summary>
@@ -32,7 +34,7 @@ public class ChokingDetectionSystemTests
     private static ChokingConfig DefaultCfg() => new()
     {
         BolusSizeThreshold        = 0.65f,
-        EnergyThreshold           = 40f,
+        EnergyThreshold           = 40,
         StressThreshold           = 70,
         IrritationThreshold       = 65,
         IncapacitationTicks       = 90,
@@ -59,15 +61,16 @@ public class ChokingDetectionSystemTests
         float energy                   = 30f,    // below EnergyThreshold → distracted
         int   acuteLevel               = 0,
         int   irritationCurrent        = 0,
-        LifeState npcState             = LifeState.Alive,
+        LS npcState             = LS.Alive,
         bool  alreadyChoking           = false)
     {
         var em         = new EntityManager();
         var bus        = new NarrativeEventBus();
         var clock      = new SimulationClock();
         var membership = new EntityRoomMembership();
+        var config     = new SimConfig { LifeState = DefaultLifeStateCfg() };
 
-        var transitions = new LifeStateTransitionSystem(bus, em, clock, DefaultLifeStateCfg(), membership);
+        var transitions = new LifeStateTransitionSystem(bus, em, clock, config);
 
         // Room
         var room = em.CreateEntity();
@@ -119,11 +122,10 @@ public class ChokingDetectionSystemTests
     private static ChokingDetectionSystem MakeSys(
         LifeStateTransitionSystem transitions,
         NarrativeEventBus bus,
-        EntityManager em,
         SimulationClock clock,
-        EntityRoomMembership membership,
+        EntityManager em,
         ChokingConfig? cfg = null)
-        => new(transitions, bus, em, clock, membership, cfg ?? DefaultCfg());
+        => new(transitions, bus, clock, cfg ?? DefaultCfg(), em);
 
     // ── AT-01: Tough bolus + distracted NPC → IsChokingTag ───────────────────
 
@@ -131,7 +133,7 @@ public class ChokingDetectionSystemTests
     public void AT01_ToughBolus_DistractedNpc_AttachesIsChokingTag()
     {
         var (em, bus, clock, membership, transitions, _, npc) = Build();
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.True(npc.Has<IsChokingTag>());
     }
@@ -140,7 +142,7 @@ public class ChokingDetectionSystemTests
     public void AT01_ToughBolus_DistractedNpc_AttachesChokingComponent()
     {
         var (em, bus, clock, membership, transitions, _, npc) = Build();
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.True(npc.Has<ChokingComponent>());
     }
@@ -151,7 +153,7 @@ public class ChokingDetectionSystemTests
     public void AT02_SoftBolus_BelowThreshold_NoIsChokingTag()
     {
         var (em, bus, clock, membership, transitions, _, npc) = Build(bolusThoughness: 0.40f);
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.False(npc.Has<IsChokingTag>());
     }
@@ -161,7 +163,7 @@ public class ChokingDetectionSystemTests
     {
         // threshold is < (strictly less-than check), so exactly 0.65 still triggers
         var (em, bus, clock, membership, transitions, _, npc) = Build(bolusThoughness: 0.65f);
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.True(npc.Has<IsChokingTag>());
     }
@@ -172,7 +174,7 @@ public class ChokingDetectionSystemTests
     public void AT03_NpcAlreadyChoking_NoSecondChokingComponent()
     {
         var (em, bus, clock, membership, transitions, _, npc) = Build(alreadyChoking: true);
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         // ChokingComponent should NOT be added (idempotent guard hit IsChokingTag)
         Assert.False(npc.Has<ChokingComponent>());
@@ -183,8 +185,8 @@ public class ChokingDetectionSystemTests
     [Fact]
     public void AT04_DeceasedNpc_NoChokeTrigger()
     {
-        var (em, bus, clock, membership, transitions, _, npc) = Build(npcState: LifeState.Deceased);
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        var (em, bus, clock, membership, transitions, _, npc) = Build(npcState: LS.Deceased);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.False(npc.Has<IsChokingTag>());
     }
@@ -197,7 +199,7 @@ public class ChokingDetectionSystemTests
         // Energy well above threshold; stress and irritation below thresholds
         var (em, bus, clock, membership, transitions, _, npc) = Build(
             energy: 90f, acuteLevel: 10, irritationCurrent: 10);
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.False(npc.Has<IsChokingTag>());
     }
@@ -210,7 +212,7 @@ public class ChokingDetectionSystemTests
         // Energy < 40; stress and irritation both below their thresholds
         var (em, bus, clock, membership, transitions, _, npc) = Build(
             energy: 20f, acuteLevel: 0, irritationCurrent: 0);
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.True(npc.Has<IsChokingTag>());
     }
@@ -223,7 +225,7 @@ public class ChokingDetectionSystemTests
         // Energy fine; stress >= 70; irritation fine
         var (em, bus, clock, membership, transitions, _, npc) = Build(
             energy: 90f, acuteLevel: 75, irritationCurrent: 0);
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.True(npc.Has<IsChokingTag>());
     }
@@ -236,7 +238,7 @@ public class ChokingDetectionSystemTests
         // Energy fine; stress fine; irritation >= 65
         var (em, bus, clock, membership, transitions, _, npc) = Build(
             energy: 90f, acuteLevel: 0, irritationCurrent: 70);
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.True(npc.Has<IsChokingTag>());
     }
@@ -251,7 +253,7 @@ public class ChokingDetectionSystemTests
         cfg.EmitChokeStartedNarrative = true;
 
         var candidates = Collect(bus, () =>
-            MakeSys(transitions, bus, em, clock, membership, cfg).Update(em, 1f));
+            MakeSys(transitions, bus, clock, em, cfg).Update(em, 1f));
 
         Assert.Contains(candidates, c => c.Kind == NarrativeEventKind.ChokeStarted);
     }
@@ -266,7 +268,7 @@ public class ChokingDetectionSystemTests
         cfg.EmitChokeStartedNarrative = false;
 
         var candidates = Collect(bus, () =>
-            MakeSys(transitions, bus, em, clock, membership, cfg).Update(em, 1f));
+            MakeSys(transitions, bus, clock, em, cfg).Update(em, 1f));
 
         Assert.DoesNotContain(candidates, c => c.Kind == NarrativeEventKind.ChokeStarted);
     }
@@ -278,7 +280,7 @@ public class ChokingDetectionSystemTests
     {
         const float toughness = 0.80f;
         var (em, bus, clock, membership, transitions, _, npc) = Build(bolusThoughness: toughness);
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.True(npc.Has<ChokingComponent>());
         Assert.Equal(toughness, npc.Get<ChokingComponent>().BolusSize);
@@ -290,7 +292,7 @@ public class ChokingDetectionSystemTests
     public void AT12_PanicLevel_SetToPanicMoodIntensity()
     {
         var (em, bus, clock, membership, transitions, _, npc) = Build();
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
 
         Assert.Equal(DefaultCfg().PanicMoodIntensity, npc.Get<MoodComponent>().PanicLevel);
     }
@@ -303,9 +305,9 @@ public class ChokingDetectionSystemTests
         var (em, bus, clock, membership, transitions, _, npc) = Build();
 
         // Detection + drain in the same conceptual tick
-        MakeSys(transitions, bus, em, clock, membership).Update(em, 1f);
+        MakeSys(transitions, bus, clock, em).Update(em, 1f);
         transitions.Update(em, 1f);
 
-        Assert.Equal(LifeState.Incapacitated, npc.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Incapacitated, npc.Get<LifeStateComponent>().State);
     }
 }

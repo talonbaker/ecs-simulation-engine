@@ -52,6 +52,8 @@ public struct ExhaustedTag { } // Energy < exhaustedThreshold — severely sleep
 public struct IrritableTag { } // Hunger OR Thirst above irritableThreshold
 /// <summary>Active sleep marker. Applied by SleepSystem when an NPC enters sleep; removed when they wake. Read by EnergySystem (recovery rate) and behavior systems that should not act on a sleeping NPC.</summary>
 public struct SleepingTag { }  // Entity is actively sleeping
+/// <summary>Fainting marker. Applied by FaintingDetectionSystem when an NPC faints; removed when they recover. Used to identify NPCs in the fainting recovery pipeline.</summary>
+public struct IsFaintingTag { }
 #endregion
 
 #region Entity Identity Tags
@@ -77,6 +79,8 @@ public struct ObstacleTag { }
 public struct NpcSlotTag { }
 /// <summary>Marks an entity as an authored world object placed at a named anchor (e.g. box of floppy disks, parking-lot sign).</summary>
 public struct AnchorObjectTag { }
+/// <summary>Marks a deceased NPC entity transformed into a corpse. Attached by CorpseSpawnerSystem when an NPC dies; never removed. Used by proximity-bereavement and corpse-detection systems.</summary>
+public struct CorpseTag { }
 /// <summary>Marks a persistent physical spill entity spawned by PhysicalManifestSpawner.</summary>
 public struct StainTag { }
 /// <summary>Marks a persistent broken-item entity spawned by PhysicalManifestSpawner.</summary>

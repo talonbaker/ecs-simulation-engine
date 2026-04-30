@@ -1,6 +1,8 @@
 using APIFramework.Components;
 using APIFramework.Core;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -40,7 +42,7 @@ public class ChokingCleanupSystem : ISystem
             if (!npc.Has<LifeStateComponent>()) continue;
 
             var state = npc.Get<LifeStateComponent>().State;
-            if (state == Components.LifeState.Deceased)
+            if (state == LS.Deceased)
             {
                 // Remove the choking markers — the deceased no longer "is choking"
                 npc.Remove<IsChokingTag>();

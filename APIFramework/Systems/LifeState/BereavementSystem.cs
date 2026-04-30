@@ -5,6 +5,7 @@ using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Narrative;
 
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -101,7 +102,7 @@ public sealed class BereavementSystem : ISystem
                 if (witness.Has<MoodComponent>())
                 {
                     var mood = witness.Get<MoodComponent>();
-                    mood.GriefLevel = MathF.Max(mood.GriefLevel, _cfg.WitnessGriefIntensity);
+                    mood.GriefLevel = MathF.Max(mood.GriefLevel, (float)_cfg.WitnessGriefIntensity);
                     witness.Add(mood);
                 }
             }
@@ -146,7 +147,7 @@ public sealed class BereavementSystem : ISystem
             if (colleague.Has<MoodComponent>())
             {
                 var mood = colleague.Get<MoodComponent>();
-                float griefAmount = _cfg.ColleagueBereavementGriefIntensity * intensityFraction;
+                float griefAmount = (float)(_cfg.ColleagueBereavementGriefIntensity * intensityFraction);
                 mood.GriefLevel = MathF.Max(mood.GriefLevel, griefAmount);
                 colleague.Add(mood);
             }
@@ -175,7 +176,8 @@ public sealed class BereavementSystem : ISystem
     private static string? GetRoomIdFromCauseOfDeath(Entity entity)
     {
         if (!entity.Has<CauseOfDeathComponent>()) return null;
-        return entity.Get<CauseOfDeathComponent>().LocationRoomId;
+        var roomId = entity.Get<CauseOfDeathComponent>().LocationRoomId;
+        return roomId == Guid.Empty ? null : roomId.ToString();
     }
 
     private Entity? FindEntityByIntId(int intId)

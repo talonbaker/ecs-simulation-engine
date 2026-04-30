@@ -3,6 +3,8 @@ using APIFramework.Core;
 using APIFramework.Systems.LifeState;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.LifeState;
 
 /// <summary>
@@ -15,7 +17,7 @@ public class ChokingCleanupSystemTests
 {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private static Entity BuildChokingNpc(EntityManager em, LifeState state)
+    private static Entity BuildChokingNpc(EntityManager em, LS state)
     {
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
@@ -30,7 +32,7 @@ public class ChokingCleanupSystemTests
     public void AT01_DeceasedNpc_WithIsChokingTag_TagIsRemoved()
     {
         var em  = new EntityManager();
-        var npc = BuildChokingNpc(em, LifeState.Deceased);
+        var npc = BuildChokingNpc(em, LS.Deceased);
 
         new ChokingCleanupSystem().Update(em, 1f);
 
@@ -43,7 +45,7 @@ public class ChokingCleanupSystemTests
     public void AT02_DeceasedNpc_WithChokingComponent_ComponentAlsoRemoved()
     {
         var em  = new EntityManager();
-        var npc = BuildChokingNpc(em, LifeState.Deceased);
+        var npc = BuildChokingNpc(em, LS.Deceased);
         npc.Add(new ChokingComponent { ChokeStartTick = 10, RemainingTicks = 5 });
 
         new ChokingCleanupSystem().Update(em, 1f);
@@ -58,7 +60,7 @@ public class ChokingCleanupSystemTests
     public void AT03_IncapacitatedNpc_IsChokingTag_NotRemoved()
     {
         var em  = new EntityManager();
-        var npc = BuildChokingNpc(em, LifeState.Incapacitated);
+        var npc = BuildChokingNpc(em, LS.Incapacitated);
 
         new ChokingCleanupSystem().Update(em, 1f);
 
@@ -71,7 +73,7 @@ public class ChokingCleanupSystemTests
     public void AT04_AliveNpc_IsChokingTag_NotRemoved()
     {
         var em  = new EntityManager();
-        var npc = BuildChokingNpc(em, LifeState.Alive);
+        var npc = BuildChokingNpc(em, LS.Alive);
 
         new ChokingCleanupSystem().Update(em, 1f);
 

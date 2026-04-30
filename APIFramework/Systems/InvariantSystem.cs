@@ -4,6 +4,7 @@ using APIFramework.Core;
 using APIFramework.Diagnostics;
 using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.LifeState;
+using LS = global::APIFramework.Components.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -87,7 +88,7 @@ public class InvariantSystem : ISystem
             // WP-3.0.0: Deceased entities are checked against a reduced invariant set only.
             // Their physiology components are frozen by design — do not raise alerts for them.
             if (entity.Has<LifeStateComponent>() &&
-                entity.Get<LifeStateComponent>().State == LifeState.Deceased)
+                entity.Get<LifeStateComponent>().State == LS.Deceased)
             {
                 CheckLifeStateComponent (entity, name, gameTime);
                 CheckCauseOfDeath       (entity, name, gameTime);
@@ -133,7 +134,7 @@ public class InvariantSystem : ISystem
         }
 
         // Deceased entities must have a CauseOfDeathComponent attached.
-        if (ls.State == LifeState.Deceased && !entity.Has<CauseOfDeathComponent>())
+        if (ls.State == LS.Deceased && !entity.Has<CauseOfDeathComponent>())
         {
             _violations.Add(new InvariantViolation(
                 GameTime:    t,

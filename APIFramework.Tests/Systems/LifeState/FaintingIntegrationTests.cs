@@ -9,6 +9,8 @@ using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.LifeState;
 
 /// <summary>
@@ -55,7 +57,8 @@ public class FaintingIntegrationTests
         var bus         = new NarrativeEventBus();
         var clock       = new SimulationClock();
         var membership  = new EntityRoomMembership();
-        var transitions = new LifeStateTransitionSystem(bus, em, clock, DefaultLifeStateCfg(), membership);
+        var config      = new SimConfig { LifeState = DefaultLifeStateCfg() };
+        var transitions = new LifeStateTransitionSystem(bus, em, clock, config);
         var cfg         = DefaultCfg();
         var detection   = new FaintingDetectionSystem(transitions, bus, clock, membership, cfg);
         var recovery    = new FaintingRecoverySystem(transitions, bus, clock, cfg);
@@ -77,7 +80,7 @@ public class FaintingIntegrationTests
         recovery.Update(em, 1f);
         transitions.Update(em, 1f);
         cleanup.Update(em, 1f);
-        clock.Advance(1);
+        clock.Tick(1f);
     }
 
     // ── AT-16: Full faint → recovery → cleanup cycle ──────────────────────────
@@ -89,7 +92,7 @@ public class FaintingIntegrationTests
 
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
-        npc.Add(new LifeStateComponent { State = LifeState.Alive });
+        npc.Add(new LifeStateComponent { State = LS.Alive });
         npc.Add(new MoodComponent { Fear = 95f });
 
         // ── Tick 0: detect faint ──────────────────────────────────────────────
@@ -97,7 +100,7 @@ public class FaintingIntegrationTests
         Tick(em, clock, detection, recovery, transitions, cleanup);
 
         Assert.True(npc.Has<IsFaintingTag>(),  "NPC should have IsFaintingTag after faint");
-        Assert.Equal(LifeState.Incapacitated,   npc.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Incapacitated,   npc.Get<LifeStateComponent>().State);
 
         long recoveryTick = tick0 + DefaultCfg().FaintDurationTicks;
 
@@ -105,13 +108,13 @@ public class FaintingIntegrationTests
         while (clock.CurrentTick < recoveryTick)
         {
             Tick(em, clock, detection, recovery, transitions, cleanup);
-            Assert.Equal(LifeState.Incapacitated, npc.Get<LifeStateComponent>().State);
+            Assert.Equal(LS.Incapacitated, npc.Get<LifeStateComponent>().State);
         }
 
         // ── Tick 20 (RecoveryTick): recover ──────────────────────────────────
         Tick(em, clock, detection, recovery, transitions, cleanup);
 
-        Assert.Equal(LifeState.Alive,  npc.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Alive,  npc.Get<LifeStateComponent>().State);
         Assert.False(npc.Has<IsFaintingTag>(),    "IsFaintingTag should be removed after recovery");
         Assert.False(npc.Has<FaintingComponent>(), "FaintingComponent should be removed after recovery");
     }
@@ -125,7 +128,7 @@ public class FaintingIntegrationTests
 
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
-        npc.Add(new LifeStateComponent { State = LifeState.Alive });
+        npc.Add(new LifeStateComponent { State = LS.Alive });
         npc.Add(new MoodComponent { Fear = 95f });
 
         // Faint
@@ -139,7 +142,7 @@ public class FaintingIntegrationTests
         // Recover tick
         Tick(em, clock, detection, recovery, transitions, cleanup);
 
-        Assert.Equal(LifeState.Alive, npc.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Alive, npc.Get<LifeStateComponent>().State);
         // Fainting systems do not touch Fear — MoodSystem decays it
         Assert.Equal(95f, npc.Get<MoodComponent>().Fear);
     }
@@ -153,12 +156,12 @@ public class FaintingIntegrationTests
 
         var npc1 = em.CreateEntity();
         npc1.Add(new NpcTag());
-        npc1.Add(new LifeStateComponent { State = LifeState.Alive });
+        npc1.Add(new LifeStateComponent { State = LS.Alive });
         npc1.Add(new MoodComponent { Fear = 92f });
 
         var npc2 = em.CreateEntity();
         npc2.Add(new NpcTag());
-        npc2.Add(new LifeStateComponent { State = LifeState.Alive });
+        npc2.Add(new LifeStateComponent { State = LS.Alive });
         npc2.Add(new MoodComponent { Fear = 88f });
 
         // Both should faint in the same tick
@@ -166,8 +169,8 @@ public class FaintingIntegrationTests
 
         Assert.True(npc1.Has<IsFaintingTag>(), "npc1 should have fainted");
         Assert.True(npc2.Has<IsFaintingTag>(), "npc2 should have fainted");
-        Assert.Equal(LifeState.Incapacitated, npc1.Get<LifeStateComponent>().State);
-        Assert.Equal(LifeState.Incapacitated, npc2.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Incapacitated, npc1.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Incapacitated, npc2.Get<LifeStateComponent>().State);
 
         // Verify both have the same RecoveryTick (same start tick)
         long rt1 = npc1.Get<FaintingComponent>().RecoveryTick;
@@ -184,12 +187,12 @@ public class FaintingIntegrationTests
 
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
-        npc.Add(new LifeStateComponent { State = LifeState.Alive });
+        npc.Add(new LifeStateComponent { State = LS.Alive });
         npc.Add(new MoodComponent { Fear = 95f });
 
         Tick(em, clock, detection, recovery, transitions, cleanup);
 
-        Assert.Equal(LifeState.Incapacitated, npc.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Incapacitated, npc.Get<LifeStateComponent>().State);
         Assert.False(npc.Has<CorpseTag>(),        "A fainted NPC must never receive CorpseTag");
         Assert.False(npc.Has<CorpseComponent>(),  "A fainted NPC must never receive CorpseComponent");
     }

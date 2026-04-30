@@ -75,6 +75,13 @@ public struct MoodComponent
     /// </summary>
     public float PanicLevel;
 
+    /// <summary>
+    /// Grief intensity — a sustained sorrow response to learning of or witnessing death.
+    /// Separate from the baseline Sadness emotion. Values 0–100.
+    /// Set by BereavementSystem when an NPC learns of a death; decays via MoodSystem's decay rules.
+    /// </summary>
+    public float GriefLevel;
+
     // ── Convenience ───────────────────────────────────────────────────────────
 
     /// <summary>True if any emotion is above a negligible threshold (not emotionally neutral).</summary>

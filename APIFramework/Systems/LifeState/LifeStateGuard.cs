@@ -1,6 +1,8 @@
 using APIFramework.Components;
 using APIFramework.Core;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -25,12 +27,12 @@ public static class LifeStateGuard
     /// Returns true for non-NPC entities lacking the component (pass-through semantics).
     /// </summary>
     /// <param name="npc">The entity to check; may be a non-NPC entity (pass-through).</param>
-    /// <returns>True if the entity has no <see cref="LifeStateComponent"/> or its state is <see cref="Components.LifeState.Alive"/>; false for Incapacitated or Deceased.</returns>
+    /// <returns>True if the entity has no <see cref="LifeStateComponent"/> or its state is <see cref="LS.Alive"/>; false for Incapacitated or Deceased.</returns>
     /// <seealso cref="IsBiologicallyTicking"/>
     public static bool IsAlive(Entity npc)
     {
         if (!npc.Has<LifeStateComponent>()) return true; // non-NPC entities pass through
-        return npc.Get<LifeStateComponent>().State == Components.LifeState.Alive;
+        return npc.Get<LifeStateComponent>().State == LS.Alive;
     }
 
     /// <summary>
@@ -40,12 +42,12 @@ public static class LifeStateGuard
     /// Returns true for non-NPC entities lacking the component (pass-through semantics).
     /// </summary>
     /// <param name="npc">The entity to check; may be a non-NPC entity (pass-through).</param>
-    /// <returns>True if the entity has no <see cref="LifeStateComponent"/> or its state is <see cref="Components.LifeState.Alive"/> or <see cref="Components.LifeState.Incapacitated"/>; false only for Deceased.</returns>
+    /// <returns>True if the entity has no <see cref="LifeStateComponent"/> or its state is <see cref="LS.Alive"/> or <see cref="LS.Incapacitated"/>; false only for Deceased.</returns>
     /// <seealso cref="IsAlive"/>
     public static bool IsBiologicallyTicking(Entity npc)
     {
         if (!npc.Has<LifeStateComponent>()) return true; // non-NPC entities pass through
         var s = npc.Get<LifeStateComponent>().State;
-        return s == Components.LifeState.Alive || s == Components.LifeState.Incapacitated;
+        return s == LS.Alive || s == LS.Incapacitated;
     }
 }

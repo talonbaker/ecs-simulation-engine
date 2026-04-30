@@ -7,6 +7,8 @@ using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Spatial;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.LifeState;
 
 /// <summary>
@@ -56,7 +58,7 @@ public class BereavementByProximitySystemTests
         bool   npcInSameRoom    = true,
         int    intensity        = 50,   // above ProximityBereavementMinIntensity (30) by default
         bool   hasRelationship  = true,
-        LifeState npcState      = LifeState.Alive)
+        LS npcState      = LS.Alive)
     {
         var em         = new EntityManager();
         var membership = new EntityRoomMembership();
@@ -71,7 +73,7 @@ public class BereavementByProximitySystemTests
         // Corpse (deceased NPC in room1)
         var corpse = em.CreateEntity();
         corpse.Add(new NpcTag());
-        corpse.Add(new LifeStateComponent { State = LifeState.Deceased });
+        corpse.Add(new LifeStateComponent { State = LS.Deceased });
         corpse.Add(new CorpseTag());
         corpse.Add(new CorpseComponent
         {
@@ -202,7 +204,7 @@ public class BereavementByProximitySystemTests
     [Fact]
     public void AT06_DeceasedNpcInSameRoom_NotProcessed()
     {
-        var (em, _, sys, npc, _) = Build(npcState: LifeState.Deceased);
+        var (em, _, sys, npc, _) = Build(npcState: LS.Deceased);
 
         sys.Update(em, 1f);
 

@@ -23,6 +23,9 @@ public class SimulationClock
     /// <summary>Total accumulated game-seconds since the simulation started.</summary>
     public double TotalTime { get; private set; }
 
+    /// <summary>Discrete tick counter — incremented once per simulation update. Used for event timing.</summary>
+    public long CurrentTick { get; private set; }
+
     // ── Day / Night constants ─────────────────────────────────────────────────
 
     /// <summary>Number of game-seconds in a full 24-hour day (24 × 3600 = 86 400).</summary>
@@ -127,6 +130,7 @@ public class SimulationClock
     {
         float scaled = realDeltaTime * TimeScale;
         TotalTime   += scaled;
+        CurrentTick++;
         return scaled;
     }
 

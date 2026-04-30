@@ -7,6 +7,8 @@ using APIFramework.Core;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -111,12 +113,12 @@ public class LifeStateTransitionSystem : ISystem
             var current = npc.Get<LifeStateComponent>().State;
 
             // Legal transitions: Alive → Incapacitated → Deceased; Alive → Deceased (sudden death)
-            if (current == Components.LifeState.Deceased) continue;  // already dead, ignore request
-            if (req.TargetState == Components.LifeState.Alive && current == Components.LifeState.Deceased) continue;  // no resurrection
+            if (current == LS.Deceased) continue;  // already dead, ignore request
+            if (req.TargetState == LS.Alive && current == LS.Deceased) continue;  // no resurrection
 
             // Emit cause-of-death narrative BEFORE flipping state to Deceased,
             // so subscribers see the deceased while still flagged as Alive in their entity snapshot.
-            if (req.TargetState == Components.LifeState.Deceased)
+            if (req.TargetState == LS.Deceased)
             {
                 var witness = FindClosestWitness(npc, em);
                 // Location room ID: populated by future packets (3.0.2+).
@@ -154,10 +156,10 @@ public class LifeStateTransitionSystem : ISystem
             {
                 State = req.TargetState,
                 LastTransitionTick = (long)_clock.TotalTime,
-                IncapacitatedTickBudget = req.TargetState == Components.LifeState.Incapacitated
+                IncapacitatedTickBudget = req.TargetState == LS.Incapacitated
                     ? _config.LifeState.DefaultIncapacitatedTicks
                     : 0,
-                PendingDeathCause = req.TargetState == Components.LifeState.Incapacitated ? req.Cause : CauseOfDeath.Unknown
+                PendingDeathCause = req.TargetState == LS.Incapacitated ? req.Cause : CauseOfDeath.Unknown
             });
         }
 
@@ -169,7 +171,7 @@ public class LifeStateTransitionSystem : ISystem
         {
             if (!npc.Has<LifeStateComponent>()) continue;
             var state = npc.Get<LifeStateComponent>();
-            if (state.State != Components.LifeState.Incapacitated) continue;
+            if (state.State != LS.Incapacitated) continue;
 
             // Decrement the budget.
             state.IncapacitatedTickBudget--;
@@ -178,7 +180,7 @@ public class LifeStateTransitionSystem : ISystem
             // If budget expired, queue a Deceased transition.
             if (state.IncapacitatedTickBudget <= 0)
             {
-                RequestTransition(npc.Id, Components.LifeState.Deceased, state.PendingDeathCause);
+                RequestTransition(npc.Id, LS.Deceased, state.PendingDeathCause);
             }
         }
 

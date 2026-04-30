@@ -6,6 +6,8 @@ using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Narrative;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -143,7 +145,7 @@ public class ChokingDetectionSystem : ISystem
             // 4. Enqueue transition to Incapacitated(Choked)
             // The LifeStateTransitionSystem will set IncapacitatedTickBudget = _cfg.IncapacitationTicks
             // and PendingDeathCause = Choked. On budget expiry, it transitions to Deceased(Choked).
-            _transition.RequestTransition(npc.Id, Components.LifeState.Incapacitated, CauseOfDeath.Choked);
+            _transition.RequestTransition(npc.Id, LS.Incapacitated, CauseOfDeath.Choked);
         }
     }
 
