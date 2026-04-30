@@ -29,8 +29,20 @@ namespace APIFramework.Systems;
 ///   ContentVolumeMl -= processed
 ///   stool           = processed × StoolFraction          → colon.StoolVolumeMl
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="LargeIntestineComponent"/>, <see cref="MetabolismComponent"/>,
+/// <see cref="ColonComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="LargeIntestineComponent"/>.ContentVolumeMl,
+/// <see cref="MetabolismComponent"/>.Hydration (secondary reabsorption),
+/// <see cref="ColonComponent"/>.StoolVolumeMl (single writer of stool formation).<br/>
+/// Phase: Elimination, after <see cref="SmallIntestineSystem"/> deposits residue and
+/// before <see cref="ColonSystem"/> reads colon volume to apply tags.
+/// </remarks>
 public class LargeIntestineSystem : ISystem
 {
+    /// <summary>Per-tick water-reabsorption and stool-formation pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<LargeIntestineComponent>().ToList())

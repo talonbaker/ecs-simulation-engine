@@ -24,10 +24,17 @@ namespace APIFramework.Systems.LifeState;
 ///
 /// WP-3.0.2: Deceased-Entity Handling + Bereavement.
 /// </summary>
+/// <seealso cref="BereavementSystem"/>
+/// <seealso cref="BereavementByProximitySystem"/>
 public sealed class CorpseSpawnerSystem : ISystem
 {
     private readonly EntityManager _em;
 
+    /// <summary>
+    /// Subscribes to <see cref="NarrativeEventBus.OnCandidateEmitted"/> to react to the four death event kinds.
+    /// </summary>
+    /// <param name="narrativeBus">Bus from which death events are received.</param>
+    /// <param name="em">Entity manager — used to resolve the deceased entity by EntityIntId.</param>
     public CorpseSpawnerSystem(NarrativeEventBus narrativeBus, EntityManager em)
     {
         _em = em;
@@ -74,6 +81,11 @@ public sealed class CorpseSpawnerSystem : ISystem
         });
     }
 
+    /// <summary>
+    /// No per-tick work — this system is purely event-driven via the narrative bus subscription.
+    /// </summary>
+    /// <param name="em">Entity manager (unused).</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime) { /* event-driven; no per-tick work */ }
 
     // ── Utility ───────────────────────────────────────────────────────────────

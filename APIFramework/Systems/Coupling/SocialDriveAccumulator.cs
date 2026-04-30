@@ -15,6 +15,12 @@ namespace APIFramework.Systems.Coupling;
 /// Accumulators persist across save/load cycles (they live in engine memory, not WorldStateDto).
 /// Losing a few sub-1 fractional points on load is acceptable.
 /// </summary>
+/// <remarks>
+/// Singleton service registered by SimulationBootstrapper and shared by
+/// <see cref="LightingToDriveCouplingSystem"/> (and any future drive-coupling systems).
+/// Single-writer per (entity, drive) key from within a single phase guarantees deterministic
+/// flush order.
+/// </remarks>
 public sealed class SocialDriveAccumulator
 {
     // Canonical drive index: 0=belonging, 1=status, 2=affection, 3=irritation,
@@ -41,6 +47,9 @@ public sealed class SocialDriveAccumulator
     /// Adds <paramref name="delta"/> to the named drive's accumulator for <paramref name="entityId"/>.
     /// Unknown drive names are silently ignored.
     /// </summary>
+    /// <param name="entityId">Entity Guid that owns this fractional accumulator.</param>
+    /// <param name="driveName">Lowercase drive name; one of the eight canonical social drives.</param>
+    /// <param name="delta">Fractional delta to add this tick.</param>
     public void AddDelta(Guid entityId, string driveName, float delta)
     {
         if (!DriveIndex.TryGetValue(driveName, out int idx)) return;
@@ -54,6 +63,8 @@ public sealed class SocialDriveAccumulator
     /// and applies them (clamped to 0–100) to <paramref name="drives"/>.
     /// The fractional remainders stay in the accumulator for the next flush.
     /// </summary>
+    /// <param name="entityId">Entity Guid whose accumulators to flush.</param>
+    /// <param name="drives">Drive component to mutate in place.</param>
     public void FlushTo(Guid entityId, ref SocialDrivesComponent drives)
     {
         for (int idx = 0; idx < DriveCount; idx++)

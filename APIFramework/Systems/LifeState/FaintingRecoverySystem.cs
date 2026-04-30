@@ -35,6 +35,9 @@ namespace APIFramework.Systems.LifeState;
 ///
 /// WP-3.0.6: Fainting System.
 /// </summary>
+/// <seealso cref="FaintingDetectionSystem"/>
+/// <seealso cref="FaintingCleanupSystem"/>
+/// <seealso cref="LifeStateTransitionSystem"/>
 public sealed class FaintingRecoverySystem : ISystem
 {
     private readonly LifeStateTransitionSystem _transition;
@@ -42,6 +45,13 @@ public sealed class FaintingRecoverySystem : ISystem
     private readonly SimulationClock           _clock;
     private readonly FaintingConfig            _cfg;
 
+    /// <summary>
+    /// Stores the dependencies used per tick.
+    /// </summary>
+    /// <param name="transition">Single-writer life-state transition system that drains Alive recovery requests.</param>
+    /// <param name="narrativeBus">Bus on which RegainedConsciousness candidates are emitted before the state flip.</param>
+    /// <param name="clock">Simulation clock — used to compare against <c>RecoveryTick</c>.</param>
+    /// <param name="cfg">Fainting config — supplies <c>EmitRegainedConsciousnessNarrative</c>.</param>
     public FaintingRecoverySystem(
         LifeStateTransitionSystem transition,
         NarrativeEventBus         narrativeBus,
@@ -54,6 +64,12 @@ public sealed class FaintingRecoverySystem : ISystem
         _cfg          = cfg;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Walks fainted NPCs in deterministic order and queues the
+    /// Alive recovery for any whose recovery tick has arrived.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for entities tagged <c>IsFaintingTag</c>.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var npc in em.Query<IsFaintingTag>()

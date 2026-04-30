@@ -19,8 +19,16 @@ namespace APIFramework.Systems.LifeState;
 ///
 /// WP-3.0.6: Fainting System.
 /// </summary>
+/// <seealso cref="FaintingDetectionSystem"/>
+/// <seealso cref="FaintingRecoverySystem"/>
 public sealed class FaintingCleanupSystem : ISystem
 {
+    /// <summary>
+    /// Per-tick entry point. Strips fainting tags and components from any NPC that has
+    /// returned to <see cref="LifeState.Alive"/>.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for entities tagged <c>IsFaintingTag</c>.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<IsFaintingTag>().ToList())

@@ -14,12 +14,25 @@ namespace APIFramework.Systems;
 /// Pipeline position: 6 of 8 — after FeedingSystem and DrinkingSystem have
 /// potentially spawned transit entities, before EsophagusSystem moves them.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="MetabolismComponent"/>, <see cref="FoodObjectComponent"/>,
+/// <see cref="EsophagusTransitComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: spawns bolus transit entities; decrements
+/// <see cref="FoodObjectComponent"/>.BitesRemaining and removes the held-food
+/// component when fully consumed.<br/>
+/// Phase: Transit, before <see cref="EsophagusSystem"/>.
+/// </remarks>
 public class InteractionSystem : ISystem
 {
     private readonly InteractionSystemConfig _cfg;
 
+    /// <summary>Constructs the interaction system with its tuning.</summary>
+    /// <param name="cfg">Interaction tuning (bite volume, esophagus speed).</param>
     public InteractionSystem(InteractionSystemConfig cfg) => _cfg = cfg;
 
+    /// <summary>Per-tick interaction pass; takes a bite of held food when the throat is clear.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var human in em.Query<MetabolismComponent>().ToList())

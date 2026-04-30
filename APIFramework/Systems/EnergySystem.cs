@@ -21,12 +21,25 @@ namespace APIFramework.Systems;
 ///
 /// Pipeline position: 2 of 10 — after MetabolismSystem, before BiologicalConditionSystem.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="EnergyComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="EnergyComponent"/> Energy/Sleepiness, plus
+/// <see cref="SleepingTag"/>, <see cref="TiredTag"/>, <see cref="ExhaustedTag"/>
+/// (single writer of these three energy-state tags). Does NOT toggle
+/// <see cref="EnergyComponent"/>.IsSleeping — that is owned by <see cref="SleepSystem"/>.<br/>
+/// Phase: Physiology, after <see cref="MetabolismSystem"/> drains macro-resources.
+/// </remarks>
 public class EnergySystem : ISystem
 {
     private readonly EnergySystemConfig _cfg;
 
+    /// <summary>Constructs the energy system with its threshold tuning.</summary>
+    /// <param name="cfg">Energy thresholds (TiredThreshold, ExhaustedThreshold).</param>
     public EnergySystem(EnergySystemConfig cfg) => _cfg = cfg;
 
+    /// <summary>Per-tick energy/sleepiness pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<EnergyComponent>().ToList())

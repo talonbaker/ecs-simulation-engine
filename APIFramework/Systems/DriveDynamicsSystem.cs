@@ -21,6 +21,12 @@ namespace APIFramework.Systems;
 /// Baseline is never modified. Final Current is clamped to 0–100.
 /// Phase: Cognition.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="SocialDrivesComponent"/>, <see cref="PersonalityComponent"/>,
+/// <see cref="StressComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="SocialDrivesComponent"/> Current values (single writer).<br/>
+/// Phase: Cognition, before <see cref="ActionSelectionSystem"/> reads the resulting drives.
+/// </remarks>
 public class DriveDynamicsSystem : ISystem
 {
     private readonly SocialSystemConfig _cfg;
@@ -34,6 +40,11 @@ public class DriveDynamicsSystem : ISystem
 
     private const int DriveCount = 8;
 
+    /// <summary>Constructs the drive-dynamics system.</summary>
+    /// <param name="cfg">Social system tuning (decay rate, circadian shapes, volatility scale).</param>
+    /// <param name="clock">Simulation clock; used to derive day fraction for the circadian term.</param>
+    /// <param name="rng">Seeded RNG for deterministic volatility noise.</param>
+    /// <param name="stressCfg">Optional stress tuning; when present, high acute stress amplifies volatility.</param>
     public DriveDynamicsSystem(SocialSystemConfig cfg, SimulationClock clock, SeededRandom rng,
         StressConfig? stressCfg = null)
     {
@@ -43,6 +54,9 @@ public class DriveDynamicsSystem : ISystem
         _stressCfg = stressCfg;
     }
 
+    /// <summary>Per-tick mutation of social-drive Current values.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         float dayFraction = _clock.GameTimeOfDay / SimulationClock.SecondsPerDay;

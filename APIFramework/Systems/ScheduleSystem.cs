@@ -8,19 +8,32 @@ using APIFramework.Systems.LifeState;
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Phase: Condition (20). Runs before ActionSelectionSystem (Cognition 30).
-/// For each NPC with ScheduleComponent, resolves the active schedule block from the current
-/// game hour and writes CurrentScheduleBlockComponent so ActionSelectionSystem can read it.
+/// Condition phase. For each NPC with <see cref="ScheduleComponent"/>, resolves the
+/// active schedule block from the current game hour and writes
+/// <see cref="CurrentScheduleBlockComponent"/> so <see cref="ActionSelectionSystem"/>
+/// can read it.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="ScheduleComponent"/>,
+/// <see cref="CurrentScheduleBlockComponent"/>, <see cref="NamedAnchorComponent"/>,
+/// <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="CurrentScheduleBlockComponent"/> (single writer per tick).<br/>
+/// Phase: Condition, before <see cref="ActionSelectionSystem"/> (Cognition).
+/// </remarks>
 public sealed class ScheduleSystem : ISystem
 {
     private readonly SimulationClock _clock;
 
+    /// <summary>Constructs the schedule resolver with the simulation clock.</summary>
+    /// <param name="clock">Simulation clock providing the current game hour.</param>
     public ScheduleSystem(SimulationClock clock)
     {
         _clock = clock;
     }
 
+    /// <summary>Per-tick schedule resolution pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         float gameHour = _clock.GameHour;

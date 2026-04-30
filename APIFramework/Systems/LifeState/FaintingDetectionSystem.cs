@@ -52,6 +52,9 @@ namespace APIFramework.Systems.LifeState;
 ///
 /// WP-3.0.6: Fainting System.
 /// </summary>
+/// <seealso cref="FaintingCleanupSystem"/>
+/// <seealso cref="FaintingRecoverySystem"/>
+/// <seealso cref="LifeStateTransitionSystem"/>
 public sealed class FaintingDetectionSystem : ISystem
 {
     private readonly LifeStateTransitionSystem _transition;
@@ -60,6 +63,14 @@ public sealed class FaintingDetectionSystem : ISystem
     private readonly EntityRoomMembership      _roomMembership;
     private readonly FaintingConfig            _cfg;
 
+    /// <summary>
+    /// Stores the dependencies used per tick.
+    /// </summary>
+    /// <param name="transition">Single-writer life-state transition system that drains incapacitation requests.</param>
+    /// <param name="narrativeBus">Bus on which Fainted candidates are emitted before the state flip.</param>
+    /// <param name="clock">Simulation clock — supplies <c>CurrentTick</c>.</param>
+    /// <param name="roomMembership">Room-membership lookup used to stamp <c>RoomId</c> on emitted candidates.</param>
+    /// <param name="cfg">Fainting config — fear threshold, faint duration, narrative toggle.</param>
     public FaintingDetectionSystem(
         LifeStateTransitionSystem transition,
         NarrativeEventBus         narrativeBus,
@@ -74,6 +85,12 @@ public sealed class FaintingDetectionSystem : ISystem
         _cfg            = cfg;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Iterates Alive NPCs in deterministic order and triggers the
+    /// fainting pipeline for any whose Fear has crossed the threshold.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for NPCs.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Deterministic iteration order.

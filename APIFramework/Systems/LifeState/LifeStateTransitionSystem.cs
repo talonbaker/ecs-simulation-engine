@@ -28,6 +28,17 @@ namespace APIFramework.Systems.LifeState;
 /// (which subscribes to the bus synchronously) sees participants as still Alive
 /// when routing the memory entry. This is intentional and must not be changed.
 /// </summary>
+/// <remarks>
+/// Single-writer rule: this is the ONLY system that writes <c>LifeStateComponent.State</c>
+/// or attaches <c>CauseOfDeathComponent</c>. Scenario systems must enqueue requests via
+/// <see cref="RequestTransition"/> rather than mutating components directly.
+/// Phase: Cleanup (80) — registered LAST in the cleanup group so all detection systems
+/// (choking, fainting) have had their chance to enqueue requests before the queue drains.
+/// </remarks>
+/// <seealso cref="LifeStateInitializerSystem"/>
+/// <seealso cref="LifeStateGuard"/>
+/// <seealso cref="ChokingDetectionSystem"/>
+/// <seealso cref="FaintingDetectionSystem"/>
 public sealed class LifeStateTransitionSystem : ISystem
 {
     private readonly NarrativeEventBus    _narrativeBus;
@@ -39,6 +50,14 @@ public sealed class LifeStateTransitionSystem : ISystem
     // Single-tick request queue. Cleared at end of each tick.
     private readonly List<LifeStateTransitionRequest> _queue = new();
 
+    /// <summary>
+    /// Stores the dependencies used per tick.
+    /// </summary>
+    /// <param name="narrativeBus">Bus on which cause-of-death candidates are emitted before the state flip.</param>
+    /// <param name="em">Entity manager — used to resolve NPCs by GUID and find witness candidates.</param>
+    /// <param name="clock">Simulation clock — supplies <c>CurrentTick</c> for transition timestamps.</param>
+    /// <param name="cfg">Life-state config — supplies <c>DefaultIncapacitatedTicks</c>.</param>
+    /// <param name="roomMembership">Room-membership lookup used to stamp <c>LocationRoomId</c> on cause-of-death.</param>
     public LifeStateTransitionSystem(
         NarrativeEventBus    narrativeBus,
         EntityManager        em,
@@ -93,6 +112,12 @@ public sealed class LifeStateTransitionSystem : ISystem
 
     // ── ISystem.Update ────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Per-tick entry point. Drains the request queue in NPC-id ascending order, then
+    /// ticks down Incapacitated budgets and auto-transitions exhausted NPCs to Deceased.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for Incapacitated NPCs.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // 1. Process the tick's explicit transition requests (deterministic order).

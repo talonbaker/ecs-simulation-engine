@@ -16,18 +16,34 @@ namespace APIFramework.Systems.Spatial;
 ///   - Caches the result in EntityRoomMembership.
 ///   - Fires RoomMembershipChanged on ProximityEventBus when the result changes.
 /// </summary>
+/// <remarks>
+/// Reads <c>PositionComponent</c>, <c>RoomComponent</c>; writes to <see cref="EntityRoomMembership"/>
+/// and publishes <see cref="RoomMembershipChanged"/> events. Single-writer rule for
+/// <see cref="EntityRoomMembership"/>: only this system updates membership during the simulation.
+/// </remarks>
 public sealed class RoomMembershipSystem : ISystem
 {
     private readonly EntityRoomMembership _membership;
     private readonly ProximityEventBus    _bus;
     private int _tick;
 
+    /// <summary>
+    /// Stores membership and bus references used per tick.
+    /// </summary>
+    /// <param name="membership">Service to update with the per-tick room assignments.</param>
+    /// <param name="bus">Bus on which transition events are published.</param>
     public RoomMembershipSystem(EntityRoomMembership membership, ProximityEventBus bus)
     {
         _membership = membership;
         _bus        = bus;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Resolves the containing room for every positioned entity and
+    /// publishes any transition events.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for rooms and positioned entities.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         _tick++;

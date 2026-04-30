@@ -41,6 +41,8 @@ namespace APIFramework.Systems.LifeState;
 ///
 /// WP-3.0.1: Choking-on-Food Scenario.
 /// </summary>
+/// <seealso cref="ChokingCleanupSystem"/>
+/// <seealso cref="LifeStateTransitionSystem"/>
 public sealed class ChokingDetectionSystem : ISystem
 {
     private readonly LifeStateTransitionSystem _transition;
@@ -50,6 +52,15 @@ public sealed class ChokingDetectionSystem : ISystem
     private readonly EntityRoomMembership      _roomMembership;
     private readonly ChokingConfig             _cfg;
 
+    /// <summary>
+    /// Stores the dependencies used per tick.
+    /// </summary>
+    /// <param name="transition">Single-writer life-state transition system that drains choke incapacitation requests.</param>
+    /// <param name="narrativeBus">Bus on which ChokeStarted candidates are emitted before the state flip.</param>
+    /// <param name="em">Entity manager — used to resolve transit-target NPCs and witness candidates.</param>
+    /// <param name="clock">Simulation clock — supplies <c>CurrentTick</c>.</param>
+    /// <param name="roomMembership">Room-membership lookup used to stamp <c>RoomId</c> on emitted candidates.</param>
+    /// <param name="cfg">Choking config — bolus and distraction thresholds, panic intensity, narrative toggle.</param>
     public ChokingDetectionSystem(
         LifeStateTransitionSystem transition,
         NarrativeEventBus         narrativeBus,
@@ -66,6 +77,12 @@ public sealed class ChokingDetectionSystem : ISystem
         _cfg            = cfg;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Walks every esophageal transit and triggers the choking pipeline
+    /// for any NPC whose distraction conditions hold while a tough bolus is in transit.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for boluses and consumer NPCs.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Iterate food boluses currently in esophageal transit.

@@ -23,6 +23,12 @@ namespace APIFramework.Systems;
 ///
 /// Phase: Cognition.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="RelationshipTag"/>, <see cref="RelationshipComponent"/>,
+/// <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="RelationshipComponent"/>.Intensity (decay).<br/>
+/// Phase: Cognition.
+/// </remarks>
 public class RelationshipLifecycleSystem : ISystem
 {
     private readonly SocialSystemConfig _cfg;
@@ -33,6 +39,9 @@ public class RelationshipLifecycleSystem : ISystem
     // Accumulated fractional decay; applied to integer Intensity when it crosses 1.
     private readonly Dictionary<Guid, double> _decayAccum = new();
 
+    /// <summary>Constructs the lifecycle system with its config and a pre-loaded transition table.</summary>
+    /// <param name="cfg">Social-system tuning (intensity decay rate).</param>
+    /// <param name="transitions">Pre-loaded list of legal (from, to) pattern transitions.</param>
     public RelationshipLifecycleSystem(
         SocialSystemConfig cfg,
         IReadOnlyList<(RelationshipPattern, RelationshipPattern)> transitions)
@@ -41,6 +50,9 @@ public class RelationshipLifecycleSystem : ISystem
         _transitions = transitions;
     }
 
+    /// <summary>Per-tick relationship pass; decays intensity and walks the transition table.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<RelationshipTag>().ToList())

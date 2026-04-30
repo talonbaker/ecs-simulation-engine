@@ -10,13 +10,22 @@ using APIFramework.Systems.Spatial;
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Phase: Cognition (after DriveDynamicsSystem, before WillpowerSystem).
-/// Per tick, for each NPC: enumerate drive-based + idle candidates, score them
-/// (including approach-avoidance inversion), pick the winner via weighted
-/// selection, write IntendedActionComponent, update MovementTargetComponent,
-/// and push a SuppressionTick into WillpowerEventQueue when a candidate is
-/// actively suppressed.
+/// Cognition phase. Per tick, for each NPC: enumerates drive-based + schedule + idle
+/// candidates, scores them (including approach-avoidance inversion), picks the winner
+/// via weighted selection with deterministic jitter, and writes the result.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="SocialDrivesComponent"/>, <see cref="WillpowerComponent"/>,
+/// <see cref="InhibitionsComponent"/>, <see cref="PersonalityComponent"/>,
+/// <see cref="PositionComponent"/>, <see cref="ProximityComponent"/>,
+/// <see cref="CurrentScheduleBlockComponent"/>, <see cref="WorkloadComponent"/>,
+/// <see cref="RoomComponent"/> (room illumination), and <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="IntendedActionComponent"/> (single writer),
+/// <see cref="MovementTargetComponent"/>, and <see cref="WillpowerEventSignal"/>
+/// SuppressionTick events into <see cref="WillpowerEventQueue"/>.<br/>
+/// Phase: Cognition (after <see cref="DriveDynamicsSystem"/>, before
+/// <see cref="WillpowerSystem"/>).
+/// </remarks>
 public sealed class ActionSelectionSystem : ISystem
 {
     // ── Candidate source tags (for diagnostics) ───────────────────────────────
@@ -76,6 +85,18 @@ public sealed class ActionSelectionSystem : ISystem
     // Flee-target entities: NPC → ephemeral entity positioned at flee point.
     private readonly Dictionary<Entity, Entity> _fleeTargets = new();
 
+    /// <summary>
+    /// Constructs the action-selection system with the services it needs to enumerate,
+    /// score, and write per-NPC intents.
+    /// </summary>
+    /// <param name="spatial">Cell-based spatial index used to discover nearby NPCs.</param>
+    /// <param name="rooms">Room membership map used to read ambient illumination for observability.</param>
+    /// <param name="willpowerQueue">Queue receiving SuppressionTick signals when a candidate is suppressed.</param>
+    /// <param name="rng">Seeded RNG used for deterministic tie-breaking jitter.</param>
+    /// <param name="cfg">Action-selection thresholds, weights, and limits.</param>
+    /// <param name="scheduleCfg">Schedule-related thresholds (anchor weight, linger distance).</param>
+    /// <param name="em">Entity manager used to spawn ephemeral flee-target entities and resolve Guid → Entity.</param>
+    /// <param name="workloadCfg">Optional workload tuning; defaults to a fresh <see cref="WorkloadConfig"/> when null.</param>
     public ActionSelectionSystem(
         ISpatialIndex        spatial,
         EntityRoomMembership rooms,
@@ -96,6 +117,11 @@ public sealed class ActionSelectionSystem : ISystem
         _em             = em;
     }
 
+    /// <summary>
+    /// Per-tick scoring and intent write. Skips non-Alive NPCs.
+    /// </summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Process NPCs in deterministic order (ascending EntityIntId).

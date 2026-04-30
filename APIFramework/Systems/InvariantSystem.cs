@@ -25,12 +25,29 @@ namespace APIFramework.Systems;
 ///   Resource stuck at 0 for ages → entity in terminal state; feedback loop broken
 ///   Resource never drops below X → action threshold is set too low; entity never experiences need
 /// </summary>
+/// <remarks>
+/// Reads: every component listed in the per-component checks
+/// (<see cref="LifeStateComponent"/>, <see cref="MetabolismComponent"/>,
+/// <see cref="EnergyComponent"/>, <see cref="StomachComponent"/>,
+/// <see cref="SmallIntestineComponent"/>, <see cref="LargeIntestineComponent"/>,
+/// <see cref="ColonComponent"/>, <see cref="BladderComponent"/>,
+/// <see cref="DriveComponent"/>, <see cref="EsophagusTransitComponent"/>,
+/// <see cref="StainComponent"/>, <see cref="BrokenItemComponent"/>).<br/>
+/// Writes: clamps any out-of-range value back into range on the offending component
+/// and appends an <see cref="APIFramework.Diagnostics.InvariantViolation"/> to its
+/// internal list.<br/>
+/// Phase: PreUpdate (always first) — guards against stale bad state from the
+/// previous tick before any system reads it this tick.
+/// </remarks>
 public class InvariantSystem : ISystem
 {
     private readonly SimulationClock          _clock;
     private readonly ChronicleService?        _chronicle;
     private readonly List<InvariantViolation> _violations = new();
 
+    /// <summary>Constructs the invariant guard with the simulation clock and an optional chronicle service.</summary>
+    /// <param name="clock">Simulation clock; supplies the GameTime stamp on every recorded violation.</param>
+    /// <param name="chronicle">Optional chronicle service; when supplied, the chronicle ↔ entity-tree integrity check runs.</param>
     public InvariantSystem(SimulationClock clock, ChronicleService? chronicle = null)
     {
         _clock     = clock;
@@ -54,6 +71,9 @@ public class InvariantSystem : ISystem
         return batch;
     }
 
+    /// <summary>Per-tick invariant pass; checks every entity's components and clamps offenders.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         double gameTime = _clock.TotalTime;

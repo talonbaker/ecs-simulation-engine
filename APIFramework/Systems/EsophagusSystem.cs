@@ -4,8 +4,26 @@ using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
+/// <summary>
+/// Transit phase. Advances each <see cref="EsophagusTransitComponent"/> toward the
+/// stomach. When progress reaches 1.0, deposits the bolus or liquid into the consumer's
+/// <see cref="StomachComponent"/> (volume + queued nutrients) and destroys the transit
+/// entity.
+/// </summary>
+/// <remarks>
+/// Reads: <see cref="EsophagusTransitComponent"/>, <see cref="LiquidComponent"/>,
+/// <see cref="BolusComponent"/>, <see cref="StomachComponent"/>,
+/// <see cref="LifeStateComponent"/> (Deceased consumers do not receive deposits).<br/>
+/// Writes: <see cref="EsophagusTransitComponent"/>.Progress, target
+/// <see cref="StomachComponent"/>; destroys completed transit entities.<br/>
+/// Phase: Transit, after <see cref="InteractionSystem"/>/<see cref="FeedingSystem"/>/<see cref="DrinkingSystem"/>
+/// have created transit entities and before <see cref="DigestionSystem"/> drains the stomach.
+/// </remarks>
 public class EsophagusSystem : ISystem
 {
+    /// <summary>Per-tick progress and deposit pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         var entities = em.Query<EsophagusTransitComponent>().ToList();

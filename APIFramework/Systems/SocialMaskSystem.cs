@@ -19,6 +19,13 @@ namespace APIFramework.Systems;
 ///
 /// Fractional accumulators prevent precision loss at sub-integer gain/decay rates.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="SocialMaskComponent"/>,
+/// <see cref="SocialDrivesComponent"/>, <see cref="PersonalityComponent"/>,
+/// <see cref="RoomComponent"/> (illumination), <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="SocialMaskComponent"/> (single writer of mask values).<br/>
+/// Phase: Cognition, before <see cref="MaskCrackSystem"/> (Cleanup).
+/// </remarks>
 public sealed class SocialMaskSystem : ISystem
 {
     private readonly EntityRoomMembership _roomMembership;
@@ -30,12 +37,18 @@ public sealed class SocialMaskSystem : ISystem
     // Per-entity fractional decay accumulator (same decay rate for all 4 drives)
     private readonly Dictionary<Guid, double> _decayAccum = new();
 
+    /// <summary>Constructs the social mask system.</summary>
+    /// <param name="roomMembership">Room membership service used to compute exposure (illumination + observers).</param>
+    /// <param name="cfg">Mask tuning (gain/decay rates, exposure thresholds, personality scales).</param>
     public SocialMaskSystem(EntityRoomMembership roomMembership, SocialMaskConfig cfg)
     {
         _roomMembership = roomMembership;
         _cfg            = cfg;
     }
 
+    /// <summary>Per-tick mask growth/decay pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Build room → occupant count so we can compute exposure for each NPC.

@@ -5,29 +5,25 @@ using APIFramework.Systems.LifeState;
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Monitors bladder fill level and manages urination-urge tags.
-///
-/// PIPELINE POSITION
-/// ─────────────────
-///   BladderFillSystem (Physiology/10) fills BladderComponent.
-///   BladderSystem     (Elimination/55) runs here, applying tags immediately.
-///   UrinationSystem   (Behavior/40) acts on those tags next tick.
-///
-///   Note: Because Behavior(40) precedes Elimination(55), UrinationSystem always
-///   reads tags set by the PREVIOUS tick — a one-tick lag identical to ColonSystem,
-///   and imperceptible at any normal TimeScale.
-///
-/// TAG LIFECYCLE
-/// ─────────────
-///   VolumeML >= UrgeThresholdMl → UrinationUrgeTag  (entity feels the urge)
-///   VolumeML >= CapacityMl      → BladderCriticalTag (emergency override)
-///   Both tags are cleared when volume drops below their respective thresholds.
-///
-/// This system owns all writes to UrinationUrgeTag and BladderCriticalTag.
-/// No other system should add or remove these tags.
+/// Elimination phase. Monitors <see cref="BladderComponent"/> fill level and toggles
+/// <see cref="UrinationUrgeTag"/> and <see cref="BladderCriticalTag"/> based on the
+/// component's HasUrge / IsCritical thresholds.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="BladderComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="UrinationUrgeTag"/> and <see cref="BladderCriticalTag"/>
+/// (single writer of both).<br/>
+/// Phase: Elimination, after <see cref="BladderFillSystem"/> (Physiology). Because
+/// Behavior(40) precedes Elimination(55), <see cref="UrinationSystem"/> reads tags
+/// from the previous tick — a one-tick lag imperceptible at normal TimeScale.
+/// </remarks>
+/// <seealso cref="BladderFillSystem"/>
+/// <seealso cref="UrinationSystem"/>
 public class BladderSystem : ISystem
 {
+    /// <summary>Per-tick tag-toggle pass over <see cref="BladderComponent"/> entities.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<BladderComponent>().ToList())

@@ -6,46 +6,38 @@ using APIFramework.Systems.LifeState;
 namespace APIFramework.Systems;
 
 /// <summary>
-/// The priority queue. Scores every active drive, applies mood modifiers, and
-/// writes the dominant DesireType onto each entity's DriveComponent.
-///
-/// Action systems (FeedingSystem, DrinkingSystem, SleepSystem) MUST check
-/// DriveComponent.Dominant before acting. This is the single source of truth for
-/// "what should Billy do right now."
-///
-/// SCORING FORMULA
-/// ───────────────
-///   EatUrgency      = (Hunger     / 100) * EatMaxScore
-///   DrinkUrgency    = (Thirst     / 100) * DrinkMaxScore
-///   SleepUrgency    = (Sleepiness / 100) * SleepMaxScore * CircadianFactor
-///   DefecateUrgency = ColonComponent.Fill * DefecateMaxScore
-///                     (overrides to 1.0 when BowelCriticalTag is present)
-///
-/// MOOD MODIFIERS (applied after base scores)
-/// ───────────────────────────────────────────
-///   BoredTag    → +BoredUrgencyBonus flat added to every drive (idle → more likely to act)
-///   SadTag      → ×SadnessUrgencyMult on every drive (sadness reduces motivation)
-///   GriefTag    → ×GriefUrgencyMult  on every drive (grief strongly suppresses action)
-///
-/// MINIMUM URGENCY FLOOR
-/// ──────────────────────
-/// If all urgency scores remain below MinUrgencyThreshold after mood modifiers,
-/// all scores are zeroed — Dominant returns None via DriveComponent's 0.001 guard.
-/// This is the idle state from which boredom accumulates in MoodSystem.
-///
-/// Pipeline position: 6 — after MoodSystem has updated emotion tags this tick.
+/// Cognition phase. Scores each NPC's biological drives (Eat, Drink, Sleep, Defecate, Pee)
+/// using physiology, circadian state, and mood-tag modifiers, and writes per-drive urgencies
+/// (whose <c>Dominant</c> getter selects the winning <see cref="DesireType"/>) into
+/// <see cref="DriveComponent"/>. Single writer of <see cref="DriveComponent"/>.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="MetabolismComponent"/>, <see cref="EnergyComponent"/>,
+/// <see cref="ColonComponent"/>, <see cref="BladderComponent"/>, mood tags
+/// (<see cref="BoredTag"/>, <see cref="SadTag"/>, <see cref="GriefTag"/>),
+/// criticality tags (<see cref="BowelCriticalTag"/>, <see cref="BladderCriticalTag"/>),
+/// circadian factor from <see cref="SimulationClock"/>.<br/>
+/// Writes: <see cref="DriveComponent"/> urgencies (single writer).<br/>
+/// Phase: Cognition. Runs after <see cref="MoodSystem"/> has updated emotion tags this
+/// tick and before <see cref="PhysiologyGateSystem"/> writes the veto set.
+/// </remarks>
 public class BrainSystem : ISystem
 {
     private readonly BrainSystemConfig _cfg;
     private readonly SimulationClock   _clock;
 
+    /// <summary>Constructs the brain with its scoring tuning and the simulation clock.</summary>
+    /// <param name="cfg">Brain scoring tuning (max scores, mood multipliers, urgency floor).</param>
+    /// <param name="clock">Simulation clock; <c>CircadianFactor</c> shapes sleep urgency.</param>
     public BrainSystem(BrainSystemConfig cfg, SimulationClock clock)
     {
         _cfg   = cfg;
         _clock = clock;
     }
 
+    /// <summary>Per-tick drive-scoring pass over every entity with a <see cref="MetabolismComponent"/>.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         float circadian = _clock.CircadianFactor;

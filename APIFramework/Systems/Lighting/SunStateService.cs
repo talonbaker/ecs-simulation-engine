@@ -12,6 +12,7 @@ public sealed class SunStateService
     public SunStateRecord CurrentSunState { get; private set; }
 
     /// <summary>Called by SunSystem each tick. Also callable from tests to inject a specific sun state.</summary>
+    /// <param name="state">The new sun state to publish.</param>
     public void UpdateSunState(SunStateRecord state)
     {
         CurrentSunState = state;

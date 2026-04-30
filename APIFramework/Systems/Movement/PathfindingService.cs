@@ -22,6 +22,14 @@ public sealed class PathfindingService
 
     private static readonly (int dx, int dy)[] Directions = { (0, -1), (0, 1), (-1, 0), (1, 0) };
 
+    /// <summary>
+    /// Stores world bounds, pathfinding tuning, and the entity-manager reference used to
+    /// build the obstacle and doorway sets.
+    /// </summary>
+    /// <param name="em">Entity manager — scanned for obstacles and rooms each call to <see cref="ComputePath"/>.</param>
+    /// <param name="worldWidth">World width in tiles. Coordinates are clamped to [0, worldWidth).</param>
+    /// <param name="worldHeight">World height in tiles. Coordinates are clamped to [0, worldHeight).</param>
+    /// <param name="cfg">Movement config — supplies <c>Pathfinding.DoorwayDiscount</c> and <c>TieBreakNoiseScale</c>.</param>
     public PathfindingService(EntityManager em, int worldWidth, int worldHeight, MovementConfig cfg)
     {
         _em                 = em;
@@ -36,6 +44,12 @@ public sealed class PathfindingService
     /// Returns an empty list when start == goal or no path exists.
     /// The same (from, to, seed) triple always produces the same path.
     /// </summary>
+    /// <param name="fromX">Start tile X.</param>
+    /// <param name="fromY">Start tile Y.</param>
+    /// <param name="toX">Goal tile X.</param>
+    /// <param name="toY">Goal tile Y.</param>
+    /// <param name="seed">Per-trip seed mixed into the tie-break noise hash.</param>
+    /// <returns>Tile waypoints from start (exclusive) to goal (inclusive); empty if unreachable.</returns>
     public IReadOnlyList<(int X, int Y)> ComputePath(int fromX, int fromY, int toX, int toY, int seed)
     {
         if (fromX == toX && fromY == toY)

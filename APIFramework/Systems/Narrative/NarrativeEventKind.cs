@@ -6,13 +6,21 @@ namespace APIFramework.Systems.Narrative;
 /// </summary>
 public enum NarrativeEventKind
 {
+    /// <summary>A social drive's Current value moved by at least NarrativeConfig.DriveSpikeThreshold in a single tick.</summary>
     DriveSpike,
+    /// <summary>WillpowerComponent.Current dropped by at least NarrativeConfig.WillpowerDropThreshold in a single tick.</summary>
     WillpowerCollapse,
+    /// <summary>WillpowerComponent.Current crossed below NarrativeConfig.WillpowerLowThreshold for the first time since being above it.</summary>
     WillpowerLow,
+    /// <summary>Two NPCs entered each other's conversation range. Emitted by NarrativeEventDetector from ProximityEnteredConversationRange events.</summary>
     ConversationStarted,
+    /// <summary>An NPC left a room shortly after a DriveSpike (within NarrativeConfig.AbruptDepartureWindowTicks).</summary>
     LeftRoomAbruptly,
+    /// <summary>An NPC's social mask cracked. Emitted by MaskCrackSystem in the Cleanup phase.</summary>
     MaskSlip,
+    /// <summary>A workload task passed its deadline without completion. Emitted by WorkloadSystem.</summary>
     OverdueTask,
+    /// <summary>A workload task was completed. Emitted by WorkloadSystem.</summary>
     TaskCompleted,
 
     // ── Phase 3 — death and incapacitation events (WP-3.0.0) ─────────────────

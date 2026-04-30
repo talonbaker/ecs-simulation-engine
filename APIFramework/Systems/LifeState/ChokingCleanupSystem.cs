@@ -17,8 +17,15 @@ namespace APIFramework.Systems.LifeState;
 ///
 /// WP-3.0.1: Choking-on-Food Scenario.
 /// </summary>
+/// <seealso cref="ChokingDetectionSystem"/>
 public sealed class ChokingCleanupSystem : ISystem
 {
+    /// <summary>
+    /// Per-tick entry point. Strips choking tags and components from any NPC that has
+    /// already transitioned to <see cref="LifeState.Deceased"/>.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for entities tagged <c>IsChokingTag</c>.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<IsChokingTag>().ToList())

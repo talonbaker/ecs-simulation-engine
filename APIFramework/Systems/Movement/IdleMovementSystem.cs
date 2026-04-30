@@ -13,12 +13,24 @@ namespace APIFramework.Systems.Movement;
 ///      current direction, simulating looking around.
 /// Uses SeededRandom for determinism.
 /// </summary>
+/// <remarks>
+/// Phase: World (60), registered LAST in the movement quality pipeline so jitter and
+/// posture shifts do not leak into other movement systems. Reads
+/// <c>PositionComponent</c>, <c>MovementComponent</c>, <c>FacingComponent</c>;
+/// writes <c>PositionComponent</c> and <c>FacingComponent</c> for stationary NPCs only.
+/// Skips non-Alive NPCs and any NPC with an active <c>MovementTargetComponent</c>.
+/// </remarks>
 public sealed class IdleMovementSystem : ISystem
 {
     private readonly SeededRandom  _rng;
     private readonly float         _jitterTiles;
     private readonly float         _postureShiftProb;
 
+    /// <summary>
+    /// Stores RNG and movement-tuning references used per tick.
+    /// </summary>
+    /// <param name="rng">Deterministic RNG used for jitter and posture-shift rolls.</param>
+    /// <param name="cfg">Movement config — supplies <c>IdleJitterTiles</c> and <c>IdlePostureShiftProb</c>.</param>
     public IdleMovementSystem(SeededRandom rng, MovementConfig cfg)
     {
         _rng              = rng;
@@ -26,6 +38,12 @@ public sealed class IdleMovementSystem : ISystem
         _postureShiftProb = cfg.IdlePostureShiftProb;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Applies position jitter and stochastic posture shifts to
+    /// stationary NPCs.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for positioned entities.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<PositionComponent>())

@@ -13,6 +13,8 @@
          apphost binary, so CreateAppHost fails. With this off, 'dotnet run' uses the
          .dll directly through the runtime — no chmod needed, works on any filesystem. -->
     <UseAppHost>false</UseAppHost>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

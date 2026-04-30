@@ -20,6 +20,18 @@ namespace APIFramework.Systems.Narrative;
 ///
 /// Phase: Narrative (70) — runs after all other phases so state has settled.
 /// </summary>
+/// <remarks>
+/// Reads <c>SocialDrivesComponent</c> and <c>WillpowerComponent</c> snapshots tick-over-tick;
+/// reads <c>IdentityComponent</c> on rooms; reads <see cref="EntityRoomMembership"/>; consumes
+/// proximity events buffered from the Spatial phase. Writes nothing to the entity world —
+/// the only side effect is publishing on <see cref="NarrativeEventBus"/>.
+///
+/// Determinism: NPCs are iterated in entity-id ascending order, candidates are sorted by
+/// primary participant id before emission, and LINQ <c>OrderBy</c> stable-sorts ties.
+/// </remarks>
+/// <seealso cref="NarrativeEventBus"/>
+/// <seealso cref="NarrativeEventCandidate"/>
+/// <seealso cref="NarrativeEventKind"/>
 public sealed class NarrativeEventDetector : ISystem
 {
     private readonly NarrativeEventBus    _narrativeBus;
@@ -43,6 +55,13 @@ public sealed class NarrativeEventDetector : ISystem
         { "belonging", "status", "affection", "irritation",
           "attraction", "trust", "suspicion", "loneliness" };
 
+    /// <summary>
+    /// Subscribes to the proximity bus and stores the dependencies for per-tick detection.
+    /// </summary>
+    /// <param name="narrativeBus">Bus on which detected candidates are published.</param>
+    /// <param name="proximityBus">Bus from which OnEnteredConversationRange and OnRoomMembershipChanged events are buffered.</param>
+    /// <param name="roomMembership">Room-membership lookup used to resolve room names.</param>
+    /// <param name="cfg">Tunable thresholds (drive-spike, willpower drop/low, abrupt-departure window, detail max length).</param>
     public NarrativeEventDetector(
         NarrativeEventBus    narrativeBus,
         ProximityEventBus    proximityBus,
@@ -57,6 +76,12 @@ public sealed class NarrativeEventDetector : ISystem
         proximityBus.OnRoomMembershipChanged    += e => _roomEvents.Add(e);
     }
 
+    /// <summary>
+    /// Per-tick entry point. Diffs current drive/willpower snapshots against the previous tick,
+    /// processes buffered proximity events, and publishes ordered candidates on the bus.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for NPCs.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused; this system is tick-counted).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         _tick++;

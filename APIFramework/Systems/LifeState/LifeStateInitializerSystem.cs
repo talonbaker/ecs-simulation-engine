@@ -13,8 +13,16 @@ namespace APIFramework.Systems.LifeState;
 /// Idempotent: entities already carrying <see cref="LifeStateComponent"/> are skipped.
 /// No RNG is used; the operation is deterministic and order-independent.
 /// </summary>
+/// <seealso cref="LifeStateTransitionSystem"/>
+/// <seealso cref="LifeStateGuard"/>
 public sealed class LifeStateInitializerSystem : ISystem
 {
+    /// <summary>
+    /// Per-tick entry point. Attaches a default <c>LifeStateComponent</c> (Alive) to every
+    /// NPC that does not yet have one.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for NPCs.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<NpcTag>().ToList())

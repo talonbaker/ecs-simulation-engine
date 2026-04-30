@@ -110,6 +110,7 @@ public struct MoodComponent
     public readonly float Valence =>
         (Joy + Trust + Anticipation) - (Fear + Sadness + Disgust + Anger);
 
+    /// <summary>Debug-friendly summary of all eight Plutchik intensity values.</summary>
     public override string ToString() =>
         $"Joy:{Joy:F0} Trust:{Trust:F0} Fear:{Fear:F0} Surprise:{Surprise:F0} " +
         $"Sadness:{Sadness:F0} Disgust:{Disgust:F0} Anger:{Anger:F0} Anticipation:{Anticipation:F0}";

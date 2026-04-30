@@ -27,17 +27,35 @@ namespace APIFramework.Systems.LifeState;
 ///
 /// WP-3.0.2: Deceased-Entity Handling + Bereavement.
 /// </summary>
+/// <remarks>
+/// Reads <c>RelationshipComponent</c>, <c>CorpseTag</c>, the room-membership snapshot, and
+/// (lazily) <c>BereavementHistoryComponent</c>. Writes <c>StressComponent.AcuteLevel</c>
+/// and <c>BereavementHistoryComponent.EncounteredCorpseIds</c>.
+/// </remarks>
+/// <seealso cref="BereavementSystem"/>
+/// <seealso cref="CorpseSpawnerSystem"/>
 public sealed class BereavementByProximitySystem : ISystem
 {
     private readonly EntityRoomMembership _roomMembership;
     private readonly BereavementConfig    _cfg;
 
+    /// <summary>
+    /// Stores room-membership and bereavement-tuning references used per tick.
+    /// </summary>
+    /// <param name="roomMembership">Membership lookup used to find NPCs and corpses sharing a room.</param>
+    /// <param name="cfg">Bereavement config — supplies <c>ProximityBereavementMinIntensity</c> and <c>ProximityBereavementStressGain</c>.</param>
     public BereavementByProximitySystem(EntityRoomMembership roomMembership, BereavementConfig cfg)
     {
         _roomMembership = roomMembership;
         _cfg            = cfg;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Walks every Alive NPC and applies a one-shot bereavement hit
+    /// for each in-room corpse they had a meaningful relationship with.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for corpses and Alive NPCs.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Gather corpse entities and their rooms (skip corpses with no room).

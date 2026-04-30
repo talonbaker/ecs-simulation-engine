@@ -17,17 +17,31 @@ namespace APIFramework.Systems;
 ///
 /// Phase: Cognition.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="WillpowerComponent"/>,
+/// <see cref="SleepingTag"/>, <see cref="LifeStateComponent"/>; drains
+/// <see cref="WillpowerEventQueue"/>.<br/>
+/// Writes: <see cref="WillpowerComponent"/>.Current (single writer); enqueues
+/// per-tick RestTick signals for sleeping NPCs.<br/>
+/// Phase: Cognition, after <see cref="ActionSelectionSystem"/>.
+/// </remarks>
 public class WillpowerSystem : ISystem
 {
     private readonly SocialSystemConfig  _cfg;
     private readonly WillpowerEventQueue _queue;
 
+    /// <summary>Constructs the willpower system.</summary>
+    /// <param name="cfg">Social system tuning (sleep regen-per-tick magnitude).</param>
+    /// <param name="queue">Shared willpower event queue.</param>
     public WillpowerSystem(SocialSystemConfig cfg, WillpowerEventQueue queue)
     {
         _cfg   = cfg;
         _queue = queue;
     }
 
+    /// <summary>Per-tick pass: enqueues sleep RestTicks, then drains and applies the queue.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Push RestTick signals for sleeping NPCs

@@ -31,6 +31,13 @@ public static class AiNarrativeStreamCommand
     private const float DeltaTime   = 1f / 60f;
     private const int   HumanCount  = 10;
 
+    /// <summary>
+    /// Builds the <c>narrative-stream</c> subcommand with its <c>--out</c>,
+    /// <c>--interval</c>, <c>--duration</c>, and <c>--seed</c> options and
+    /// wires the handler that runs the simulation while emitting one JSON line
+    /// per <see cref="NarrativeEventCandidate"/>.
+    /// </summary>
+    /// <returns>The configured <see cref="Command"/> ready to be added to <see cref="AiCommand.Root"/>.</returns>
     public static Command Build()
     {
         var outOpt = new Option<FileInfo?>(
