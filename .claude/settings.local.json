@@ -30,7 +30,25 @@
       "Read(//usr/local/bin/**)",
       "Bash(where gh *)",
       "Bash(winget list *)",
-      "Bash(echo \"exit:$?\")"
+      "Bash(echo \"exit:$?\")",
+      "PowerShell(Head *)",
+      "PowerShell(New-Item *)",
+      "PowerShell(dotnet build *)",
+      "Bash(mkdir *)",
+      "Bash(sed -n '30,42p' \"C:/repos/ecs/APIFramework/Systems/Lighting/LightSourceStateSystem.cs\")",
+      "Bash(sed -n '30,42p' \"C:/repos/ecs/APIFramework/Systems/Movement/StepAsideSystem.cs\")",
+      "Bash(grep -v \"\\\\.csproj\\\\|obj\\\\\\\\\"])",
+      "Bash(python -c ' *)",
+      "Bash(sed -i 's/AT-01 \\\\xe2\\\\x80\\\\x94 Projector emits SchemaVersion = \"0.4.0\"/AT-01 \\\\xe2\\\\x80\\\\x94 Projector emits SchemaVersion = \"0.5.0\"/' \"Warden.Telemetry.Tests/TelemetryProjectorTests.cs\")",
+      "Bash(sed -i 's/Assert.Equal\\(\"0.4.0\", dto.SchemaVersion\\)/Assert.Equal\\(\"0.5.0\", dto.SchemaVersion\\)/' \"Warden.Telemetry.Tests/TelemetryProjectorTests.cs\")",
+      "Bash(Get-Process -Name \"dotnet\")",
+      "Bash(Select-Object Id,CPU)",
+      "Bash(gh pr create --title 'WP-3.2.2 — Rudimentary Physics' --body ' *)",
+      "Read(//usr/bin/**)",
+      "Bash(find /usr -name \"gh\")",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\repos\\\\ecs\\\\APIFramework\\\\Systems\" -ErrorAction SilentlyContinue | Format-Table Name, @{N=\"Type\";E={if\\($_.PSIsContainer\\){\"Folder\"}else{\"File\"}}} -AutoSize)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\repos\\\\ecs\\\\APIFramework\\\\Components\" -ErrorAction SilentlyContinue | Format-Table Name, @{N=\"Type\";E={if\\($_.PSIsContainer\\){\"Folder\"}else{\"File\"}}} -AutoSize)",
+      "Bash(gh pr create --base staging --title 'WP-3.1.S.3-INT — Wire inspector popup into live selection + WorldStateDto' --body ' *)"
     ]
   }
 }
