@@ -1,4 +1,4 @@
-namespace Warden.Contracts.SchemaValidation;
+﻿namespace Warden.Contracts.SchemaValidation;
 
 /// <summary>
 /// Names each JSON Schema embedded in <c>Warden.Contracts</c>.
@@ -44,7 +44,7 @@ public enum Schema
 /// </summary>
 public static class SchemaVersions
 {
-    public const string WorldState    = "0.4.0";
+    public const string WorldState    = "0.5.0";
     public const string OpusToSonnet  = "0.1.0";
     public const string SonnetResult  = "0.1.0";
     public const string SonnetToHaiku = "0.1.0";

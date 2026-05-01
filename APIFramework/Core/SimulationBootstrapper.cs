@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using APIFramework.Bootstrap;
 using APIFramework.Components;
@@ -13,7 +13,9 @@ using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using APIFramework.Systems.LifeState;
+using System.Linq;
 using System.Reflection;
+using Warden.Contracts.Telemetry;
 
 namespace APIFramework.Core;
 
@@ -349,6 +351,342 @@ public class SimulationBootstrapper
     /// </param>
     public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
         : this(new FileConfigProvider(configPath), humanCount, seed, worldDefinitionPath) { }
+
+
+    /// <summary>
+    /// Load-path constructor — wires all services and systems but spawns no entities.
+    /// Callers must restore entities explicitly after construction.
+    /// </summary>
+    private SimulationBootstrapper(IConfigProvider configProvider, int seed, bool _loadPath)
+    {
+        Config          = configProvider.GetConfig();
+        EntityManager   = new EntityManager();
+        Clock           = new SimulationClock { TimeScale = Config.World.DefaultTimeScale };
+        Engine          = new SimulationEngine(EntityManager, Clock);
+        Random          = new SeededRandom(seed);
+        WillpowerEvents = new WillpowerEventQueue();
+
+        SpatialIndex   = new GridSpatialIndex(Config.Spatial);
+        ProximityBus   = new ProximityEventBus();
+        StructuralBus  = new StructuralChangeBus();
+        RoomMembership = new EntityRoomMembership();
+
+        PathfindingCache = new PathfindingCache(Config.Movement.Pathfinding.CacheMaxEntries);
+        MutationApi      = new WorldMutationApi(EntityManager, StructuralBus);
+
+        SunState           = new SunStateService();
+        DriveCouplingTable = new LightingDriveCouplingTable(Config.Lighting.DriveCouplings);
+        DriveAccumulator   = new SocialDriveAccumulator();
+
+        Pathfinding = new PathfindingService(
+            EntityManager,
+            Config.Spatial.WorldSize.Width,
+            Config.Spatial.WorldSize.Height,
+            Config.Movement,
+            PathfindingCache,
+            StructuralBus);
+
+        Chronicle  = new ChronicleService(Config.Chronicle.MaxEntries);
+        Invariants = new InvariantSystem(Clock, Chronicle);
+
+        NarrativeBus      = new NarrativeEventBus();
+        PendingDialogQueue = new PendingDialogQueue();
+
+        var corpusPath = DialogCorpusService.FindCorpusFile(Config.Dialog.CorpusPath);
+        if (corpusPath != null)
+        {
+            try   { CorpusService = DialogCorpusService.LoadFromFile(corpusPath); }
+            catch (Exception ex)
+            { Console.WriteLine($"[Dialog] Corpus load failed: {ex.Message} — dialog systems disabled."); }
+        }
+
+        RegisterSystems();
+    }
+
+    // ── Save / Load ───────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Constructs a fully-restored simulation from a save-game DTO.
+    /// Clock, entity ID counter, and all persistent entities are rebuilt from the snapshot.
+    /// </summary>
+    public static SimulationBootstrapper BootFromWorldStateDto(WorldStateDto dto, IConfigProvider configProvider)
+    {
+        var sim = new SimulationBootstrapper(configProvider, dto.Seed ?? 0, true);
+
+        if (dto.SaveTick.HasValue && dto.SaveTotalTime.HasValue && dto.SaveTimeScale.HasValue)
+            sim.Clock.RestoreState(dto.SaveTotalTime.Value, dto.SaveTick.Value, dto.SaveTimeScale.Value);
+
+        if (dto.EntityIdCounter.HasValue)
+            sim.EntityManager.RestoreIdCounter(dto.EntityIdCounter.Value);
+
+        if (dto.NpcSaveStates != null)
+            foreach (var npc in dto.NpcSaveStates)
+                RestoreNpcEntity(npc, sim.EntityManager, sim.Config);
+
+        if (dto.TaskEntities != null)
+            foreach (var task in dto.TaskEntities)
+                RestoreTaskEntity(task, sim.EntityManager);
+
+        if (dto.StainEntities != null)
+            foreach (var stain in dto.StainEntities)
+                RestoreStainEntity(stain, sim.EntityManager);
+
+        if (dto.LockedDoors != null)
+            foreach (var door in dto.LockedDoors)
+                RestoreLockedDoorEntity(door, sim.EntityManager);
+
+        return sim;
+    }
+
+    private static void RestoreNpcEntity(NpcSaveDto dto, EntityManager em, SimConfig cfg)
+    {
+        var entity = Guid.TryParse(dto.Id, out var id) ? em.CreateEntity(id) : em.CreateEntity();
+
+        entity.Add(new IdentityComponent { Name = dto.Name });
+        if (dto.IsHuman) entity.Add(new HumanTag()); else entity.Add(new CatTag());
+        entity.Add(new NpcTag());
+
+        entity.Add(new PositionComponent { X = dto.PosX, Y = dto.PosY, Z = dto.PosZ });
+
+        var m = dto.IsHuman ? cfg.Entities.Human.Metabolism : cfg.Entities.Cat.Metabolism;
+        entity.Add(new MetabolismComponent
+        {
+            Satiation                 = dto.Satiation,
+            Hydration                 = dto.Hydration,
+            BodyTemp                  = dto.BodyTemp,
+            SatiationDrainRate        = dto.SatiationDrainRate,
+            HydrationDrainRate        = dto.HydrationDrainRate,
+            SleepMetabolismMultiplier = m.SleepMetabolismMultiplier
+        });
+
+        var s = dto.IsHuman ? cfg.Entities.Human.Stomach : cfg.Entities.Cat.Stomach;
+        entity.Add(new StomachComponent
+        {
+            CurrentVolumeMl = dto.StomachVolumeMl,
+            DigestionRate   = s.DigestionRate
+        });
+
+        var e = dto.IsHuman ? cfg.Entities.Human.Energy : cfg.Entities.Cat.Energy;
+        entity.Add(new EnergyComponent
+        {
+            Energy              = dto.Energy,
+            Sleepiness          = dto.Sleepiness,
+            IsSleeping          = dto.IsSleeping,
+            EnergyDrainRate     = e.EnergyDrainRate,
+            SleepinessGainRate  = e.SleepinessGainRate,
+            EnergyRestoreRate   = e.EnergyRestoreRate,
+            SleepinessDrainRate = e.SleepinessDrainRate
+        });
+
+        var si = dto.IsHuman ? cfg.Entities.Human.SmallIntestine : cfg.Entities.Cat.SmallIntestine;
+        entity.Add(new SmallIntestineComponent
+        {
+            ChymeVolumeMl          = dto.SiChymeVolumeMl,
+            AbsorptionRate         = si.AbsorptionRate,
+            ResidueToLargeFraction = si.ResidueToLargeFraction
+        });
+
+        var li = dto.IsHuman ? cfg.Entities.Human.LargeIntestine : cfg.Entities.Cat.LargeIntestine;
+        entity.Add(new LargeIntestineComponent
+        {
+            ContentVolumeMl       = dto.LiContentVolumeMl,
+            WaterReabsorptionRate = li.WaterReabsorptionRate,
+            MobilityRate          = li.MobilityRate,
+            StoolFraction         = li.StoolFraction
+        });
+
+        var co = dto.IsHuman ? cfg.Entities.Human.Colon : cfg.Entities.Cat.Colon;
+        entity.Add(new ColonComponent
+        {
+            StoolVolumeMl   = dto.ColonStoolVolumeMl,
+            UrgeThresholdMl = co.UrgeThresholdMl,
+            CapacityMl      = co.CapacityMl
+        });
+
+        var bl = dto.IsHuman ? cfg.Entities.Human.Bladder : cfg.Entities.Cat.Bladder;
+        entity.Add(new BladderComponent
+        {
+            VolumeML        = dto.BladderVolumeMl,
+            FillRate        = bl.FillRate,
+            UrgeThresholdMl = bl.UrgeThresholdMl,
+            CapacityMl      = bl.CapacityMl
+        });
+
+        entity.Add(new MovementComponent { Speed = dto.IsHuman ? 0.04f : 0.06f, ArrivalDistance = 0.4f });
+
+        if (dto.LifeState != null)
+            entity.Add(new LifeStateComponent
+            {
+                State                   = (LifeState)(int)dto.LifeState.State,
+                LastTransitionTick      = dto.LifeState.LastTransitionTick,
+                IncapacitatedTickBudget = dto.LifeState.IncapacitatedTickBudget,
+                PendingDeathCause       = (CauseOfDeath)(int)dto.LifeState.PendingDeathCause
+            });
+
+        if (dto.Choking != null)
+        {
+            entity.Add(new ChokingComponent
+            {
+                ChokeStartTick = dto.Choking.ChokeStartTick,
+                RemainingTicks = dto.Choking.RemainingTicks,
+                BolusSize      = dto.Choking.BolusSize,
+                PendingCause   = (CauseOfDeath)(int)dto.Choking.PendingCause
+            });
+            entity.Add(new IsChokingTag());
+        }
+
+        if (dto.Fainting != null)
+        {
+            entity.Add(new FaintingComponent
+            {
+                FaintStartTick = dto.Fainting.FaintStartTick,
+                RecoveryTick   = dto.Fainting.RecoveryTick
+            });
+            entity.Add(new IsFaintingTag());
+        }
+
+        if (dto.LockedIn != null)
+            entity.Add(new LockedInComponent
+            {
+                FirstDetectedTick    = dto.LockedIn.FirstDetectedTick,
+                StarvationTickBudget = dto.LockedIn.StarvationTickBudget
+            });
+
+        if (dto.CauseOfDeath != null)
+            entity.Add(new CauseOfDeathComponent
+            {
+                Cause            = (CauseOfDeath)(int)dto.CauseOfDeath.Cause,
+                DeathTick        = dto.CauseOfDeath.DeathTick,
+                WitnessedByNpcId = Guid.TryParse(dto.CauseOfDeath.WitnessedById,  out var wId) ? wId : Guid.Empty,
+                LocationRoomId   = Guid.TryParse(dto.CauseOfDeath.LocationRoomId, out var rId) ? rId : Guid.Empty
+            });
+
+        if (dto.Corpse != null)
+        {
+            entity.Add(new CorpseTag());
+            entity.Add(new CorpseComponent
+            {
+                DeathTick           = dto.Corpse.DeathTick,
+                OriginalNpcEntityId = Guid.TryParse(dto.Corpse.OriginalNpcEntityId, out var origId) ? origId : Guid.Empty,
+                LocationRoomId      = dto.Corpse.LocationRoomId,
+                HasBeenMoved        = dto.Corpse.HasBeenMoved
+            });
+        }
+
+        if (dto.Stress != null)
+            entity.Add(new StressComponent
+            {
+                AcuteLevel                = dto.Stress.AcuteLevel,
+                ChronicLevel              = dto.Stress.ChronicLevel,
+                LastDayUpdated            = dto.Stress.LastDayUpdated,
+                SuppressionEventsToday    = dto.Stress.SuppressionEventsToday,
+                DriveSpikeEventsToday     = dto.Stress.DriveSpikeEventsToday,
+                SocialConflictEventsToday = dto.Stress.SocialConflictEventsToday,
+                OverdueTaskEventsToday    = dto.Stress.OverdueTaskEventsToday,
+                BurnoutLastAppliedDay     = dto.Stress.BurnoutLastAppliedDay,
+                WitnessedDeathEventsToday = dto.Stress.WitnessedDeathEventsToday,
+                BereavementEventsToday    = dto.Stress.BereavementEventsToday
+            });
+
+        if (dto.Mask != null)
+            entity.Add(new SocialMaskComponent
+            {
+                IrritationMask = dto.Mask.IrritationMask,
+                AffectionMask  = dto.Mask.AffectionMask,
+                AttractionMask = dto.Mask.AttractionMask,
+                LonelinessMask = dto.Mask.LonelinessMask,
+                CurrentLoad    = dto.Mask.CurrentLoad,
+                Baseline       = dto.Mask.Baseline,
+                LastSlipTick   = dto.Mask.LastSlipTick
+            });
+
+        if (dto.Mood != null)
+            entity.Add(new MoodComponent
+            {
+                Joy          = dto.Mood.Joy,
+                Trust        = dto.Mood.Trust,
+                Fear         = dto.Mood.Fear,
+                Surprise     = dto.Mood.Surprise,
+                Sadness      = dto.Mood.Sadness,
+                Disgust      = dto.Mood.Disgust,
+                Anger        = dto.Mood.Anger,
+                Anticipation = dto.Mood.Anticipation,
+                PanicLevel   = dto.Mood.PanicLevel,
+                GriefLevel   = dto.Mood.GriefLevel
+            });
+
+        if (dto.Willpower != null)
+            entity.Add(new WillpowerComponent { Current = dto.Willpower.Current, Baseline = dto.Willpower.Baseline });
+
+        if (dto.Workload != null)
+        {
+            var activeGuids = dto.Workload.ActiveTaskIds?
+                .Select(s => Guid.TryParse(s, out var g) ? g : Guid.Empty)
+                .Where(g => g != Guid.Empty)
+                .ToList() ?? new List<Guid>();
+            entity.Add(new WorkloadComponent
+            {
+                Capacity    = dto.Workload.Capacity,
+                CurrentLoad = dto.Workload.CurrentLoad,
+                ActiveTasks = activeGuids
+            });
+        }
+
+        if (dto.ScheduleBlocks != null && dto.ScheduleBlocks.Count > 0)
+        {
+            var blocks = dto.ScheduleBlocks.Select(b => new ScheduleBlock(
+                b.StartHour,
+                b.EndHour,
+                b.AnchorId,
+                (ScheduleActivityKind)(int)b.Activity)).ToList();
+            entity.Add(new ScheduleComponent { Blocks = blocks });
+        }
+
+        if (dto.EncounteredCorpseIds != null && dto.EncounteredCorpseIds.Count > 0)
+        {
+            var ids = new HashSet<Guid>(dto.EncounteredCorpseIds
+                .Select(s => Guid.TryParse(s, out var g) ? g : Guid.Empty)
+                .Where(g => g != Guid.Empty));
+            entity.Add(new BereavementHistoryComponent { EncounteredCorpseIds = ids });
+        }
+    }
+
+    private static void RestoreTaskEntity(TaskSaveDto dto, EntityManager em)
+    {
+        var entity = Guid.TryParse(dto.Id, out var id) ? em.CreateEntity(id) : em.CreateEntity();
+        entity.Add(new TaskTag());
+        entity.Add(new TaskComponent
+        {
+            EffortHours   = dto.EffortHours,
+            DeadlineTick  = dto.DeadlineTick,
+            Priority      = dto.Priority,
+            Progress      = dto.Progress,
+            QualityLevel  = dto.QualityLevel,
+            AssignedNpcId = Guid.TryParse(dto.AssignedNpcId, out var nId) ? nId : Guid.Empty,
+            CreatedTick   = dto.CreatedTick
+        });
+    }
+
+    private static void RestoreStainEntity(StainEntitySaveDto dto, EntityManager em)
+    {
+        var entity = Guid.TryParse(dto.Id, out var id) ? em.CreateEntity(id) : em.CreateEntity();
+        entity.Add(new StainTag());
+        entity.Add(new PositionComponent { X = dto.PosX, Y = 0f, Z = dto.PosZ });
+        entity.Add(new StainComponent { Source = dto.Source, Magnitude = dto.Magnitude, CreatedAtTick = dto.CreatedAtTick, ChronicleEntryId = dto.ChronicleEntryId });
+        if (dto.FallRisk.HasValue)
+            entity.Add(new FallRiskComponent { RiskLevel = dto.FallRisk.Value });
+        if (dto.IsObstacle)
+            entity.Add(new ObstacleTag());
+    }
+
+    private static void RestoreLockedDoorEntity(LockedDoorSaveDto dto, EntityManager em)
+    {
+        var entity = Guid.TryParse(dto.Id, out var id) ? em.CreateEntity(id) : em.CreateEntity();
+        entity.Add(new LockedTag());
+        entity.Add(new PositionComponent { X = dto.PosX, Y = dto.PosY, Z = dto.PosZ });
+        if (dto.Name != null)
+            entity.Add(new IdentityComponent { Name = dto.Name });
+    }
 
     /// <summary>
     /// Wires every simulation system into <see cref="Engine"/> in execution order.
