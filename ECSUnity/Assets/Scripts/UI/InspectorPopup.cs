@@ -7,14 +7,26 @@ public sealed class InspectorPopup : MonoBehaviour
     [Tooltip("Root canvas of the popup. Must be Screen Space - Overlay.")]
     [SerializeField] private Canvas _canvas;
 
-    [Tooltip("TextMeshProUGUI field for the Name line.")]
-    [SerializeField] private TMP_Text _nameText;
+    // ── Surface tier (live data) ──────────────────────────────────────────────
+    [Tooltip("Header label for the Surface tier.")]
+    [SerializeField] private TMP_Text _surfaceHeaderText;
 
-    [Tooltip("TextMeshProUGUI field for the Drives line.")]
-    [SerializeField] private TMP_Text _drivesText;
+    [Tooltip("Body text for the Surface tier (Name + current action).")]
+    [SerializeField] private TMP_Text _surfaceBodyText;
 
-    [Tooltip("TextMeshProUGUI field for the Mood line.")]
-    [SerializeField] private TMP_Text _moodText;
+    // ── Behaviour tier (stubbed — future packet) ──────────────────────────────
+    [Tooltip("Header label for the Behaviour tier (rendered at 50% alpha until live).")]
+    [SerializeField] private TMP_Text _behaviourHeaderText;
+
+    [Tooltip("Body text for the Behaviour tier.")]
+    [SerializeField] private TMP_Text _behaviourBodyText;
+
+    // ── Internal tier (stubbed — future packet) ───────────────────────────────
+    [Tooltip("Header label for the Internal tier (rendered at 50% alpha until live).")]
+    [SerializeField] private TMP_Text _internalHeaderText;
+
+    [Tooltip("Body text for the Internal tier.")]
+    [SerializeField] private TMP_Text _internalBodyText;
 
     [Tooltip("Pixel offset from cursor (positive x = right, positive y = downward).")]
     [SerializeField] private Vector2 _cursorOffset = new Vector2(20f, 20f);
@@ -24,13 +36,40 @@ public sealed class InspectorPopup : MonoBehaviour
     [SerializeField] private float _panelPadding = 12f;
 
     private bool _isVisible;
+    private bool _externallyDriven;
     private RectTransform _panelRect;
+
+    // Called by WorldStateInspectorBinder.Awake() before this component's
+    // Start() fires, suppressing the self-managed SelectionManager subscription.
+    public void SetExternallyDriven(bool value) => _externallyDriven = value;
 
     private void Awake()
     {
         if (_canvas != null)
             _canvas.enabled = false;
+    }
 
+    private void Start()
+    {
+        if (_canvas != null)
+        {
+            var panelTransform = _canvas.transform.Find("PopupPanel");
+            if (panelTransform != null)
+                _panelRect = panelTransform as RectTransform;
+
+            var blocker = _canvas.transform.Find("FullscreenBlocker");
+            if (blocker != null)
+            {
+                var btn = blocker.GetComponent<Button>();
+                if (btn != null)
+                    btn.onClick.AddListener(Hide);
+            }
+        }
+
+        if (_externallyDriven) return;
+
+        // Fallback: self-manage selection in scenes without a WorldStateInspectorBinder
+        // (e.g. the inspector-popup sandbox scene).
         var sm = FindObjectOfType<SelectionManager>();
         if (sm != null)
         {
@@ -44,28 +83,16 @@ public sealed class InspectorPopup : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        if (_canvas == null) return;
-
-        var panelTransform = _canvas.transform.Find("PopupPanel");
-        if (panelTransform != null)
-            _panelRect = panelTransform as RectTransform;
-
-        var blocker = _canvas.transform.Find("FullscreenBlocker");
-        if (blocker != null)
-        {
-            var btn = blocker.GetComponent<Button>();
-            if (btn != null)
-                btn.onClick.AddListener(Hide);
-        }
-    }
-
     public void Show(InspectorPopupData data)
     {
-        if (_nameText   != null) _nameText.text   = "Name: "   + data.Name;
-        if (_drivesText != null) _drivesText.text = "Drives: " + data.Drives;
-        if (_moodText   != null) _moodText.text   = "Mood: "   + data.Mood;
+        if (_surfaceHeaderText  != null) _surfaceHeaderText.text  = "— Surface —";
+        if (_surfaceBodyText    != null) _surfaceBodyText.text    = data.Surface.Name + " | " + data.Surface.CurrentAction;
+
+        if (_behaviourHeaderText != null) _behaviourHeaderText.text = "— Behaviour —";
+        if (_behaviourBodyText   != null) _behaviourBodyText.text   = "(coming soon)";
+
+        if (_internalHeaderText != null) _internalHeaderText.text = "— Internal —";
+        if (_internalBodyText   != null) _internalBodyText.text   = "(coming soon)";
 
         if (_canvas != null) _canvas.enabled = true;
         _isVisible = true;

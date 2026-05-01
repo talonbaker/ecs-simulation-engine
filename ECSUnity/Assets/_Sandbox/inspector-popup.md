@@ -58,3 +58,32 @@ Save the prefab. Commit the tuned values.
 - Popup never dismisses → the click-outside path isn't wired.
 - Edge-flip doesn't fire → screen-edge math wrong, likely missing
   RectTransform.rect.size lookup.
+
+## Integration verification (after WP-3.1.S.3-INT)
+
+This step confirms the popup binds to live NPC state.
+
+1. Open Assets/Scenes/MainScene.unity.
+2. Press Play. Engine ticks; NPCs render.
+3. Click an NPC dot. Expect: popup appears with three sections:
+   - **Surface** — NPC's name, current action (e.g. "Greg | Eat").
+   - **Behaviour** — header at 50% alpha, body says "(coming soon)".
+   - **Internal** — header at 50% alpha, body says "(coming soon)".
+4. Wait a few seconds. As the NPC's dominant drive changes (Eat → Drink,
+   etc.), the Surface tier's "Current Action" updates live in the popup.
+5. Click another NPC. Popup repaints with new NPC's data.
+6. Click empty floor. Popup disappears.
+7. Click a sleeping NPC (if any). Expect: popup shows "Sleep" as the
+   action — confirms IsSleeping branch in DeriveCurrentAction fires.
+
+## If integration fails
+- Popup appears but has no data → WorldStateInspectorBinder isn't
+  finding the entity in WorldStateDto. Check entity ID matching.
+- Popup shows stale data → Update() loop isn't firing or the binder
+  isn't refreshing. Check the _trackedEntityId logic.
+- Popup throws exception when an NPC dies → BuildDataForEntity isn't
+  handling the entity-left-DTO case. Should call _popup.Hide().
+- Tier 2 / Tier 3 sections show data instead of placeholder → struct
+  defaults aren't empty (default keyword returns zeroed structs, which
+  is correct for string fields — they'll be null, and Show() uses
+  "(coming soon)" literals, not the struct fields).
