@@ -2,15 +2,15 @@ using UnityEngine;
 
 /// <summary>
 /// Singleton-ish manager that owns the "currently dragged prop" reference.
-/// Polls mouse input, projects the cursor ray onto the floor plane, applies
-/// snap-to-grid, and coordinates grab/drop with DraggableProp and PropSocket.
+/// Polls mouse input, projects the cursor ray onto the current drag surface plane,
+/// applies snap-to-grid, and coordinates grab/drop with DraggableProp and PropSocket.
 /// </summary>
 public sealed class DragHandler : MonoBehaviour
 {
     [Tooltip("Drag ray source. Auto-grabs Camera.main on Awake if null.")]
     [SerializeField] private Camera _camera;
 
-    [Tooltip("Y coordinate of the floor projection plane.")]
+    [Tooltip("Y of the floor — used as the minimum surface height when nothing else is found.")]
     [SerializeField] private float _floorPlaneY = 0f;
 
     [Tooltip("Which layers can be grabbed. Defaults to Everything.")]
@@ -18,6 +18,7 @@ public sealed class DragHandler : MonoBehaviour
 
     private DraggableProp _currentDrag;
     private bool          _active = true;
+    private float         _dragPlaneY; // surface Y the prop is currently above; used as the projection plane
 
     /// <summary>Allow this handler to process drag input. Called by BuildModeController on build-mode enter.</summary>
     public void Activate()   => _active = true;
@@ -41,14 +42,16 @@ public sealed class DragHandler : MonoBehaviour
             {
                 _currentDrag = prop;
                 _currentDrag.BeginDrag();
+                _dragPlaneY = GetSurfaceYAtXZ(prop.transform.position.x, prop.transform.position.z);
             }
         }
 
-        if (_currentDrag != null && TryProjectToFloor(out Vector3 floorPos))
+        if (_currentDrag != null && TryProjectToPlane(_dragPlaneY, out Vector3 planePos))
         {
-            float snappedX = SnapToGrid(floorPos.x, _currentDrag.SnapTileSize);
-            float snappedZ = SnapToGrid(floorPos.z, _currentDrag.SnapTileSize);
+            float snappedX = SnapToGrid(planePos.x, _currentDrag.SnapTileSize);
+            float snappedZ = SnapToGrid(planePos.z, _currentDrag.SnapTileSize);
             float surfaceY = GetSurfaceYAtXZ(snappedX, snappedZ);
+            _dragPlaneY = surfaceY;
             _currentDrag.UpdateDragPosition(snappedX, snappedZ, surfaceY);
         }
 
@@ -60,20 +63,24 @@ public sealed class DragHandler : MonoBehaviour
 
     private void Drop()
     {
-        if (TryProjectToFloor(out Vector3 floorPos))
+        if (TryProjectToPlane(_dragPlaneY, out Vector3 planePos))
         {
-            float snappedX = SnapToGrid(floorPos.x, _currentDrag.SnapTileSize);
-            float snappedZ = SnapToGrid(floorPos.z, _currentDrag.SnapTileSize);
+            float snappedX = SnapToGrid(planePos.x, _currentDrag.SnapTileSize);
+            float snappedZ = SnapToGrid(planePos.z, _currentDrag.SnapTileSize);
             float surfaceY = GetSurfaceYAtXZ(snappedX, snappedZ);
 
             PropSocket socket = FindMatchingSocket(
-                new Vector3(snappedX, floorPos.y, snappedZ),
+                new Vector3(snappedX, planePos.y, snappedZ),
                 _currentDrag.TargetSocketTag);
 
             if (socket != null)
+            {
                 _currentDrag.SnapToSocket(socket);
+            }
             else
+            {
                 _currentDrag.FinalizeDrop(snappedX, snappedZ, surfaceY);
+            }
         }
         else
         {
@@ -82,6 +89,7 @@ public sealed class DragHandler : MonoBehaviour
             float sz = _currentDrag.transform.position.z;
             _currentDrag.FinalizeDrop(sx, sz, GetSurfaceYAtXZ(sx, sz));
         }
+
         _currentDrag = null;
     }
 
@@ -95,13 +103,13 @@ public sealed class DragHandler : MonoBehaviour
         return prop != null && prop.CurrentState == DraggableProp.DragState.Idle;
     }
 
-    // Mathematical plane intersection — does not require a floor collider.
-    private bool TryProjectToFloor(out Vector3 worldPos)
+    // Mathematical plane intersection — no collider required on the surface.
+    private bool TryProjectToPlane(float planeY, out Vector3 worldPos)
     {
         worldPos = Vector3.zero;
         Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
         if (Mathf.Abs(ray.direction.y) < 0.0001f) return false;
-        float t = (_floorPlaneY - ray.origin.y) / ray.direction.y;
+        float t = (planeY - ray.origin.y) / ray.direction.y;
         if (t < 0f) return false;
         worldPos = ray.origin + ray.direction * t;
         return true;
@@ -112,8 +120,9 @@ public sealed class DragHandler : MonoBehaviour
         return Mathf.Round(value / snapSize) * snapSize;
     }
 
-    // Shoot a ray straight down; return the Y of the highest surface below (x, z),
-    // excluding the dragged prop's own colliders so it can't stand on itself.
+    // Shoot a ray straight down; return the Y of the highest surface below (x, z).
+    // Excludes the dragged prop and its entire child hierarchy (e.g. a banana parented
+    // to a table socket) so neither the prop nor its passengers count as surfaces.
     private float GetSurfaceYAtXZ(float x, float z)
     {
         var hits = Physics.RaycastAll(
@@ -123,7 +132,7 @@ public sealed class DragHandler : MonoBehaviour
         foreach (var hit in hits)
         {
             if (_currentDrag != null &&
-                hit.collider.GetComponentInParent<DraggableProp>() == _currentDrag)
+                hit.collider.transform.IsChildOf(_currentDrag.transform))
                 continue;
             if (hit.point.y > topY)
                 topY = hit.point.y;

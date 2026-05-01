@@ -79,8 +79,19 @@ public sealed class PropToEngineBridge : MonoBehaviour
             Debug.LogWarning($"[PropToEngineBridge] Engine rejected drop for '{prop.name}': {ex.Message}. Snapping back.");
             if (_stablePositions.TryGetValue(prop, out Vector3 stablePos))
             {
-                prop.transform.SetParent(null);
-                prop.transform.position = stablePos;
+                // If the prop is still parented to a socket, restore it in-place rather than
+                // detaching it — detaching a socketed banana returns it to floor level and lets
+                // physics push the table (causing the "table disappears" bug).
+                if (prop.transform.parent?.GetComponent<PropSocket>() != null)
+                {
+                    prop.transform.localPosition = Vector3.zero;
+                    prop.transform.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    prop.transform.SetParent(null);
+                    prop.transform.position = stablePos;
+                }
             }
         }
     }

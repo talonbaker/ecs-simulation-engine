@@ -9,11 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1, type: 3}
+  m_Script: {fileID: 11500000, guid: 84f9a9c12f0fc584c9d51cb703243fa0, type: 3}
   m_Name: PropArchetypeMap
-  m_EditorClassIdentifier:
-  _entries:
-  - PrefabName: Table
-    ArchetypeId: table
-  - PrefabName: Banana
-    ArchetypeId: banana
+  m_EditorClassIdentifier: 
+  _entries: []
