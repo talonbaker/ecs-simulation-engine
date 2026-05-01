@@ -38,4 +38,10 @@ public enum NarrativeEventKind
     RegainedConsciousness,
     /// <summary>An NPC experienced bereavement (learned of or witnessed the death of someone with whom they had a relationship). Emitted by BereavementSystem to record grief impact.</summary>
     BereavementImpact,
+    /// <summary>A rescuer successfully intervened and brought an Incapacitated NPC back to Alive. Persistent. Emitted by RescueExecutionSystem after state transition completes.</summary>
+    RescuePerformed,
+    /// <summary>A rescuer attempted an intervention but it did not succeed. Non-persistent. Emitted by RescueExecutionSystem on a failed roll.</summary>
+    RescueAttempted,
+    /// <summary>A rescuer attempted an intervention but the victim still died. Persistent — the rescuer carries this. Emitted by RescueExecutionSystem when roll fails and victim proceeds to Deceased.</summary>
+    RescueFailed,
 }
