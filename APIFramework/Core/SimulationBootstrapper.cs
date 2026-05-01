@@ -5,6 +5,7 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Mutation;
 using APIFramework.Systems;
+using APIFramework.Systems.Chores;
 using APIFramework.Systems.Coupling;
 using APIFramework.Systems.Dialog;
 using APIFramework.Systems.Lighting;
@@ -46,6 +47,8 @@ namespace APIFramework.Core;
 ///  PreUpdate   (0)  WorkloadInitializerSystem — attach WorkloadComponent (per-archetype capacity)
 ///  PreUpdate   (0)  LifeStateInitializerSystem— attach LifeStateComponent = Alive
 ///  PreUpdate   (0)  TaskGeneratorSystem       — spawn day's task batch at configured hour
+///  PreUpdate   (0)  ChoreInitializerSystem    — WP-3.2.3: spawn chore entities; attach ChoreHistoryComponent
+///  PreUpdate   (0)  ChoreAssignmentSystem     — WP-3.2.3: daily chore assignment at configured hour
 ///  PreUpdate   (0)  LockoutDetectionSystem    — Phase 3: end-of-day exit reachability + starvation
 ///  Spatial     (5)  SpatialIndexSyncSystem    — keep spatial index in sync with positions
 ///  Spatial     (5)  RoomMembershipSystem      — derive per-NPC room residency
@@ -101,6 +104,7 @@ namespace APIFramework.Core;
 ///  Cleanup     (90) LifeStateTransitionSystem — Phase 3: Alive → Incapacitated → Deceased
 ///  Cleanup     (90) ChokingCleanupSystem      — Phase 3: clear choke tags after death
 ///  Cleanup     (90) SlipAndFallSystem         — Phase 3: roll fall-risk hazards on settled positions
+///  Cleanup     (90) ChoreExecutionSystem      — WP-3.2.3: advance chore progress; detect completion / overrotation
 /// </summary>
 public class SimulationBootstrapper
 {
@@ -362,6 +366,7 @@ public class SimulationBootstrapper
     private void RegisterSystems()
     {
         var sys = Config.Systems;
+        var choreBiasTable = ChoreAcceptanceBiasTable.LoadDefault((float)Config.Chores.DefaultAcceptanceBias);
 
         // Spatial — sync index, room membership, cache invalidation (Phase 5).
         // ProximityEvent moves to Lighting (Phase 7) so it fires after illumination is current.
@@ -410,6 +415,13 @@ public class SimulationBootstrapper
         Engine.AddSystem(
             new TaskGeneratorSystem(Config.Workload, Clock, Random),               SystemPhase.PreUpdate);
 
+        // Chore initializer — spawns ChoreComponent entities and attaches ChoreHistoryComponent to NPCs.
+        Engine.AddSystem(new ChoreInitializerSystem(Config.Chores),                SystemPhase.PreUpdate);
+
+        // Chore assignment — assigns due chores to highest-bias NPCs once per game-day.
+        Engine.AddSystem(
+            new ChoreAssignmentSystem(Config.Chores, Clock, choreBiasTable, NarrativeBus), SystemPhase.PreUpdate);
+
         // Physiology — raw biological resource drain/restore
         Engine.AddSystem(new MetabolismSystem(),                                   SystemPhase.Physiology);
         Engine.AddSystem(new EnergySystem(sys.Energy),                            SystemPhase.Physiology);
@@ -431,7 +443,8 @@ public class SimulationBootstrapper
         // Social cognition — drive dynamics, action selection, willpower, relationship lifecycle
         Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random, Config.Stress), SystemPhase.Cognition);
         Engine.AddSystem(new ActionSelectionSystem(
-            SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, Config.Schedule, EntityManager, Config.Workload),
+            SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, Config.Schedule,
+            EntityManager, Config.Workload, Config.Chores, choreBiasTable, NarrativeBus),
                                                                                    SystemPhase.Cognition);
         Engine.AddSystem(new WillpowerSystem(Config.Social, WillpowerEvents),      SystemPhase.Cognition);
         Engine.AddSystem(RelationshipLifecycleSystem.LoadFromFile(Config.Social),  SystemPhase.Cognition);
@@ -491,7 +504,8 @@ public class SimulationBootstrapper
         // Cleanup — stress accumulation; runs after WillpowerSystem (Cognition) and
         // NarrativeEventDetector (Narrative) so all tick state has settled.
         Engine.AddSystem(
-            new StressSystem(Config.Stress, Config.Workload, Clock, WillpowerEvents, NarrativeBus, EntityManager), SystemPhase.Cleanup);
+            new StressSystem(Config.Stress, Config.Workload, Clock, WillpowerEvents, NarrativeBus, EntityManager,
+                choreCfg: Config.Chores), SystemPhase.Cleanup);
 
         // Workload system — advances task progress, detects completion and overdue.
         Engine.AddSystem(
@@ -537,6 +551,10 @@ public class SimulationBootstrapper
                 lifeStateTransition,
                 Random),
             SystemPhase.Cleanup);
+
+        // Chore execution — advances assigned chore progress each tick; fires on ChoreWork intent.
+        Engine.AddSystem(
+            new ChoreExecutionSystem(Config.Chores, Clock, choreBiasTable, NarrativeBus), SystemPhase.Cleanup);
 
         // Lockout detection — checks end-of-day reachability to exits and starvation status.
         // Runs in PreUpdate phase, once per game-day (gated internally by hour check).

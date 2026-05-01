@@ -207,6 +207,9 @@ public sealed class MemoryRecordingSystem : ISystem
         NarrativeEventKind.RescuePerformed   => true,
         NarrativeEventKind.RescueAttempted   => false,
         NarrativeEventKind.RescueFailed      => true,
+        NarrativeEventKind.ChoreRefused      => true,
+        NarrativeEventKind.ChoreBadlyDone    => true,
+        NarrativeEventKind.ChoreOverrotation => true,
         _                                    => false,
     };
 
