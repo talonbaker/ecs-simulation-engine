@@ -822,5 +822,25 @@
     "starvationTicks": 5,
     // Named anchor tag used to identify outdoor exits
     "exitNamedAnchorTag": "outdoor"
+  },
+
+  // ── Unity host (read by ECSUnity only; engine/CLI/Avalonia ignore this) ─────
+  // These values configure the Unity-side host: FixedUpdate rate, camera, perf gate.
+  // They extend SimConfig.json for discoverability but are NOT read by the engine.
+  // The Unity host reads them via SimConfigAsset (ScriptableObject) in the Inspector,
+  // or falls back to these values when loading the JSON directly.
+  "unityHost": {
+    "ticksPerSecond":            50,
+    "renderFrameRateTarget":     60,
+    "performanceGateMinFps":     55,
+    "performanceGateMeanFps":    58,
+    "performanceGateP99Fps":     50,
+    "cameraMinAltitude":         3.0,
+    "cameraMaxAltitude":         5.0,
+    "cameraPitchAngle":          50.0,
+    "cameraPanSpeed":            5.0,
+    "cameraRotateSpeed":         90.0,
+    "cameraZoomSpeed":           2.0,
+    "logTickRateEverySeconds":   10.0
   }
 }

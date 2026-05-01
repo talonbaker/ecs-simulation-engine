@@ -150,9 +150,16 @@ public sealed class NpcDotRenderer : MonoBehaviour
         go.transform.SetParent(_npcRoot, worldPositionStays: false);
         go.transform.localScale = Vector3.one * _dotSize;
 
-        // Remove collider — dots are purely visual.
+        // Replace the MeshCollider from CreatePrimitive with a BoxCollider for raycasting.
         var col = go.GetComponent<Collider>();
         if (col != null) Destroy(col);
+        go.AddComponent<BoxCollider>();
+
+        // Wire selection components so SelectionManager can identify which NPC was clicked.
+        go.AddComponent<Selectable>();
+        go.AddComponent<OutlineRenderer>();
+        var tag = go.AddComponent<NpcSelectableTag>();
+        tag.EntityId = npc.Id;
 
         // Assign archetype color.
         Color dotColor = RenderColorPalette.ForNpc(npc.Name);
