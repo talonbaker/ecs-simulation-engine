@@ -39,12 +39,8 @@ public sealed class LockCommand : IDevConsoleCommand
         if (!System.Guid.TryParse(args[0], out var doorId))
             return $"ERROR: '{args[0]}' is not a valid entity GUID.";
 
-        bool ok = ctx.MutationApi.AttachObstacle(doorId);
-
-        return ok
-            ? $"Locked door {doorId}."
-            : $"ERROR: AttachObstacle returned false for {doorId}. " +
-              $"Entity may not exist or already has an obstacle marker.";
+        ctx.MutationApi.AttachObstacle(doorId);
+        return $"Locked door {doorId}.";
     }
 }
 #endif

@@ -37,12 +37,8 @@ public sealed class UnlockCommand : IDevConsoleCommand
         if (!System.Guid.TryParse(args[0], out var doorId))
             return $"ERROR: '{args[0]}' is not a valid entity GUID.";
 
-        bool ok = ctx.MutationApi.DetachObstacle(doorId);
-
-        return ok
-            ? $"Unlocked door {doorId}."
-            : $"ERROR: DetachObstacle returned false for {doorId}. " +
-              $"Entity may not exist or does not currently have an obstacle marker.";
+        ctx.MutationApi.DetachObstacle(doorId);
+        return $"Unlocked door {doorId}.";
     }
 }
 #endif
