@@ -506,7 +506,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Lockout.LockoutHungerThreshold` | `int` | `95` |
 | `Lockout.StarvationTicks` | `int` | `5` |
 | `Lockout.ExitNamedAnchorTag` | `string` | `outdoor` |
-| `SoundTriggers.BulbBuzzEmitIntervalTicks` | `int` | `10` |
+| `SoundTriggers.BulbBuzzEmitIntervalTicks` | `int` | `30` |
 | `SoundTriggers.FootstepIntensity` | `float` | `0.3` |
 | `SoundTriggers.ChairSqueakIntensity` | `float` | `0.4` |
 | `SoundTriggers.BulbBuzzIntensity` | `float` | `0.2` |

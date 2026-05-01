@@ -7,7 +7,7 @@ public class SoundTriggerConfig
     /// Ticks between successive BulbBuzz emissions while a fluorescent source is Flickering.
     /// At 20 game-ticks/second, 30 ticks ≈ 1.5 seconds between buzz events.
     /// </summary>
-    public int BulbBuzzEmitIntervalTicks { get; set; } = 10;
+    public int BulbBuzzEmitIntervalTicks { get; set; } = 30;
     /// <summary>Intensity for Footstep. Default 0.3.</summary>
     public float FootstepIntensity { get; set; } = 0.3f;
     /// <summary>Intensity for ChairSqueak. Default 0.4.</summary>

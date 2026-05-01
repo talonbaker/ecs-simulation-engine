@@ -33,6 +33,13 @@ public sealed class StepAsideSystem : ISystem
 
     private const float HeadOnCosThreshold = 0.866f; // cos(30°)
 
+    /// <summary>
+    /// Stores spatial-index, room-membership, and tuning references used per tick.
+    /// </summary>
+    /// <param name="index">Spatial index — used to query nearby movement candidates.</param>
+    /// <param name="rooms">Room-membership lookup — used to filter for hallway rooms.</param>
+    /// <param name="cfg">Movement config — supplies <c>StepAsideRadius</c> and <c>StepAsideShift</c>.</param>
+    /// <param name="soundBus">Optional bus for ChairSqueak emission.</param>
     public StepAsideSystem(ISpatialIndex index, EntityRoomMembership rooms, MovementConfig cfg, SoundTriggerBus? soundBus = null)
     {
         _index           = index;

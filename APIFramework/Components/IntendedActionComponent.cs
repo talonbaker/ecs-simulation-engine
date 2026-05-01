@@ -18,7 +18,13 @@ public enum IntendedActionKind
     /// <summary>NPC is moving to rescue an Incapacitated NPC (Heimlich, CPR, or door-unlock).</summary>
     Rescue,
     /// <summary>NPC is performing an assigned office chore.</summary>
-    ChoreWork
+    ChoreWork,
+    /// <summary>NPC is consuming food.</summary>
+    Eat,
+    /// <summary>NPC is consuming a liquid.</summary>
+    Drink,
+    /// <summary>NPC is defecating (no accessible bathroom; stays at desk).</summary>
+    Defecate,
 }
 
 /// <summary>Conversational context associated with an <see cref="IntendedActionKind.Dialog"/> action.</summary>

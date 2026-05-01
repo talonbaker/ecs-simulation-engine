@@ -685,7 +685,7 @@
     // Banana default is 0.2 — safe. Tough food (jerky ~0.8) is dangerous when distracted.
     "bolusSizeThreshold":        0.65,
     // EnergyComponent.Energy (0–100) strictly below which the NPC is fatigued enough to choke.
-    "energyThreshold":           40.0,
+    "energyThreshold":           40,
     // StressComponent.AcuteLevel (0–100) at or above which motor coordination is impaired.
     "stressThreshold":           70,
     // SocialDrivesComponent.Irritation.Current (0–100) at or above which inattentive eating applies.
@@ -841,6 +841,7 @@
     "sneezeIntensity": 0.7,
     "yawnIntensity": 0.4,
     "sighIntensity": 0.3
+  },
 
   // ── Rescue mechanic (WP-3.2.4) ──────────────────────────────────────────────
   "rescue": {
@@ -851,6 +852,8 @@
     "heimlichBaseSuccessRate": 0.65,
     "cprBaseSuccessRate":      0.30,
     "doorUnlockBaseSuccessRate": 0.95
+  },
+
   // ── Chore rotation (WP-3.2.3) ────────────────────────────────────────────────
   // ChoreAssignmentSystem / ChoreExecutionSystem tuning.
   "chores": {

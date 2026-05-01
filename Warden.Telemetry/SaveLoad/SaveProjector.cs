@@ -300,6 +300,39 @@ internal static class SaveProjector
             }
         }
 
+        return new NpcSaveDto
+        {
+            Id                   = e.Id.ToString(),
+            Name                 = e.Has<IdentityComponent>() ? e.Get<IdentityComponent>().Name : e.ShortId,
+            PosX                 = pos.X,
+            PosY                 = pos.Y,
+            PosZ                 = pos.Z,
+            Satiation            = meta.Satiation,
+            Hydration            = meta.Hydration,
+            BodyTemp             = meta.BodyTemp,
+            Energy               = energy.Energy,
+            Sleepiness           = energy.Sleepiness,
+            IsSleeping           = energy.IsSleeping,
+            SatiationDrainRate   = meta.SatiationDrainRate,
+            HydrationDrainRate   = meta.HydrationDrainRate,
+            StomachVolumeMl      = stomach.CurrentVolumeMl,
+            SiChymeVolumeMl      = si.ChymeVolumeMl,
+            LiContentVolumeMl    = li.ContentVolumeMl,
+            ColonStoolVolumeMl   = colon.StoolVolumeMl,
+            BladderVolumeMl      = bladder.VolumeML,
+            LifeState            = lifeState,
+            Choking              = choking,
+            Fainting             = fainting,
+            LockedIn             = lockedIn,
+            CauseOfDeath         = causeOfDeath,
+            Corpse               = corpse,
+            Stress               = stress,
+            Mask                 = mask,
+            Mood                 = mood,
+            Willpower            = willpower,
+            Workload             = workload,
+            EncounteredCorpseIds = corpseIds,
+            ScheduleBlocks       = scheduleBlocks,
     private static WillpowerSaveDto? ProjectWillpower(Entity entity)
     {
         if (!entity.Has<WillpowerComponent>()) return null;
@@ -352,6 +385,16 @@ internal static class SaveProjector
             var c = entity.Get<TaskComponent>();
             result.Add(new TaskSaveDto
             {
+                Id            = e.Id.ToString(),
+                EffortHours   = t.EffortHours,
+                DeadlineTick  = t.DeadlineTick,
+                Priority      = t.Priority,
+                Progress      = t.Progress,
+                QualityLevel  = t.QualityLevel,
+                AssignedNpcId = t.AssignedNpcId.ToString(),
+                CreatedTick   = t.CreatedTick,
+            };
+        }).ToList();
                 Id            = entity.Id.ToString(),
                 EffortHours   = c.EffortHours,
                 DeadlineTick  = c.DeadlineTick,

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypeAnimationTiming": [
+    { "archetype": "the-old-hand",  "walkSpeedMult": 0.85, "eatSpeedMult": 0.80, "talkGesturalRate": 0.90 },
+    { "archetype": "the-newbie",    "walkSpeedMult": 1.15, "eatSpeedMult": 1.20, "talkGesturalRate": 1.25 },
+    { "archetype": "the-climber",   "walkSpeedMult": 1.20, "eatSpeedMult": 1.10, "talkGesturalRate": 1.15 },
+    { "archetype": "the-hermit",    "walkSpeedMult": 0.80, "eatSpeedMult": 0.95, "talkGesturalRate": 0.70 }
+  ]
+}
