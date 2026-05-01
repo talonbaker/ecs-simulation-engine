@@ -27,20 +27,28 @@ public sealed class DraggableProp : MonoBehaviour
     private float _idleY;
 
     // Called by DragHandler when the player clicks this prop.
-    public void BeginDrag()
+    // floorY: the Y the prop should return to when dropped on the floor.
+    // Needed when detaching from a socket so _idleY resets to floor, not the socket height.
+    public void BeginDrag(float floorY = 0f)
     {
+        bool detachedFromSocket = false;
+
         // If parented to a PropSocket (e.g. banana on a table), detach and free the socket.
         if (transform.parent != null)
         {
             var socket = transform.parent.GetComponent<PropSocket>();
             if (socket != null)
             {
-                socket.IsOccupied   = false;
+                socket.IsOccupied    = false;
                 socket.OccupyingProp = null;
                 transform.SetParent(null);
+                detachedFromSocket = true;
             }
         }
-        _idleY = transform.position.y;
+
+        // When coming off a socket the prop's world Y is the socket height.
+        // Use floorY so a floor-drop lands at the correct level, not mid-air.
+        _idleY = detachedFromSocket ? floorY : transform.position.y;
         CurrentState = DragState.Dragging;
     }
 

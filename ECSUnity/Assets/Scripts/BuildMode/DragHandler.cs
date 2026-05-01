@@ -33,7 +33,7 @@ public sealed class DragHandler : MonoBehaviour
             if (TryGrab(out DraggableProp prop))
             {
                 _currentDrag = prop;
-                _currentDrag.BeginDrag();
+                _currentDrag.BeginDrag(_floorPlaneY);
             }
         }
 

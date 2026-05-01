@@ -110,7 +110,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  _snapTileSize: 1
+  _snapTileSize: 0.5
   _targetSocketTag:
   _grabHeight: 0.1
 --- !u!1 &200000000
