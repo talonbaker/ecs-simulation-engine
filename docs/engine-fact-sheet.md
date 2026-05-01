@@ -1,6 +1,7 @@
 ﻿# ECS Simulation Engine — Fact Sheet
 
 **SimVersion:** ECS Simulation Engine  v0.7.2
+**Generated:** 2026-05-01T15:39:54.7223592+00:00
 **Generated:** 2026-05-01T02:24:28.6350818+00:00
 **TelemetrySchema:** world-state.schema.json v0.1.0
 
@@ -222,6 +223,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `WillpowerComponent` | `Current: int`, `Baseline: int` |
 | `WorkloadComponent` | `ActiveTasks: IReadOnlyList`1`, `Capacity: int`, `CurrentLoad: int` |
 
+**Total:** 136 component types
 **Total:** 141 component types
 
 ## SimConfig Keys
@@ -494,6 +496,23 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Lockout.LockoutHungerThreshold` | `int` | `95` |
 | `Lockout.StarvationTicks` | `int` | `5` |
 | `Lockout.ExitNamedAnchorTag` | `string` | `outdoor` |
+| `SoundTriggers.BulbBuzzEmitIntervalTicks` | `int` | `10` |
+| `SoundTriggers.FootstepIntensity` | `float` | `0.3` |
+| `SoundTriggers.ChairSqueakIntensity` | `float` | `0.4` |
+| `SoundTriggers.BulbBuzzIntensity` | `float` | `0.2` |
+| `SoundTriggers.ChewIntensity` | `float` | `0.15` |
+| `SoundTriggers.SlurpIntensity` | `float` | `0.2` |
+| `SoundTriggers.CoughIntensity` | `float` | `0.6` |
+| `SoundTriggers.GaspIntensity` | `float` | `0.7` |
+| `SoundTriggers.WheezeIntensity` | `float` | `0.4` |
+| `SoundTriggers.SlipIntensity` | `float` | `0.8` |
+| `SoundTriggers.ThudIntensity` | `float` | `0.9` |
+| `SoundTriggers.SpeechFragmentLoudIntensity` | `float` | `1` |
+| `SoundTriggers.SpeechFragmentNormalIntensity` | `float` | `0.6` |
+| `SoundTriggers.SpeechFragmentQuietIntensity` | `float` | `0.3` |
+| `SoundTriggers.SneezeIntensity` | `float` | `0.7` |
+| `SoundTriggers.YawnIntensity` | `float` | `0.4` |
+| `SoundTriggers.SighIntensity` | `float` | `0.3` |
 | `Bereavement.WitnessedDeathStressGain` | `double` | `5` |
 | `Bereavement.BereavementStressGain` | `double` | `3` |
 | `Bereavement.ProximityBereavementMinIntensity` | `int` | `20` |

@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
@@ -21,7 +22,13 @@ namespace APIFramework.Systems;
 public class BiologicalConditionSystem : ISystem
 {
     private readonly BiologicalConditionSystemConfig _cfg;
+    private readonly SoundTriggerBus? _soundBus;
 
+    public BiologicalConditionSystem(BiologicalConditionSystemConfig cfg, SoundTriggerBus? soundBus = null)
+    {
+        _cfg      = cfg;
+        _soundBus = soundBus;
+    }
     /// <summary>Constructs the system with its tag-threshold tuning.</summary>
     /// <param name="cfg">Hunger/thirst/irritable threshold values.</param>
     public BiologicalConditionSystem(BiologicalConditionSystemConfig cfg) => _cfg = cfg;
@@ -47,6 +54,24 @@ public class BiologicalConditionSystem : ISystem
             ToggleTag<IrritableTag>(entity,
                 meta.Hunger > _cfg.IrritableThreshold ||
                 meta.Thirst > _cfg.IrritableThreshold);
+
+            // Emit biological sounds based on physiological state
+            if (_soundBus != null)
+            {
+                var pos = entity.Has<PositionComponent>() ? entity.Get<PositionComponent>() : default;
+
+                // Yawn when exhausted (high sleepiness / low energy)
+                if (entity.Has<ExhaustedTag>())
+                    _soundBus.Emit(SoundTriggerKind.Yawn, entity.Id, pos.X, pos.Z, 0.4f, 0L);
+
+                // Sigh when sad or grieving (emotional distress)
+                if (entity.Has<SadTag>() || entity.Has<GriefTag>())
+                    _soundBus.Emit(SoundTriggerKind.Sigh, entity.Id, pos.X, pos.Z, 0.3f, 0L);
+
+                // Sneeze when severely dehydrated (physiological stress)
+                if (entity.Has<DehydratedTag>())
+                    _soundBus.Emit(SoundTriggerKind.Sneeze, entity.Id, pos.X, pos.Z, 0.7f, 0L);
+            }
         }
     }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 
@@ -51,6 +52,7 @@ public class LifeStateTransitionSystem : ISystem
     private readonly EntityManager _entityManager;
     private readonly SimulationClock _clock;
     private readonly SimConfig _config;
+    private readonly SoundTriggerBus? _soundBus;
 
     /// <summary>
     /// Constructs the life-state transition system.
@@ -64,12 +66,14 @@ public class LifeStateTransitionSystem : ISystem
         NarrativeEventBus narrativeEventBus,
         EntityManager entityManager,
         SimulationClock clock,
-        SimConfig config)
+        SimConfig config,
+        SoundTriggerBus? soundBus = null)
     {
         _narrativeEventBus = narrativeEventBus ?? throw new ArgumentNullException(nameof(narrativeEventBus));
         _entityManager = entityManager ?? throw new ArgumentNullException(nameof(entityManager));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _config = config ?? throw new ArgumentNullException(nameof(config));
+        _soundBus = soundBus;
     }
 
     /// <summary>
@@ -120,6 +124,12 @@ public class LifeStateTransitionSystem : ISystem
             // so subscribers see the deceased while still flagged as Alive in their entity snapshot.
             if (req.TargetState == LS.Deceased)
             {
+                // Emit Thud sound at the moment of death
+                if (_soundBus != null)
+                {
+                    var deathPos = npc.Has<PositionComponent>() ? npc.Get<PositionComponent>() : default;
+                    _soundBus.Emit(SoundTriggerKind.Thud, npc.Id, deathPos.X, deathPos.Z, 0.9f, (long)_clock.TotalTime);
+                }
                 var witness = FindClosestWitness(npc, em);
                 // Location room ID: populated by future packets (3.0.2+).
                 // For now, we just store the position and later packets will resolve room membership.
@@ -164,6 +174,16 @@ public class LifeStateTransitionSystem : ISystem
         }
 
         _queue.Clear();
+
+        // Emit Wheeze each tick for choking NPCs
+        if (_soundBus != null)
+        {
+            foreach (var npc in em.Query<IsChokingTag>())
+            {
+                var wheezePos = npc.Has<PositionComponent>() ? npc.Get<PositionComponent>() : default;
+                _soundBus.Emit(SoundTriggerKind.Wheeze, npc.Id, wheezePos.X, wheezePos.Z, 0.4f, (long)_clock.TotalTime);
+            }
+        }
 
         // Separately: tick down IncapacitatedTickBudget for any Incapacitated NPC.
         // When it reaches 0, enqueue a Deceased transition with the pending cause.

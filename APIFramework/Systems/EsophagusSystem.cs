@@ -1,5 +1,6 @@
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
@@ -21,6 +22,13 @@ namespace APIFramework.Systems;
 /// </remarks>
 public class EsophagusSystem : ISystem
 {
+    private readonly SoundTriggerBus? _soundBus;
+
+    public EsophagusSystem(SoundTriggerBus? soundBus = null)
+    {
+        _soundBus = soundBus;
+    }
+
     /// <summary>Per-tick progress and deposit pass.</summary>
     /// <param name="em">Entity manager backing this tick.</param>
     /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
@@ -51,6 +59,13 @@ public class EsophagusSystem : ISystem
                         // to be absorbed by DigestionSystem.
                         stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + liquid.VolumeMl, StomachComponent.MaxVolumeMl);
                         stomach.NutrientsQueued += liquid.Nutrients;
+
+                        // Emit Slurp when liquid arrives
+                        if (_soundBus != null)
+                        {
+                            var pos = consumer.Has<PositionComponent>() ? consumer.Get<PositionComponent>() : default;
+                            _soundBus.Emit(SoundTriggerKind.Slurp, consumer.Id, pos.X, pos.Z, 0.2f, 0L);
+                        }
                     }
                     else if (entity.Has<BolusComponent>())
                     {
@@ -60,6 +75,13 @@ public class EsophagusSystem : ISystem
                         // to be absorbed by DigestionSystem.
                         stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + bolus.Volume, StomachComponent.MaxVolumeMl);
                         stomach.NutrientsQueued += bolus.Nutrients;
+
+                        // Emit Chew when solid bolus arrives
+                        if (_soundBus != null)
+                        {
+                            var pos = consumer.Has<PositionComponent>() ? consumer.Get<PositionComponent>() : default;
+                            _soundBus.Emit(SoundTriggerKind.Chew, consumer.Id, pos.X, pos.Z, 0.15f, 0L);
+                        }
                     }
 
                     consumer.Add(stomach);
