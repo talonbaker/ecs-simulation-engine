@@ -39,7 +39,7 @@ public sealed record WorldStateDto
     // v0.4 â€” persistent narrative chronicle (optional; projector omits when empty)
     public IReadOnlyList<ChronicleEntryDto>? Chronicle     { get; init; }
 
-    // v0.5 â€” save/load round-trip fields (optional; absent on live telemetry snapshots)
+    // v0.5 — save/load round-trip substrate (null on live telemetry snapshots)
     public long?   SaveTick          { get; init; }
     public double? SaveTotalTime     { get; init; }
     public float?  SaveTimeScale     { get; init; }

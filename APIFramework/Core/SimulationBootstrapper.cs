@@ -5,6 +5,7 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Mutation;
 using APIFramework.Systems;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Chores;
 using APIFramework.Systems.Coupling;
 using APIFramework.Systems.Dialog;
@@ -14,7 +15,9 @@ using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using APIFramework.Systems.LifeState;
+using System.Linq;
 using System.Reflection;
+using Warden.Contracts.Telemetry;
 
 namespace APIFramework.Core;
 
@@ -198,7 +201,10 @@ public class SimulationBootstrapper
     /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
     public NarrativeEventBus NarrativeBus { get; }
 
-    // â”€â”€ Chronicle services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    /// <summary>Sound trigger bus. Subscribe to receive audio trigger events emitted each tick.</summary>
+    public SoundTriggerBus SoundBus { get; }
+
+    // ── Chronicle services ────────────────────────────────────────────────────
 
     /// <summary>Global persistent narrative chronicle. Read by TelemetryProjector each tick.</summary>
     public ChronicleService Chronicle { get; }
@@ -304,6 +310,9 @@ public class SimulationBootstrapper
         // Narrative services
         NarrativeBus = new NarrativeEventBus();
 
+        // Sound trigger bus
+        SoundBus = new SoundTriggerBus();
+
         // Dialog services
         PendingDialogQueue = new PendingDialogQueue();
         var corpusPath = DialogCorpusService.FindCorpusFile(Config.Dialog.CorpusPath);
@@ -354,8 +363,12 @@ public class SimulationBootstrapper
     public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
         : this(new FileConfigProvider(configPath), humanCount, seed, worldDefinitionPath) { }
 
-    // Load-path constructor — same service wiring as the primary constructor but skips SpawnWorld.
-    private SimulationBootstrapper(IConfigProvider configProvider, int seed, bool _)
+
+    /// <summary>
+    /// Load-path constructor — wires all services and systems but spawns no entities.
+    /// Callers must restore entities explicitly after construction.
+    /// </summary>
+    private SimulationBootstrapper(IConfigProvider configProvider, int seed, bool _loadPath)
     {
         Config          = configProvider.GetConfig();
         EntityManager   = new EntityManager();
@@ -371,7 +384,8 @@ public class SimulationBootstrapper
 
         PathfindingCache = new PathfindingCache(Config.Movement.Pathfinding.CacheMaxEntries);
         MutationApi      = new WorldMutationApi(EntityManager, StructuralBus);
-        SunState         = new SunStateService();
+
+        SunState           = new SunStateService();
         DriveCouplingTable = new LightingDriveCouplingTable(Config.Lighting.DriveCouplings);
         DriveAccumulator   = new SocialDriveAccumulator();
 
@@ -385,9 +399,10 @@ public class SimulationBootstrapper
 
         Chronicle  = new ChronicleService(Config.Chronicle.MaxEntries);
         Invariants = new InvariantSystem(Clock, Chronicle);
-        NarrativeBus = new NarrativeEventBus();
 
+        NarrativeBus      = new NarrativeEventBus();
         PendingDialogQueue = new PendingDialogQueue();
+
         var corpusPath = DialogCorpusService.FindCorpusFile(Config.Dialog.CorpusPath);
         if (corpusPath != null)
         {
@@ -399,14 +414,15 @@ public class SimulationBootstrapper
         RegisterSystems();
     }
 
+    // ── Save / Load ───────────────────────────────────────────────────────────
+
     /// <summary>
-    /// Boots a simulation from a v0.5 <see cref="Warden.Contracts.Telemetry.WorldStateDto"/>
-    /// save document, restoring all persistent component state.
+    /// Constructs a fully-restored simulation from a save-game DTO.
+    /// Clock, entity ID counter, and all persistent entities are rebuilt from the snapshot.
     /// </summary>
-    public static SimulationBootstrapper BootFromWorldStateDto(
-        Warden.Contracts.Telemetry.WorldStateDto dto, IConfigProvider configProvider)
+    public static SimulationBootstrapper BootFromWorldStateDto(WorldStateDto dto, IConfigProvider configProvider)
     {
-        var sim = new SimulationBootstrapper(configProvider, dto.Seed ?? 0, false);
+        var sim = new SimulationBootstrapper(configProvider, dto.Seed ?? 0, true);
 
         if (dto.SaveTick.HasValue && dto.SaveTotalTime.HasValue && dto.SaveTimeScale.HasValue)
             sim.Clock.RestoreState(dto.SaveTotalTime.Value, dto.SaveTick.Value, dto.SaveTimeScale.Value);
@@ -433,247 +449,254 @@ public class SimulationBootstrapper
         return sim;
     }
 
-    // ── Save/load entity restoration ─────────────────────────────────────────
-
-    private static void RestoreNpcEntity(
-        Warden.Contracts.Telemetry.NpcSaveDto npc,
-        EntityManager em,
-        SimConfig cfg)
+    private static void RestoreNpcEntity(NpcSaveDto dto, EntityManager em, SimConfig cfg)
     {
-        var entity = em.CreateEntity(Guid.Parse(npc.Id));
-        entity.Add(new IdentityComponent { Name = npc.Name });
-        entity.Add(new PositionComponent { X = npc.PosX, Y = npc.PosY, Z = npc.PosZ });
+        var entity = Guid.TryParse(dto.Id, out var id) ? em.CreateEntity(id) : em.CreateEntity();
 
-        var tags      = npc.Tags;
-        bool isHuman  = tags != null && tags.Contains("Human");
-        bool isCat    = tags != null && tags.Contains("Cat");
-        bool isCorpse = tags != null && tags.Contains("Corpse");
+        entity.Add(new IdentityComponent { Name = dto.Name });
+        if (dto.IsHuman) entity.Add(new HumanTag()); else entity.Add(new CatTag());
+        entity.Add(new NpcTag());
 
-        if (!isCorpse)
+        entity.Add(new PositionComponent { X = dto.PosX, Y = dto.PosY, Z = dto.PosZ });
+
+        var m = dto.IsHuman ? cfg.Entities.Human.Metabolism : cfg.Entities.Cat.Metabolism;
+        entity.Add(new MetabolismComponent
         {
-            var ecfg = isCat ? cfg.Entities.Cat : cfg.Entities.Human;
-            entity.Add(new MetabolismComponent
-            {
-                Satiation                 = npc.Satiation,
-                Hydration                 = npc.Hydration,
-                BodyTemp                  = npc.BodyTemp,
-                SatiationDrainRate        = npc.SatiationDrainRate,
-                HydrationDrainRate        = npc.HydrationDrainRate,
-                SleepMetabolismMultiplier = ecfg.Metabolism.SleepMetabolismMultiplier,
-                NutrientStores            = new NutrientProfile(),
-            });
-            entity.Add(new EnergyComponent
-            {
-                Energy              = npc.Energy,
-                Sleepiness          = npc.Sleepiness,
-                IsSleeping          = npc.IsSleeping,
-                EnergyDrainRate     = ecfg.Energy.EnergyDrainRate,
-                SleepinessGainRate  = ecfg.Energy.SleepinessGainRate,
-                EnergyRestoreRate   = ecfg.Energy.EnergyRestoreRate,
-                SleepinessDrainRate = ecfg.Energy.SleepinessDrainRate,
-            });
-            entity.Add(new StomachComponent
-            {
-                CurrentVolumeMl = npc.StomachVolumeMl,
-                DigestionRate   = ecfg.Stomach.DigestionRate,
-                NutrientsQueued = new NutrientProfile(),
-            });
-            entity.Add(new SmallIntestineComponent
-            {
-                ChymeVolumeMl          = npc.SiChymeVolumeMl,
-                AbsorptionRate         = ecfg.SmallIntestine.AbsorptionRate,
-                Chyme                  = new NutrientProfile(),
-                ResidueToLargeFraction = ecfg.SmallIntestine.ResidueToLargeFraction,
-            });
-            entity.Add(new LargeIntestineComponent
-            {
-                ContentVolumeMl       = npc.LiContentVolumeMl,
-                WaterReabsorptionRate = ecfg.LargeIntestine.WaterReabsorptionRate,
-                MobilityRate          = ecfg.LargeIntestine.MobilityRate,
-                StoolFraction         = ecfg.LargeIntestine.StoolFraction,
-            });
-            entity.Add(new ColonComponent
-            {
-                StoolVolumeMl   = npc.ColonStoolVolumeMl,
-                UrgeThresholdMl = ecfg.Colon.UrgeThresholdMl,
-                CapacityMl      = ecfg.Colon.CapacityMl,
-            });
-            entity.Add(new BladderComponent
-            {
-                VolumeML        = npc.BladderVolumeMl,
-                FillRate        = ecfg.Bladder.FillRate,
-                UrgeThresholdMl = ecfg.Bladder.UrgeThresholdMl,
-                CapacityMl      = ecfg.Bladder.CapacityMl,
-            });
-            entity.Add(new MovementComponent { Speed = isCat ? 0.06f : 0.04f, ArrivalDistance = 0.4f });
-        }
+            Satiation                 = dto.Satiation,
+            Hydration                 = dto.Hydration,
+            BodyTemp                  = dto.BodyTemp,
+            SatiationDrainRate        = dto.SatiationDrainRate,
+            HydrationDrainRate        = dto.HydrationDrainRate,
+            SleepMetabolismMultiplier = m.SleepMetabolismMultiplier
+        });
 
-        if (npc.LifeState is { } ls)
+        var s = dto.IsHuman ? cfg.Entities.Human.Stomach : cfg.Entities.Cat.Stomach;
+        entity.Add(new StomachComponent
+        {
+            CurrentVolumeMl = dto.StomachVolumeMl,
+            DigestionRate   = s.DigestionRate
+        });
+
+        var e = dto.IsHuman ? cfg.Entities.Human.Energy : cfg.Entities.Cat.Energy;
+        entity.Add(new EnergyComponent
+        {
+            Energy              = dto.Energy,
+            Sleepiness          = dto.Sleepiness,
+            IsSleeping          = dto.IsSleeping,
+            EnergyDrainRate     = e.EnergyDrainRate,
+            SleepinessGainRate  = e.SleepinessGainRate,
+            EnergyRestoreRate   = e.EnergyRestoreRate,
+            SleepinessDrainRate = e.SleepinessDrainRate
+        });
+
+        var si = dto.IsHuman ? cfg.Entities.Human.SmallIntestine : cfg.Entities.Cat.SmallIntestine;
+        entity.Add(new SmallIntestineComponent
+        {
+            ChymeVolumeMl          = dto.SiChymeVolumeMl,
+            AbsorptionRate         = si.AbsorptionRate,
+            ResidueToLargeFraction = si.ResidueToLargeFraction
+        });
+
+        var li = dto.IsHuman ? cfg.Entities.Human.LargeIntestine : cfg.Entities.Cat.LargeIntestine;
+        entity.Add(new LargeIntestineComponent
+        {
+            ContentVolumeMl       = dto.LiContentVolumeMl,
+            WaterReabsorptionRate = li.WaterReabsorptionRate,
+            MobilityRate          = li.MobilityRate,
+            StoolFraction         = li.StoolFraction
+        });
+
+        var co = dto.IsHuman ? cfg.Entities.Human.Colon : cfg.Entities.Cat.Colon;
+        entity.Add(new ColonComponent
+        {
+            StoolVolumeMl   = dto.ColonStoolVolumeMl,
+            UrgeThresholdMl = co.UrgeThresholdMl,
+            CapacityMl      = co.CapacityMl
+        });
+
+        var bl = dto.IsHuman ? cfg.Entities.Human.Bladder : cfg.Entities.Cat.Bladder;
+        entity.Add(new BladderComponent
+        {
+            VolumeML        = dto.BladderVolumeMl,
+            FillRate        = bl.FillRate,
+            UrgeThresholdMl = bl.UrgeThresholdMl,
+            CapacityMl      = bl.CapacityMl
+        });
+
+        entity.Add(new MovementComponent { Speed = dto.IsHuman ? 0.04f : 0.06f, ArrivalDistance = 0.4f });
+
+        if (dto.LifeState != null)
             entity.Add(new LifeStateComponent
             {
-                State                   = (LifeState)ls.State,
-                LastTransitionTick      = ls.LastTransitionTick,
-                IncapacitatedTickBudget = ls.IncapacitatedTickBudget,
-                PendingDeathCause       = (CauseOfDeath)ls.PendingDeathCause,
+                State                   = (LifeState)(int)dto.LifeState.State,
+                LastTransitionTick      = dto.LifeState.LastTransitionTick,
+                IncapacitatedTickBudget = dto.LifeState.IncapacitatedTickBudget,
+                PendingDeathCause       = (CauseOfDeath)(int)dto.LifeState.PendingDeathCause
             });
 
-        if (npc.Choking is { } ch)
+        if (dto.Choking != null)
+        {
             entity.Add(new ChokingComponent
             {
-                ChokeStartTick = ch.ChokeStartTick,
-                RemainingTicks = ch.RemainingTicks,
-                BolusSize      = ch.BolusSize,
-                PendingCause   = (CauseOfDeath)ch.PendingCause,
+                ChokeStartTick = dto.Choking.ChokeStartTick,
+                RemainingTicks = dto.Choking.RemainingTicks,
+                BolusSize      = dto.Choking.BolusSize,
+                PendingCause   = (CauseOfDeath)(int)dto.Choking.PendingCause
             });
+            entity.Add(new IsChokingTag());
+        }
 
-        if (npc.Fainting is { } fa)
-            entity.Add(new FaintingComponent { FaintStartTick = fa.FaintStartTick, RecoveryTick = fa.RecoveryTick });
+        if (dto.Fainting != null)
+        {
+            entity.Add(new FaintingComponent
+            {
+                FaintStartTick = dto.Fainting.FaintStartTick,
+                RecoveryTick   = dto.Fainting.RecoveryTick
+            });
+            entity.Add(new IsFaintingTag());
+        }
 
-        if (npc.LockedIn is { } loc)
+        if (dto.LockedIn != null)
             entity.Add(new LockedInComponent
             {
-                FirstDetectedTick    = loc.FirstDetectedTick,
-                StarvationTickBudget = loc.StarvationTickBudget,
+                FirstDetectedTick    = dto.LockedIn.FirstDetectedTick,
+                StarvationTickBudget = dto.LockedIn.StarvationTickBudget
             });
 
-        if (npc.CauseOfDeath is { } cod)
+        if (dto.CauseOfDeath != null)
             entity.Add(new CauseOfDeathComponent
             {
-                Cause            = (CauseOfDeath)cod.Cause,
-                DeathTick        = cod.DeathTick,
-                WitnessedByNpcId = Guid.Parse(cod.WitnessedById),
-                LocationRoomId   = Guid.Parse(cod.LocationRoomId),
+                Cause            = (CauseOfDeath)(int)dto.CauseOfDeath.Cause,
+                DeathTick        = dto.CauseOfDeath.DeathTick,
+                WitnessedByNpcId = Guid.TryParse(dto.CauseOfDeath.WitnessedById,  out var wId) ? wId : Guid.Empty,
+                LocationRoomId   = Guid.TryParse(dto.CauseOfDeath.LocationRoomId, out var rId) ? rId : Guid.Empty
             });
 
-        if (npc.Corpse is { } cp)
+        if (dto.Corpse != null)
+        {
+            entity.Add(new CorpseTag());
             entity.Add(new CorpseComponent
             {
-                DeathTick           = cp.DeathTick,
-                OriginalNpcEntityId = Guid.Parse(cp.OriginalNpcEntityId),
-                LocationRoomId      = cp.LocationRoomId,
-                HasBeenMoved        = cp.HasBeenMoved,
+                DeathTick           = dto.Corpse.DeathTick,
+                OriginalNpcEntityId = Guid.TryParse(dto.Corpse.OriginalNpcEntityId, out var origId) ? origId : Guid.Empty,
+                LocationRoomId      = dto.Corpse.LocationRoomId,
+                HasBeenMoved        = dto.Corpse.HasBeenMoved
             });
+        }
 
-        if (npc.Stress is { } st)
+        if (dto.Stress != null)
             entity.Add(new StressComponent
             {
-                AcuteLevel                = st.AcuteLevel,
-                ChronicLevel              = st.ChronicLevel,
-                LastDayUpdated            = st.LastDayUpdated,
-                SuppressionEventsToday    = st.SuppressionEventsToday,
-                DriveSpikeEventsToday     = st.DriveSpikeEventsToday,
-                SocialConflictEventsToday = st.SocialConflictEventsToday,
-                OverdueTaskEventsToday    = st.OverdueTaskEventsToday,
-                WitnessedDeathEventsToday = st.WitnessedDeathEventsToday,
-                BereavementEventsToday    = st.BereavementEventsToday,
-                BurnoutLastAppliedDay     = st.BurnoutLastAppliedDay,
+                AcuteLevel                = dto.Stress.AcuteLevel,
+                ChronicLevel              = dto.Stress.ChronicLevel,
+                LastDayUpdated            = dto.Stress.LastDayUpdated,
+                SuppressionEventsToday    = dto.Stress.SuppressionEventsToday,
+                DriveSpikeEventsToday     = dto.Stress.DriveSpikeEventsToday,
+                SocialConflictEventsToday = dto.Stress.SocialConflictEventsToday,
+                OverdueTaskEventsToday    = dto.Stress.OverdueTaskEventsToday,
+                BurnoutLastAppliedDay     = dto.Stress.BurnoutLastAppliedDay,
+                WitnessedDeathEventsToday = dto.Stress.WitnessedDeathEventsToday,
+                BereavementEventsToday    = dto.Stress.BereavementEventsToday
             });
 
-        if (npc.Mask is { } mk)
+        if (dto.Mask != null)
             entity.Add(new SocialMaskComponent
             {
-                IrritationMask = mk.IrritationMask,
-                AffectionMask  = mk.AffectionMask,
-                AttractionMask = mk.AttractionMask,
-                LonelinessMask = mk.LonelinessMask,
-                CurrentLoad    = mk.CurrentLoad,
-                Baseline       = mk.Baseline,
-                LastSlipTick   = mk.LastSlipTick,
+                IrritationMask = dto.Mask.IrritationMask,
+                AffectionMask  = dto.Mask.AffectionMask,
+                AttractionMask = dto.Mask.AttractionMask,
+                LonelinessMask = dto.Mask.LonelinessMask,
+                CurrentLoad    = dto.Mask.CurrentLoad,
+                Baseline       = dto.Mask.Baseline,
+                LastSlipTick   = dto.Mask.LastSlipTick
             });
 
-        if (npc.Mood is { } mo)
+        if (dto.Mood != null)
             entity.Add(new MoodComponent
             {
-                Joy          = mo.Joy,
-                Trust        = mo.Trust,
-                Fear         = mo.Fear,
-                Surprise     = mo.Surprise,
-                Sadness      = mo.Sadness,
-                Disgust      = mo.Disgust,
-                Anger        = mo.Anger,
-                Anticipation = mo.Anticipation,
-                PanicLevel   = mo.PanicLevel,
-                GriefLevel   = mo.GriefLevel,
+                Joy          = dto.Mood.Joy,
+                Trust        = dto.Mood.Trust,
+                Fear         = dto.Mood.Fear,
+                Surprise     = dto.Mood.Surprise,
+                Sadness      = dto.Mood.Sadness,
+                Disgust      = dto.Mood.Disgust,
+                Anger        = dto.Mood.Anger,
+                Anticipation = dto.Mood.Anticipation,
+                PanicLevel   = dto.Mood.PanicLevel,
+                GriefLevel   = dto.Mood.GriefLevel
             });
 
-        if (npc.Willpower is { } wp)
-            entity.Add(new WillpowerComponent(wp.Current, wp.Baseline));
+        if (dto.Willpower != null)
+            entity.Add(new WillpowerComponent { Current = dto.Willpower.Current, Baseline = dto.Willpower.Baseline });
 
-        if (npc.Workload is { } wl)
+        if (dto.Workload != null)
+        {
+            var activeGuids = dto.Workload.ActiveTaskIds?
+                .Select(s => Guid.TryParse(s, out var g) ? g : Guid.Empty)
+                .Where(g => g != Guid.Empty)
+                .ToList() ?? new List<Guid>();
             entity.Add(new WorkloadComponent
             {
-                ActiveTasks = wl.ActiveTaskIds.Select(Guid.Parse).ToArray(),
-                Capacity    = wl.Capacity,
-                CurrentLoad = wl.CurrentLoad,
+                Capacity    = dto.Workload.Capacity,
+                CurrentLoad = dto.Workload.CurrentLoad,
+                ActiveTasks = activeGuids
             });
+        }
 
-        if (npc.EncounteredCorpseIds is { Count: > 0 } cids)
-            entity.Add(new BereavementHistoryComponent
-            {
-                EncounteredCorpseIds = new HashSet<Guid>(cids.Select(Guid.Parse)),
-            });
+        if (dto.ScheduleBlocks != null && dto.ScheduleBlocks.Count > 0)
+        {
+            var blocks = dto.ScheduleBlocks.Select(b => new ScheduleBlock(
+                b.StartHour,
+                b.EndHour,
+                b.AnchorId,
+                (ScheduleActivityKind)(int)b.Activity)).ToList();
+            entity.Add(new ScheduleComponent { Blocks = blocks });
+        }
 
-        if (npc.ScheduleBlocks is { Count: > 0 } sched)
-            entity.Add(new ScheduleComponent
-            {
-                Blocks = sched.Select(b => new ScheduleBlock(
-                    b.StartHour, b.EndHour, b.AnchorId,
-                    (ScheduleActivityKind)b.Activity)).ToList(),
-            });
-
-        if (isHuman)                                     entity.Add(new HumanTag());
-        if (isCat)                                       entity.Add(new CatTag());
-        if (tags != null && tags.Contains("Npc"))        entity.Add(new NpcTag());
-        if (isCorpse)                                    entity.Add(new CorpseTag());
-        if (tags != null && tags.Contains("IsChoking"))  entity.Add(new IsChokingTag());
-        if (tags != null && tags.Contains("IsFainting")) entity.Add(new IsFaintingTag());
-        if (tags != null && tags.Contains("Sleeping"))   entity.Add(new SleepingTag());
+        if (dto.EncounteredCorpseIds != null && dto.EncounteredCorpseIds.Count > 0)
+        {
+            var ids = new HashSet<Guid>(dto.EncounteredCorpseIds
+                .Select(s => Guid.TryParse(s, out var g) ? g : Guid.Empty)
+                .Where(g => g != Guid.Empty));
+            entity.Add(new BereavementHistoryComponent { EncounteredCorpseIds = ids });
+        }
     }
 
-    private static void RestoreTaskEntity(
-        Warden.Contracts.Telemetry.TaskSaveDto task, EntityManager em)
+    private static void RestoreTaskEntity(TaskSaveDto dto, EntityManager em)
     {
-        var entity = em.CreateEntity(Guid.Parse(task.Id));
+        var entity = Guid.TryParse(dto.Id, out var id) ? em.CreateEntity(id) : em.CreateEntity();
         entity.Add(new TaskTag());
         entity.Add(new TaskComponent
         {
-            EffortHours   = task.EffortHours,
-            DeadlineTick  = task.DeadlineTick,
-            Priority      = task.Priority,
-            Progress      = task.Progress,
-            QualityLevel  = task.QualityLevel,
-            AssignedNpcId = Guid.Parse(task.AssignedNpcId),
-            CreatedTick   = task.CreatedTick,
+            EffortHours   = dto.EffortHours,
+            DeadlineTick  = dto.DeadlineTick,
+            Priority      = dto.Priority,
+            Progress      = dto.Progress,
+            QualityLevel  = dto.QualityLevel,
+            AssignedNpcId = Guid.TryParse(dto.AssignedNpcId, out var nId) ? nId : Guid.Empty,
+            CreatedTick   = dto.CreatedTick
         });
-        if (task.IsOverdue) entity.Add(new OverdueTag());
     }
 
-    private static void RestoreStainEntity(
-        Warden.Contracts.Telemetry.StainEntitySaveDto stain, EntityManager em)
+    private static void RestoreStainEntity(StainEntitySaveDto dto, EntityManager em)
     {
-        var entity = em.CreateEntity(Guid.Parse(stain.Id));
+        var entity = Guid.TryParse(dto.Id, out var id) ? em.CreateEntity(id) : em.CreateEntity();
         entity.Add(new StainTag());
-        entity.Add(new PositionComponent { X = stain.PosX, Y = stain.PosY, Z = stain.PosZ });
-        entity.Add(new StainComponent
-        {
-            Source           = stain.Source,
-            Magnitude        = stain.Magnitude,
-            CreatedAtTick    = stain.CreatedAtTick,
-            ChronicleEntryId = stain.ChronicleEntryId,
-        });
-        if (stain.FallRiskLevel.HasValue)
-            entity.Add(new FallRiskComponent { RiskLevel = stain.FallRiskLevel.Value });
-        if (stain.Magnitude >= 50)
+        entity.Add(new PositionComponent { X = dto.PosX, Y = 0f, Z = dto.PosZ });
+        entity.Add(new StainComponent { Source = dto.Source, Magnitude = dto.Magnitude, CreatedAtTick = dto.CreatedAtTick, ChronicleEntryId = dto.ChronicleEntryId });
+        if (dto.FallRisk.HasValue)
+            entity.Add(new FallRiskComponent { RiskLevel = dto.FallRisk.Value });
+        if (dto.IsObstacle)
             entity.Add(new ObstacleTag());
     }
 
-    private static void RestoreLockedDoorEntity(
-        Warden.Contracts.Telemetry.LockedDoorSaveDto door, EntityManager em)
+    private static void RestoreLockedDoorEntity(LockedDoorSaveDto dto, EntityManager em)
     {
-        var entity = em.CreateEntity(Guid.Parse(door.Id));
+        var entity = Guid.TryParse(dto.Id, out var id) ? em.CreateEntity(id) : em.CreateEntity();
         entity.Add(new LockedTag());
-        entity.Add(new PositionComponent { X = door.PosX, Y = door.PosY, Z = door.PosZ });
-        if (door.Name != null) entity.Add(new IdentityComponent { Name = door.Name });
+        entity.Add(new PositionComponent { X = dto.PosX, Y = dto.PosY, Z = dto.PosZ });
+        if (dto.Name != null)
+            entity.Add(new IdentityComponent { Name = dto.Name });
     }
 
     /// <summary>
@@ -700,7 +723,7 @@ public class SimulationBootstrapper
 
         // Lighting â€” sun position, source state machines, aperture beams, room illumination,
         // then proximity events (which now see current illumination).
-        var lightSourceStates = new LightSourceStateSystem(Random, Config.Lighting);
+        var lightSourceStates = new LightSourceStateSystem(Random, Config.Lighting, Config.SoundTriggers, SoundBus);
         var apertureBeams     = new ApertureBeamSystem(SunState, Clock);
         Engine.AddSystem(new SunSystem(Clock, SunState, Config.Lighting),                           SystemPhase.Lighting);
         Engine.AddSystem(lightSourceStates,                                                          SystemPhase.Lighting);
@@ -749,8 +772,8 @@ public class SimulationBootstrapper
         Engine.AddSystem(new EnergySystem(sys.Energy),                            SystemPhase.Physiology);
         Engine.AddSystem(new BladderFillSystem(),                                  SystemPhase.Physiology);
 
-        // Condition â€” derive sensation tags from physiology values
-        Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition),  SystemPhase.Condition);
+        // Condition — derive sensation tags from physiology values
+        Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition, SoundBus),  SystemPhase.Condition);
         // Schedule: resolve active block before ActionSelectionSystem reads it.
         Engine.AddSystem(new ScheduleSystem(Clock),                                SystemPhase.Condition);
 
@@ -781,7 +804,7 @@ public class SimulationBootstrapper
 
         // Transit â€” move content through the upper digestive pipeline
         Engine.AddSystem(new InteractionSystem(sys.Interaction),                  SystemPhase.Transit);
-        Engine.AddSystem(new EsophagusSystem(),                                   SystemPhase.Transit);
+        Engine.AddSystem(new EsophagusSystem(SoundBus),                           SystemPhase.Transit);
         Engine.AddSystem(new DigestionSystem(sys.Digestion),                      SystemPhase.Transit);
 
         // Elimination â€” lower digestive pipeline; intestines â†’ colon/bladder â†’ tags
@@ -796,8 +819,8 @@ public class SimulationBootstrapper
         // Movement quality pipeline (runs in World phase, in registration order)
         Engine.AddSystem(new PathfindingTriggerSystem(Pathfinding),                SystemPhase.World);
         Engine.AddSystem(new MovementSpeedModifierSystem(Config.Movement),         SystemPhase.World);
-        Engine.AddSystem(new StepAsideSystem(SpatialIndex, RoomMembership, Config.Movement), SystemPhase.World);
-        Engine.AddSystem(new MovementSystem(Random),                               SystemPhase.World);
+        Engine.AddSystem(new StepAsideSystem(SpatialIndex, RoomMembership, Config.Movement, SoundBus), SystemPhase.World);
+        Engine.AddSystem(new MovementSystem(Random, SoundBus),                     SystemPhase.World);
         Engine.AddSystem(new FacingSystem(ProximityBus),                           SystemPhase.World);
         Engine.AddSystem(new IdleMovementSystem(Random, Config.Movement),          SystemPhase.World);
 
@@ -816,7 +839,7 @@ public class SimulationBootstrapper
         if (CorpusService != null)
         {
             var decisionSys   = new DialogContextDecisionSystem(PendingDialogQueue, ProximityBus, Config.Dialog, Random);
-            var retrievalSys  = new DialogFragmentRetrievalSystem(PendingDialogQueue, CorpusService, ProximityBus, Config.Dialog);
+            var retrievalSys  = new DialogFragmentRetrievalSystem(PendingDialogQueue, CorpusService, ProximityBus, Config.Dialog, SoundBus);
             var calcifySys    = new DialogCalcifySystem(Config.Dialog);
             Engine.AddSystem(decisionSys,  SystemPhase.Dialog);
             Engine.AddSystem(retrievalSys, SystemPhase.Dialog);
@@ -839,7 +862,7 @@ public class SimulationBootstrapper
             new MaskCrackSystem(RoomMembership, NarrativeBus, Config.SocialMask),  SystemPhase.Cleanup);
 
         // Create a single LifeStateTransitionSystem instance for both choking and life-state management.
-        var lifeStateTransition = new LifeStateTransitionSystem(NarrativeBus, EntityManager, Clock, Config);
+        var lifeStateTransition = new LifeStateTransitionSystem(NarrativeBus, EntityManager, Clock, Config, SoundBus);
 
         // Choking detection â€” identifies choking conditions (bolus + distraction) and enqueues transition to Incapacitated.
         // Runs after EsophagusSystem (in Transit) so the bolus has had its chance to advance,
@@ -850,7 +873,8 @@ public class SimulationBootstrapper
                 NarrativeBus,
                 Clock,
                 Config.Choking,
-                EntityManager),
+                EntityManager,
+                SoundBus),
             SystemPhase.Cleanup);
 
         // Life state transitions â€” processes queued state changes (Aliveâ†’Incapacitatedâ†’Deceased);
@@ -871,7 +895,8 @@ public class SimulationBootstrapper
                 Clock,
                 Config,
                 lifeStateTransition,
-                Random),
+                Random,
+                SoundBus),
             SystemPhase.Cleanup);
 
         // Chore execution — advances assigned chore progress each tick; fires on ChoreWork intent.

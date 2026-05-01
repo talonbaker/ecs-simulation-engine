@@ -69,7 +69,7 @@ public class EntityManager
     /// <summary>Restores the ID counter from a saved value so newly created entities continue from the right offset.</summary>
     internal void RestoreIdCounter(long counter) => _idCounter = counter;
 
-    // â”€â”€ Entity lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Entity lifecycle ──────────────────────────────────────────────────────
 
     /// <summary>
     /// Creates a new entity with a deterministic, counter-based ID.

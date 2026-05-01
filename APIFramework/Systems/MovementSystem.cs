@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
@@ -55,7 +56,13 @@ public class MovementSystem : ISystem
 
     private readonly Dictionary<Guid, (float X, float Z)> _wanderTargets = new();
     private readonly SeededRandom                          _rng;
+    private readonly SoundTriggerBus?                      _soundBus;
 
+    public MovementSystem(SeededRandom rng, SoundTriggerBus? soundBus = null)
+    {
+        _rng      = rng;
+        _soundBus = soundBus;
+    }
     /// <summary>Constructs the movement system with the deterministic RNG used to pick wander destinations.</summary>
     /// <param name="rng">Seeded RNG shared across the simulation.</param>
     public MovementSystem(SeededRandom rng) { _rng = rng; }
@@ -173,12 +180,20 @@ public class MovementSystem : ISystem
                 float newX = pos.X + dx * inv * step;
                 float newZ = pos.Z + dz * inv * step;
 
+                float movedDist = MathF.Sqrt((newX - pos.X) * (newX - pos.X) + (newZ - pos.Z) * (newZ - pos.Z));
+
                 entity.Add(new PositionComponent { X = newX, Y = pos.Y, Z = newZ });
                 _wanderTargets[entity.Id] = (targetX, targetZ);
 
                 move.LastVelocityX = newX - pos.X;
                 move.LastVelocityZ = newZ - pos.Z;
                 entity.Add(move);
+
+                // Emit Footstep when entity moves >= 1 tile
+                if (_soundBus != null && movedDist >= 1.0f)
+                {
+                    _soundBus.Emit(SoundTriggerKind.Footstep, entity.Id, newX, newZ, 0.3f, 0L);
+                }
             }
         }
     }

@@ -1,79 +1,77 @@
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Warden.Contracts.Telemetry;
 
-// ── NPC full save state ───────────────────────────────────────────────────────
+// ── Enums (mirrored from APIFramework to keep Contracts dependency-free) ─────
 
-/// <summary>Full per-NPC state for save/load round-trips (v0.5). Null fields = component absent.</summary>
+public enum SaveLifeState  { Alive = 0, Incapacitated = 1, Deceased = 2 }
+public enum SaveCauseOfDeath { Unknown = 0, Choked = 1, SlippedAndFell = 2, StarvedAlone = 3 }
+public enum SaveScheduleActivity { AtDesk, Break, Meeting, Lunch, Outside, Roaming, Sleeping }
+
+// ── NPC entity ────────────────────────────────────────────────────────────────
+
+/// <summary>Complete persistent snapshot of one NPC (or corpse) entity.</summary>
 public sealed record NpcSaveDto
 {
-    public string  Id        { get; init; } = string.Empty;
-    public string  Name      { get; init; } = string.Empty;
-    public float   PosX      { get; init; }
-    public float   PosY      { get; init; }
-    public float   PosZ      { get; init; }
+    public string Id   { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    public bool   IsHuman { get; init; } = true;
 
-    // Physiology — all persistent values
-    public float   Satiation           { get; init; }
-    public float   Hydration           { get; init; }
-    public float   BodyTemp            { get; init; }
-    public float   Energy              { get; init; }
-    public float   Sleepiness          { get; init; }
-    public bool    IsSleeping          { get; init; }
-    public float   SatiationDrainRate  { get; init; }
-    public float   HydrationDrainRate  { get; init; }
-    public float   StomachVolumeMl     { get; init; }
-    public float   SiChymeVolumeMl     { get; init; }
-    public float   LiContentVolumeMl   { get; init; }
-    public float   ColonStoolVolumeMl  { get; init; }
-    public float   BladderVolumeMl     { get; init; }
+    // Position
+    public float PosX { get; init; }
+    public float PosY { get; init; }
+    public float PosZ { get; init; }
 
-    // Life state
+    // MetabolismComponent
+    public float Satiation         { get; init; }
+    public float Hydration         { get; init; }
+    public float BodyTemp          { get; init; }
+    public float SatiationDrainRate { get; init; }
+    public float HydrationDrainRate { get; init; }
+
+    // EnergyComponent
+    public float Energy    { get; init; }
+    public float Sleepiness { get; init; }
+    public bool  IsSleeping { get; init; }
+
+    // GI fill volumes (rates restored from config)
+    public float StomachVolumeMl    { get; init; }
+    public float SiChymeVolumeMl    { get; init; }
+    public float LiContentVolumeMl  { get; init; }
+    public float ColonStoolVolumeMl { get; init; }
+    public float BladderVolumeMl    { get; init; }
+
+    // Optional components (null = component not present on entity)
     public LifeStateSaveDto?    LifeState    { get; init; }
     public ChokeSaveDto?        Choking      { get; init; }
     public FaintSaveDto?        Fainting     { get; init; }
     public LockedInSaveDto?     LockedIn     { get; init; }
     public CauseOfDeathSaveDto? CauseOfDeath { get; init; }
     public CorpseSaveDto?       Corpse       { get; init; }
+    public StressSaveDto?       Stress       { get; init; }
+    public MaskSaveDto?         Mask         { get; init; }
+    public MoodSaveDto?         Mood         { get; init; }
+    public WillpowerSaveDto?    Willpower    { get; init; }
+    public WorkloadSaveDto?     Workload     { get; init; }
 
-    // Stress / mask / mood
-    public StressSaveDto? Stress   { get; init; }
-    public MaskSaveDto?   Mask     { get; init; }
-    public MoodSaveDto?   Mood     { get; init; }
-
-    // Social
-    public WillpowerSaveDto? Willpower { get; init; }
-
-    // Workload
-    public WorkloadSaveDto? Workload { get; init; }
-
-    // Bereavement history — entity IDs of corpses whose proximity hit has fired
-    public IReadOnlyList<string>? EncounteredCorpseIds { get; init; }
-
-    // Active structural tags on this entity (e.g. "Human", "Npc", "Corpse", "IsChoking")
-    public IReadOnlyList<string>? Tags { get; init; }
-
-    // Schedule blocks (definition is persisted; current block is recomputed each tick)
-    public IReadOnlyList<ScheduleBlockSaveDto>? ScheduleBlocks { get; init; }
+    public IReadOnlyList<ScheduleBlockSaveDto>? ScheduleBlocks      { get; init; }
+    public IReadOnlyList<string>?               EncounteredCorpseIds { get; init; }
 }
-
-// ── Life state ───────────────────────────────────────────────────────────────
 
 public sealed record LifeStateSaveDto
 {
-    public int  State                   { get; init; }  // LifeState enum int
-    public long LastTransitionTick      { get; init; }
-    public int  IncapacitatedTickBudget { get; init; }
-    public int  PendingDeathCause       { get; init; }  // CauseOfDeath enum int
+    public SaveLifeState State                  { get; init; }
+    public long          LastTransitionTick      { get; init; }
+    public int           IncapacitatedTickBudget { get; init; }
+    public SaveCauseOfDeath PendingDeathCause   { get; init; }
 }
 
 public sealed record ChokeSaveDto
 {
-    public long  ChokeStartTick { get; init; }
-    public int   RemainingTicks { get; init; }
-    public float BolusSize      { get; init; }
-    public int   PendingCause   { get; init; }  // CauseOfDeath enum int
+    public long          ChokeStartTick { get; init; }
+    public int           RemainingTicks { get; init; }
+    public float         BolusSize      { get; init; }
+    public SaveCauseOfDeath PendingCause { get; init; }
 }
 
 public sealed record FaintSaveDto
@@ -90,21 +88,19 @@ public sealed record LockedInSaveDto
 
 public sealed record CauseOfDeathSaveDto
 {
-    public int    Cause          { get; init; }  // CauseOfDeath enum int
-    public long   DeathTick      { get; init; }
-    public string WitnessedById  { get; init; } = string.Empty;  // Guid string
-    public string LocationRoomId { get; init; } = string.Empty;  // Guid string
+    public SaveCauseOfDeath Cause           { get; init; }
+    public long             DeathTick       { get; init; }
+    public string           WitnessedById   { get; init; } = string.Empty;
+    public string           LocationRoomId  { get; init; } = string.Empty;
 }
 
 public sealed record CorpseSaveDto
 {
-    public long    DeathTick           { get; init; }
-    public string  OriginalNpcEntityId { get; init; } = string.Empty;
+    public long   DeathTick            { get; init; }
+    public string OriginalNpcEntityId  { get; init; } = string.Empty;
     public string? LocationRoomId      { get; init; }
-    public bool    HasBeenMoved        { get; init; }
+    public bool   HasBeenMoved         { get; init; }
 }
-
-// ── Stress / mask / mood / willpower ─────────────────────────────────────────
 
 public sealed record StressSaveDto
 {
@@ -115,9 +111,9 @@ public sealed record StressSaveDto
     public int    DriveSpikeEventsToday     { get; init; }
     public int    SocialConflictEventsToday { get; init; }
     public int    OverdueTaskEventsToday    { get; init; }
+    public int    BurnoutLastAppliedDay     { get; init; }
     public int    WitnessedDeathEventsToday { get; init; }
     public int    BereavementEventsToday    { get; init; }
-    public int    BurnoutLastAppliedDay     { get; init; }
 }
 
 public sealed record MaskSaveDto
@@ -151,14 +147,22 @@ public sealed record WillpowerSaveDto
     public int Baseline { get; init; }
 }
 
-// ── Workload / tasks ──────────────────────────────────────────────────────────
-
 public sealed record WorkloadSaveDto
 {
-    public IReadOnlyList<string> ActiveTaskIds { get; init; } = Array.Empty<string>();
-    public int Capacity    { get; init; }
-    public int CurrentLoad { get; init; }
+    public int                     Capacity    { get; init; }
+    public int                     CurrentLoad { get; init; }
+    public IReadOnlyList<string>?  ActiveTaskIds { get; init; }
 }
+
+public sealed record ScheduleBlockSaveDto
+{
+    public float                StartHour { get; init; }
+    public float                EndHour   { get; init; }
+    public string               AnchorId  { get; init; } = string.Empty;
+    public SaveScheduleActivity Activity  { get; init; }
+}
+
+// ── Task entity ───────────────────────────────────────────────────────────────
 
 public sealed record TaskSaveDto
 {
@@ -170,35 +174,26 @@ public sealed record TaskSaveDto
     public float  QualityLevel  { get; init; }
     public string AssignedNpcId { get; init; } = string.Empty;
     public long   CreatedTick   { get; init; }
-    public bool   IsOverdue     { get; init; }
 }
 
-// ── Schedule ──────────────────────────────────────────────────────────────────
-
-public sealed record ScheduleBlockSaveDto
-{
-    public float  StartHour { get; init; }
-    public float  EndHour   { get; init; }
-    public string AnchorId  { get; init; } = string.Empty;
-    public int    Activity  { get; init; }  // ScheduleActivityKind enum int
-}
-
-// ── Stain + fall risk ─────────────────────────────────────────────────────────
+// ── Stain entity ──────────────────────────────────────────────────────────────
 
 public sealed record StainEntitySaveDto
 {
-    public string  Id               { get; init; } = string.Empty;
-    public float   PosX             { get; init; }
-    public float   PosY             { get; init; }
-    public float   PosZ             { get; init; }
-    public string  Source           { get; init; } = string.Empty;
-    public int     Magnitude        { get; init; }
-    public long    CreatedAtTick    { get; init; }
-    public string  ChronicleEntryId { get; init; } = string.Empty;
-    public float?  FallRiskLevel    { get; init; }
+    public string Id              { get; init; } = string.Empty;
+    public float  PosX            { get; init; }
+    public float  PosZ            { get; init; }
+    public string Source          { get; init; } = string.Empty;
+    public int    Magnitude       { get; init; }
+    public long   CreatedAtTick   { get; init; }
+    public string ChronicleEntryId { get; init; } = string.Empty;
+
+    // Optional
+    public float? FallRisk   { get; init; }
+    public bool   IsObstacle { get; init; }
 }
 
-// ── Locked doors (structural entities carrying LockedTag) ─────────────────────
+// ── Locked-door entity ────────────────────────────────────────────────────────
 
 public sealed record LockedDoorSaveDto
 {

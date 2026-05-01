@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using APIFramework.Components;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Coupling;
 
 namespace APIFramework.Config;
@@ -80,6 +81,7 @@ public class SimConfig
 
     /// <summary>End-of-day lockout detection (door reachability, starvation budget).</summary>
     public LockoutConfig          Lockout         { get; set; } = new();
+    public SoundTriggerConfig     SoundTriggers   { get; set; } = new();
 
     /// <summary>Bereavement stress gains and proximity-bereavement tuning.</summary>
     public BereavementConfig      Bereavement     { get; set; } = new();

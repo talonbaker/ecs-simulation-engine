@@ -823,6 +823,24 @@
     // Named anchor tag used to identify outdoor exits
     "exitNamedAnchorTag": "outdoor"
   },
+  "soundTriggers": {
+    "bulbBuzzEmitIntervalTicks": 10,
+    "footstepIntensity": 0.3,
+    "chairSqueakIntensity": 0.4,
+    "bulbBuzzIntensity": 0.2,
+    "chewIntensity": 0.15,
+    "slurpIntensity": 0.2,
+    "coughIntensity": 0.6,
+    "gaspIntensity": 0.7,
+    "wheezeIntensity": 0.4,
+    "slipIntensity": 0.8,
+    "thudIntensity": 0.9,
+    "speechFragmentLoudIntensity": 1.0,
+    "speechFragmentNormalIntensity": 0.6,
+    "speechFragmentQuietIntensity": 0.3,
+    "sneezeIntensity": 0.7,
+    "yawnIntensity": 0.4,
+    "sighIntensity": 0.3
 
   // ── Rescue mechanic (WP-3.2.4) ──────────────────────────────────────────────
   "rescue": {

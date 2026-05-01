@@ -53,12 +53,26 @@ public class EsophagusSystem : ISystem
                         var liquid = entity.Get<LiquidComponent>();
                         stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + liquid.VolumeMl, StomachComponent.MaxVolumeMl);
                         stomach.NutrientsQueued += liquid.Nutrients;
+
+                        // Emit Slurp when liquid arrives
+                        if (_soundBus != null)
+                        {
+                            var pos = consumer.Has<PositionComponent>() ? consumer.Get<PositionComponent>() : default;
+                            _soundBus.Emit(SoundTriggerKind.Slurp, consumer.Id, pos.X, pos.Z, 0.2f, 0L);
+                        }
                     }
                     else if (entity.Has<BolusComponent>())
                     {
                         var bolus = entity.Get<BolusComponent>();
                         stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + bolus.Volume, StomachComponent.MaxVolumeMl);
                         stomach.NutrientsQueued += bolus.Nutrients;
+
+                        // Emit Chew when solid bolus arrives
+                        if (_soundBus != null)
+                        {
+                            var pos = consumer.Has<PositionComponent>() ? consumer.Get<PositionComponent>() : default;
+                            _soundBus.Emit(SoundTriggerKind.Chew, consumer.Id, pos.X, pos.Z, 0.15f, 0L);
+                        }
                     }
 
                     consumer.Add(stomach);

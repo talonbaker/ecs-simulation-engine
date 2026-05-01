@@ -22,6 +22,11 @@ public class BiologicalConditionSystem : ISystem
     private readonly SoundTriggerBus?                _soundBus;
     private readonly SimulationClock?                _clock;
 
+    public BiologicalConditionSystem(BiologicalConditionSystemConfig cfg, SoundTriggerBus? soundBus = null)
+    {
+        _cfg      = cfg;
+        _soundBus = soundBus;
+    }
     /// <summary>Constructs the system with its tag-threshold tuning.</summary>
     public BiologicalConditionSystem(BiologicalConditionSystemConfig cfg,
         SoundTriggerBus? soundBus = null, SimulationClock? clock = null)
@@ -50,14 +55,22 @@ public class BiologicalConditionSystem : ISystem
                 meta.Hunger > _cfg.IrritableThreshold ||
                 meta.Thirst > _cfg.IrritableThreshold);
 
-            if (_soundBus != null && _clock != null && entity.Has<PositionComponent>())
+            // Emit biological sounds based on physiological state
+            if (_soundBus != null)
             {
-                var p    = entity.Get<PositionComponent>();
-                long tick = (long)_clock.TotalTime;
-                if (newThirst)     _soundBus.Emit(SoundTriggerKind.Sigh,   entity.Id, p.X, p.Z, 0.4f, tick);
-                if (newDehydrated) _soundBus.Emit(SoundTriggerKind.Sneeze, entity.Id, p.X, p.Z, 0.6f, tick);
-                if (newHunger)     _soundBus.Emit(SoundTriggerKind.Sigh,   entity.Id, p.X, p.Z, 0.4f, tick);
-                if (newIrritable)  _soundBus.Emit(SoundTriggerKind.Yawn,   entity.Id, p.X, p.Z, 0.3f, tick);
+                var pos = entity.Has<PositionComponent>() ? entity.Get<PositionComponent>() : default;
+
+                // Yawn when exhausted (high sleepiness / low energy)
+                if (entity.Has<ExhaustedTag>())
+                    _soundBus.Emit(SoundTriggerKind.Yawn, entity.Id, pos.X, pos.Z, 0.4f, 0L);
+
+                // Sigh when sad or grieving (emotional distress)
+                if (entity.Has<SadTag>() || entity.Has<GriefTag>())
+                    _soundBus.Emit(SoundTriggerKind.Sigh, entity.Id, pos.X, pos.Z, 0.3f, 0L);
+
+                // Sneeze when severely dehydrated (physiological stress)
+                if (entity.Has<DehydratedTag>())
+                    _soundBus.Emit(SoundTriggerKind.Sneeze, entity.Id, pos.X, pos.Z, 0.7f, 0L);
             }
         }
     }
