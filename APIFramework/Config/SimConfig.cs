@@ -94,6 +94,9 @@ public class SimConfig
     /// <summary>Chore rotation assignment, execution, and overrotation tuning.</summary>
     public ChoreConfig            Chores          { get; set; } = new();
 
+    /// <summary>Physics throw/gravity/decay tuning (WP-3.2.2).</summary>
+    public PhysicsConfig          Physics         { get; set; } = new();
+
     // ── Loading ───────────────────────────────────────────────────────────────
 
     // Newtonsoft.Json settings:
@@ -1794,4 +1797,25 @@ public class ChoreFrequencyConfig
     public long RefillWaterCooler { get; set; } = 2_880_000;
     public long RestockSupplyCloset { get; set; } = 28_800_000;
     public long ReplaceToner      { get; set; } = 14_400_000;
+}
+
+// ── Physics system (WP-3.2.2) ────────────────────────────────────────────────
+
+/// <summary>
+/// Gravity, velocity threshold, decay, and collision-margin tuning for PhysicsTickSystem.
+/// All values apply per-tick (not per-second).
+/// </summary>
+public class PhysicsConfig
+{
+    /// <summary>Downward velocity added to VelocityY each tick. Default 1.5.</summary>
+    public float GravityPerTick      { get; set; } = 1.5f;
+
+    /// <summary>Velocity magnitude below which the entity is considered stopped. Default 0.05.</summary>
+    public float MinVelocity         { get; set; } = 0.05f;
+
+    /// <summary>Default decay rate applied when ThrowEntity is called without an explicit value. Default 0.10.</summary>
+    public float DefaultDecayPerTick { get; set; } = 0.10f;
+
+    /// <summary>Margin from world boundary walls used for collision clamping. Default 0.01.</summary>
+    public float WallHitClampMargin  { get; set; } = 0.01f;
 }

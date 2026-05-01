@@ -34,12 +34,6 @@ public sealed class LightSourceStateSystem : ISystem
     private readonly Dictionary<Entity, int> _flickerTick = new();
 
     public LightSourceStateSystem(SeededRandom rng, LightingConfig cfg, SoundTriggerConfig? soundCfg = null, SoundTriggerBus? soundBus = null)
-    /// <summary>
-    /// Stores RNG and config references used per tick.
-    /// </summary>
-    /// <param name="rng">Deterministic RNG used for flicker and decay rolls.</param>
-    /// <param name="cfg">Lighting tuning — supplies <c>FlickerOnProb</c> and <c>DyingDecayProb</c>.</param>
-    public LightSourceStateSystem(SeededRandom rng, LightingConfig cfg)
     {
         _rng = rng;
         _cfg = cfg;

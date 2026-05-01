@@ -58,12 +58,41 @@ internal static class SaveProjector
         var id      = entity.Id.ToString();
         var name    = entity.Has<IdentityComponent>() ? entity.Get<IdentityComponent>().Name : string.Empty;
         var isHuman = entity.Has<HumanTag>();
+        var meta    = e.Has<MetabolismComponent>()      ? e.Get<MetabolismComponent>()      : default;
+        var energy  = e.Has<EnergyComponent>()           ? e.Get<EnergyComponent>()           : default;
+        var pos     = e.Has<PositionComponent>()         ? e.Get<PositionComponent>()         : default;
+        var stomach = e.Has<StomachComponent>()          ? e.Get<StomachComponent>()          : default;
+        var si      = e.Has<SmallIntestineComponent>()   ? e.Get<SmallIntestineComponent>()   : default;
+        var li      = e.Has<LargeIntestineComponent>()   ? e.Get<LargeIntestineComponent>()   : default;
+        var colon   = e.Has<ColonComponent>()            ? e.Get<ColonComponent>()            : default;
+        var bladder = e.Has<BladderComponent>()          ? e.Get<BladderComponent>()          : default;
+
+        LifeStateSaveDto? lifeState = null;
+        if (e.Has<LifeStateComponent>())
+        {
+            var ls = e.Get<LifeStateComponent>();
+            lifeState = new LifeStateSaveDto
+            {
+                State                   = (SaveLifeState)(int)ls.State,
+                LastTransitionTick      = ls.LastTransitionTick,
+                IncapacitatedTickBudget = ls.IncapacitatedTickBudget,
+                PendingDeathCause       = (SaveCauseOfDeath)(int)ls.PendingDeathCause,
+            };
+        }
 
         float posX = 0f, posY = 0f, posZ = 0f;
         if (entity.Has<PositionComponent>())
         {
             var pos = entity.Get<PositionComponent>();
             posX = pos.X; posY = pos.Y; posZ = pos.Z;
+            var c = e.Get<ChokingComponent>();
+            choking = new ChokeSaveDto
+            {
+                ChokeStartTick = c.ChokeStartTick,
+                RemainingTicks = c.RemainingTicks,
+                BolusSize      = c.BolusSize,
+                PendingCause   = (SaveCauseOfDeath)(int)c.PendingCause,
+            };
         }
 
         float satiation = 0f, hydration = 0f, bodyTemp = 36.6f;
@@ -89,6 +118,18 @@ internal static class SaveProjector
         if (entity.Has<LargeIntestineComponent>()) liVol      = entity.Get<LargeIntestineComponent>().ContentVolumeMl;
         if (entity.Has<ColonComponent>())          colonVol   = entity.Get<ColonComponent>().StoolVolumeMl;
         if (entity.Has<BladderComponent>())        bladderVol = entity.Get<BladderComponent>().VolumeML;
+        CauseOfDeathSaveDto? causeOfDeath = null;
+        if (e.Has<CauseOfDeathComponent>())
+        {
+            var cod = e.Get<CauseOfDeathComponent>();
+            causeOfDeath = new CauseOfDeathSaveDto
+            {
+                Cause          = (SaveCauseOfDeath)(int)cod.Cause,
+                DeathTick      = cod.DeathTick,
+                WitnessedById  = cod.WitnessedByNpcId.ToString(),
+                LocationRoomId = cod.LocationRoomId.ToString(),
+            };
+        }
 
         return new NpcSaveDto
         {
@@ -246,6 +287,18 @@ internal static class SaveProjector
             GriefLevel   = c.GriefLevel
         };
     }
+            var sc = e.Get<ScheduleComponent>();
+            if (sc.Blocks?.Count > 0)
+            {
+                scheduleBlocks = sc.Blocks.Select(b => new ScheduleBlockSaveDto
+                {
+                    StartHour = b.StartHour,
+                    EndHour   = b.EndHour,
+                    AnchorId  = b.AnchorId,
+                    Activity  = (SaveScheduleActivity)(int)b.Activity,
+                }).ToList();
+            }
+        }
 
     private static WillpowerSaveDto? ProjectWillpower(Entity entity)
     {
@@ -336,6 +389,13 @@ internal static class SaveProjector
             });
         }
         return result;
+                Source           = s.Source,
+                Magnitude        = s.Magnitude,
+                CreatedAtTick    = s.CreatedAtTick,
+                ChronicleEntryId = s.ChronicleEntryId,
+                FallRisk         = e.Has<FallRiskComponent>() ? e.Get<FallRiskComponent>().RiskLevel : null,
+            };
+        }).ToList();
     }
 
     // ── Locked-door entities ──────────────────────────────────────────────────
