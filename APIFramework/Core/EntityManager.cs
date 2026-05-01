@@ -1,4 +1,4 @@
-namespace APIFramework.Core;
+﻿namespace APIFramework.Core;
 
 /// <summary>
 /// Owns all Entity instances and maintains a component-type index so that
@@ -62,6 +62,12 @@ public class EntityManager
     /// Useful for diagnostics -- shows how many query buckets are live.
     /// </summary>
     public int ComponentTypeCount => _componentIndex.Count;
+
+    /// <summary>Current value of the entity ID counter (for save/load round-trips).</summary>
+    public long IdCounter => _idCounter;
+
+    /// <summary>Restores the ID counter from a saved value so newly created entities continue from the right offset.</summary>
+    internal void RestoreIdCounter(long counter) => _idCounter = counter;
 
     // ── Entity lifecycle ──────────────────────────────────────────────────────
 

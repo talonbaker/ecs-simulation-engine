@@ -1,4 +1,4 @@
-namespace APIFramework.Core;
+﻿namespace APIFramework.Core;
 
 /// <summary>
 /// Central time authority for the simulation.
@@ -136,4 +136,12 @@ public class SimulationClock
 
     /// <summary>Returns deltaTime scaled by the current TimeScale.</summary>
     public float GetScaledDelta(float realDeltaTime) => realDeltaTime * TimeScale;
+
+    /// <summary>Restores clock state from a saved snapshot (save/load round-trip).</summary>
+    internal void RestoreState(double totalTime, long currentTick, float timeScale)
+    {
+        TotalTime   = totalTime;
+        CurrentTick = currentTick;
+        TimeScale   = timeScale;
+    }
 }
