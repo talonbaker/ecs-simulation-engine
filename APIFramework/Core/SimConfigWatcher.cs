@@ -32,6 +32,17 @@ public sealed class SimConfigWatcher : IDisposable
     private Timer?                     _debounceTimer;
     private bool                       _disposed;
 
+    /// <summary>
+    /// Starts watching the SimConfig file at <paramref name="configPath"/> and invokes
+    /// <paramref name="onChanged"/> with a freshly loaded <see cref="SimConfig"/> each
+    /// time the file is modified. Writes are debounced by 250 ms so editor save bursts
+    /// produce a single callback. The callback runs on a background thread.
+    /// </summary>
+    /// <param name="configPath">Absolute or relative path to the SimConfig.json file to watch.</param>
+    /// <param name="onChanged">Callback invoked with the reloaded config on each debounced change.</param>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="configPath"/> resolves to a path with no directory component.
+    /// </exception>
     public SimConfigWatcher(string configPath, Action<SimConfig> onChanged)
     {
         _configPath = Path.GetFullPath(configPath);
@@ -76,6 +87,10 @@ public sealed class SimConfigWatcher : IDisposable
 
     // ── IDisposable ───────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Stops the underlying <see cref="FileSystemWatcher"/>, cancels any pending
+    /// debounce timer, and prevents further callbacks from firing. Idempotent.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed) return;

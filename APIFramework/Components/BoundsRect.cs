@@ -8,5 +8,6 @@ public readonly record struct BoundsRect(int X, int Y, int Width, int Height)
         tileX >= X && tileX < X + Width &&
         tileY >= Y && tileY < Y + Height;
 
+    /// <summary>Total tile-area covered by the rect (Width × Height).</summary>
     public int Area => Width * Height;
 }

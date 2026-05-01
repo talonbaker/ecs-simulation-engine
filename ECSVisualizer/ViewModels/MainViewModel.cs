@@ -11,6 +11,15 @@ using System.Linq;
 
 namespace ECSVisualizer.ViewModels;
 
+/// <summary>
+/// Top-level view model that binds the running simulation to the main window.
+///
+/// Owns a <see cref="DispatcherTimer"/> ticking at ~60 Hz which advances the
+/// engine, samples charts on a game-time cadence, throttles the UI refresh
+/// rate based on <c>TimeScale</c>, and synchronises the
+/// <see cref="LivingEntities"/>, <see cref="PipelineEntities"/>, and
+/// <see cref="WorldEntities"/> collections with the ECS world.
+/// </summary>
 public partial class MainViewModel : ObservableObject
 {
     // ── Simulation ───────────────────────────────────────────────────────────
@@ -18,6 +27,7 @@ public partial class MainViewModel : ObservableObject
     private readonly DispatcherTimer        _timer;
 
     // ── Version ──────────────────────────────────────────────────────────────
+    /// <summary>Full simulation version string shown in the title bar.</summary>
     public string VersionDisplay => SimVersion.Full;
 
     // ── Clock ────────────────────────────────────────────────────────────────
@@ -39,11 +49,15 @@ public partial class MainViewModel : ObservableObject
     partial void OnTimeScaleChanged(float value) => _sim.Clock.TimeScale = value;
 
     // ── Charts ────────────────────────────────────────────────────────────────
+    /// <summary>Collection of scrolling-chart series (resources, mood, FPS, entity load).</summary>
     public ChartViewModel Charts { get; } = new();
 
     // ── Entity Collections ───────────────────────────────────────────────────
+    /// <summary>Living entities (those carrying a <c>MetabolismComponent</c>) bound to the entity panel.</summary>
     public ObservableCollection<EntityViewModel>      LivingEntities   { get; } = new();
+    /// <summary>Entities currently in the esophagus transit pipeline.</summary>
     public ObservableCollection<EntityViewModel>      PipelineEntities { get; } = new();
+    /// <summary>Food and liquid entities sitting in the world (not currently in transit).</summary>
     public ObservableCollection<WorldEntityViewModel> WorldEntities    { get; } = new();
 
     private readonly Dictionary<Guid, EntityViewModel>      _viewModelCache      = new();
@@ -65,11 +79,21 @@ public partial class MainViewModel : ObservableObject
     private const int          FpsSampleEvery = 60; // real frames between FPS reads
 
     // ── Design-time constructor ───────────────────────────────────────────────
+    /// <summary>
+    /// Design-time constructor — boots a fresh <see cref="SimulationBootstrapper"/>
+    /// so the Avalonia previewer has a populated view model to render.
+    /// </summary>
     public MainViewModel() : this(new SimulationBootstrapper()) { }
 
     // ── Runtime constructor ───────────────────────────────────────────────────
     private SimConfigWatcher? _configWatcher;
 
+    /// <summary>
+    /// Runtime constructor — wires the supplied simulation bootstrapper, sets
+    /// up <c>SimConfig.json</c> hot-reload watching, and starts the dispatcher
+    /// timer that ticks the engine and refreshes the UI.
+    /// </summary>
+    /// <param name="sim">The headless simulation bootstrapper resolved from DI.</param>
     public MainViewModel(SimulationBootstrapper sim)
     {
         _sim = sim;

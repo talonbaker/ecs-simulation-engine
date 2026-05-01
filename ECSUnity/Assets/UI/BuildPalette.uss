@@ -1,0 +1,97 @@
+/*
+ * Build Palette side panel styles (WP-3.1.D)
+ * CRT-inspired aesthetic per UX bible §1.6:
+ *   - Dark background (#1a1a22)
+ *   - Phosphor green accents (#3cb371 muted green)
+ *   - Monospace / condensed font feel
+ *   - Slight scanline texture (achieved via background gradient)
+ */
+
+.palette-root {
+    position: absolute;
+    right: 0;
+    top: 10%;
+    width: 160px;
+    height: 80%;
+    background-color: rgba(18, 18, 28, 0.92);
+    border-left-width: 2px;
+    border-left-color: rgba(60, 179, 113, 0.6);
+    padding: 6px;
+    flex-direction: column;
+}
+
+.palette-header {
+    color: rgb(60, 179, 113);
+    font-size: 11px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    -unity-text-align: upper-center;
+}
+
+.tab-bar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.tab-btn {
+    flex-grow: 1;
+    font-size: 9px;
+    color: rgb(180, 200, 180);
+    background-color: rgba(40, 50, 40, 0.7);
+    border-color: rgba(60, 179, 113, 0.3);
+    border-width: 1px;
+    padding: 2px;
+    margin: 1px;
+}
+
+.tab-btn:hover {
+    background-color: rgba(60, 179, 113, 0.2);
+    color: rgb(255, 255, 255);
+}
+
+.item-scroll {
+    flex-grow: 1;
+}
+
+.item-list {
+    flex-direction: column;
+}
+
+.palette-item {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 2px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(60, 179, 113, 0.15);
+}
+
+.palette-item:hover {
+    background-color: rgba(60, 179, 113, 0.15);
+    cursor: link;
+}
+
+.palette-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.palette-label {
+    font-size: 10px;
+    color: rgb(210, 220, 210);
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.palette-hint {
+    font-size: 8px;
+    color: rgba(140, 160, 140, 0.6);
+    -unity-text-align: upper-center;
+    margin-top: 4px;
+    white-space: normal;
+}

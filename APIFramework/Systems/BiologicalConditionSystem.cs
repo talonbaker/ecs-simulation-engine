@@ -1,31 +1,42 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Observes the current physiological state and sets or clears biological condition tags.
-/// This system is purely observational — it reads resources and writes tags.
-/// It does NOT spawn food, water, or any other entities. That is the job of
-/// FeedingSystem and DrinkingSystem, which act after BrainSystem has decided
-/// what is currently the dominant drive.
-///
-/// Pipeline position: 2 of 8 — after MetabolismSystem drains resources,
-/// before BrainSystem scores drives.
+/// Condition phase. Observes physiology values (Hunger, Thirst) on
+/// <see cref="MetabolismComponent"/> and toggles sensation tags accordingly:
+/// <see cref="ThirstTag"/>, <see cref="DehydratedTag"/>, <see cref="HungerTag"/>,
+/// <see cref="StarvingTag"/>, and <see cref="IrritableTag"/>. Purely observational —
+/// spawns nothing.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="MetabolismComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: hunger/thirst/irritable tags listed above (single writer of these tags).<br/>
+/// Phase: Condition. Runs after <see cref="MetabolismSystem"/> drains resources and
+/// before <see cref="BrainSystem"/> scores drives.
+/// </remarks>
 public class BiologicalConditionSystem : ISystem
 {
     private readonly BiologicalConditionSystemConfig _cfg;
 
+    /// <summary>Constructs the system with its tag-threshold tuning.</summary>
+    /// <param name="cfg">Hunger/thirst/irritable threshold values.</param>
     public BiologicalConditionSystem(BiologicalConditionSystemConfig cfg) => _cfg = cfg;
 
+    /// <summary>Per-tick observation pass that toggles biological-condition tags.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds). No-op when zero or negative.</param>
     public void Update(EntityManager em, float deltaTime)
     {
         if (deltaTime <= 0) return;
 
         foreach (var entity in em.Query<MetabolismComponent>().ToList())
         {
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: skip Deceased NPCs (Incapacitated still ticks)
+
             var meta = entity.Get<MetabolismComponent>();
 
             // Hunger and Thirst are computed: Hunger = 100 - Satiation, Thirst = 100 - Hydration

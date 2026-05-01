@@ -5,6 +5,8 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -101,7 +103,7 @@ public class SlipAndFallSystem : ISystem
                     // Fatal slip — transition directly to Deceased
                     _lifeStateTransitionSystem.RequestTransition(
                         npc.Id,
-                        Components.LifeState.Deceased,
+                        LS.Deceased,
                         CauseOfDeath.SlippedAndFell);
                     // Only one slip per NPC per tick
                     break;

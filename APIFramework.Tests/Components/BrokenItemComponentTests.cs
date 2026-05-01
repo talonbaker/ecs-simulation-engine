@@ -4,6 +4,7 @@ using Xunit;
 
 namespace APIFramework.Tests.Components;
 
+/// <summary>Round-trip and invariant tests for <see cref="BrokenItemComponent"/> and the <see cref="EntityTemplates.BrokenItem"/> factory — default values, field round-trip, <see cref="BreakageKind"/> enum coverage, and template tag/component composition.</summary>
 public class BrokenItemComponentTests
 {
     [Fact]

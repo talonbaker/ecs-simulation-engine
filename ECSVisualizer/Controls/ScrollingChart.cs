@@ -22,9 +22,18 @@ public sealed class ScrollingChart : Control
 {
     // ── Series StyledProperty (binds from AXAML with compiled bindings) ───────
 
+    /// <summary>
+    /// Avalonia styled property backing <see cref="Series"/>. Compiled bindings
+    /// in AXAML target this property directly.
+    /// </summary>
     public static readonly StyledProperty<ChartSeriesViewModel?> SeriesProperty =
         AvaloniaProperty.Register<ScrollingChart, ChartSeriesViewModel?>(nameof(Series));
 
+    /// <summary>
+    /// The data series rendered by this control. Setting a new value detaches
+    /// from the previous series' <c>Refreshed</c> event and subscribes to the
+    /// new one so each push triggers a redraw.
+    /// </summary>
     public ChartSeriesViewModel? Series
     {
         get => GetValue(SeriesProperty);
@@ -54,6 +63,12 @@ public sealed class ScrollingChart : Control
 
     // ── React to Series changes ───────────────────────────────────────────────
 
+    /// <summary>
+    /// Handles property changes on this control. When <see cref="SeriesProperty"/>
+    /// changes, swaps the <c>Refreshed</c> event subscription from the old
+    /// series to the new one and forces a redraw.
+    /// </summary>
+    /// <param name="change">The Avalonia property-change notification.</param>
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -76,6 +91,12 @@ public sealed class ScrollingChart : Control
 
     // ── Rendering ─────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Draws one frame of the chart: dark background, three horizontal grid
+    /// lines, label and current-value text, and the data line built from the
+    /// bound <see cref="Series"/>.
+    /// </summary>
+    /// <param name="ctx">The Avalonia drawing context for this render pass.</param>
     public override void Render(DrawingContext ctx)
     {
         double w = Bounds.Width;

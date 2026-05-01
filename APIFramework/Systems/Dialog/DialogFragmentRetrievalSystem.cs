@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems.Dialog;
@@ -20,6 +21,14 @@ namespace APIFramework.Systems.Dialog;
 ///   -RecencyPenalty     if the fragment was used within RecencyWindowSeconds
 /// Tie-break: fragment id ascending (deterministic).
 /// </summary>
+/// <remarks>
+/// Phase: Dialog (75), registered between <see cref="DialogContextDecisionSystem"/> and
+/// <see cref="DialogCalcifySystem"/>. Reads <see cref="PendingDialogQueue"/>,
+/// <c>PersonalityComponent</c>, <c>SocialDrivesComponent</c>; reads and writes
+/// <c>DialogHistoryComponent</c> and <c>RecognizedTicComponent</c>; publishes
+/// <see cref="SpokenFragmentEvent"/> on the proximity bus.
+/// Skips non-Alive speakers.
+/// </remarks>
 public sealed class DialogFragmentRetrievalSystem : ISystem
 {
     private readonly PendingDialogQueue  _queue;
@@ -30,6 +39,13 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
     private long   _tick;
     private double _gameTimeSec;
 
+    /// <summary>
+    /// Stores queue, corpus, bus, and tuning references used per tick.
+    /// </summary>
+    /// <param name="queue">Queue from which pending pairs are drained each tick.</param>
+    /// <param name="corpus">Phrase corpus consulted for matching fragments.</param>
+    /// <param name="bus">Bus on which <see cref="SpokenFragmentEvent"/> is published.</param>
+    /// <param name="cfg">Dialog config — supplies scoring weights and recency window.</param>
     public DialogFragmentRetrievalSystem(
         PendingDialogQueue  queue,
         DialogCorpusService corpus,
@@ -42,6 +58,12 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
         _cfg    = cfg;
     }
 
+    /// <summary>
+    /// Per-tick entry point. For every pending pair, scores corpus fragments, picks the
+    /// best one, updates dialog history, and emits <see cref="SpokenFragmentEvent"/>.
+    /// </summary>
+    /// <param name="em">Entity manager (unused — pairs come from the queue).</param>
+    /// <param name="deltaTime">Tick delta in seconds; accumulated into the system's clock.</param>
     public void Update(EntityManager em, float deltaTime)
     {
         _tick++;
@@ -53,6 +75,7 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
             var listener = pending.Listener;
             var context  = pending.Context;
 
+            if (!LifeStateGuard.IsAlive(speaker)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!speaker.Has<PersonalityComponent>()) continue;
 
             var personality = speaker.Get<PersonalityComponent>();

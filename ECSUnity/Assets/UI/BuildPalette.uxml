@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <!-- Build Palette side panel (WP-3.1.D) -->
+    <!-- Docked to the right side of the screen; toggled by BuildPaletteUI.SetVisible() -->
+    <ui:VisualElement name="build-palette-root" class="palette-root">
+
+        <!-- Header -->
+        <ui:Label name="palette-header" text="BUILD MODE" class="palette-header" />
+
+        <!-- Category tabs -->
+        <ui:VisualElement name="tab-bar" class="tab-bar">
+            <ui:Button name="tab-structural"   text="Structure" class="tab-btn" />
+            <ui:Button name="tab-furniture"    text="Furniture" class="tab-btn" />
+            <ui:Button name="tab-props"        text="Props"     class="tab-btn" />
+            <ui:Button name="tab-namedanchor"  text="Anchors"   class="tab-btn" />
+        </ui:VisualElement>
+
+        <!-- Scrollable item list -->
+        <ui:ScrollView name="item-scroll" class="item-scroll" vertical-scroller-visibility="AlwaysVisible">
+            <ui:VisualElement name="item-list" class="item-list" />
+        </ui:ScrollView>
+
+        <!-- Footer hint -->
+        <ui:Label name="palette-hint"
+                  text="[B] Exit   [R] Rotate   [Esc] Cancel"
+                  class="palette-hint" />
+
+    </ui:VisualElement>
+</ui:UXML>

@@ -5,6 +5,7 @@ using Xunit;
 
 namespace APIFramework.Tests.Components;
 
+/// <summary>Construction and invariant tests for <see cref="InhibitionsComponent"/> — capacity limit (max eight), strength clamping on <see cref="Inhibition"/>, awareness round-trip, and <see cref="InhibitionClass"/> enum coverage.</summary>
 public class InhibitionsComponentTests
 {
     [Fact]

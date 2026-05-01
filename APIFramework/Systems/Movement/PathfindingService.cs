@@ -16,6 +16,16 @@ namespace APIFramework.Systems.Movement;
 /// v0.1: Caches queries by (fromX, fromY, toX, toY, seed, topologyVersion).
 /// Cache is invalidated (cleared) whenever the topology changes (via StructuralChangeBus).
 /// </summary>
+/// <remarks>
+/// Not an <c>ISystem</c> — this is a pure service held by <see cref="Core.SimulationBootstrapper"/>.
+/// Reads: <see cref="ObstacleTag"/>, <see cref="LockedTag"/>, <see cref="RoomTag"/>+<see cref="RoomComponent"/>,
+/// and <see cref="PositionComponent"/> when scanning for obstacles and doorways.
+/// Writes: nothing — only fills the supplied <see cref="PathfindingCache"/>.
+/// Consumed by <see cref="PathfindingTriggerSystem"/> each tick when an NPC needs a fresh route.
+/// </remarks>
+/// <seealso cref="PathfindingCache"/>
+/// <seealso cref="PathfindingTriggerSystem"/>
+/// <seealso cref="StructuralChangeBus"/>
 public sealed class PathfindingService
 {
     private readonly EntityManager _em;
@@ -28,6 +38,16 @@ public sealed class PathfindingService
 
     private static readonly (int dx, int dy)[] Directions = { (0, -1), (0, 1), (-1, 0), (1, 0) };
 
+    /// <summary>
+    /// Constructs the service.
+    /// </summary>
+    /// <param name="em">Entity manager scanned each query for obstacles, locked doors, and rooms.</param>
+    /// <param name="worldWidth">Grid width in tiles. Coordinates outside <c>[0, worldWidth)</c> are rejected.</param>
+    /// <param name="worldHeight">Grid height in tiles. Coordinates outside <c>[0, worldHeight)</c> are rejected.</param>
+    /// <param name="cfg">Movement tuning; supplies <c>Pathfinding.DoorwayDiscount</c> and
+    /// <c>Pathfinding.TieBreakNoiseScale</c>.</param>
+    /// <param name="cache">LRU cache shared with the bootstrapper. Hits short-circuit the A* search.</param>
+    /// <param name="bus">Structural change bus; its <c>TopologyVersion</c> participates in the cache key.</param>
     public PathfindingService(EntityManager em, int worldWidth, int worldHeight, MovementConfig cfg, PathfindingCache cache, StructuralChangeBus bus)
     {
         _em                 = em;
@@ -50,21 +70,15 @@ public sealed class PathfindingService
         if (fromX == toX && fromY == toY)
             return Array.Empty<(int, int)>();
 
-        // Check cache first
         var key = new PathQueryKey(fromX, fromY, toX, toY, seed, _bus.TopologyVersion);
         if (_cache.TryGet(key, out var cached))
             return cached;
 
-        // Cache miss — compute the path
         var path = ComputePathUncached(fromX, fromY, toX, toY, seed);
         _cache.Put(key, path);
         return path;
     }
 
-    /// <summary>
-    /// Internal method that performs the uncached A* computation.
-    /// Extracted to keep ComputePath clean; called only on cache misses.
-    /// </summary>
     private IReadOnlyList<(int X, int Y)> ComputePathUncached(int fromX, int fromY, int toX, int toY, int seed)
     {
         var obstacles = BuildObstacleSet();

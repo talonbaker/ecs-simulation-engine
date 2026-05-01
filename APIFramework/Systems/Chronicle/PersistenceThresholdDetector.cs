@@ -22,6 +22,19 @@ namespace APIFramework.Systems.Chronicle;
 ///
 /// Doesn't stick: WillpowerLow alone; DriveSpike where drive already returned to baseline.
 /// </summary>
+/// <remarks>
+/// Phase: Narrative (70). Subscribes to <see cref="NarrativeEventBus.OnCandidateEmitted"/>
+/// and buffers candidates within a tick; <see cref="Update"/> evaluates the buffered list
+/// and appends qualifying entries to <see cref="ChronicleService"/>. May spawn Stain
+/// entities via <see cref="PhysicalManifestSpawner"/> when the irritation-near-item rule fires.
+///
+/// Must run AFTER <see cref="APIFramework.Systems.Narrative.NarrativeEventDetector"/>
+/// (which lives in the same phase but is registered first) so candidates are present in
+/// the buffer when this system processes them.
+/// </remarks>
+/// <seealso cref="ChronicleService"/>
+/// <seealso cref="ChronicleEntry"/>
+/// <seealso cref="PhysicalManifestSpawner"/>
 public sealed class PersistenceThresholdDetector : ISystem
 {
     private readonly ChronicleService        _chronicle;
@@ -37,6 +50,16 @@ public sealed class PersistenceThresholdDetector : ISystem
     // Relationship intensity snapshot from the previous tick; key = (ParticipantA, ParticipantB).
     private readonly Dictionary<(int, int), int> _prevRelIntensity = new();
 
+    /// <summary>
+    /// Subscribes to <paramref name="narrativeBus"/> and constructs the spawner used to
+    /// create physical manifestations when persistence rules fire.
+    /// </summary>
+    /// <param name="chronicle">Target chronicle service for promoted entries.</param>
+    /// <param name="narrativeBus">Bus from which candidates are buffered.</param>
+    /// <param name="em">Entity manager — used to scan entities for relationships and nearby items.</param>
+    /// <param name="clock">Simulation clock — currently unused but stored for future expansion.</param>
+    /// <param name="rng">Deterministic RNG used for entry-id generation and stain magnitudes.</param>
+    /// <param name="config">Persistence thresholds and physical-manifest tuning.</param>
     public PersistenceThresholdDetector(
         ChronicleService  chronicle,
         NarrativeEventBus narrativeBus,
@@ -54,6 +77,13 @@ public sealed class PersistenceThresholdDetector : ISystem
         narrativeBus.OnCandidateEmitted += c => _buffered.Add(c);
     }
 
+    /// <summary>
+    /// Evaluates every candidate buffered this tick against the persistence rules,
+    /// promotes survivors to <see cref="ChronicleEntry"/> records, and refreshes
+    /// the relationship-intensity snapshot for next-tick comparison.
+    /// </summary>
+    /// <param name="em">Entity manager — scanned for relationship and item entities.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         var currentRelIntensity = SnapshotRelIntensities(em);

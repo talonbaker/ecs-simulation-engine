@@ -16,6 +16,18 @@ namespace APIFramework.Systems.Spatial;
 ///   - Fires RoomMembershipChanged on ProximityEventBus when the result changes.
 ///   - Detects room bounds changes and emits RoomBoundsChanged on StructuralChangeBus.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="RoomTag"/>+<see cref="RoomComponent"/> (room geometry) and
+/// <see cref="PositionComponent"/> on every other entity.
+/// Writes: the <see cref="EntityRoomMembership"/> map (single writer); emits
+/// <see cref="ProximityEventBus.RaiseRoomMembershipChanged"/> on transitions and
+/// <see cref="StructuralChangeKind.RoomBoundsChanged"/> on geometry changes.
+/// Ordering: must run after <see cref="SpatialIndexSyncSystem"/> so positions are current,
+/// and before <see cref="ProximityEventSystem"/> so it sees the current membership map.
+/// </remarks>
+/// <seealso cref="EntityRoomMembership"/>
+/// <seealso cref="ProximityEventBus"/>
+/// <seealso cref="StructuralChangeBus"/>
 public sealed class RoomMembershipSystem : ISystem
 {
     private readonly EntityRoomMembership _membership;
@@ -24,6 +36,12 @@ public sealed class RoomMembershipSystem : ISystem
     private readonly Dictionary<Entity, BoundsRect> _lastRoomBounds = new();
     private int _tick;
 
+    /// <summary>
+    /// Constructs the system.
+    /// </summary>
+    /// <param name="membership">Runtime entity-to-room map this system maintains.</param>
+    /// <param name="bus">Proximity event bus that receives <c>RoomMembershipChanged</c> events.</param>
+    /// <param name="structuralBus">Structural change bus that receives <c>RoomBoundsChanged</c> events.</param>
     public RoomMembershipSystem(EntityRoomMembership membership, ProximityEventBus bus, StructuralChangeBus structuralBus)
     {
         _membership = membership;
@@ -31,47 +49,42 @@ public sealed class RoomMembershipSystem : ISystem
         _structuralBus = structuralBus;
     }
 
+    /// <summary>
+    /// Per-tick update. Detects room bounds changes (emitting structural events), then
+    /// resolves containing-room membership for every positioned non-room entity and
+    /// emits proximity events on transitions.
+    /// </summary>
     public void Update(EntityManager em, float deltaTime)
     {
         _tick++;
 
-        // Check for room bounds changes and emit events
-        var roomEntities = em.Query<RoomTag>()
-            .Where(re => re.Has<RoomComponent>())
-            .ToList();
-
-        foreach (var roomEntity in roomEntities)
+        // Check for room bounds changes before membership resolution
+        foreach (var roomEntity in em.Query<RoomTag>())
         {
-            var room = roomEntity.Get<RoomComponent>();
+            if (!roomEntity.Has<RoomComponent>()) continue;
+            var current = roomEntity.Get<RoomComponent>().Bounds;
 
-            if (_lastRoomBounds.TryGetValue(roomEntity, out var lastBounds))
+            if (_lastRoomBounds.TryGetValue(roomEntity, out var prev))
             {
-                if (!lastBounds.Equals(room.Bounds))
+                if (prev != current)
                 {
-                    // Bounds changed — emit event
-                    _structuralBus.Emit(
-                        StructuralChangeKind.RoomBoundsChanged,
-                        roomEntity.Id,
-                        0, 0,
-                        0, 0,
-                        roomEntity.Id,
-                        _tick
-                    );
-                    _lastRoomBounds[roomEntity] = room.Bounds;
+                    _lastRoomBounds[roomEntity] = current;
+                    _structuralBus.Emit(StructuralChangeKind.RoomBoundsChanged, roomEntity.Id,
+                        prev.X, prev.Y, current.X, current.Y, roomEntity.Id, _tick);
                 }
             }
             else
             {
-                // First time seeing this room — just cache the bounds
-                _lastRoomBounds[roomEntity] = room.Bounds;
+                _lastRoomBounds[roomEntity] = current;
             }
         }
 
         // Snapshot rooms once per tick; sorted by area ascending so the first match wins
-        var rooms = roomEntities
+        var rooms = em.Query<RoomTag>()
+            .Where(re => re.Has<RoomComponent>())
             .Select(re => (entity: re, room: re.Get<RoomComponent>()))
             .OrderBy(r => r.room.Bounds.Area)
-            .ThenBy(r => r.entity.Id)   // deterministic tiebreak on equal area
+            .ThenBy(r => r.entity.Id)
             .ToList();
 
         // Process positioned non-room entities in id order for determinism
@@ -83,7 +96,6 @@ public sealed class RoomMembershipSystem : ISystem
             int tx = (int)Math.Round(pos.X);
             int ty = (int)Math.Round(pos.Z);
 
-            // First containing room in the sorted list wins (smallest area)
             Entity? newRoom = null;
             foreach (var (re, rc) in rooms)
             {
@@ -99,6 +111,7 @@ public sealed class RoomMembershipSystem : ISystem
 
             if (!ReferenceEquals(oldRoom, newRoom))
             {
+                // NPC room transitions fire on ProximityEventBus only — never on structural bus
                 _bus.RaiseRoomMembershipChanged(new RoomMembershipChanged(entity, oldRoom, newRoom, _tick));
             }
         }

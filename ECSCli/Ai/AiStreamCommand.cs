@@ -27,6 +27,14 @@ public static class AiStreamCommand
 {
     private const float DeltaTime = 1f / 60f;
 
+    /// <summary>
+    /// Builds the <c>stream</c> subcommand with its required <c>--out</c>
+    /// and <c>--interval</c> options (plus optional <c>--duration</c> and
+    /// <c>--world-definition</c>) and wires the handler that runs the
+    /// simulation forever or for a fixed window, emitting one JSON line per
+    /// interval.
+    /// </summary>
+    /// <returns>The configured <see cref="Command"/> ready to be added to <see cref="AiCommand.Root"/>.</returns>
     public static Command Build()
     {
         var outOpt = new Option<FileInfo>(

@@ -41,11 +41,16 @@ public struct ColonComponent
 
     // ── Derived ───────────────────────────────────────────────────────────────
 
+    /// <summary>Normalised fill 0.0 (empty) – 1.0 (at <see cref="CapacityMl"/>).</summary>
     public readonly float Fill       => CapacityMl > 0 ? StoolVolumeMl / CapacityMl : 0f;
+    /// <summary>True when <see cref="StoolVolumeMl"/> ≥ <see cref="UrgeThresholdMl"/>.</summary>
     public readonly bool  HasUrge    => StoolVolumeMl >= UrgeThresholdMl;
+    /// <summary>True when <see cref="StoolVolumeMl"/> ≥ <see cref="CapacityMl"/>.</summary>
     public readonly bool  IsCritical => StoolVolumeMl >= CapacityMl;
+    /// <summary>True when no stool remains in the colon.</summary>
     public readonly bool  IsEmpty    => StoolVolumeMl <= 0f;
 
+    /// <summary>Debug-friendly volume/threshold/state summary.</summary>
     public override string ToString() =>
         $"Colon: {StoolVolumeMl:F1}ml (urge at {UrgeThresholdMl:F0}ml, cap {CapacityMl:F0}ml)" +
         (IsCritical ? " CRITICAL" : HasUrge ? " URGE" : "");

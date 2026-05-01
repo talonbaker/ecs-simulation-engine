@@ -19,6 +19,7 @@ namespace APIFramework.Components;
 /// </summary>
 public struct StomachComponent
 {
+    /// <summary>Comfortable adult capacity in millilitres; <see cref="Fill"/> is normalised against this.</summary>
     public const float MaxVolumeMl = 1000f;
 
     /// <summary>Physical content currently present in the stomach (ml).</summary>
@@ -37,9 +38,12 @@ public struct StomachComponent
     /// <summary>Normalised fill: 0.0 = empty, 1.0 = full. Systems/UI should read this.</summary>
     public readonly float Fill => CurrentVolumeMl / MaxVolumeMl;
 
+    /// <summary>True when no content remains in the stomach.</summary>
     public readonly bool IsEmpty => CurrentVolumeMl <= 0f;
+    /// <summary>True when the stomach is at or above <see cref="MaxVolumeMl"/>.</summary>
     public readonly bool IsFull  => Fill >= 1.0f;
 
+    /// <summary>Debug-friendly fill-percentage and queued-nutrient summary.</summary>
     public override string ToString() =>
         $"Stomach: {Fill:P0} full ({CurrentVolumeMl:F0}/{MaxVolumeMl}ml) | Queued: {NutrientsQueued}";
 }

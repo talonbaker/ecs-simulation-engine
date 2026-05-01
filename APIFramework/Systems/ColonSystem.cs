@@ -1,36 +1,35 @@
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Monitors colon fill level and manages defecation-urge tags.
-///
-/// PIPELINE POSITION
-/// ─────────────────
-///   LargeIntestineSystem (Elimination/55) fills ColonComponent.
-///   ColonSystem (Elimination/55) runs immediately after, applying tags.
-///   DefecationSystem (Behavior/40) acts on those tags next tick.
-///
-///   Note: Because Behavior(40) precedes Elimination(55), DefecationSystem always
-///   reads tags set by the PREVIOUS tick — a one-tick lag that is imperceptible at
-///   any normal TimeScale.
-///
-/// TAG LIFECYCLE
-/// ─────────────
-///   StoolVolumeMl >= UrgeThresholdMl  → DefecationUrgeTag (entity feels the urge)
-///   StoolVolumeMl >= CapacityMl       → BowelCriticalTag  (emergency override)
-///   Both tags are cleared when volume drops below their respective thresholds.
-///
-/// This system owns all writes to DefecationUrgeTag and BowelCriticalTag.
-/// No other system should add or remove these tags.
+/// Elimination phase. Monitors <see cref="ColonComponent"/> fill level and toggles
+/// <see cref="DefecationUrgeTag"/> and <see cref="BowelCriticalTag"/> based on the
+/// component's HasUrge / IsCritical thresholds.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="ColonComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="DefecationUrgeTag"/> and <see cref="BowelCriticalTag"/>
+/// (single writer of both).<br/>
+/// Phase: Elimination, after <see cref="LargeIntestineSystem"/> fills the colon.
+/// Because Behavior(40) precedes Elimination(55), <see cref="DefecationSystem"/>
+/// reads tags from the previous tick — a one-tick lag imperceptible at normal TimeScale.
+/// </remarks>
+/// <seealso cref="LargeIntestineSystem"/>
+/// <seealso cref="DefecationSystem"/>
 public class ColonSystem : ISystem
 {
+    /// <summary>Per-tick tag-toggle pass over <see cref="ColonComponent"/> entities.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<ColonComponent>().ToList())
         {
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: skip Deceased NPCs (Incapacitated still ticks)
+
             var colon = entity.Get<ColonComponent>();
 
             ToggleTag<DefecationUrgeTag>(entity, colon.HasUrge);

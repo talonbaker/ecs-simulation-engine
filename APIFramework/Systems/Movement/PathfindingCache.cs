@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+
 namespace APIFramework.Systems.Movement;
 
 /// <summary>
@@ -11,7 +15,6 @@ public sealed class PathfindingCache
     private readonly int _maxEntries;
     private readonly Dictionary<PathQueryKey, LinkedListNode<KeyValuePair<PathQueryKey, IReadOnlyList<(int X, int Y)>>>> _map;
     private readonly LinkedList<KeyValuePair<PathQueryKey, IReadOnlyList<(int X, int Y)>>> _lru;
-
     private long _hits;
     private long _misses;
 
@@ -30,7 +33,6 @@ public sealed class PathfindingCache
     {
         if (_map.TryGetValue(key, out var node))
         {
-            // Move to end (most-recently-used)
             _lru.Remove(node);
             _lru.AddLast(node);
             path = node.Value.Value;
@@ -42,19 +44,15 @@ public sealed class PathfindingCache
         return false;
     }
 
-    /// <summary>Put a path into the cache. If full, evicts the least-recently-used entry.</summary>
+    /// <summary>Put a path into the cache. If the key already exists, updates its value. If full, evicts the least-recently-used entry.</summary>
     public void Put(PathQueryKey key, IReadOnlyList<(int X, int Y)> path)
     {
-        // If already in cache, move to end
-        if (_map.TryGetValue(key, out var node))
+        if (_map.TryGetValue(key, out var existing))
         {
-            _lru.Remove(node);
-            _lru.AddLast(node);
-            return;
+            _lru.Remove(existing);
+            _map.Remove(key);
         }
-
-        // If at capacity, evict the least-recently-used (first in list)
-        if (_lru.Count >= _maxEntries)
+        else if (_lru.Count >= _maxEntries)
         {
             var lru = _lru.First;
             if (lru != null)
@@ -64,7 +62,6 @@ public sealed class PathfindingCache
             }
         }
 
-        // Add new entry
         var newEntry = new KeyValuePair<PathQueryKey, IReadOnlyList<(int X, int Y)>>(key, path);
         var newNode = _lru.AddLast(newEntry);
         _map[key] = newNode;

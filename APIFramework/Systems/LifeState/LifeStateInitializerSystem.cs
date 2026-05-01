@@ -1,6 +1,8 @@
 using APIFramework.Components;
 using APIFramework.Core;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -11,8 +13,22 @@ namespace APIFramework.Systems.LifeState;
 ///
 /// Every NPC spawned by the cast generator gains LifeStateComponent at boot with State == Alive.
 /// </summary>
+/// <remarks>
+/// Phase: <see cref="SystemPhase.PreUpdate"/>. Must run before any system that reads
+/// <see cref="LifeStateComponent"/> (in particular, before <see cref="LifeStateGuard.IsAlive"/>
+/// gates in cognition and physiology). This is an initializer, NOT the single writer of
+/// <see cref="LifeStateComponent"/> — once an NPC has the component, only
+/// <see cref="LifeStateTransitionSystem"/> may modify it.
+/// </remarks>
+/// <seealso cref="LifeStateTransitionSystem"/>
+/// <seealso cref="LifeStateGuard"/>
 public class LifeStateInitializerSystem : ISystem
 {
+    /// <summary>
+    /// Attaches a fresh <see cref="LifeStateComponent"/> (State = Alive) to any NPC archetype entity that lacks one.
+    /// </summary>
+    /// <param name="em">Entity manager used to query NPCs.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused; this is a one-shot-per-entity initializer).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<NpcTag>().ToList())
@@ -22,7 +38,7 @@ public class LifeStateInitializerSystem : ISystem
 
             entity.Add(new LifeStateComponent
             {
-                State = Components.LifeState.Alive,
+                State = LS.Alive,
                 LastTransitionTick = 0,
                 IncapacitatedTickBudget = 0,
                 PendingDeathCause = CauseOfDeath.Unknown
