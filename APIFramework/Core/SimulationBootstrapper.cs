@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using APIFramework.Bootstrap;
 using APIFramework.Components;
@@ -22,85 +22,85 @@ namespace APIFramework.Core;
 /// Loads SimConfig.json, wires every system in execution order, and spawns
 /// the initial world entities.
 ///
-/// Any frontend — Avalonia GUI, CLI, Unity, test harness — creates one instance
+/// Any frontend â€” Avalonia GUI, CLI, Unity, test harness â€” creates one instance
 /// of this class and drives it by calling Engine.Update(deltaTime) in its own loop.
 /// APIFramework never knows a frontend exists.
 ///
 /// HOT-RELOAD
-/// ──────────
+/// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 /// Call ApplyConfig(newCfg) at any time to push new tuning values into all live
 /// systems without restarting the simulation.
 ///
 /// IMPORTANT: hot-reload updates system configs (thresholds, drain rates, brain
-/// ceilings) immediately. It does NOT re-spawn entities — starting values like
+/// ceilings) immediately. It does NOT re-spawn entities â€” starting values like
 /// EnergyStart only take effect for entities spawned AFTER the reload. To test
 /// different starting conditions, restart the simulation.
 ///
-/// SYSTEM PIPELINE (phase → execution order within phase)
-/// ────────────────────────────────────────────────────────
-///  PreUpdate   (0)  InvariantSystem           — catch/clamp impossible state values
-///  PreUpdate   (0)  StructuralTaggingSystem   — one-shot: tag obstacles/walls/doors at boot
-///  PreUpdate   (0)  ScheduleSpawnerSystem     — attach default routines to scheduleless NPCs
-///  PreUpdate   (0)  StressInitializerSystem   — attach StressComponent to fresh NPCs
-///  PreUpdate   (0)  MaskInitializerSystem     — attach SocialMaskComponent (personality baseline)
-///  PreUpdate   (0)  WorkloadInitializerSystem — attach WorkloadComponent (per-archetype capacity)
-///  PreUpdate   (0)  LifeStateInitializerSystem— attach LifeStateComponent = Alive
-///  PreUpdate   (0)  TaskGeneratorSystem       — spawn day's task batch at configured hour
-///  PreUpdate   (0)  LockoutDetectionSystem    — Phase 3: end-of-day exit reachability + starvation
-///  Spatial     (5)  SpatialIndexSyncSystem    — keep spatial index in sync with positions
-///  Spatial     (5)  RoomMembershipSystem      — derive per-NPC room residency
-///  Spatial     (5)  PathfindingCacheInvalidationSystem — clear cache on structural change
-///  Lighting    (7)  SunSystem                 — advance sun phase / day-phase boundary
-///  Lighting    (7)  LightSourceStateSystem    — flicker/dying state machines
-///  Lighting    (7)  ApertureBeamSystem        — compute aperture beams from sun + clock
-///  Lighting    (7)  IlluminationAccumulationSystem — combine source + aperture per room
-///  Lighting    (7)  ProximityEventSystem      — emit proximity signals against current illumination
-///  Coupling    (8)  LightingToDriveCouplingSystem — accumulate lighting → drive deltas
-///  Physiology  (10) MetabolismSystem          — drain satiation / hydration
-///  Physiology  (10) EnergySystem              — drain/restore energy + sleepiness
-///  Physiology  (10) BladderFillSystem         — fill bladder at constant rate
-///  Condition   (20) BiologicalConditionSystem — set hunger/thirst/irritable tags
-///  Condition   (20) ScheduleSystem            — resolve active block before ActionSelection reads it
-///  Cognition   (30) MoodSystem                — decay emotions; apply Plutchik intensity tags
-///  Cognition   (30) BrainSystem               — score drives (incl. circadian, colon, bladder); pick dominant
-///  Cognition   (30) PhysiologyGateSystem      — write BlockedActionsComponent; inhibitions veto biology
-///  Cognition   (30) DriveDynamicsSystem       — decay/circadian-modulate social drives
-///  Cognition   (30) ActionSelectionSystem     — enumerate candidates, pick winner, write IntendedAction
-///  Cognition   (30) WillpowerSystem           — apply suppression cost / regen
-///  Cognition   (30) RelationshipLifecycleSystem — relationship intensity / lifecycle
-///  Cognition   (30) SocialMaskSystem          — drift mask in public, decay in private
-///  Behavior    (40) FeedingSystem             — act if Eat is dominant (skipped if Eat blocked)
-///  Behavior    (40) DrinkingSystem            — act if Drink is dominant
-///  Behavior    (40) SleepSystem               — toggle IsSleeping based on dominant desire
-///  Behavior    (40) DefecationSystem          — empty colon if Defecate is dominant
-///  Behavior    (40) UrinationSystem           — empty bladder if Pee is dominant
-///  Transit     (50) InteractionSystem         — convert held food to esophagus bolus
-///  Transit     (50) EsophagusSystem           — move transit entities toward stomach
-///  Transit     (50) DigestionSystem           — release nutrients; deposit chyme to small intestine
-///  Elimination (55) SmallIntestineSystem      — drain chyme; pass residue to large intestine
-///  Elimination (55) LargeIntestineSystem      — reabsorb water; form stool into colon
-///  Elimination (55) ColonSystem               — apply DefecationUrgeTag / BowelCriticalTag
-///  Elimination (55) BladderSystem             — apply UrinationUrgeTag / BladderCriticalTag
-///  World       (60) RotSystem                 — age food entities; apply RotTag at threshold
-///  World       (60) PathfindingTriggerSystem  — kick off A* requests for movement intents
-///  World       (60) MovementSpeedModifierSystem — derive per-NPC speed multiplier
-///  World       (60) StepAsideSystem           — perpendicular shift on near-miss
-///  World       (60) MovementSystem            — advance positions along paths
-///  World       (60) FacingSystem              — update facing from proximity signals
-///  World       (60) IdleMovementSystem        — jitter/posture for idle NPCs
-///  Narrative   (70) NarrativeEventDetector    — emit narrative candidates this tick
-///  Narrative   (70) PersistenceThresholdDetector — promote candidates to chronicle entries
-///  Narrative   (70) MemoryRecordingSystem     — route candidates to per-pair / personal memory buffers
-///  Dialog      (80) DialogContextDecisionSystem    — choose context, queue dialog attempts
-///  Dialog      (80) DialogFragmentRetrievalSystem  — pick fragments from corpus
-///  Dialog      (80) DialogCalcifySystem            — promote/decalcify catchphrases
-///  Cleanup     (90) StressSystem              — accumulate acute/chronic stress, apply tags
-///  Cleanup     (90) WorkloadSystem            — advance task progress; detect completion / overdue
-///  Cleanup     (90) MaskCrackSystem           — Phase 3: emit MaskCrack when pressure exceeds threshold
-///  Cleanup     (90) ChokingDetectionSystem    — Phase 3: bolus + distraction → enqueue Incapacitated
-///  Cleanup     (90) LifeStateTransitionSystem — Phase 3: Alive → Incapacitated → Deceased
-///  Cleanup     (90) ChokingCleanupSystem      — Phase 3: clear choke tags after death
-///  Cleanup     (90) SlipAndFallSystem         — Phase 3: roll fall-risk hazards on settled positions
+/// SYSTEM PIPELINE (phase â†’ execution order within phase)
+/// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+///  PreUpdate   (0)  InvariantSystem           â€” catch/clamp impossible state values
+///  PreUpdate   (0)  StructuralTaggingSystem   â€” one-shot: tag obstacles/walls/doors at boot
+///  PreUpdate   (0)  ScheduleSpawnerSystem     â€” attach default routines to scheduleless NPCs
+///  PreUpdate   (0)  StressInitializerSystem   â€” attach StressComponent to fresh NPCs
+///  PreUpdate   (0)  MaskInitializerSystem     â€” attach SocialMaskComponent (personality baseline)
+///  PreUpdate   (0)  WorkloadInitializerSystem â€” attach WorkloadComponent (per-archetype capacity)
+///  PreUpdate   (0)  LifeStateInitializerSystemâ€” attach LifeStateComponent = Alive
+///  PreUpdate   (0)  TaskGeneratorSystem       â€” spawn day's task batch at configured hour
+///  PreUpdate   (0)  LockoutDetectionSystem    â€” Phase 3: end-of-day exit reachability + starvation
+///  Spatial     (5)  SpatialIndexSyncSystem    â€” keep spatial index in sync with positions
+///  Spatial     (5)  RoomMembershipSystem      â€” derive per-NPC room residency
+///  Spatial     (5)  PathfindingCacheInvalidationSystem â€” clear cache on structural change
+///  Lighting    (7)  SunSystem                 â€” advance sun phase / day-phase boundary
+///  Lighting    (7)  LightSourceStateSystem    â€” flicker/dying state machines
+///  Lighting    (7)  ApertureBeamSystem        â€” compute aperture beams from sun + clock
+///  Lighting    (7)  IlluminationAccumulationSystem â€” combine source + aperture per room
+///  Lighting    (7)  ProximityEventSystem      â€” emit proximity signals against current illumination
+///  Coupling    (8)  LightingToDriveCouplingSystem â€” accumulate lighting â†’ drive deltas
+///  Physiology  (10) MetabolismSystem          â€” drain satiation / hydration
+///  Physiology  (10) EnergySystem              â€” drain/restore energy + sleepiness
+///  Physiology  (10) BladderFillSystem         â€” fill bladder at constant rate
+///  Condition   (20) BiologicalConditionSystem â€” set hunger/thirst/irritable tags
+///  Condition   (20) ScheduleSystem            â€” resolve active block before ActionSelection reads it
+///  Cognition   (30) MoodSystem                â€” decay emotions; apply Plutchik intensity tags
+///  Cognition   (30) BrainSystem               â€” score drives (incl. circadian, colon, bladder); pick dominant
+///  Cognition   (30) PhysiologyGateSystem      â€” write BlockedActionsComponent; inhibitions veto biology
+///  Cognition   (30) DriveDynamicsSystem       â€” decay/circadian-modulate social drives
+///  Cognition   (30) ActionSelectionSystem     â€” enumerate candidates, pick winner, write IntendedAction
+///  Cognition   (30) WillpowerSystem           â€” apply suppression cost / regen
+///  Cognition   (30) RelationshipLifecycleSystem â€” relationship intensity / lifecycle
+///  Cognition   (30) SocialMaskSystem          â€” drift mask in public, decay in private
+///  Behavior    (40) FeedingSystem             â€” act if Eat is dominant (skipped if Eat blocked)
+///  Behavior    (40) DrinkingSystem            â€” act if Drink is dominant
+///  Behavior    (40) SleepSystem               â€” toggle IsSleeping based on dominant desire
+///  Behavior    (40) DefecationSystem          â€” empty colon if Defecate is dominant
+///  Behavior    (40) UrinationSystem           â€” empty bladder if Pee is dominant
+///  Transit     (50) InteractionSystem         â€” convert held food to esophagus bolus
+///  Transit     (50) EsophagusSystem           â€” move transit entities toward stomach
+///  Transit     (50) DigestionSystem           â€” release nutrients; deposit chyme to small intestine
+///  Elimination (55) SmallIntestineSystem      â€” drain chyme; pass residue to large intestine
+///  Elimination (55) LargeIntestineSystem      â€” reabsorb water; form stool into colon
+///  Elimination (55) ColonSystem               â€” apply DefecationUrgeTag / BowelCriticalTag
+///  Elimination (55) BladderSystem             â€” apply UrinationUrgeTag / BladderCriticalTag
+///  World       (60) RotSystem                 â€” age food entities; apply RotTag at threshold
+///  World       (60) PathfindingTriggerSystem  â€” kick off A* requests for movement intents
+///  World       (60) MovementSpeedModifierSystem â€” derive per-NPC speed multiplier
+///  World       (60) StepAsideSystem           â€” perpendicular shift on near-miss
+///  World       (60) MovementSystem            â€” advance positions along paths
+///  World       (60) FacingSystem              â€” update facing from proximity signals
+///  World       (60) IdleMovementSystem        â€” jitter/posture for idle NPCs
+///  Narrative   (70) NarrativeEventDetector    â€” emit narrative candidates this tick
+///  Narrative   (70) PersistenceThresholdDetector â€” promote candidates to chronicle entries
+///  Narrative   (70) MemoryRecordingSystem     â€” route candidates to per-pair / personal memory buffers
+///  Dialog      (80) DialogContextDecisionSystem    â€” choose context, queue dialog attempts
+///  Dialog      (80) DialogFragmentRetrievalSystem  â€” pick fragments from corpus
+///  Dialog      (80) DialogCalcifySystem            â€” promote/decalcify catchphrases
+///  Cleanup     (90) StressSystem              â€” accumulate acute/chronic stress, apply tags
+///  Cleanup     (90) WorkloadSystem            â€” advance task progress; detect completion / overdue
+///  Cleanup     (90) MaskCrackSystem           â€” Phase 3: emit MaskCrack when pressure exceeds threshold
+///  Cleanup     (90) ChokingDetectionSystem    â€” Phase 3: bolus + distraction â†’ enqueue Incapacitated
+///  Cleanup     (90) LifeStateTransitionSystem â€” Phase 3: Alive â†’ Incapacitated â†’ Deceased
+///  Cleanup     (90) ChokingCleanupSystem      â€” Phase 3: clear choke tags after death
+///  Cleanup     (90) SlipAndFallSystem         â€” Phase 3: roll fall-risk hazards on settled positions
 /// </summary>
 public class SimulationBootstrapper
 {
@@ -134,7 +134,7 @@ public class SimulationBootstrapper
 
     /// <summary>
     /// Invariant enforcement system. Receives the chronicle so it can verify
-    /// the chronicle ↔ entity-tree agreement check each tick.
+    /// the chronicle â†” entity-tree agreement check each tick.
     /// </summary>
     public InvariantSystem     Invariants          { get; }
 
@@ -154,7 +154,7 @@ public class SimulationBootstrapper
     /// </summary>
     public SeededRandom Random { get; }
 
-    // ── Spatial services ──────────────────────────────────────────────────────
+    // â”€â”€ Spatial services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>Cell-based spatial index. Singleton; shared by all spatial systems.</summary>
     public ISpatialIndex        SpatialIndex    { get; }
@@ -165,12 +165,12 @@ public class SimulationBootstrapper
     /// <summary>Runtime room-membership map. Queried by social and behavior systems.</summary>
     public EntityRoomMembership RoomMembership  { get; }
 
-    // ── Lighting services ─────────────────────────────────────────────────────
+    // â”€â”€ Lighting services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>Singleton sun state. Updated by SunSystem each tick; read by aperture and accumulation systems.</summary>
     public SunStateService SunState { get; }
 
-    // ── Coupling services ─────────────────────────────────────────────────────
+    // â”€â”€ Coupling services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>Lighting-to-drive coupling table loaded from SimConfig.lighting.driveCouplings.</summary>
     public LightingDriveCouplingTable DriveCouplingTable { get; }
@@ -178,7 +178,7 @@ public class SimulationBootstrapper
     /// <summary>Fractional drive accumulator shared by LightingToDriveCouplingSystem.</summary>
     public SocialDriveAccumulator DriveAccumulator { get; }
 
-    // ── Structural change services ────────────────────────────────────────────
+    // â”€â”€ Structural change services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>Structural topology change bus. Subscribe to receive events when obstacles, doors, or room bounds change.</summary>
     public StructuralChangeBus StructuralBus { get; }
@@ -189,17 +189,17 @@ public class SimulationBootstrapper
     /// <summary>Public mutation API for runtime structural topology changes.</summary>
     public IWorldMutationApi MutationApi { get; }
 
-    // ── Narrative services ────────────────────────────────────────────────────
+    // â”€â”€ Narrative services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
     public NarrativeEventBus NarrativeBus { get; }
 
-    // ── Chronicle services ────────────────────────────────────────────────────
+    // â”€â”€ Chronicle services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>Global persistent narrative chronicle. Read by TelemetryProjector each tick.</summary>
     public ChronicleService Chronicle { get; }
 
-    // ── Dialog services ───────────────────────────────────────────────────────
+    // â”€â”€ Dialog services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Loaded phrase corpus. Null when the corpus file could not be located at boot.
@@ -210,7 +210,7 @@ public class SimulationBootstrapper
     /// <summary>Queue shared between DialogContextDecisionSystem and DialogFragmentRetrievalSystem.</summary>
     public PendingDialogQueue PendingDialogQueue { get; }
 
-    /// <summary>Singleton pathfinding service — computes A* paths on demand.</summary>
+    /// <summary>Singleton pathfinding service â€” computes A* paths on demand.</summary>
     public PathfindingService Pathfinding { get; }
 
     /// <summary>
@@ -234,16 +234,16 @@ public class SimulationBootstrapper
     public IReadOnlyList<Entity>? SeededRelationships { get; private set; }
 
     /// <summary>
-    /// Primary constructor — accepts any <see cref="IConfigProvider"/>.
+    /// Primary constructor â€” accepts any <see cref="IConfigProvider"/>.
     /// Use this for tests (InMemoryConfigProvider) and Unity (custom provider).
     /// Builds every service singleton, registers every system, then either loads
     /// the world from <paramref name="worldDefinitionPath"/> or spawns the default
-    /// 10×10 apartment via <see cref="SpawnWorld"/>.
+    /// 10Ã—10 apartment via <see cref="SpawnWorld"/>.
     /// </summary>
-    /// <param name="configProvider">Config source — typically a <see cref="FileConfigProvider"/> in production.</param>
+    /// <param name="configProvider">Config source â€” typically a <see cref="FileConfigProvider"/> in production.</param>
     /// <param name="humanCount">
     /// How many human entities to spawn on startup when no world definition is given.
-    /// Default is <see cref="DefaultHumanCount"/> (100 — full stress-test world).
+    /// Default is <see cref="DefaultHumanCount"/> (100 â€” full stress-test world).
     /// Pass 1 for isolated single-entity tests; pass 0 to spawn no humans
     /// (useful for world-object-only unit tests).
     /// </param>
@@ -265,13 +265,13 @@ public class SimulationBootstrapper
         Random          = new SeededRandom(seed);
         WillpowerEvents = new WillpowerEventQueue();
 
-        // Spatial services — instantiated before RegisterSystems so systems can receive them
+        // Spatial services â€” instantiated before RegisterSystems so systems can receive them
         SpatialIndex   = new GridSpatialIndex(Config.Spatial);
         ProximityBus   = new ProximityEventBus();
         StructuralBus  = new StructuralChangeBus();
         RoomMembership = new EntityRoomMembership();
 
-        // Structural change services — bus and cache before PathfindingService
+        // Structural change services â€” bus and cache before PathfindingService
         PathfindingCache = new PathfindingCache(Config.Movement.Pathfinding.CacheMaxEntries);
         MutationApi      = new WorldMutationApi(EntityManager, StructuralBus);
 
@@ -291,10 +291,10 @@ public class SimulationBootstrapper
             PathfindingCache,
             StructuralBus);
 
-        // Chronicle services — created before Invariants so the check can be injected.
+        // Chronicle services â€” created before Invariants so the check can be injected.
         Chronicle = new ChronicleService(Config.Chronicle.MaxEntries);
 
-        // Invariants — receives Chronicle for the chronicle ↔ entity-tree agreement check.
+        // Invariants â€” receives Chronicle for the chronicle â†” entity-tree agreement check.
         Invariants = new InvariantSystem(Clock, Chronicle);
 
         // Narrative services
@@ -307,11 +307,11 @@ public class SimulationBootstrapper
         {
             try   { CorpusService = DialogCorpusService.LoadFromFile(corpusPath); }
             catch (Exception ex)
-            { Console.WriteLine($"[Dialog] Corpus load failed: {ex.Message} — dialog systems disabled."); }
+            { Console.WriteLine($"[Dialog] Corpus load failed: {ex.Message} â€” dialog systems disabled."); }
         }
         else
         {
-            Console.WriteLine($"[Dialog] Corpus file '{Config.Dialog.CorpusPath}' not found — dialog systems disabled.");
+            Console.WriteLine($"[Dialog] Corpus file '{Config.Dialog.CorpusPath}' not found â€” dialog systems disabled.");
         }
 
         RegisterSystems();
@@ -333,7 +333,7 @@ public class SimulationBootstrapper
     }
 
     /// <summary>
-    /// Convenience overload — loads config from the JSON file at <paramref name="configPath"/>.
+    /// Convenience overload â€” loads config from the JSON file at <paramref name="configPath"/>.
     /// This is the default used by the Avalonia GUI and CLI.
     /// </summary>
     /// <param name="configPath">Path to SimConfig.json.</param>
@@ -350,10 +350,332 @@ public class SimulationBootstrapper
     public SimulationBootstrapper(string configPath = "SimConfig.json", int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
         : this(new FileConfigProvider(configPath), humanCount, seed, worldDefinitionPath) { }
 
+    // Load-path constructor — same service wiring as the primary constructor but skips SpawnWorld.
+    private SimulationBootstrapper(IConfigProvider configProvider, int seed, bool _)
+    {
+        Config          = configProvider.GetConfig();
+        EntityManager   = new EntityManager();
+        Clock           = new SimulationClock { TimeScale = Config.World.DefaultTimeScale };
+        Engine          = new SimulationEngine(EntityManager, Clock);
+        Random          = new SeededRandom(seed);
+        WillpowerEvents = new WillpowerEventQueue();
+
+        SpatialIndex   = new GridSpatialIndex(Config.Spatial);
+        ProximityBus   = new ProximityEventBus();
+        StructuralBus  = new StructuralChangeBus();
+        RoomMembership = new EntityRoomMembership();
+
+        PathfindingCache = new PathfindingCache(Config.Movement.Pathfinding.CacheMaxEntries);
+        MutationApi      = new WorldMutationApi(EntityManager, StructuralBus);
+        SunState         = new SunStateService();
+        DriveCouplingTable = new LightingDriveCouplingTable(Config.Lighting.DriveCouplings);
+        DriveAccumulator   = new SocialDriveAccumulator();
+
+        Pathfinding = new PathfindingService(
+            EntityManager,
+            Config.Spatial.WorldSize.Width,
+            Config.Spatial.WorldSize.Height,
+            Config.Movement,
+            PathfindingCache,
+            StructuralBus);
+
+        Chronicle  = new ChronicleService(Config.Chronicle.MaxEntries);
+        Invariants = new InvariantSystem(Clock, Chronicle);
+        NarrativeBus = new NarrativeEventBus();
+
+        PendingDialogQueue = new PendingDialogQueue();
+        var corpusPath = DialogCorpusService.FindCorpusFile(Config.Dialog.CorpusPath);
+        if (corpusPath != null)
+        {
+            try   { CorpusService = DialogCorpusService.LoadFromFile(corpusPath); }
+            catch (Exception ex)
+            { Console.WriteLine($"[Dialog] Corpus load failed: {ex.Message} — dialog systems disabled."); }
+        }
+
+        RegisterSystems();
+    }
+
+    /// <summary>
+    /// Boots a simulation from a v0.5 <see cref="Warden.Contracts.Telemetry.WorldStateDto"/>
+    /// save document, restoring all persistent component state.
+    /// </summary>
+    public static SimulationBootstrapper BootFromWorldStateDto(
+        Warden.Contracts.Telemetry.WorldStateDto dto, IConfigProvider configProvider)
+    {
+        var sim = new SimulationBootstrapper(configProvider, dto.Seed ?? 0, false);
+
+        if (dto.SaveTick.HasValue && dto.SaveTotalTime.HasValue && dto.SaveTimeScale.HasValue)
+            sim.Clock.RestoreState(dto.SaveTotalTime.Value, dto.SaveTick.Value, dto.SaveTimeScale.Value);
+
+        if (dto.EntityIdCounter.HasValue)
+            sim.EntityManager.RestoreIdCounter(dto.EntityIdCounter.Value);
+
+        if (dto.NpcSaveStates != null)
+            foreach (var npc in dto.NpcSaveStates)
+                RestoreNpcEntity(npc, sim.EntityManager, sim.Config);
+
+        if (dto.TaskEntities != null)
+            foreach (var task in dto.TaskEntities)
+                RestoreTaskEntity(task, sim.EntityManager);
+
+        if (dto.StainEntities != null)
+            foreach (var stain in dto.StainEntities)
+                RestoreStainEntity(stain, sim.EntityManager);
+
+        if (dto.LockedDoors != null)
+            foreach (var door in dto.LockedDoors)
+                RestoreLockedDoorEntity(door, sim.EntityManager);
+
+        return sim;
+    }
+
+    // ── Save/load entity restoration ─────────────────────────────────────────
+
+    private static void RestoreNpcEntity(
+        Warden.Contracts.Telemetry.NpcSaveDto npc,
+        EntityManager em,
+        SimConfig cfg)
+    {
+        var entity = em.CreateEntity(Guid.Parse(npc.Id));
+        entity.Add(new IdentityComponent { Name = npc.Name });
+        entity.Add(new PositionComponent { X = npc.PosX, Y = npc.PosY, Z = npc.PosZ });
+
+        var tags      = npc.Tags;
+        bool isHuman  = tags != null && tags.Contains("Human");
+        bool isCat    = tags != null && tags.Contains("Cat");
+        bool isCorpse = tags != null && tags.Contains("Corpse");
+
+        if (!isCorpse)
+        {
+            var ecfg = isCat ? cfg.Entities.Cat : cfg.Entities.Human;
+            entity.Add(new MetabolismComponent
+            {
+                Satiation                 = npc.Satiation,
+                Hydration                 = npc.Hydration,
+                BodyTemp                  = npc.BodyTemp,
+                SatiationDrainRate        = npc.SatiationDrainRate,
+                HydrationDrainRate        = npc.HydrationDrainRate,
+                SleepMetabolismMultiplier = ecfg.Metabolism.SleepMetabolismMultiplier,
+                NutrientStores            = new NutrientProfile(),
+            });
+            entity.Add(new EnergyComponent
+            {
+                Energy              = npc.Energy,
+                Sleepiness          = npc.Sleepiness,
+                IsSleeping          = npc.IsSleeping,
+                EnergyDrainRate     = ecfg.Energy.EnergyDrainRate,
+                SleepinessGainRate  = ecfg.Energy.SleepinessGainRate,
+                EnergyRestoreRate   = ecfg.Energy.EnergyRestoreRate,
+                SleepinessDrainRate = ecfg.Energy.SleepinessDrainRate,
+            });
+            entity.Add(new StomachComponent
+            {
+                CurrentVolumeMl = npc.StomachVolumeMl,
+                DigestionRate   = ecfg.Stomach.DigestionRate,
+                NutrientsQueued = new NutrientProfile(),
+            });
+            entity.Add(new SmallIntestineComponent
+            {
+                ChymeVolumeMl          = npc.SiChymeVolumeMl,
+                AbsorptionRate         = ecfg.SmallIntestine.AbsorptionRate,
+                Chyme                  = new NutrientProfile(),
+                ResidueToLargeFraction = ecfg.SmallIntestine.ResidueToLargeFraction,
+            });
+            entity.Add(new LargeIntestineComponent
+            {
+                ContentVolumeMl       = npc.LiContentVolumeMl,
+                WaterReabsorptionRate = ecfg.LargeIntestine.WaterReabsorptionRate,
+                MobilityRate          = ecfg.LargeIntestine.MobilityRate,
+                StoolFraction         = ecfg.LargeIntestine.StoolFraction,
+            });
+            entity.Add(new ColonComponent
+            {
+                StoolVolumeMl   = npc.ColonStoolVolumeMl,
+                UrgeThresholdMl = ecfg.Colon.UrgeThresholdMl,
+                CapacityMl      = ecfg.Colon.CapacityMl,
+            });
+            entity.Add(new BladderComponent
+            {
+                VolumeML        = npc.BladderVolumeMl,
+                FillRate        = ecfg.Bladder.FillRate,
+                UrgeThresholdMl = ecfg.Bladder.UrgeThresholdMl,
+                CapacityMl      = ecfg.Bladder.CapacityMl,
+            });
+            entity.Add(new MovementComponent { Speed = isCat ? 0.06f : 0.04f, ArrivalDistance = 0.4f });
+        }
+
+        if (npc.LifeState is { } ls)
+            entity.Add(new LifeStateComponent
+            {
+                State                   = (LifeState)ls.State,
+                LastTransitionTick      = ls.LastTransitionTick,
+                IncapacitatedTickBudget = ls.IncapacitatedTickBudget,
+                PendingDeathCause       = (CauseOfDeath)ls.PendingDeathCause,
+            });
+
+        if (npc.Choking is { } ch)
+            entity.Add(new ChokingComponent
+            {
+                ChokeStartTick = ch.ChokeStartTick,
+                RemainingTicks = ch.RemainingTicks,
+                BolusSize      = ch.BolusSize,
+                PendingCause   = (CauseOfDeath)ch.PendingCause,
+            });
+
+        if (npc.Fainting is { } fa)
+            entity.Add(new FaintingComponent { FaintStartTick = fa.FaintStartTick, RecoveryTick = fa.RecoveryTick });
+
+        if (npc.LockedIn is { } loc)
+            entity.Add(new LockedInComponent
+            {
+                FirstDetectedTick    = loc.FirstDetectedTick,
+                StarvationTickBudget = loc.StarvationTickBudget,
+            });
+
+        if (npc.CauseOfDeath is { } cod)
+            entity.Add(new CauseOfDeathComponent
+            {
+                Cause            = (CauseOfDeath)cod.Cause,
+                DeathTick        = cod.DeathTick,
+                WitnessedByNpcId = Guid.Parse(cod.WitnessedById),
+                LocationRoomId   = Guid.Parse(cod.LocationRoomId),
+            });
+
+        if (npc.Corpse is { } cp)
+            entity.Add(new CorpseComponent
+            {
+                DeathTick           = cp.DeathTick,
+                OriginalNpcEntityId = Guid.Parse(cp.OriginalNpcEntityId),
+                LocationRoomId      = cp.LocationRoomId,
+                HasBeenMoved        = cp.HasBeenMoved,
+            });
+
+        if (npc.Stress is { } st)
+            entity.Add(new StressComponent
+            {
+                AcuteLevel                = st.AcuteLevel,
+                ChronicLevel              = st.ChronicLevel,
+                LastDayUpdated            = st.LastDayUpdated,
+                SuppressionEventsToday    = st.SuppressionEventsToday,
+                DriveSpikeEventsToday     = st.DriveSpikeEventsToday,
+                SocialConflictEventsToday = st.SocialConflictEventsToday,
+                OverdueTaskEventsToday    = st.OverdueTaskEventsToday,
+                WitnessedDeathEventsToday = st.WitnessedDeathEventsToday,
+                BereavementEventsToday    = st.BereavementEventsToday,
+                BurnoutLastAppliedDay     = st.BurnoutLastAppliedDay,
+            });
+
+        if (npc.Mask is { } mk)
+            entity.Add(new SocialMaskComponent
+            {
+                IrritationMask = mk.IrritationMask,
+                AffectionMask  = mk.AffectionMask,
+                AttractionMask = mk.AttractionMask,
+                LonelinessMask = mk.LonelinessMask,
+                CurrentLoad    = mk.CurrentLoad,
+                Baseline       = mk.Baseline,
+                LastSlipTick   = mk.LastSlipTick,
+            });
+
+        if (npc.Mood is { } mo)
+            entity.Add(new MoodComponent
+            {
+                Joy          = mo.Joy,
+                Trust        = mo.Trust,
+                Fear         = mo.Fear,
+                Surprise     = mo.Surprise,
+                Sadness      = mo.Sadness,
+                Disgust      = mo.Disgust,
+                Anger        = mo.Anger,
+                Anticipation = mo.Anticipation,
+                PanicLevel   = mo.PanicLevel,
+                GriefLevel   = mo.GriefLevel,
+            });
+
+        if (npc.Willpower is { } wp)
+            entity.Add(new WillpowerComponent(wp.Current, wp.Baseline));
+
+        if (npc.Workload is { } wl)
+            entity.Add(new WorkloadComponent
+            {
+                ActiveTasks = wl.ActiveTaskIds.Select(Guid.Parse).ToArray(),
+                Capacity    = wl.Capacity,
+                CurrentLoad = wl.CurrentLoad,
+            });
+
+        if (npc.EncounteredCorpseIds is { Count: > 0 } cids)
+            entity.Add(new BereavementHistoryComponent
+            {
+                EncounteredCorpseIds = new HashSet<Guid>(cids.Select(Guid.Parse)),
+            });
+
+        if (npc.ScheduleBlocks is { Count: > 0 } sched)
+            entity.Add(new ScheduleComponent
+            {
+                Blocks = sched.Select(b => new ScheduleBlock(
+                    b.StartHour, b.EndHour, b.AnchorId,
+                    (ScheduleActivityKind)b.Activity)).ToList(),
+            });
+
+        if (isHuman)                                     entity.Add(new HumanTag());
+        if (isCat)                                       entity.Add(new CatTag());
+        if (tags != null && tags.Contains("Npc"))        entity.Add(new NpcTag());
+        if (isCorpse)                                    entity.Add(new CorpseTag());
+        if (tags != null && tags.Contains("IsChoking"))  entity.Add(new IsChokingTag());
+        if (tags != null && tags.Contains("IsFainting")) entity.Add(new IsFaintingTag());
+        if (tags != null && tags.Contains("Sleeping"))   entity.Add(new SleepingTag());
+    }
+
+    private static void RestoreTaskEntity(
+        Warden.Contracts.Telemetry.TaskSaveDto task, EntityManager em)
+    {
+        var entity = em.CreateEntity(Guid.Parse(task.Id));
+        entity.Add(new TaskTag());
+        entity.Add(new TaskComponent
+        {
+            EffortHours   = task.EffortHours,
+            DeadlineTick  = task.DeadlineTick,
+            Priority      = task.Priority,
+            Progress      = task.Progress,
+            QualityLevel  = task.QualityLevel,
+            AssignedNpcId = Guid.Parse(task.AssignedNpcId),
+            CreatedTick   = task.CreatedTick,
+        });
+        if (task.IsOverdue) entity.Add(new OverdueTag());
+    }
+
+    private static void RestoreStainEntity(
+        Warden.Contracts.Telemetry.StainEntitySaveDto stain, EntityManager em)
+    {
+        var entity = em.CreateEntity(Guid.Parse(stain.Id));
+        entity.Add(new StainTag());
+        entity.Add(new PositionComponent { X = stain.PosX, Y = stain.PosY, Z = stain.PosZ });
+        entity.Add(new StainComponent
+        {
+            Source           = stain.Source,
+            Magnitude        = stain.Magnitude,
+            CreatedAtTick    = stain.CreatedAtTick,
+            ChronicleEntryId = stain.ChronicleEntryId,
+        });
+        if (stain.FallRiskLevel.HasValue)
+            entity.Add(new FallRiskComponent { RiskLevel = stain.FallRiskLevel.Value });
+        if (stain.Magnitude >= 50)
+            entity.Add(new ObstacleTag());
+    }
+
+    private static void RestoreLockedDoorEntity(
+        Warden.Contracts.Telemetry.LockedDoorSaveDto door, EntityManager em)
+    {
+        var entity = em.CreateEntity(Guid.Parse(door.Id));
+        entity.Add(new LockedTag());
+        entity.Add(new PositionComponent { X = door.PosX, Y = door.PosY, Z = door.PosZ });
+        if (door.Name != null) entity.Add(new IdentityComponent { Name = door.Name });
+    }
+
     /// <summary>
     /// Wires every simulation system into <see cref="Engine"/> in execution order.
     /// Phase ordering and per-system rationale are documented inline (do not add
-    /// XML comments to the inline blocks below — they are implementation detail).
+    /// XML comments to the inline blocks below â€” they are implementation detail).
     /// </summary>
     /// <remarks>
     /// Called once from the constructor. Re-running it would double-register systems.
@@ -363,7 +685,7 @@ public class SimulationBootstrapper
     {
         var sys = Config.Systems;
 
-        // Spatial — sync index, room membership, cache invalidation (Phase 5).
+        // Spatial â€” sync index, room membership, cache invalidation (Phase 5).
         // ProximityEvent moves to Lighting (Phase 7) so it fires after illumination is current.
         var syncSys = new SpatialIndexSyncSystem(SpatialIndex, StructuralBus);
         EntityManager.EntityDestroyed += syncSys.OnEntityDestroyed;
@@ -371,7 +693,7 @@ public class SimulationBootstrapper
         Engine.AddSystem(new RoomMembershipSystem(RoomMembership, ProximityBus, StructuralBus), SystemPhase.Spatial);
         Engine.AddSystem(new PathfindingCacheInvalidationSystem(StructuralBus, PathfindingCache), SystemPhase.Spatial);
 
-        // Lighting — sun position, source state machines, aperture beams, room illumination,
+        // Lighting â€” sun position, source state machines, aperture beams, room illumination,
         // then proximity events (which now see current illumination).
         var lightSourceStates = new LightSourceStateSystem(Random, Config.Lighting);
         var apertureBeams     = new ApertureBeamSystem(SunState, Clock);
@@ -381,54 +703,54 @@ public class SimulationBootstrapper
         Engine.AddSystem(new IlluminationAccumulationSystem(lightSourceStates, apertureBeams, Config.Lighting), SystemPhase.Lighting);
         Engine.AddSystem(new ProximityEventSystem(SpatialIndex, ProximityBus, RoomMembership),      SystemPhase.Lighting);
 
-        // Coupling — lighting-to-drive coupling; after illumination is fresh, before drive dynamics.
+        // Coupling â€” lighting-to-drive coupling; after illumination is fresh, before drive dynamics.
         Engine.AddSystem(new LightingToDriveCouplingSystem(
             DriveCouplingTable, DriveAccumulator, RoomMembership, apertureBeams, SunState),          SystemPhase.Coupling);
 
-        // PreUpdate — invariant enforcement; always first
+        // PreUpdate â€” invariant enforcement; always first
         Engine.AddSystem(Invariants,                                               SystemPhase.PreUpdate);
         // Structural tagging: one-shot system at boot that attaches StructuralTag to obstacles/walls/doors
         Engine.AddSystem(new StructuralTaggingSystem(),                            SystemPhase.PreUpdate);
         // Schedule spawner: attach routines to NPCs that lack one (runs every tick, idempotent)
         Engine.AddSystem(new ScheduleSpawnerSystem(),                              SystemPhase.PreUpdate);
 
-        // Stress initialization — attaches StressComponent to newly-spawned NPCs that lack one.
+        // Stress initialization â€” attaches StressComponent to newly-spawned NPCs that lack one.
         Engine.AddSystem(
             new StressInitializerSystem(StressInitializerSystem.LoadBaselines()),  SystemPhase.PreUpdate);
 
-        // Mask initialization — attaches SocialMaskComponent with personality-derived baseline.
+        // Mask initialization â€” attaches SocialMaskComponent with personality-derived baseline.
         Engine.AddSystem(new MaskInitializerSystem(),                              SystemPhase.PreUpdate);
 
-        // Workload initialization — attaches WorkloadComponent with per-archetype capacity.
+        // Workload initialization â€” attaches WorkloadComponent with per-archetype capacity.
         Engine.AddSystem(
             new WorkloadInitializerSystem(WorkloadInitializerSystem.LoadCapacities()), SystemPhase.PreUpdate);
 
-        // Life state initialization — attaches LifeStateComponent to newly-spawned NPCs with State == Alive.
+        // Life state initialization â€” attaches LifeStateComponent to newly-spawned NPCs with State == Alive.
         Engine.AddSystem(new LifeStateInitializerSystem(),                          SystemPhase.PreUpdate);
 
-        // Task generation — spawns new task entities once per game-day at the configured hour.
+        // Task generation â€” spawns new task entities once per game-day at the configured hour.
         Engine.AddSystem(
             new TaskGeneratorSystem(Config.Workload, Clock, Random),               SystemPhase.PreUpdate);
 
-        // Physiology — raw biological resource drain/restore
+        // Physiology â€” raw biological resource drain/restore
         Engine.AddSystem(new MetabolismSystem(),                                   SystemPhase.Physiology);
         Engine.AddSystem(new EnergySystem(sys.Energy),                            SystemPhase.Physiology);
         Engine.AddSystem(new BladderFillSystem(),                                  SystemPhase.Physiology);
 
-        // Condition — derive sensation tags from physiology values
+        // Condition â€” derive sensation tags from physiology values
         Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition),  SystemPhase.Condition);
         // Schedule: resolve active block before ActionSelectionSystem reads it.
         Engine.AddSystem(new ScheduleSystem(Clock),                                SystemPhase.Condition);
 
-        // Cognition — process conditions into emotions and drive scores
+        // Cognition â€” process conditions into emotions and drive scores
         Engine.AddSystem(new MoodSystem(sys.Mood),                                SystemPhase.Cognition);
         Engine.AddSystem(new BrainSystem(sys.Brain, Clock),                       SystemPhase.Cognition);
 
-        // Physiology gate — veto set computed after BrainSystem, before Behavior systems act.
+        // Physiology gate â€” veto set computed after BrainSystem, before Behavior systems act.
         // PhysiologyGateSystem writes BlockedActionsComponent for each NPC with inhibitions.
         Engine.AddSystem(new PhysiologyGateSystem(Config.PhysiologyGate),                  SystemPhase.Cognition);
 
-        // Social cognition — drive dynamics, action selection, willpower, relationship lifecycle
+        // Social cognition â€” drive dynamics, action selection, willpower, relationship lifecycle
         Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random, Config.Stress), SystemPhase.Cognition);
         Engine.AddSystem(new ActionSelectionSystem(
             SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, Config.Schedule, EntityManager, Config.Workload),
@@ -437,25 +759,25 @@ public class SimulationBootstrapper
         Engine.AddSystem(RelationshipLifecycleSystem.LoadFromFile(Config.Social),  SystemPhase.Cognition);
         Engine.AddSystem(new SocialMaskSystem(RoomMembership, Config.SocialMask),  SystemPhase.Cognition);
 
-        // Behavior — act on the dominant drive
+        // Behavior â€” act on the dominant drive
         Engine.AddSystem(new FeedingSystem(sys.Feeding),                          SystemPhase.Behavior);
         Engine.AddSystem(new DrinkingSystem(sys.Drinking),                        SystemPhase.Behavior);
         Engine.AddSystem(new SleepSystem(sys.Sleep),                              SystemPhase.Behavior);
         Engine.AddSystem(new DefecationSystem(),                                  SystemPhase.Behavior);
         Engine.AddSystem(new UrinationSystem(),                                    SystemPhase.Behavior);
 
-        // Transit — move content through the upper digestive pipeline
+        // Transit â€” move content through the upper digestive pipeline
         Engine.AddSystem(new InteractionSystem(sys.Interaction),                  SystemPhase.Transit);
         Engine.AddSystem(new EsophagusSystem(),                                   SystemPhase.Transit);
         Engine.AddSystem(new DigestionSystem(sys.Digestion),                      SystemPhase.Transit);
 
-        // Elimination — lower digestive pipeline; intestines → colon/bladder → tags
+        // Elimination â€” lower digestive pipeline; intestines â†’ colon/bladder â†’ tags
         Engine.AddSystem(new SmallIntestineSystem(),                              SystemPhase.Elimination);
         Engine.AddSystem(new LargeIntestineSystem(),                              SystemPhase.Elimination);
         Engine.AddSystem(new ColonSystem(),                                       SystemPhase.Elimination);
         Engine.AddSystem(new BladderSystem(),                                     SystemPhase.Elimination);
 
-        // World — environmental systems independent of entity biology
+        // World â€” environmental systems independent of entity biology
         Engine.AddSystem(new RotSystem(sys.Rot),                                  SystemPhase.World);
 
         // Movement quality pipeline (runs in World phase, in registration order)
@@ -466,18 +788,18 @@ public class SimulationBootstrapper
         Engine.AddSystem(new FacingSystem(ProximityBus),                           SystemPhase.World);
         Engine.AddSystem(new IdleMovementSystem(Random, Config.Movement),          SystemPhase.World);
 
-        // Narrative — runs last so all state has settled; emits candidates via NarrativeBus
+        // Narrative â€” runs last so all state has settled; emits candidates via NarrativeBus
         Engine.AddSystem(new NarrativeEventDetector(
             NarrativeBus, ProximityBus, RoomMembership, Config.Narrative),        SystemPhase.Narrative);
 
-        // Chronicle — evaluates candidates emitted this tick; must run after NarrativeEventDetector.
+        // Chronicle â€” evaluates candidates emitted this tick; must run after NarrativeEventDetector.
         Engine.AddSystem(new PersistenceThresholdDetector(
             Chronicle, NarrativeBus, EntityManager, Clock, Random, Config.Chronicle), SystemPhase.Narrative);
 
-        // Memory recording — subscribes to the bus and routes candidates to per-pair/personal buffers.
+        // Memory recording â€” subscribes to the bus and routes candidates to per-pair/personal buffers.
         Engine.AddSystem(new MemoryRecordingSystem(NarrativeBus, EntityManager, Config.Memory), SystemPhase.Narrative);
 
-        // Dialog — after Narrative so final drive state is visible
+        // Dialog â€” after Narrative so final drive state is visible
         if (CorpusService != null)
         {
             var decisionSys   = new DialogContextDecisionSystem(PendingDialogQueue, ProximityBus, Config.Dialog, Random);
@@ -488,16 +810,16 @@ public class SimulationBootstrapper
             Engine.AddSystem(calcifySys,   SystemPhase.Dialog);
         }
 
-        // Cleanup — stress accumulation; runs after WillpowerSystem (Cognition) and
+        // Cleanup â€” stress accumulation; runs after WillpowerSystem (Cognition) and
         // NarrativeEventDetector (Narrative) so all tick state has settled.
         Engine.AddSystem(
             new StressSystem(Config.Stress, Config.Workload, Clock, WillpowerEvents, NarrativeBus, EntityManager), SystemPhase.Cleanup);
 
-        // Workload system — advances task progress, detects completion and overdue.
+        // Workload system â€” advances task progress, detects completion and overdue.
         Engine.AddSystem(
             new WorkloadSystem(Config.Workload, Clock, NarrativeBus, EntityManager), SystemPhase.Cleanup);
 
-        // Mask crack detection — runs at Cleanup so it fires after ActionSelectionSystem has
+        // Mask crack detection â€” runs at Cleanup so it fires after ActionSelectionSystem has
         // written its intent; the crack override wins for the following Dialog phase.
         Engine.AddSystem(
             new MaskCrackSystem(RoomMembership, NarrativeBus, Config.SocialMask),  SystemPhase.Cleanup);
@@ -505,7 +827,7 @@ public class SimulationBootstrapper
         // Create a single LifeStateTransitionSystem instance for both choking and life-state management.
         var lifeStateTransition = new LifeStateTransitionSystem(NarrativeBus, EntityManager, Clock, Config);
 
-        // Choking detection — identifies choking conditions (bolus + distraction) and enqueues transition to Incapacitated.
+        // Choking detection â€” identifies choking conditions (bolus + distraction) and enqueues transition to Incapacitated.
         // Runs after EsophagusSystem (in Transit) so the bolus has had its chance to advance,
         // and before LifeStateTransitionSystem so the request reaches the queue this tick.
         Engine.AddSystem(
@@ -517,16 +839,16 @@ public class SimulationBootstrapper
                 EntityManager),
             SystemPhase.Cleanup);
 
-        // Life state transitions — processes queued state changes (Alive→Incapacitated→Deceased);
+        // Life state transitions â€” processes queued state changes (Aliveâ†’Incapacitatedâ†’Deceased);
         // runs after WorkloadSystem and MaskCrackSystem so all cognitive ticking is complete.
         Engine.AddSystem(lifeStateTransition, SystemPhase.Cleanup);
 
-        // Choking cleanup — removes IsChokingTag and ChokingComponent when NPC transitions to Deceased.
+        // Choking cleanup â€” removes IsChokingTag and ChokingComponent when NPC transitions to Deceased.
         // Runs at the very end of Cleanup phase (after LifeStateTransitionSystem).
         Engine.AddSystem(
             new ChokingCleanupSystem(), SystemPhase.Cleanup);
 
-        // Slip-and-fall detection — rolls hazard checks for NPCs on tiles with FallRiskComponent.
+        // Slip-and-fall detection â€” rolls hazard checks for NPCs on tiles with FallRiskComponent.
         // Runs in Cleanup phase after MovementSystem (so NPCs have settled position) and
         // before LifeStateTransitionSystem (so transition requests hit the queue this tick).
         Engine.AddSystem(
@@ -538,7 +860,7 @@ public class SimulationBootstrapper
                 Random),
             SystemPhase.Cleanup);
 
-        // Lockout detection — checks end-of-day reachability to exits and starvation status.
+        // Lockout detection â€” checks end-of-day reachability to exits and starvation status.
         // Runs in PreUpdate phase, once per game-day (gated internally by hour check).
         Engine.AddSystem(
             new LockoutDetectionSystem(
@@ -551,7 +873,7 @@ public class SimulationBootstrapper
             SystemPhase.PreUpdate);
     }
 
-    // ── Human count ───────────────────────────────────────────────────────────
+    // â”€â”€ Human count â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     /// <summary>
     /// Default number of humans spawned when no <c>humanCount</c> argument is
     /// supplied.  100 gives a realistic stress-test world; pass 1 to
@@ -561,24 +883,24 @@ public class SimulationBootstrapper
     public const int DefaultHumanCount = 100;
 
     /// <summary>
-    /// Spawns the default 10×10 apartment — a humanCount-sized human grid plus
+    /// Spawns the default 10Ã—10 apartment â€” a humanCount-sized human grid plus
     /// fixed-position fridge, sink, bed, and toilet world objects. Used when no
     /// world definition file was supplied.
     /// </summary>
     /// <param name="humanCount">How many humans to lay out on the grid.</param>
     private void SpawnWorld(int humanCount)
     {
-        // ── Living entities ───────────────────────────────────────────────────
-        // Spread humanCount humans on a uniform grid inside the 10×10 world.
-        // humanCount = 1  → single Billy at centre (5, 5).
-        // humanCount = 100 → 10×10 grid from (1,1) to (9,9).
+        // â”€â”€ Living entities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // Spread humanCount humans on a uniform grid inside the 10Ã—10 world.
+        // humanCount = 1  â†’ single Billy at centre (5, 5).
+        // humanCount = 100 â†’ 10Ã—10 grid from (1,1) to (9,9).
         SpawnHumanGrid(humanCount);
 
-        // ── World objects — 10×10 unit apartment ─────────────────────────────
-        //   Fridge  (2, 0, 2)  NW — kitchen
-        //   Sink    (7, 0, 2)  NE — kitchen
-        //   Bed     (2, 0, 8)  SW — bedroom
-        //   Toilet  (7, 0, 8)  SE — bathroom
+        // â”€â”€ World objects â€” 10Ã—10 unit apartment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        //   Fridge  (2, 0, 2)  NW â€” kitchen
+        //   Sink    (7, 0, 2)  NE â€” kitchen
+        //   Bed     (2, 0, 8)  SW â€” bedroom
+        //   Toilet  (7, 0, 8)  SE â€” bathroom
         //
         // Fridge food scales with population so every human has a realistic
         // chance of getting fed: 5 items per human, minimum 5.
@@ -594,10 +916,10 @@ public class SimulationBootstrapper
 
     /// <summary>
     /// Spreads <paramref name="count"/> humans evenly on a rectangular grid
-    /// inside the 10×10 default world. For count = 1 the single entity lands
+    /// inside the 10Ã—10 default world. For count = 1 the single entity lands
     /// at centre (5, 5) and is named "Billy".
     /// </summary>
-    /// <param name="count">Number of humans to spawn. Values ≤ 0 are a no-op.</param>
+    /// <param name="count">Number of humans to spawn. Values â‰¤ 0 are a no-op.</param>
     private void SpawnHumanGrid(int count)
     {
         if (count <= 0) return;
@@ -609,7 +931,7 @@ public class SimulationBootstrapper
             return;
         }
 
-        // cols × rows ≥ count, shaped as square as possible.
+        // cols Ã— rows â‰¥ count, shaped as square as possible.
         int cols = (int)Math.Ceiling(Math.Sqrt(count));
         int rows = (int)Math.Ceiling((double)count / cols);
 
@@ -633,9 +955,9 @@ public class SimulationBootstrapper
     }
 
     /// <summary>
-    /// Creates a single static world object — Identity, Position, and a default
+    /// Creates a single static world object â€” Identity, Position, and a default
     /// instance of <typeparamref name="TTag"/> as the marker component (e.g.
-    /// <see cref="SinkComponent"/>, <see cref="BedComponent"/>, …).
+    /// <see cref="SinkComponent"/>, <see cref="BedComponent"/>, â€¦).
     /// </summary>
     /// <typeparam name="TTag">Marker component type identifying the object kind.</typeparam>
     /// <param name="name">Human-readable name written to the entity's <see cref="IdentityComponent"/>.</param>
@@ -651,7 +973,7 @@ public class SimulationBootstrapper
         e.Add(default(TTag));
     }
 
-    // ── Snapshot ──────────────────────────────────────────────────────────────
+    // â”€â”€ Snapshot â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Captures the current engine state as an immutable SimulationSnapshot.
@@ -665,7 +987,7 @@ public class SimulationBootstrapper
     /// <returns>An immutable snapshot of the current simulation state.</returns>
     public SimulationSnapshot Capture() => SimulationSnapshot.Capture(this);
 
-    // ── Hot-reload ────────────────────────────────────────────────────────────
+    // â”€â”€ Hot-reload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Pushes all tuning values from <paramref name="newCfg"/> into the live running
@@ -673,7 +995,7 @@ public class SimulationBootstrapper
     /// next tick.
     ///
     /// Works by mutating the EXISTING config objects in-place, so all system
-    /// constructor references remain valid — no system pointer changes hands.
+    /// constructor references remain valid â€” no system pointer changes hands.
     ///
     /// Thread note: call this on the same thread that drives Engine.Update() to
     /// avoid a tick reading partially-applied config.  Both the CLI (flag check in
@@ -683,14 +1005,14 @@ public class SimulationBootstrapper
     /// <param name="newCfg">Freshly loaded config whose primitive values are merged into the live <see cref="Config"/>.</param>
     /// <remarks>
     /// Only flat (value-type) properties are merged. Nested object identities are
-    /// preserved — see <see cref="MergeFlat{T}"/>. Entity starting values
+    /// preserved â€” see <see cref="MergeFlat{T}"/>. Entity starting values
     /// (e.g. <c>EnergyStart</c>) take effect for entities spawned AFTER the reload.
     /// </remarks>
     public void ApplyConfig(SimConfig newCfg)
     {
         var changes = new List<string>();
 
-        // ── System configs ────────────────────────────────────────────────────
+        // â”€â”€ System configs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         MergeFlat(newCfg.Systems.BiologicalCondition, Config.Systems.BiologicalCondition, changes);
         MergeFlat(newCfg.Systems.Energy,              Config.Systems.Energy,              changes);
         MergeFlat(newCfg.Systems.Brain,               Config.Systems.Brain,               changes);
@@ -707,7 +1029,7 @@ public class SimulationBootstrapper
         MergeFlat(newCfg.Chronicle,                   Config.Chronicle,                   changes);
         MergeFlat(newCfg.Chronicle.ThresholdRules,    Config.Chronicle.ThresholdRules,    changes);
 
-        // ── Entity starting configs (only affect future spawns) ───────────────
+        // â”€â”€ Entity starting configs (only affect future spawns) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         MergeFlat(newCfg.Entities.Human.Metabolism,     Config.Entities.Human.Metabolism,     changes);
         MergeFlat(newCfg.Entities.Human.Stomach,       Config.Entities.Human.Stomach,       changes);
         MergeFlat(newCfg.Entities.Human.Energy,        Config.Entities.Human.Energy,        changes);
@@ -725,11 +1047,11 @@ public class SimulationBootstrapper
 
         if (changes.Count == 0)
         {
-            Console.WriteLine("[Config] Reloaded — no values changed.");
+            Console.WriteLine("[Config] Reloaded â€” no values changed.");
         }
         else
         {
-            Console.WriteLine($"[Config] Reloaded — {changes.Count} value(s) changed:");
+            Console.WriteLine($"[Config] Reloaded â€” {changes.Count} value(s) changed:");
             foreach (var c in changes)
                 Console.WriteLine($"         {c}");
         }
@@ -738,13 +1060,13 @@ public class SimulationBootstrapper
     /// <summary>
     /// Copies all primitive (value-type) public properties from <paramref name="src"/>
     /// onto <paramref name="dst"/> in-place, logging any that actually changed.
-    /// Reference-type properties (nested objects) are intentionally skipped —
+    /// Reference-type properties (nested objects) are intentionally skipped â€”
     /// they must be merged separately to preserve object identity.
     /// </summary>
     /// <typeparam name="T">Reference type of the config object being merged.</typeparam>
     /// <param name="src">Newly loaded config object whose primitive values are read.</param>
     /// <param name="dst">Live config object whose primitive values are mutated in place.</param>
-    /// <param name="changes">Sink for "Type.Prop  old → new" change descriptions, one per modified property.</param>
+    /// <param name="changes">Sink for "Type.Prop  old â†’ new" change descriptions, one per modified property.</param>
     private static void MergeFlat<T>(T src, T dst, List<string> changes) where T : class
     {
         if (src == null || dst == null) return;
@@ -758,7 +1080,7 @@ public class SimulationBootstrapper
             if (!Equals(oldVal, newVal))
             {
                 prop.SetValue(dst, newVal);
-                changes.Add($"{typeof(T).Name}.{prop.Name}  {oldVal} → {newVal}");
+                changes.Add($"{typeof(T).Name}.{prop.Name}  {oldVal} â†’ {newVal}");
             }
         }
     }
