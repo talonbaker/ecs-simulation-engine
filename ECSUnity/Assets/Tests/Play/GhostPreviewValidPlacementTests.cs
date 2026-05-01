@@ -77,8 +77,6 @@ public class GhostPreviewValidPlacementTests
 
         Assert.AreEqual(1, _fakeApi.SpawnCount,
             "Committing a valid placement should call SpawnStructural once.");
-        Assert.AreEqual(templateId, _fakeApi.LastSpawnedTemplateId,
-            "SpawnStructural should be called with the correct template ID.");
     }
 
     [UnityTest]
@@ -109,21 +107,19 @@ public class GhostPreviewValidPlacementTests
 public sealed class FakeWorldMutationApi : IWorldMutationApi
 {
     public int  SpawnCount          { get; private set; }
-    public Guid LastSpawnedTemplateId { get; private set; }
     public int  MoveCount           { get; private set; }
     public int  AttachObstacleCount { get; private set; }
     public int  DetachObstacleCount { get; private set; }
 
-    public Guid SpawnStructural(Guid templateId, int tileX, int tileY)
+    public Guid SpawnStructural(int tileX, int tileY)
     {
         SpawnCount++;
-        LastSpawnedTemplateId = templateId;
         return Guid.NewGuid();
     }
 
-    public bool MoveEntity(Guid entityId, int newTileX, int newTileY) { MoveCount++; return true; }
-    public bool DespawnStructural(Guid entityId) => true;
-    public bool AttachObstacle(Guid entityId)   { AttachObstacleCount++; return true; }
-    public bool DetachObstacle(Guid entityId)   { DetachObstacleCount++; return true; }
-    public bool ChangeRoomBounds(Guid roomId, APIFramework.Components.BoundsRect newBounds) => true;
+    public void MoveEntity(Guid entityId, int newTileX, int newTileY) { MoveCount++; }
+    public void DespawnStructural(Guid entityId) { }
+    public void AttachObstacle(Guid entityId)   { AttachObstacleCount++; }
+    public void DetachObstacle(Guid entityId)   { DetachObstacleCount++; }
+    public void ChangeRoomBounds(Guid roomId, APIFramework.Components.BoundsRect newBounds) { }
 }
