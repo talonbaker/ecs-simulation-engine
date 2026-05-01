@@ -72,6 +72,11 @@ public sealed class BuildModeController : MonoBehaviour
              "camera pan/rotate while a context menu is open.")]
     private CameraController _camera;
 
+    [SerializeField]
+    [Tooltip("DragHandler that manages DraggableProp grab/drop. " +
+             "Activated when build mode is ON; deactivated when OFF.")]
+    private DragHandler _dragHandler;
+
     // ── Runtime state ─────────────────────────────────────────────────────────
 
     private bool              _isBuildMode;
@@ -124,6 +129,11 @@ public sealed class BuildModeController : MonoBehaviour
 
         _palette?.SetVisible(active);
         _overlay?.SetTinted(active);
+
+        if (active)
+            _dragHandler?.Activate();
+        else
+            _dragHandler?.Deactivate();
 
         // Cancel any active intent when leaving build mode.
         if (!active) ClearIntent();
