@@ -29,7 +29,14 @@
       "Bash(command -v gh)",
       "Read(//usr/local/bin/**)",
       "Bash(where gh *)",
-      "Bash(winget list *)"
+      "Bash(winget list *)",
+      "Bash(python -c \"import sys, json; lines = sys.stdin.read\\(\\).strip\\(\\).split\\('\\\\n'\\); [print\\(json.loads\\(l\\).get\\('summary',''\\) or json.loads\\(l\\).get\\('content',''\\)[:500] if isinstance\\(json.loads\\(l\\).get\\('content',''\\), str\\) else ''\\) for l in lines[-5:] if l]\")",
+      "Bash(python *)",
+      "Bash(find . -name \"SaveStateDto.cs\")",
+      "Bash(find . -name \"NpcSaveDto.cs\")",
+      "Bash(grep -v \".cs:.*//\")",
+      "Bash(grep -rn \"class NpcSaveDto\\\\|record NpcSaveDto\\\\|struct NpcSaveDto\" --include=\"*.cs\")",
+      "Bash(grep -rn \"NpcSaveDto\" Warden.Contracts/)"
     ]
   }
 }
