@@ -33,7 +33,7 @@ public sealed class DragHandler : MonoBehaviour
             if (TryGrab(out DraggableProp prop))
             {
                 _currentDrag = prop;
-                _currentDrag.BeginDrag(_floorPlaneY);
+                _currentDrag.BeginDrag();
             }
         }
 
@@ -41,7 +41,8 @@ public sealed class DragHandler : MonoBehaviour
         {
             float snappedX = SnapToGrid(floorPos.x, _currentDrag.SnapTileSize);
             float snappedZ = SnapToGrid(floorPos.z, _currentDrag.SnapTileSize);
-            _currentDrag.UpdateDragPosition(snappedX, snappedZ);
+            float surfaceY = GetSurfaceYAtXZ(snappedX, snappedZ);
+            _currentDrag.UpdateDragPosition(snappedX, snappedZ, surfaceY);
         }
 
         if (Input.GetMouseButtonUp(0) && _currentDrag != null)
@@ -56,20 +57,23 @@ public sealed class DragHandler : MonoBehaviour
         {
             float snappedX = SnapToGrid(floorPos.x, _currentDrag.SnapTileSize);
             float snappedZ = SnapToGrid(floorPos.z, _currentDrag.SnapTileSize);
-            Vector3 dropPos = new Vector3(snappedX, floorPos.y, snappedZ);
+            float surfaceY = GetSurfaceYAtXZ(snappedX, snappedZ);
 
-            PropSocket socket = FindMatchingSocket(dropPos, _currentDrag.TargetSocketTag);
+            PropSocket socket = FindMatchingSocket(
+                new Vector3(snappedX, floorPos.y, snappedZ),
+                _currentDrag.TargetSocketTag);
+
             if (socket != null)
                 _currentDrag.SnapToSocket(socket);
             else
-                _currentDrag.FinalizeDrop(snappedX, snappedZ);
+                _currentDrag.FinalizeDrop(snappedX, snappedZ, surfaceY);
         }
         else
         {
-            // Cursor off-screen or nearly parallel to floor — drop in place.
-            _currentDrag.FinalizeDrop(
-                _currentDrag.transform.position.x,
-                _currentDrag.transform.position.z);
+            // Cursor off-screen — drop in place on whatever surface is below.
+            float sx = _currentDrag.transform.position.x;
+            float sz = _currentDrag.transform.position.z;
+            _currentDrag.FinalizeDrop(sx, sz, GetSurfaceYAtXZ(sx, sz));
         }
         _currentDrag = null;
     }
@@ -99,6 +103,25 @@ public sealed class DragHandler : MonoBehaviour
     private static float SnapToGrid(float value, float snapSize)
     {
         return Mathf.Round(value / snapSize) * snapSize;
+    }
+
+    // Shoot a ray straight down; return the Y of the highest surface below (x, z),
+    // excluding the dragged prop's own colliders so it can't stand on itself.
+    private float GetSurfaceYAtXZ(float x, float z)
+    {
+        var hits = Physics.RaycastAll(
+            new Vector3(x, 1000f, z), Vector3.down, 2000f, _dragLayerMask);
+
+        float topY = _floorPlaneY;
+        foreach (var hit in hits)
+        {
+            if (_currentDrag != null &&
+                hit.collider.GetComponentInParent<DraggableProp>() == _currentDrag)
+                continue;
+            if (hit.point.y > topY)
+                topY = hit.point.y;
+        }
+        return topY;
     }
 
     // XZ-distance check: top-down game, socket height is irrelevant for snap.

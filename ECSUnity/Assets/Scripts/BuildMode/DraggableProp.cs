@@ -8,31 +8,25 @@ public sealed class DraggableProp : MonoBehaviour
 {
     public enum DragState { Idle, Dragging, Settled }
 
-    [Tooltip("World-units per snap step. Default 1.0 matches the engine tile size.")]
+    [Tooltip("World-units per snap step. Default 0.5 = half-tile resolution.")]
     [Range(0.1f, 5.0f)]
-    [SerializeField] private float _snapTileSize = 1.0f;
+    [SerializeField] private float _snapTileSize = 0.5f;
 
     [Tooltip("If non-empty, attempt to parent onto a PropSocket with this tag on drop.")]
     [SerializeField] private string _targetSocketTag = "";
 
-    [Tooltip("World-units lifted off the floor while dragging — visual grab feedback.")]
+    [Tooltip("World-units lifted above the current surface while dragging.")]
     [Range(0f, 2f)]
     [SerializeField] private float _grabHeight = 0.1f;
 
     public DragState CurrentState { get; private set; } = DragState.Idle;
-    public float SnapTileSize    => _snapTileSize;
+    public float SnapTileSize     => _snapTileSize;
     public string TargetSocketTag => _targetSocketTag;
-    public float GrabHeight      => _grabHeight;
-
-    private float _idleY;
+    public float GrabHeight       => _grabHeight;
 
     // Called by DragHandler when the player clicks this prop.
-    // floorY: the Y the prop should return to when dropped on the floor.
-    // Needed when detaching from a socket so _idleY resets to floor, not the socket height.
-    public void BeginDrag(float floorY = 0f)
+    public void BeginDrag()
     {
-        bool detachedFromSocket = false;
-
         // If parented to a PropSocket (e.g. banana on a table), detach and free the socket.
         if (transform.parent != null)
         {
@@ -42,20 +36,16 @@ public sealed class DraggableProp : MonoBehaviour
                 socket.IsOccupied    = false;
                 socket.OccupyingProp = null;
                 transform.SetParent(null);
-                detachedFromSocket = true;
             }
         }
-
-        // When coming off a socket the prop's world Y is the socket height.
-        // Use floorY so a floor-drop lands at the correct level, not mid-air.
-        _idleY = detachedFromSocket ? floorY : transform.position.y;
         CurrentState = DragState.Dragging;
     }
 
-    // Called each frame by DragHandler with the snapped cursor projection.
-    public void UpdateDragPosition(float snappedX, float snappedZ)
+    // surfaceY: Y of the highest surface under the prop's XZ, supplied by DragHandler each frame.
+    // The prop hovers at surfaceY + _grabHeight so it tracks whatever it's above.
+    public void UpdateDragPosition(float snappedX, float snappedZ, float surfaceY)
     {
-        transform.position = new Vector3(snappedX, _idleY + _grabHeight, snappedZ);
+        transform.position = new Vector3(snappedX, surfaceY + _grabHeight, snappedZ);
     }
 
     // Called by DragHandler when a matching socket is found at the drop point.
@@ -69,10 +59,10 @@ public sealed class DraggableProp : MonoBehaviour
         CurrentState = DragState.Idle;
     }
 
-    // Called by DragHandler when dropped on empty floor (no matching socket nearby).
-    public void FinalizeDrop(float snappedX, float snappedZ)
+    // surfaceY: Y of the surface at the drop point; prop rests directly on it.
+    public void FinalizeDrop(float snappedX, float snappedZ, float surfaceY)
     {
-        transform.position = new Vector3(snappedX, _idleY, snappedZ);
+        transform.position = new Vector3(snappedX, surfaceY, snappedZ);
         CurrentState = DragState.Settled;
     }
 
