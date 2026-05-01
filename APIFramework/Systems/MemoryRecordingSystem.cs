@@ -5,6 +5,7 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Narrative;
+using APIFramework.Systems.Tuning;
 
 namespace APIFramework.Systems;
 
@@ -41,6 +42,7 @@ public sealed class MemoryRecordingSystem : ISystem
 {
     private readonly EntityManager _em;
     private readonly MemoryConfig  _cfg;
+    private readonly TuningCatalog _tuning;
 
     /// <summary>
     /// Subscribes the routing handler to the supplied <paramref name="bus"/>.
@@ -49,10 +51,12 @@ public sealed class MemoryRecordingSystem : ISystem
     /// <param name="em">Entity manager — used to lookup participants and to create
     /// relationship entities on demand.</param>
     /// <param name="cfg">Memory tuning — supplies per-buffer capacity caps.</param>
-    public MemoryRecordingSystem(NarrativeEventBus bus, EntityManager em, MemoryConfig cfg)
+    /// <param name="tuning">Per-archetype tuning catalog; supplies memory-persistence-bias multipliers.</param>
+    public MemoryRecordingSystem(NarrativeEventBus bus, EntityManager em, MemoryConfig cfg, TuningCatalog? tuning = null)
     {
-        _em  = em;
-        _cfg = cfg;
+        _em     = em;
+        _cfg    = cfg;
+        _tuning = tuning ?? TuningCatalog.Empty();
         bus.OnCandidateEmitted += OnCandidateEmitted;
     }
 
@@ -111,8 +115,15 @@ public sealed class MemoryRecordingSystem : ISystem
             ? entity.Get<PersonalMemoryComponent>().Recent
             : Array.Empty<MemoryEntry>();
 
-        var entry = BuildEntry(candidate);
-        var next  = AppendBounded(current, entry, _cfg.MaxPersonalMemoryCount);
+        var archetypeId = entity.Has<NpcArchetypeComponent>()
+            ? entity.Get<NpcArchetypeComponent>().ArchetypeId : null;
+        var memBias = _tuning.GetMemoryPersistenceBias(archetypeId);
+
+        var entry = BuildEntryWithBias(candidate, memBias);
+
+        // Effective capacity: higher decayRateMult → smaller buffer → memories dropped sooner.
+        int effectiveMax = Math.Max(1, (int)(_cfg.MaxPersonalMemoryCount / memBias.DecayRateMult));
+        var next = AppendBounded(current, entry, effectiveMax);
         entity.Add(new PersonalMemoryComponent { Recent = next });
     }
 
@@ -152,6 +163,9 @@ public sealed class MemoryRecordingSystem : ISystem
     // ── Entry construction ────────────────────────────────────────────────────
 
     private static MemoryEntry BuildEntry(NarrativeEventCandidate c)
+        => BuildEntryWithBias(c, MemoryPersistenceBias.Default);
+
+    private static MemoryEntry BuildEntryWithBias(NarrativeEventCandidate c, MemoryPersistenceBias bias)
     {
         int[] canonical;
         if (c.ParticipantIds.Count == 2)
@@ -167,6 +181,17 @@ public sealed class MemoryRecordingSystem : ISystem
             canonical = c.ParticipantIds.ToArray();
         }
 
+        // persistenceMult < 1.0 probabilistically demotes normally-persistent events.
+        // Deterministic: hash the event ID so the same event always resolves the same way.
+        bool persistent = IsPersistent(c.Kind);
+        if (persistent && bias.PersistenceMult < 1f)
+        {
+            int hash = HashEventForPersistence(c.Tick, c.Kind, canonical);
+            float roll = (hash & 0x7FFFFFFF) / (float)int.MaxValue;
+            if (roll >= bias.PersistenceMult)
+                persistent = false;
+        }
+
         return new MemoryEntry(
             Id:             BuildId(c.Tick, c.Kind, canonical),
             Tick:           c.Tick,
@@ -174,8 +199,16 @@ public sealed class MemoryRecordingSystem : ISystem
             ParticipantIds: canonical,
             RoomId:         c.RoomId,
             Detail:         c.Detail,
-            Persistent:     IsPersistent(c.Kind)
+            Persistent:     persistent
         );
+    }
+
+    private static int HashEventForPersistence(long tick, NarrativeEventKind kind, int[] participants)
+    {
+        int hash = (int)(tick ^ (tick >> 17)) ^ (int)kind;
+        foreach (var p in participants)
+            hash = hash * 397 ^ p;
+        return hash;
     }
 
     /// <summary>

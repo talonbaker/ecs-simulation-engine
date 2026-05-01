@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypeSlipBias": [
+    {"archetype": "the-old-hand",        "movementSpeedFactor": 0.90, "slipChanceMult": 0.70},
+    {"archetype": "the-newbie",          "movementSpeedFactor": 1.10, "slipChanceMult": 1.30},
+    {"archetype": "the-cynic",           "movementSpeedFactor": 0.95, "slipChanceMult": 0.85},
+    {"archetype": "the-vent",            "movementSpeedFactor": 1.05, "slipChanceMult": 1.20},
+    {"archetype": "the-hermit",          "movementSpeedFactor": 0.95, "slipChanceMult": 0.80},
+    {"archetype": "the-climber",         "movementSpeedFactor": 1.00, "slipChanceMult": 0.90},
+    {"archetype": "the-affair",          "movementSpeedFactor": 1.05, "slipChanceMult": 1.15},
+    {"archetype": "the-recovering",      "movementSpeedFactor": 0.95, "slipChanceMult": 0.85},
+    {"archetype": "the-founders-nephew", "movementSpeedFactor": 1.10, "slipChanceMult": 1.20},
+    {"archetype": "the-crush",           "movementSpeedFactor": 1.00, "slipChanceMult": 1.00}
+  ]
+}

@@ -16,7 +16,7 @@ public enum IntendedActionKind
     /// <summary>NPC is performing scheduled work.</summary>
     Work,
     /// <summary>NPC is moving to rescue an Incapacitated NPC (Heimlich, CPR, or door-unlock).</summary>
-    Rescue
+    Rescue,
     /// <summary>NPC is performing an assigned office chore.</summary>
     ChoreWork
 }

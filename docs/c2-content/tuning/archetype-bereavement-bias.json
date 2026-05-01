@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypeBereavementBias": [
+    {"archetype": "the-vent",            "stressIntensityMult": 1.20, "moodIntensityMult": 1.30, "memoryPersistenceMult": 1.00},
+    {"archetype": "the-cynic",           "stressIntensityMult": 0.70, "moodIntensityMult": 0.65, "memoryPersistenceMult": 0.85},
+    {"archetype": "the-recovering",      "stressIntensityMult": 1.10, "moodIntensityMult": 1.20, "memoryPersistenceMult": 1.10},
+    {"archetype": "the-newbie",          "stressIntensityMult": 1.10, "moodIntensityMult": 1.15, "memoryPersistenceMult": 1.05},
+    {"archetype": "the-old-hand",        "stressIntensityMult": 0.85, "moodIntensityMult": 0.90, "memoryPersistenceMult": 0.95},
+    {"archetype": "the-hermit",          "stressIntensityMult": 0.80, "moodIntensityMult": 0.75, "memoryPersistenceMult": 0.90},
+    {"archetype": "the-climber",         "stressIntensityMult": 0.85, "moodIntensityMult": 0.80, "memoryPersistenceMult": 1.00},
+    {"archetype": "the-affair",          "stressIntensityMult": 1.05, "moodIntensityMult": 1.10, "memoryPersistenceMult": 0.95},
+    {"archetype": "the-founders-nephew", "stressIntensityMult": 0.60, "moodIntensityMult": 0.55, "memoryPersistenceMult": 0.80},
+    {"archetype": "the-crush",           "stressIntensityMult": 1.00, "moodIntensityMult": 1.00, "memoryPersistenceMult": 1.00}
+  ]
+}

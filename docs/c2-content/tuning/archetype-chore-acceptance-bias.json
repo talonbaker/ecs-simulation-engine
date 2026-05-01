@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "biases": {
+    "the-old-hand":         {"cleanMicrowave": 0.85, "cleanFridge": 0.70, "cleanBathroom": 0.65, "takeOutTrash": 0.50, "refillWaterCooler": 0.75, "restockSupplyCloset": 0.70, "replaceToner": 0.60},
+    "the-cynic":            {"cleanMicrowave": 0.60, "cleanFridge": 0.55, "cleanBathroom": 0.50, "takeOutTrash": 0.65, "refillWaterCooler": 0.55, "restockSupplyCloset": 0.50, "replaceToner": 0.45},
+    "the-newbie":           {"cleanMicrowave": 0.95, "cleanFridge": 0.90, "cleanBathroom": 0.90, "takeOutTrash": 0.85, "refillWaterCooler": 0.90, "restockSupplyCloset": 0.85, "replaceToner": 0.80},
+    "the-founders-nephew":  {"cleanMicrowave": 0.05, "cleanFridge": 0.05, "cleanBathroom": 0.05, "takeOutTrash": 0.05, "refillWaterCooler": 0.05, "restockSupplyCloset": 0.05, "replaceToner": 0.05},
+    "the-climber":          {"cleanMicrowave": 0.40, "cleanFridge": 0.30, "cleanBathroom": 0.25, "takeOutTrash": 0.20, "refillWaterCooler": 0.45, "restockSupplyCloset": 0.35, "replaceToner": 0.30},
+    "the-recovering":       {"cleanMicrowave": 0.70, "cleanFridge": 0.65, "cleanBathroom": 0.70, "takeOutTrash": 0.55, "refillWaterCooler": 0.65, "restockSupplyCloset": 0.75, "replaceToner": 0.60},
+    "the-vent":             {"cleanMicrowave": 0.30, "cleanFridge": 0.25, "cleanBathroom": 0.20, "takeOutTrash": 0.20, "refillWaterCooler": 0.30, "restockSupplyCloset": 0.25, "replaceToner": 0.20},
+    "the-hermit":           {"cleanMicrowave": 0.50, "cleanFridge": 0.45, "cleanBathroom": 0.55, "takeOutTrash": 0.40, "refillWaterCooler": 0.50, "restockSupplyCloset": 0.60, "replaceToner": 0.50},
+    "the-affair":           {"cleanMicrowave": 0.45, "cleanFridge": 0.40, "cleanBathroom": 0.35, "takeOutTrash": 0.30, "refillWaterCooler": 0.40, "restockSupplyCloset": 0.40, "replaceToner": 0.35},
+    "the-crush":            {"cleanMicrowave": 0.65, "cleanFridge": 0.60, "cleanBathroom": 0.60, "takeOutTrash": 0.55, "refillWaterCooler": 0.65, "restockSupplyCloset": 0.60, "replaceToner": 0.55}
+  }
+}

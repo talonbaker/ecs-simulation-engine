@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypeMass": [
+    {"archetype": "the-old-hand",        "massKg": 75.0},
+    {"archetype": "the-newbie",          "massKg": 65.0},
+    {"archetype": "the-cynic",           "massKg": 70.0},
+    {"archetype": "the-vent",            "massKg": 80.0},
+    {"archetype": "the-climber",         "massKg": 70.0},
+    {"archetype": "the-hermit",          "massKg": 65.0},
+    {"archetype": "the-founders-nephew", "massKg": 65.0},
+    {"archetype": "the-recovering",      "massKg": 75.0},
+    {"archetype": "the-affair",          "massKg": 70.0},
+    {"archetype": "the-crush",           "massKg": 60.0}
+  ]
+}

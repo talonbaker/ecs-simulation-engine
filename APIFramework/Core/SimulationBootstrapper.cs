@@ -15,6 +15,8 @@ using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using APIFramework.Systems.LifeState;
+using APIFramework.Systems.Rescue;
+using APIFramework.Systems.Tuning;
 using System.Linq;
 using System.Reflection;
 using Warden.Contracts.Telemetry;
@@ -712,6 +714,7 @@ public class SimulationBootstrapper
     {
         var sys = Config.Systems;
         var choreBiasTable = ChoreAcceptanceBiasTable.LoadDefault((float)Config.Chores.DefaultAcceptanceBias);
+        var tuning = TuningCatalog.LoadFromDirectory();
 
         // Spatial â€” sync index, room membership, cache invalidation (Phase 5).
         // ProximityEvent moves to Lighting (Phase 7) so it fires after illumination is current.
@@ -832,8 +835,11 @@ public class SimulationBootstrapper
         Engine.AddSystem(new PersistenceThresholdDetector(
             Chronicle, NarrativeBus, EntityManager, Clock, Random, Config.Chronicle), SystemPhase.Narrative);
 
+        // Bereavement â€” reacts to death events on the narrative bus; applies grief/stress to witnesses and colleagues.
+        Engine.AddSystem(new BereavementSystem(NarrativeBus, EntityManager, Clock, Config.Bereavement, tuning), SystemPhase.Narrative);
+
         // Memory recording â€” subscribes to the bus and routes candidates to per-pair/personal buffers.
-        Engine.AddSystem(new MemoryRecordingSystem(NarrativeBus, EntityManager, Config.Memory), SystemPhase.Narrative);
+        Engine.AddSystem(new MemoryRecordingSystem(NarrativeBus, EntityManager, Config.Memory, tuning), SystemPhase.Narrative);
 
         // Dialog â€” after Narrative so final drive state is visible
         if (CorpusService != null)
@@ -874,7 +880,8 @@ public class SimulationBootstrapper
                 Clock,
                 Config.Choking,
                 EntityManager,
-                SoundBus),
+                SoundBus,
+                tuning),
             SystemPhase.Cleanup);
 
         // Life state transitions â€” processes queued state changes (Aliveâ†’Incapacitatedâ†’Deceased);
@@ -896,7 +903,8 @@ public class SimulationBootstrapper
                 Config,
                 lifeStateTransition,
                 Random,
-                SoundBus),
+                SoundBus,
+                tuning),
             SystemPhase.Cleanup);
 
         // Chore execution — advances assigned chore progress each tick; fires on ChoreWork intent.

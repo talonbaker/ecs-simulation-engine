@@ -6,6 +6,7 @@ using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Audio;
 using APIFramework.Systems.Narrative;
+using APIFramework.Systems.Tuning;
 
 using LS = global::APIFramework.Components.LifeState;
 
@@ -48,6 +49,7 @@ public class ChokingDetectionSystem : ISystem
     private readonly ChokingConfig _cfg;
     private readonly EntityManager _em;
     private readonly SoundTriggerBus? _soundBus;
+    private readonly TuningCatalog _tuning;
 
     /// <summary>
     /// Constructs the choking detection system with all required dependencies.
@@ -57,14 +59,16 @@ public class ChokingDetectionSystem : ISystem
     /// <param name="clock">Simulation clock; supplies the current tick stamped onto markers and events.</param>
     /// <param name="cfg">Choking thresholds and tuning values (bolus size, distraction triggers, panic intensity, incapacitation tick budget).</param>
     /// <param name="em">Entity manager used for cross-entity lookups (bolus by id, witnesses).</param>
-    /// <exception cref="ArgumentNullException">Any dependency is null.</exception>
+    /// <param name="tuning">Per-archetype tuning catalog; supplies choke-bias multipliers.</param>
+    /// <exception cref="ArgumentNullException">Any required dependency is null.</exception>
     public ChokingDetectionSystem(
         LifeStateTransitionSystem transition,
         NarrativeEventBus narrative,
         SimulationClock clock,
         ChokingConfig cfg,
         EntityManager em,
-        SoundTriggerBus? soundBus = null)
+        SoundTriggerBus? soundBus = null,
+        TuningCatalog? tuning = null)
     {
         _transition = transition ?? throw new ArgumentNullException(nameof(transition));
         _narrative = narrative ?? throw new ArgumentNullException(nameof(narrative));
@@ -72,6 +76,7 @@ public class ChokingDetectionSystem : ISystem
         _cfg = cfg ?? throw new ArgumentNullException(nameof(cfg));
         _em = em ?? throw new ArgumentNullException(nameof(em));
         _soundBus = soundBus;
+        _tuning = tuning ?? TuningCatalog.Empty();
     }
 
     /// <summary>
@@ -94,14 +99,21 @@ public class ChokingDetectionSystem : ISystem
             if (!LifeStateGuard.IsAlive(npc)) continue;
             if (npc.Has<IsChokingTag>()) continue;
 
+            // Per-archetype choke bias: multipliers shift each threshold for this NPC's archetype.
+            var archetypeId = npc.Has<NpcArchetypeComponent>() ? npc.Get<NpcArchetypeComponent>().ArchetypeId : null;
+            var chokeBias = _tuning.GetChokeBias(archetypeId);
+
             // Bolus toughness (chew resistance) lives on the bolus entity itself.
             float bolusSize = bolus.Has<BolusComponent>() ? bolus.Get<BolusComponent>().Toughness : 0f;
-            if (bolusSize < _cfg.BolusSizeThreshold) continue;
+            float effectiveBolusSizeThreshold = _cfg.BolusSizeThreshold * chokeBias.BolusSizeThresholdMult;
+            if (bolusSize < effectiveBolusSizeThreshold) continue;
 
-            // Distraction check on the NPC
+            // Distraction check on the NPC — thresholds shifted by per-archetype multipliers.
+            float effectiveEnergyThreshold = _cfg.EnergyThreshold * chokeBias.EnergyThresholdMult;
+            float effectiveStressThreshold = _cfg.StressThreshold * chokeBias.StressThresholdMult;
             bool distracted =
-                (npc.Has<EnergyComponent>() && npc.Get<EnergyComponent>().Energy < _cfg.EnergyThreshold)
-                || (npc.Has<StressComponent>() && npc.Get<StressComponent>().AcuteLevel >= _cfg.StressThreshold)
+                (npc.Has<EnergyComponent>() && npc.Get<EnergyComponent>().Energy < effectiveEnergyThreshold)
+                || (npc.Has<StressComponent>() && npc.Get<StressComponent>().AcuteLevel >= effectiveStressThreshold)
                 || (npc.Has<SocialDrivesComponent>() && npc.Get<SocialDrivesComponent>().Irritation.Current >= _cfg.IrritationThreshold);
 
             if (!distracted) continue;

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypeRescueBias": [
+    {"archetype": "the-newbie",          "bias": 0.85, "heimlichCompetence": 0.05, "cprCompetence": 0.00, "doorUnlockCompetence": 0.10},
+    {"archetype": "the-old-hand",        "bias": 0.80, "heimlichCompetence": 0.20, "cprCompetence": 0.10, "doorUnlockCompetence": 0.15},
+    {"archetype": "the-cynic",           "bias": 0.55, "heimlichCompetence": 0.15, "cprCompetence": 0.05, "doorUnlockCompetence": 0.10},
+    {"archetype": "the-climber",         "bias": 0.50, "heimlichCompetence": 0.10, "cprCompetence": 0.05, "doorUnlockCompetence": 0.05},
+    {"archetype": "the-recovering",      "bias": 0.65, "heimlichCompetence": 0.10, "cprCompetence": 0.15, "doorUnlockCompetence": 0.10},
+    {"archetype": "the-vent",            "bias": 0.40, "heimlichCompetence": 0.00, "cprCompetence": 0.00, "doorUnlockCompetence": 0.05},
+    {"archetype": "the-hermit",          "bias": 0.30, "heimlichCompetence": 0.05, "cprCompetence": 0.00, "doorUnlockCompetence": 0.10},
+    {"archetype": "the-founders-nephew", "bias": 0.10, "heimlichCompetence": 0.00, "cprCompetence": 0.00, "doorUnlockCompetence": 0.00},
+    {"archetype": "the-affair",          "bias": 0.45, "heimlichCompetence": 0.05, "cprCompetence": 0.05, "doorUnlockCompetence": 0.05},
+    {"archetype": "the-crush",           "bias": 0.55, "heimlichCompetence": 0.05, "cprCompetence": 0.05, "doorUnlockCompetence": 0.10}
+  ]
+}

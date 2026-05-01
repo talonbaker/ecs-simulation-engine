@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypeMemoryPersistenceBias": [
+    {"archetype": "the-cynic",           "persistenceMult": 0.85, "decayRateMult": 1.20},
+    {"archetype": "the-old-hand",        "persistenceMult": 1.10, "decayRateMult": 0.85},
+    {"archetype": "the-recovering",      "persistenceMult": 1.20, "decayRateMult": 1.00},
+    {"archetype": "the-vent",            "persistenceMult": 1.05, "decayRateMult": 0.95},
+    {"archetype": "the-hermit",          "persistenceMult": 0.90, "decayRateMult": 1.10},
+    {"archetype": "the-climber",         "persistenceMult": 1.00, "decayRateMult": 1.00},
+    {"archetype": "the-newbie",          "persistenceMult": 1.10, "decayRateMult": 0.90},
+    {"archetype": "the-affair",          "persistenceMult": 0.90, "decayRateMult": 1.05},
+    {"archetype": "the-founders-nephew", "persistenceMult": 0.70, "decayRateMult": 1.30},
+    {"archetype": "the-crush",           "persistenceMult": 1.00, "decayRateMult": 1.00}
+  ]
+}

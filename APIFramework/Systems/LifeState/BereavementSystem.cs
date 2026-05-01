@@ -4,6 +4,7 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Narrative;
+using APIFramework.Systems.Tuning;
 
 
 namespace APIFramework.Systems.LifeState;
@@ -46,6 +47,7 @@ public sealed class BereavementSystem : ISystem
     private readonly NarrativeEventBus _narrativeBus;
     private readonly SimulationClock  _clock;
     private readonly BereavementConfig _cfg;
+    private readonly TuningCatalog    _tuning;
 
     /// <summary>
     /// Subscribes to <see cref="NarrativeEventBus.OnCandidateEmitted"/> to react to death events.
@@ -54,16 +56,19 @@ public sealed class BereavementSystem : ISystem
     /// <param name="em">Entity manager — used to resolve participants by EntityIntId.</param>
     /// <param name="clock">Simulation clock — supplies <c>CurrentTick</c> for emitted candidates.</param>
     /// <param name="cfg">Bereavement config — supplies witness/colleague intensity values.</param>
+    /// <param name="tuning">Per-archetype tuning catalog; supplies bereavement-bias multipliers.</param>
     public BereavementSystem(
         NarrativeEventBus  narrativeBus,
         EntityManager      em,
         SimulationClock    clock,
-        BereavementConfig  cfg)
+        BereavementConfig  cfg,
+        TuningCatalog?     tuning = null)
     {
         _em           = em;
         _narrativeBus = narrativeBus;
         _clock        = clock;
         _cfg          = cfg;
+        _tuning       = tuning ?? TuningCatalog.Empty();
         narrativeBus.OnCandidateEmitted += OnDeathEvent;
     }
 
@@ -90,6 +95,10 @@ public sealed class BereavementSystem : ISystem
             var witness = FindEntityByIntId(ev.ParticipantIds[1]);
             if (witness != null && LifeStateGuard.IsAlive(witness))
             {
+                var witnessArchetype = witness.Has<NpcArchetypeComponent>()
+                    ? witness.Get<NpcArchetypeComponent>().ArchetypeId : null;
+                var witnessBias = _tuning.GetBereavementBias(witnessArchetype);
+
                 // Stress counter — StressSystem applies and clears.
                 if (witness.Has<StressComponent>())
                 {
@@ -98,11 +107,12 @@ public sealed class BereavementSystem : ISystem
                     witness.Add(stress);
                 }
 
-                // Grief spike — MoodSystem decays it via NegativeDecayRate.
+                // Grief spike scaled by archetype mood intensity multiplier.
                 if (witness.Has<MoodComponent>())
                 {
                     var mood = witness.Get<MoodComponent>();
-                    mood.GriefLevel = MathF.Max(mood.GriefLevel, (float)_cfg.WitnessGriefIntensity);
+                    float grief = (float)_cfg.WitnessGriefIntensity * witnessBias.MoodIntensityMult;
+                    mood.GriefLevel = MathF.Max(mood.GriefLevel, grief);
                     witness.Add(mood);
                 }
             }
@@ -132,6 +142,11 @@ public sealed class BereavementSystem : ISystem
             // Skip if this NPC was the witness (already handled above).
             if (ev.ParticipantIds.Count >= 2 && colleagueIntId == ev.ParticipantIds[1]) continue;
 
+            // Per-archetype bereavement bias.
+            var colleagueArchetype = colleague.Has<NpcArchetypeComponent>()
+                ? colleague.Get<NpcArchetypeComponent>().ArchetypeId : null;
+            var bereavementBias = _tuning.GetBereavementBias(colleagueArchetype);
+
             // Intensity fraction: 0..1 (relationship intensity scaled from 0–100).
             float intensityFraction = rc.Intensity / 100f;
 
@@ -143,11 +158,12 @@ public sealed class BereavementSystem : ISystem
                 colleague.Add(stress);
             }
 
-            // Grief spike scaled by relationship intensity.
+            // Grief spike scaled by relationship intensity and archetype mood multiplier.
             if (colleague.Has<MoodComponent>())
             {
                 var mood = colleague.Get<MoodComponent>();
-                float griefAmount = (float)(_cfg.ColleagueBereavementGriefIntensity * intensityFraction);
+                float griefAmount = (float)(_cfg.ColleagueBereavementGriefIntensity * intensityFraction)
+                    * bereavementBias.MoodIntensityMult;
                 mood.GriefLevel = MathF.Max(mood.GriefLevel, griefAmount);
                 colleague.Add(mood);
             }

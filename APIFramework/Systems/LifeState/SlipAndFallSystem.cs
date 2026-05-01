@@ -5,6 +5,7 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Audio;
+using APIFramework.Systems.Tuning;
 
 using LS = global::APIFramework.Components.LifeState;
 
@@ -30,6 +31,7 @@ public class SlipAndFallSystem : ISystem
     private readonly LifeStateTransitionSystem _lifeStateTransitionSystem;
     private readonly SeededRandom _rng;
     private readonly SoundTriggerBus? _soundBus;
+    private readonly TuningCatalog _tuning;
 
     public SlipAndFallSystem(
         EntityManager entityManager,
@@ -37,7 +39,8 @@ public class SlipAndFallSystem : ISystem
         SimConfig config,
         LifeStateTransitionSystem lifeStateTransitionSystem,
         SeededRandom rng,
-        SoundTriggerBus? soundBus = null)
+        SoundTriggerBus? soundBus = null,
+        TuningCatalog? tuning = null)
     {
         _entityManager = entityManager ?? throw new ArgumentNullException(nameof(entityManager));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
@@ -45,6 +48,7 @@ public class SlipAndFallSystem : ISystem
         _lifeStateTransitionSystem = lifeStateTransitionSystem ?? throw new ArgumentNullException(nameof(lifeStateTransitionSystem));
         _rng = rng ?? throw new ArgumentNullException(nameof(rng));
         _soundBus = soundBus;
+        _tuning = tuning ?? TuningCatalog.Empty();
     }
 
     public void Update(EntityManager em, float deltaTime)
@@ -58,6 +62,10 @@ public class SlipAndFallSystem : ISystem
         foreach (var npc in npcs)
         {
             if (!npc.Has<PositionComponent>()) continue;
+
+            // Per-archetype slip bias.
+            var archetypeId = npc.Has<NpcArchetypeComponent>() ? npc.Get<NpcArchetypeComponent>().ArchetypeId : null;
+            var slipBias = _tuning.GetSlipBias(archetypeId);
 
             var pos = npc.Get<PositionComponent>();
             int tileX = (int)MathF.Round(pos.X);
@@ -81,10 +89,10 @@ public class SlipAndFallSystem : ISystem
             {
                 float risk = hazard.Get<FallRiskComponent>().RiskLevel;
 
-                // Get NPC's speed modifier (default 1.0)
+                // Get NPC's speed modifier, scaled by the archetype's movement-speed factor.
                 float speed = npc.Has<MovementComponent>()
-                    ? npc.Get<MovementComponent>().SpeedModifier
-                    : 1.0f;
+                    ? npc.Get<MovementComponent>().SpeedModifier * slipBias.MovementSpeedFactor
+                    : slipBias.MovementSpeedFactor;
 
                 // Apply stress multiplier if acute stress is high
                 float stressMult = 1.0f;
@@ -95,7 +103,8 @@ public class SlipAndFallSystem : ISystem
                         stressMult = _config.StressSlipMultiplier;
                 }
 
-                float slipChance = risk * speed * stressMult * _config.GlobalSlipChanceScale;
+                // Apply per-archetype slip chance multiplier.
+                float slipChance = risk * speed * stressMult * _config.GlobalSlipChanceScale * slipBias.SlipChanceMult;
 
                 // Deterministic seeded roll: hash (npc.Id, hazard.Id, current time)
                 // Uses a stateless hash-based RNG to produce deterministic results

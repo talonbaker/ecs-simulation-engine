@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypeChokeBias": [
+    {"archetype": "the-newbie",          "bolusSizeThresholdMult": 0.85, "energyThresholdMult": 1.10, "stressThresholdMult": 0.90},
+    {"archetype": "the-old-hand",        "bolusSizeThresholdMult": 1.20, "energyThresholdMult": 1.00, "stressThresholdMult": 1.10},
+    {"archetype": "the-cynic",           "bolusSizeThresholdMult": 1.00, "energyThresholdMult": 1.00, "stressThresholdMult": 1.05},
+    {"archetype": "the-vent",            "bolusSizeThresholdMult": 0.90, "energyThresholdMult": 1.05, "stressThresholdMult": 0.85},
+    {"archetype": "the-hermit",          "bolusSizeThresholdMult": 1.10, "energyThresholdMult": 0.95, "stressThresholdMult": 1.10},
+    {"archetype": "the-climber",         "bolusSizeThresholdMult": 1.05, "energyThresholdMult": 1.00, "stressThresholdMult": 1.00},
+    {"archetype": "the-affair",          "bolusSizeThresholdMult": 0.90, "energyThresholdMult": 1.05, "stressThresholdMult": 0.85},
+    {"archetype": "the-recovering",      "bolusSizeThresholdMult": 0.95, "energyThresholdMult": 1.00, "stressThresholdMult": 0.90},
+    {"archetype": "the-founders-nephew", "bolusSizeThresholdMult": 1.00, "energyThresholdMult": 0.95, "stressThresholdMult": 1.00},
+    {"archetype": "the-crush",           "bolusSizeThresholdMult": 1.00, "energyThresholdMult": 1.00, "stressThresholdMult": 1.00}
+  ]
+}
