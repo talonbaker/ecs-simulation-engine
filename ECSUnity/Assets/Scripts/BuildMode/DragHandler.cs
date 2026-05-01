@@ -17,6 +17,13 @@ public sealed class DragHandler : MonoBehaviour
     [SerializeField] private LayerMask _dragLayerMask = ~0;
 
     private DraggableProp _currentDrag;
+    private bool          _active = true;
+
+    /// <summary>Allow this handler to process drag input. Called by BuildModeController on build-mode enter.</summary>
+    public void Activate()   => _active = true;
+
+    /// <summary>Suppress all drag input. Called by BuildModeController on build-mode exit.</summary>
+    public void Deactivate() => _active = false;
 
     private void Awake()
     {
@@ -26,7 +33,7 @@ public sealed class DragHandler : MonoBehaviour
 
     private void Update()
     {
-        if (_camera == null) return;
+        if (!_active || _camera == null) return;
 
         if (Input.GetMouseButtonDown(0) && _currentDrag == null)
         {

@@ -51,3 +51,46 @@ Save the prefabs. Commit the tuned values.
 - Banana parents to floor → there's a stray PropSocket somewhere it
   shouldn't be.
 - Picking up a parented banana doesn't detach → IsOccupied not cleared.
+
+---
+
+## Integration verification (after WP-3.1.S.2-INT)
+
+This step confirms drag-place in MainScene mutates engine state.
+
+**One-time scene setup (Talon):**
+1. Add an empty GameObject to MainScene named `PropToEngineBridge`.
+2. Add the `PropToEngineBridge` component to it.
+3. Wire `_buildModeController` → the existing `BuildModeController` GameObject.
+4. Wire `_archetypeMap` → `Assets/Resources/PropArchetypeMap.asset`.
+5. Wire `_dragHandler` on `BuildModeController` → the `DragHandler` GameObject.
+   (If `DragHandler` doesn't exist in MainScene yet, add it to the
+   `PropToEngineBridge` or a dedicated `DragHandler` GameObject.)
+
+**Test recipe:**
+1. Open Assets/Scenes/MainScene.unity.
+2. Press Play. Engine ticks; NPCs render.
+3. Toggle build mode (B key or on-screen button).
+4. Click and hold an existing prop in the scene (any desk, chair, or prop
+   that has DraggableProp wired — check the Inspector). Move it.
+   Snap behaviour identical to sandbox.
+5. Drop it.
+6. Observe in the Console: "[PropToEngineBridge] Drop: 'Table' (archetype='table') → tile (X,Y)"
+   confirms the bridge received the drop and forwarded it to the engine.
+7. Observe: NPCs whose path passed through the prop's old or new location
+   re-pathfind on the next tick (proves StructuralChangeBus fired, cache invalidated).
+8. Toggle build mode off. Click on a prop. Expect: nothing happens
+   (DragHandler deactivated).
+
+**If integration fails:**
+- Drag does nothing in build mode → BuildModeController._dragHandler not wired,
+  or DragHandler.Activate() not called. Check the toggle wiring.
+- Drag works but no Console log → PropToEngineBridge not subscribed to OnDropped.
+  Check that _buildModeController is wired and the bridge is active.
+- Drag works, Console logs, but engine state doesn't change → BuildModeController.
+  MutationApi is null (engine not booted). Check EngineHost boot log.
+- Prop snaps back to original position → engine rejected the placement
+  (expected for invalid spots; if happening unexpectedly, check archetype
+  string in PropArchetypeMap).
+- Drag still works outside build mode → BuildModeController._dragHandler not
+  wired; DragHandler.Deactivate() never called.

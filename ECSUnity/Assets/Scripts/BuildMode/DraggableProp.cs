@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -7,6 +8,9 @@ using UnityEngine;
 public sealed class DraggableProp : MonoBehaviour
 {
     public enum DragState { Idle, Dragging, Settled }
+
+    /// <summary>Fires after the prop settles at its final position (floor drop or socket snap).</summary>
+    public event Action<DraggableProp, Vector3> OnDropped;
 
     [Tooltip("World-units per snap step. Default 0.5 = half-tile resolution.")]
     [Range(0.1f, 5.0f)]
@@ -57,6 +61,7 @@ public sealed class DraggableProp : MonoBehaviour
         socket.IsOccupied    = true;
         socket.OccupyingProp = this;
         CurrentState = DragState.Idle;
+        OnDropped?.Invoke(this, transform.position);
     }
 
     // surfaceY: Y of the surface at the drop point; prop rests directly on it.
@@ -64,6 +69,7 @@ public sealed class DraggableProp : MonoBehaviour
     {
         transform.position = new Vector3(snappedX, surfaceY, snappedZ);
         CurrentState = DragState.Settled;
+        OnDropped?.Invoke(this, transform.position);
     }
 
     private void LateUpdate()
