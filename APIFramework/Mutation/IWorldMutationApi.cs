@@ -37,4 +37,16 @@ public interface IWorldMutationApi
 
     /// <summary>Updates RoomComponent.Bounds for the given room entity.</summary>
     void ChangeRoomBounds(Guid roomId, BoundsRect newBounds);
+
+    /// <summary>
+    /// Attaches ThrownVelocityComponent and ThrownTag to an existing entity, launching it.
+    /// </summary>
+    void ThrowEntity(Guid entityId, float velocityX, float velocityZ, float velocityY, float decayPerTick);
+
+    /// <summary>
+    /// Spawns a stain entity from a template (see StainTemplates) at the given tile.
+    /// Attaches StainTag, StainComponent, FallRiskComponent, and PositionComponent.
+    /// Returns the new entity's ID.
+    /// </summary>
+    Guid SpawnStain(string templateId, int tileX, int tileY);
 }

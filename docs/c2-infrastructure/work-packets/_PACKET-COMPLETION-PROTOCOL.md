@@ -10,9 +10,64 @@
 
 Sonnet executors must finish a packet without further instruction from Talon. Every packet declares:
 
-1. **Whether visual verification is needed** in Unity Editor before PR (Track 2) or whether passing tests is sufficient (Track 1).
-2. **Cost envelope** — orchestrator dispatches must stay within the 1-5-25 Claude army's per-packet budget ($0.50–$1.20).
-3. **Self-cleanup on merge** — the packet spec file is deleted on merge unless a still-pending packet depends on it. Keeps the active `work-packets/` directory clean as the project moves forward.
+1. **Dispatch discipline** — one packet, one worktree, one branch. Named for the packet ID.
+2. **Whether visual verification is needed** in Unity Editor before PR (Track 2) or whether passing tests is sufficient (Track 1).
+3. **Cost envelope** — orchestrator dispatches must stay within the 1-5-25 Claude army's per-packet budget ($0.50–$1.20).
+4. **Self-cleanup on merge** — the packet spec file is deleted on merge unless a still-pending packet depends on it. Keeps the active `work-packets/` directory clean as the project moves forward.
+
+---
+
+## Dispatch protocol — one worktree per packet
+
+**Rule (mandatory for every packet, Track 1 and Track 2):**
+
+Every new work packet is dispatched into its own dedicated git worktree. Worktrees are not reused across packets. Branches are not reused across packets.
+
+**Naming convention:**
+
+| Artifact | Pattern | Example |
+|---|---|---|
+| Branch | `sonnet-wp-<id>` | `sonnet-wp-3.2.2` |
+| Worktree path | `.claude/worktrees/sonnet-wp-<id>/` | `.claude/worktrees/sonnet-wp-3.2.2/` |
+
+The packet ID is the same identifier used in the spec filename — lowercase, dot-separated. For sandbox packets: `sonnet-wp-3.1.s.2`. For integration: `sonnet-wp-3.1.s.2-int`. For Warden-side: `sonnet-wp-3.0.w`.
+
+**Standard dispatch sequence (Talon's side):**
+
+```
+git checkout staging
+git pull origin staging
+git worktree add .claude/worktrees/sonnet-wp-<id> -b sonnet-wp-<id>
+# point the Sonnet at the worktree directory; it does its work there
+```
+
+**Why one-per-packet:**
+
+- **Visibility for the dispatcher.** A glance at `git worktree list` or `ls .claude/worktrees/` shows exactly what's in flight, with packet IDs in the names. No mental mapping from anonymous worktrees to active work.
+- **Isolated testing.** Each worktree builds and tests against its own checkout. A failing test on one branch doesn't pollute another. Talon can run the Unity Editor on one worktree while xUnit tests churn on another.
+- **Clean retirement.** After a packet merges, `git worktree remove .claude/worktrees/sonnet-wp-<id>` blows it away cleanly. No leftover state, no half-stashed changes, no "what was I doing here again."
+- **Parallelism without conflict.** Multiple Sonnets in flight at once is the default mode (per Talon's operating preferences). One worktree per packet is the discipline that makes that safe.
+
+**Sonnet executor responsibility:**
+
+Before doing anything else, the Sonnet confirms:
+
+1. The current working directory is a worktree at `.claude/worktrees/sonnet-wp-<id>/` (or equivalent path).
+2. The current branch is `sonnet-wp-<id>` (matching the packet being implemented).
+3. The branch's base is recent `origin/staging`.
+
+If any of these is wrong — wrong directory, wrong branch, branch based on something other than recent staging — **stop and notify Talon**. Do not start implementing in someone else's worktree.
+
+**Retirement on merge:**
+
+When Talon merges the PR to staging, the worktree is no longer needed. Standard cleanup:
+
+```
+git worktree remove .claude/worktrees/sonnet-wp-<id>
+git branch -D sonnet-wp-<id>
+```
+
+Talon may keep a worktree alive briefly post-merge for spot inspection; that's fine. The expectation is "blown away within a day or two of merge."
 
 ---
 
@@ -31,6 +86,7 @@ This is a Track 1 (engine) packet. All verification is handled by the xUnit test
 
 The Sonnet executor's pipeline:
 
+0. **Worktree pre-flight.** Confirm you are in a dedicated worktree at `.claude/worktrees/sonnet-wp-<id>/` on branch `sonnet-wp-<id>` based on recent `origin/staging`. If anything is wrong, stop and notify Talon. (See the **Dispatch protocol** section above.)
 1. Implement the spec.
 2. Add or update xUnit tests to cover all acceptance criteria.
 3. Run `dotnet test` from the repo root. Must be green.
@@ -93,6 +149,7 @@ This is a Track 2 (Unity) packet. xUnit tests are necessary but **not sufficient
 
 The Sonnet executor's pipeline:
 
+0. **Worktree pre-flight.** Confirm you are in a dedicated worktree at `.claude/worktrees/sonnet-wp-<id>/` on branch `sonnet-wp-<id>` based on recent `origin/staging`. If anything is wrong, stop and notify Talon. (See the **Dispatch protocol** section above.)
 1. Implement the spec — write scripts, build prefabs, compose sandbox scene per spec.
 2. Add or update xUnit tests to cover all logic-level acceptance criteria (where applicable). Visual aspects are not unit-tested; the test recipe handles them.
 3. Run `dotnet test` and `dotnet build`. Must be green.
@@ -166,6 +223,5 @@ Result: at any moment, `ls docs/c2-infrastructure/work-packets/` shows exactly w
 - The `_completed/` and `_completed-specs/` directories are frozen — historical artifacts, do not modify.
 - xUnit test discipline is unchanged.
 - The orchestrator's existing dispatch flow is unchanged.
-- Worktree-per-packet convention is unchanged.
 
-This protocol only governs the lifecycle of the active spec files in `docs/c2-infrastructure/work-packets/`.
+The worktree-per-packet rule is now formalised in the **Dispatch protocol** section above (previously informal); this protocol governs the spec-file lifecycle and dispatch discipline together.
