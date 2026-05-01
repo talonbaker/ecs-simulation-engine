@@ -5,6 +5,7 @@ using Xunit;
 
 namespace APIFramework.Tests.Components;
 
+/// <summary>AT-09: Construction and invariant tests for <see cref="RelationshipComponent"/> — canonical pair ordering of participants, <see cref="RelationshipPattern"/> capacity (max two), intensity clamping to [0, 100], and full pattern enum coverage.</summary>
 public class RelationshipComponentTests
 {
     // AT-09: canonical pair ordering enforced at construction

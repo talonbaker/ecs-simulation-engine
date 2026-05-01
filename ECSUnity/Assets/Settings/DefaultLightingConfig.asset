@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000001, type: 3}
+  m_Name: DefaultLightingConfig
+  m_EditorClassIdentifier:
+  # ── Ambient room tint ────────────────────────────────────────────────────
+  ambientTintBlend: 0.28
+  minimumRoomBrightness: 0.18
+  maximumRoomBrightness: 0.95
+  # ── Sun beam ─────────────────────────────────────────────────────────────
+  beamMaxAlpha: 0.32
+  beamMinElevationDeg: 3
+  beamMaxLengthElevationDeg: 20
+  beamMaxLengthUnits: 12
+  beamWidthMultiplier: 1.4
+  beamNightSpillAlpha: 0.12
+  beamNightSpillLength: 3
+  # ── Light source halos ────────────────────────────────────────────────────
+  haloMaxRadius: 2.5
+  haloMinAlpha: 0
+  haloMaxAlpha: 0.55
+  flickerFrequency: 0.07
+  flickerNoiseMix: 0.35
+  dyingDropProbability: 0.08
+  dyingBaseIntensityFraction: 0.22
+  # ── Wall fade ─────────────────────────────────────────────────────────────
+  wallFadedAlpha: 0.25
+  wallFullAlpha: 1
+  wallFadeSeconds: 0.18
+  wallHeight: 2.5
+  wallBaseY: 0.02
+  # ── Day-night directional light ───────────────────────────────────────────
+  sunMaxIntensity: 1
+  sunMinIntensity: 0.04
+  sunHorizonPitchDeg: 5

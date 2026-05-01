@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Core;
 using APIFramework.Systems.Audio;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -30,11 +31,27 @@ namespace APIFramework.Systems;
 /// LastVelocityX/Z on MovementComponent receive the actual XZ displacement this
 /// tick. FacingSystem reads them to derive facing direction.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="PositionComponent"/>, <see cref="MovementComponent"/>,
+/// <see cref="MovementTargetComponent"/>, <see cref="PathComponent"/>,
+/// <see cref="LifeStateComponent"/>, world-object positions
+/// (<see cref="FridgeComponent"/>, <see cref="SinkComponent"/>,
+/// <see cref="ToiletComponent"/>, <see cref="BedComponent"/>).<br/>
+/// Writes: <see cref="PositionComponent"/> (single writer of agent position),
+/// <see cref="PathComponent"/> waypoint index, <see cref="MovementComponent"/>
+/// LastVelocityX/Z; removes <see cref="MovementTargetComponent"/> on arrival.<br/>
+/// Phase: World — runs in registration order alongside the rest of the movement
+/// quality pipeline.
+/// </remarks>
 public class MovementSystem : ISystem
 {
+    /// <summary>Lower X bound for wander destinations.</summary>
     public float WorldMinX { get; set; } = 1f;
+    /// <summary>Upper X bound for wander destinations.</summary>
     public float WorldMaxX { get; set; } = 9f;
+    /// <summary>Lower Z bound for wander destinations.</summary>
     public float WorldMinZ { get; set; } = 1f;
+    /// <summary>Upper Z bound for wander destinations.</summary>
     public float WorldMaxZ { get; set; } = 9f;
 
     private readonly Dictionary<Guid, (float X, float Z)> _wanderTargets = new();
@@ -46,7 +63,13 @@ public class MovementSystem : ISystem
         _rng      = rng;
         _soundBus = soundBus;
     }
+    /// <summary>Constructs the movement system with the deterministic RNG used to pick wander destinations.</summary>
+    /// <param name="rng">Seeded RNG shared across the simulation.</param>
+    public MovementSystem(SeededRandom rng) { _rng = rng; }
 
+    /// <summary>Per-tick steering pass; advances every Alive entity toward its current target/waypoint/wander point.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Snapshot world-object positions once per tick.
@@ -64,6 +87,7 @@ public class MovementSystem : ISystem
         foreach (var entity in em.Query<PositionComponent>())
         {
             if (!entity.Has<MovementComponent>()) continue;
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: deceased position frozen
 
             var pos  = entity.Get<PositionComponent>();
             var move = entity.Get<MovementComponent>();

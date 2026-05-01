@@ -1,4 +1,4 @@
-namespace APIFramework.Core;
+﻿namespace APIFramework.Core;
 
 /// <summary>
 /// Central time authority for the simulation.
@@ -23,12 +23,24 @@ public class SimulationClock
     /// <summary>Total accumulated game-seconds since the simulation started.</summary>
     public double TotalTime { get; private set; }
 
+    /// <summary>Discrete tick counter — incremented once per simulation update. Used for event timing.</summary>
+    public long CurrentTick { get; private set; }
+
     // ── Day / Night constants ─────────────────────────────────────────────────
 
+    /// <summary>Number of game-seconds in a full 24-hour day (24 × 3600 = 86 400).</summary>
     public const float SecondsPerDay  = 86_400f;   // 24 × 3600
+
+    /// <summary>Game hour at which dawn begins (6:00 AM). The world clock starts here on Day 1.</summary>
     public const float DawnHour       = 6f;         // 6:00 AM — world starts here
+
+    /// <summary>Game hour at which the sun has fully risen (7:00 AM).</summary>
     public const float SunriseHour    = 7f;
+
+    /// <summary>Game hour at which the sun begins to set (7:00 PM / 19:00).</summary>
     public const float SunsetHour     = 19f;        // 7:00 PM
+
+    /// <summary>Game hour at which dusk ends and night begins (8:00 PM / 20:00).</summary>
     public const float DuskHour       = 20f;        // 8:00 PM
 
     // World clock starts at 6:00 AM = 21 600 game-seconds into the day
@@ -118,9 +130,18 @@ public class SimulationClock
     {
         float scaled = realDeltaTime * TimeScale;
         TotalTime   += scaled;
+        CurrentTick++;
         return scaled;
     }
 
     /// <summary>Returns deltaTime scaled by the current TimeScale.</summary>
     public float GetScaledDelta(float realDeltaTime) => realDeltaTime * TimeScale;
+
+    /// <summary>Restores clock state from a saved snapshot (save/load round-trip).</summary>
+    internal void RestoreState(double totalTime, long currentTick, float timeScale)
+    {
+        TotalTime   = totalTime;
+        CurrentTick = currentTick;
+        TimeScale   = timeScale;
+    }
 }

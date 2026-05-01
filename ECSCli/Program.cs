@@ -3,7 +3,8 @@ using APIFramework.Core;
 using APIFramework.Diagnostics;
 using ECSCli;
 using ECSCli.Ai;
-using System.CommandLine;   // CommandExtensions.InvokeAsync — used for `ai` verb delegation
+using ECSCli.World;
+using System.CommandLine;   // CommandExtensions.InvokeAsync — used for `ai` and `world` verb delegation
 using System.Diagnostics;
 
 // ── AI verb delegation ────────────────────────────────────────────────────────
@@ -15,6 +16,16 @@ using System.Diagnostics;
 if (args.Length > 0 && args[0] == "ai")
 {
     int exitCode = await AiCommand.Root.InvokeAsync(args[1..]);
+    Environment.Exit(exitCode);
+}
+
+// ── World verb delegation ─────────────────────────────────────────────────────
+//
+// `world map [options]` — renders the current world snapshot as an ASCII floor plan.
+//
+if (args.Length > 0 && args[0] == "world")
+{
+    int exitCode = await WorldCommand.Root.InvokeAsync(args[1..]);
     Environment.Exit(exitCode);
 }
 

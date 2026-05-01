@@ -24,6 +24,7 @@ public struct BolusComponent
     /// <summary>Human-readable food label ("Banana", "Steak", etc.).</summary>
     public string FoodType;
 
+    /// <summary>Debug-friendly food/calorie/volume summary.</summary>
     public override string ToString() =>
         $"{FoodType} ({Nutrients.Calories:F0} kcal | Vol: {Volume:F0}ml)";
 }

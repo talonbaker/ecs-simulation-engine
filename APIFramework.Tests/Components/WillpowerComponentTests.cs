@@ -3,6 +3,7 @@ using Xunit;
 
 namespace APIFramework.Tests.Components;
 
+/// <summary>Construction and clamping tests for <see cref="WillpowerComponent"/> — Current and Baseline fields are clamped to [0, 100], default struct is zero, and boundary values round-trip.</summary>
 public class WillpowerComponentTests
 {
     [Fact]

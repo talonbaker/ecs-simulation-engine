@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <!--
+        Save / Load panel: named slots, quick-save (F5), quick-load (F9).
+        WP-3.1.E AT-11. Hidden by default.
+    -->
+    <ui:VisualElement name="saveload-root" class="saveload-root">
+        <ui:Label class="saveload-title" text="SAVE / LOAD" />
+        <ui:TextField name="slot-name-field" class="slot-name-field"
+                      value="New Save" label="Slot" />
+        <ui:VisualElement class="saveload-buttons">
+            <ui:Button name="btn-save"      class="saveload-btn" text="SAVE" />
+            <ui:Button name="btn-load"      class="saveload-btn" text="LOAD" />
+            <ui:Button name="btn-quicksave" class="saveload-btn" text="F5"   />
+            <ui:Button name="btn-quickload" class="saveload-btn" text="F9"   />
+        </ui:VisualElement>
+        <ui:ListView name="slot-list" class="slot-list" />
+    </ui:VisualElement>
+</ui:UXML>

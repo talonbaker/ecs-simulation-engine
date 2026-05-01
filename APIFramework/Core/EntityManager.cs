@@ -1,4 +1,4 @@
-namespace APIFramework.Core;
+﻿namespace APIFramework.Core;
 
 /// <summary>
 /// Owns all Entity instances and maintains a component-type index so that
@@ -25,6 +25,7 @@ public class EntityManager
 {
     private readonly List<Entity>                       _entities        = new();
     private readonly Dictionary<Type, HashSet<Entity>> _componentIndex  = new();
+    private readonly ComponentStoreRegistry             _componentRegistry = new();
 
     // ── Deterministic entity ID counter ──────────────────────────────────────
     //
@@ -41,7 +42,14 @@ public class EntityManager
     // CreateEntity(Guid) are unaffected.
     private long _idCounter = 0;
 
+    /// <summary>
+    /// Read-only view of every entity currently owned by this manager,
+    /// in insertion (creation) order.
+    /// </summary>
     public IReadOnlyList<Entity> Entities => _entities;
+
+    /// <summary>Returns the component store registry. Internal use only.</summary>
+    internal ComponentStoreRegistry ComponentRegistry => _componentRegistry;
 
     /// <summary>
     /// Fires immediately before an entity is removed from the manager.
@@ -54,6 +62,12 @@ public class EntityManager
     /// Useful for diagnostics -- shows how many query buckets are live.
     /// </summary>
     public int ComponentTypeCount => _componentIndex.Count;
+
+    /// <summary>Current value of the entity ID counter (for save/load round-trips).</summary>
+    public long IdCounter => _idCounter;
+
+    /// <summary>Restores the ID counter from a saved value so newly created entities continue from the right offset.</summary>
+    internal void RestoreIdCounter(long counter) => _idCounter = counter;
 
     // ── Entity lifecycle ──────────────────────────────────────────────────────
 
@@ -76,7 +90,7 @@ public class EntityManager
         bytes[6]  = (byte)((count >> 48) & 0xFF);
         bytes[7]  = (byte)((count >> 56) & 0xFF);
 
-        var entity = new Entity(new Guid(bytes), OnComponentChanged);
+        var entity = new Entity(new Guid(bytes), _componentRegistry, OnComponentChanged);
         _entities.Add(entity);
         return entity;
     }
@@ -84,11 +98,18 @@ public class EntityManager
     /// <summary>Creates an entity with a pre-existing Guid (e.g. deserialization).</summary>
     public Entity CreateEntity(Guid existingId)
     {
-        var entity = new Entity(existingId, OnComponentChanged);
+        var entity = new Entity(existingId, _componentRegistry, OnComponentChanged);
         _entities.Add(entity);
         return entity;
     }
 
+    /// <summary>
+    /// Removes <paramref name="entity"/> from the manager and from every component
+    /// index bucket it occupied. The <see cref="EntityDestroyed"/> event fires first,
+    /// before any index mutation, so subscribers can still observe the entity's
+    /// components while cleaning up external state (e.g. spatial index entries).
+    /// </summary>
+    /// <param name="entity">The entity to destroy.</param>
     public void DestroyEntity(Entity entity)
     {
         EntityDestroyed?.Invoke(entity);

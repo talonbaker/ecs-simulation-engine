@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
@@ -9,11 +9,11 @@ namespace Warden.Contracts.Telemetry;
 /// <summary>
 /// Versioned, AI-consumable projection of <c>SimulationSnapshot</c>.
 /// Produced by <c>Warden.Telemetry.TelemetryProjector</c> (WP-03), consumed by
-/// Tier-3 Haikus. Schema: <c>world-state.schema.json</c> v0.4.0.
+/// Tier-3 Haikus. Schema: <c>world-state.schema.json</c> v0.5.0.
 /// </summary>
 public sealed record WorldStateDto
 {
-    public string                      SchemaVersion { get; init; } = "0.4.0";
+    public string                      SchemaVersion { get; init; } = "0.5.0";
     public DateTimeOffset              CapturedAt    { get; init; }
     public int                         Tick          { get; init; }
     public ClockStateDto               Clock         { get; init; } = default!;
@@ -38,6 +38,16 @@ public sealed record WorldStateDto
 
     // v0.4 — persistent narrative chronicle (optional; projector omits when empty)
     public IReadOnlyList<ChronicleEntryDto>? Chronicle     { get; init; }
+
+    // v0.5 — save/load round-trip substrate (null on live telemetry snapshots)
+    public long?   SaveTick          { get; init; }
+    public double? SaveTotalTime     { get; init; }
+    public float?  SaveTimeScale     { get; init; }
+    public long?   EntityIdCounter   { get; init; }
+    public IReadOnlyList<NpcSaveDto>?          NpcSaveStates { get; init; }
+    public IReadOnlyList<TaskSaveDto>?         TaskEntities  { get; init; }
+    public IReadOnlyList<StainEntitySaveDto>?  StainEntities { get; init; }
+    public IReadOnlyList<LockedDoorSaveDto>?   LockedDoors   { get; init; }
 }
 
 // ── Clock ─────────────────────────────────────────────────────────────────────

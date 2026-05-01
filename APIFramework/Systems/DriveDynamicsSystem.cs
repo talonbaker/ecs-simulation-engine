@@ -21,6 +21,17 @@ namespace APIFramework.Systems;
 /// Baseline is never modified. Final Current is clamped to 0–100.
 /// Phase: Cognition.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="SocialDrivesComponent"/>,
+/// <see cref="PersonalityComponent"/>, optional <see cref="StressComponent"/>, and the
+/// <see cref="SimulationClock"/> for the day fraction.
+/// Writes: <see cref="SocialDrivesComponent"/> Current values (single writer per tick).
+/// Ordering: runs in the Cognition phase before <see cref="ActionSelectionSystem"/> so
+/// candidate scoring sees the freshly-updated drives.
+/// </remarks>
+/// <seealso cref="SocialDrivesComponent"/>
+/// <seealso cref="SocialSystemConfig"/>
+/// <seealso cref="ActionSelectionSystem"/>
 public class DriveDynamicsSystem : ISystem
 {
     private readonly SocialSystemConfig _cfg;
@@ -34,6 +45,14 @@ public class DriveDynamicsSystem : ISystem
 
     private const int DriveCount = 8;
 
+    /// <summary>
+    /// Constructs the system.
+    /// </summary>
+    /// <param name="cfg">Social tuning — decay rate, circadian amplitude/phase, volatility scale.</param>
+    /// <param name="clock">Simulation clock; supplies the current day fraction for the circadian term.</param>
+    /// <param name="rng">Seeded RNG used for the per-tick volatility noise; ensures determinism.</param>
+    /// <param name="stressCfg">Optional stress tuning. When supplied (and the entity has
+    /// <see cref="StressComponent"/>), acute stress amplifies volatility.</param>
     public DriveDynamicsSystem(SocialSystemConfig cfg, SimulationClock clock, SeededRandom rng,
         StressConfig? stressCfg = null)
     {
@@ -43,6 +62,11 @@ public class DriveDynamicsSystem : ISystem
         _stressCfg = stressCfg;
     }
 
+    /// <summary>
+    /// Per-tick update. For every alive NPC with social drives + personality, applies
+    /// decay-toward-baseline, the circadian sinusoid, and (stress-amplified) volatility noise
+    /// to all eight drives, then writes the updated <see cref="SocialDrivesComponent"/> back.
+    /// </summary>
     public void Update(EntityManager em, float deltaTime)
     {
         float dayFraction = _clock.GameTimeOfDay / SimulationClock.SecondsPerDay;

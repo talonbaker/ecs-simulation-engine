@@ -28,6 +28,12 @@ public static class AiInjectCommand
 {
     private const float DeltaTime = 1f / 60f;
 
+    /// <summary>
+    /// Builds the <c>inject</c> subcommand with its required <c>--in</c>
+    /// option and wires the handler that loads, validates, and applies an
+    /// <see cref="AiCommandBatch"/> to a freshly-booted simulation.
+    /// </summary>
+    /// <returns>The configured <see cref="Command"/> ready to be added to <see cref="AiCommand.Root"/>.</returns>
     public static Command Build()
     {
         var inOpt = new Option<FileInfo>(

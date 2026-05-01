@@ -15,6 +15,11 @@ namespace APIFramework.Systems.Lighting;
 ///
 /// All randomness goes through SeededRandom — never System.Random.
 /// </summary>
+/// <remarks>
+/// Reads and writes <c>LightSourceComponent</c>; produces a per-tick effective-intensity cache
+/// consumed by <see cref="IlluminationAccumulationSystem"/>. Must run BEFORE
+/// <see cref="IlluminationAccumulationSystem"/>.
+/// </remarks>
 public sealed class LightSourceStateSystem : ISystem
 {
     private readonly SeededRandom   _rng;
@@ -29,6 +34,12 @@ public sealed class LightSourceStateSystem : ISystem
     private readonly Dictionary<Entity, int> _flickerTick = new();
 
     public LightSourceStateSystem(SeededRandom rng, LightingConfig cfg, SoundTriggerConfig? soundCfg = null, SoundTriggerBus? soundBus = null)
+    /// <summary>
+    /// Stores RNG and config references used per tick.
+    /// </summary>
+    /// <param name="rng">Deterministic RNG used for flicker and decay rolls.</param>
+    /// <param name="cfg">Lighting tuning — supplies <c>FlickerOnProb</c> and <c>DyingDecayProb</c>.</param>
+    public LightSourceStateSystem(SeededRandom rng, LightingConfig cfg)
     {
         _rng = rng;
         _cfg = cfg;
@@ -40,9 +51,16 @@ public sealed class LightSourceStateSystem : ISystem
     /// Returns the effective intensity for <paramref name="entity"/> as computed on the
     /// most recent tick. Returns 0 for unregistered entities.
     /// </summary>
+    /// <param name="entity">A light-source entity.</param>
     public double GetEffectiveIntensity(Entity entity) =>
         _effectiveIntensity.TryGetValue(entity, out var v) ? v : 0.0;
 
+    /// <summary>
+    /// Per-tick entry point. Advances the state machine for every light source and
+    /// publishes the resulting effective-intensity cache.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for light sources.</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         _effectiveIntensity.Clear();

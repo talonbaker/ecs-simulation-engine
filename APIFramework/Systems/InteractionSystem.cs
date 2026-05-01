@@ -1,6 +1,7 @@
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -13,16 +14,31 @@ namespace APIFramework.Systems;
 /// Pipeline position: 6 of 8 — after FeedingSystem and DrinkingSystem have
 /// potentially spawned transit entities, before EsophagusSystem moves them.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="MetabolismComponent"/>, <see cref="FoodObjectComponent"/>,
+/// <see cref="EsophagusTransitComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: spawns bolus transit entities; decrements
+/// <see cref="FoodObjectComponent"/>.BitesRemaining and removes the held-food
+/// component when fully consumed.<br/>
+/// Phase: Transit, before <see cref="EsophagusSystem"/>.
+/// </remarks>
 public class InteractionSystem : ISystem
 {
     private readonly InteractionSystemConfig _cfg;
 
+    /// <summary>Constructs the interaction system with its tuning.</summary>
+    /// <param name="cfg">Interaction tuning (bite volume, esophagus speed).</param>
     public InteractionSystem(InteractionSystemConfig cfg) => _cfg = cfg;
 
+    /// <summary>Per-tick interaction pass; takes a bite of held food when the throat is clear.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var human in em.Query<MetabolismComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(human)) continue;  // WP-3.0.0: skip Incapacitated/Deceased NPCs
+
             // Throat must be clear before we can swallow anything
             bool isEsophagusBusy = em.Query<EsophagusTransitComponent>()
                 .Any(t => t.Get<EsophagusTransitComponent>().TargetEntityId == human.Id);

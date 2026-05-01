@@ -20,6 +20,15 @@ public static class CliRenderer
     //  LIVE SNAPSHOT
     // ═══════════════════════════════════════════════════════════════════════════
 
+    /// <summary>
+    /// Prints a live state snapshot for the current tick: tick number, in-game
+    /// clock, sim-speed multiplier, the per-entity status block (resources,
+    /// drives, mood, GI pipeline, bladder, stomach, nutrient stores), and the
+    /// esophagus transit queue.
+    /// </summary>
+    /// <param name="sim">The running simulation whose state should be rendered.</param>
+    /// <param name="tick">The current tick counter (1-based, monotonically increasing).</param>
+    /// <param name="wallStartTimestamp">A <see cref="Stopwatch.GetTimestamp"/> value captured when the run began; used to compute wall-clock elapsed.</param>
     public static void PrintSnapshot(SimulationBootstrapper sim, long tick, long wallStartTimestamp)
     {
         double wallSeconds = Elapsed(wallStartTimestamp);
@@ -70,6 +79,16 @@ public static class CliRenderer
     //  END-OF-RUN REPORT
     // ═══════════════════════════════════════════════════════════════════════════
 
+    /// <summary>
+    /// Prints a full end-of-run balancing report: invariant violation summary,
+    /// performance diagnostics (entity counts, average tick cost, system-phase
+    /// layout, scans avoided by the O(1) component index), per-entity lifecycle
+    /// events, activity counts, resource ranges, and balancing hints.
+    /// </summary>
+    /// <param name="sim">The simulation that just finished running.</param>
+    /// <param name="metrics">The collector that recorded per-tick metrics during the run.</param>
+    /// <param name="tick">Total ticks executed during the run.</param>
+    /// <param name="wallStartTimestamp">A <see cref="Stopwatch.GetTimestamp"/> value captured when the run began; used to compute total wall-clock elapsed.</param>
     public static void PrintReport(SimulationBootstrapper sim, SimMetrics metrics,
                                    long tick, long wallStartTimestamp)
     {

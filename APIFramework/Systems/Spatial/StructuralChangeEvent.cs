@@ -1,3 +1,5 @@
+using System;
+
 namespace APIFramework.Systems.Spatial;
 
 /// <summary>

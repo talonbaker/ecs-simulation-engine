@@ -10,8 +10,11 @@ namespace APIFramework.Bootstrap;
 /// </summary>
 public sealed class WorldDefinitionInvalidException : Exception
 {
+    /// <summary>The full list of validation error strings as reported by the schema validator.</summary>
     public IReadOnlyList<string> ValidationErrors { get; }
 
+    /// <summary>Creates the exception with the given validation errors; the message is built from them.</summary>
+    /// <param name="errors">Structured validation errors to surface to the caller.</param>
     public WorldDefinitionInvalidException(IReadOnlyList<string> errors)
         : base(BuildMessage(errors))
     {

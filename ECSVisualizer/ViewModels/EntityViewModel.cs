@@ -110,6 +110,12 @@ public partial class EntityViewModel : ObservableObject
 
     // ─────────────────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Pulls the latest component values off <paramref name="entity"/> and
+    /// pushes them into the observable properties that the AXAML view binds
+    /// to. Called every UI tick by <see cref="MainViewModel"/>.
+    /// </summary>
+    /// <param name="entity">The ECS entity whose state should drive this view model.</param>
     public void Update(Entity entity)
     {
         EntityId = entity.ShortId;

@@ -4,15 +4,23 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Phase: PreUpdate — generates new task entities once per game-day at the configured hour.
-/// Tasks are assigned round-robin to NPCs with available WorkloadComponent capacity,
-/// in ascending EntityIntId order for determinism.
-/// Uses SeededRandom exclusively; never System.Random.
+/// PreUpdate phase. Generates new task entities once per game-day at the configured hour.
+/// Tasks are assigned round-robin to Alive NPCs with available
+/// <see cref="WorkloadComponent"/> capacity, in ascending EntityIntId order for determinism.
+/// Uses <see cref="SeededRandom"/> exclusively; never System.Random.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="WorkloadComponent"/>,
+/// <see cref="LifeStateComponent"/>.<br/>
+/// Writes: spawns new task entities with <see cref="TaskTag"/> +
+/// <see cref="TaskComponent"/>; updates <see cref="WorkloadComponent"/> on the assignee.<br/>
+/// Phase: PreUpdate.
+/// </remarks>
 public class TaskGeneratorSystem : ISystem
 {
     private readonly WorkloadConfig  _cfg;
@@ -21,6 +29,10 @@ public class TaskGeneratorSystem : ISystem
 
     private int _lastGenerationDay = -1;
 
+    /// <summary>Constructs the task generator.</summary>
+    /// <param name="cfg">Workload tuning (count per day, effort/deadline ranges, generation hour).</param>
+    /// <param name="clock">Simulation clock providing the current day and game hour.</param>
+    /// <param name="rng">Seeded RNG for deterministic effort/deadline/priority sampling.</param>
     public TaskGeneratorSystem(WorkloadConfig cfg, SimulationClock clock, SeededRandom rng)
     {
         _cfg   = cfg;
@@ -28,6 +40,9 @@ public class TaskGeneratorSystem : ISystem
         _rng   = rng;
     }
 
+    /// <summary>Per-tick generation pass; generates tasks once per game-day at the configured hour.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         int day = _clock.DayNumber;
@@ -40,9 +55,10 @@ public class TaskGeneratorSystem : ISystem
 
     private void GenerateTasks(EntityManager em)
     {
-        // Build round-robin pool: NPCs with capacity, sorted ascending by EntityIntId.
+        // Build round-robin pool: Alive NPCs with capacity, sorted ascending by EntityIntId.
+        // WP-3.0.0: Deceased and Incapacitated NPCs excluded from the assignment pool.
         var available = em.Query<NpcTag>()
-            .Where(e => e.Has<WorkloadComponent>())
+            .Where(e => e.Has<WorkloadComponent>() && LifeStateGuard.IsAlive(e))
             .OrderBy(WillpowerSystem.EntityIntId)
             .ToList();
 
