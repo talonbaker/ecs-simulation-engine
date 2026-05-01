@@ -824,6 +824,17 @@
     "exitNamedAnchorTag": "outdoor"
   },
 
+  // ── Rescue mechanic (WP-3.2.4) ──────────────────────────────────────────────
+  "rescue": {
+    "rescueThreshold":         0.40,
+    "awarenessRangeForRescue": 3.0,
+    "minRescueWillpower":      20,
+    "maxRescueStress":         80.0,
+    "heimlichBaseSuccessRate": 0.65,
+    "cprBaseSuccessRate":      0.30,
+    "doorUnlockBaseSuccessRate": 0.95
+  },
+
   // ── Unity host (read by ECSUnity only; engine/CLI/Avalonia ignore this) ─────
   // These values configure the Unity-side host: FixedUpdate rate, camera, perf gate.
   // They extend SimConfig.json for discoverability but are NOT read by the engine.

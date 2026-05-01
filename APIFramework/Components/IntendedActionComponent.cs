@@ -14,7 +14,9 @@ public enum IntendedActionKind
     /// <summary>NPC is staying in place near a target.</summary>
     Linger,
     /// <summary>NPC is performing scheduled work.</summary>
-    Work
+    Work,
+    /// <summary>NPC is moving to rescue an Incapacitated NPC (Heimlich, CPR, or door-unlock).</summary>
+    Rescue
 }
 
 /// <summary>Conversational context associated with an <see cref="IntendedActionKind.Dialog"/> action.</summary>
