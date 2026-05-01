@@ -29,7 +29,8 @@
       "Bash(command -v gh)",
       "Read(//usr/local/bin/**)",
       "Bash(where gh *)",
-      "Bash(winget list *)"
+      "Bash(winget list *)",
+      "Bash(echo \"exit:$?\")"
     ]
   }
 }

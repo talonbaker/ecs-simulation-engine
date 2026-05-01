@@ -1,21 +1,21 @@
-namespace APIFramework.Core;
+﻿namespace APIFramework.Core;
 
 /// <summary>
 /// Owns all Entity instances and maintains a component-type index so that
 /// Query&lt;T&gt;() is O(1) instead of the previous O(E) full scan.
 ///
 /// HOW THE INDEX WORKS
-/// ────────────────────
+/// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 /// Each entity is created with an onChange callback that fires when a component
 /// type is added to or removed from that entity. EntityManager listens to those
 /// callbacks and keeps _componentIndex updated:
 ///
-///   _componentIndex[typeof(T)] = { entity A, entity C, entity F, … }
+///   _componentIndex[typeof(T)] = { entity A, entity C, entity F, â€¦ }
 ///
-/// Query&lt;T&gt;() then returns the pre-built bucket — no scanning, no LINQ.
+/// Query&lt;T&gt;() then returns the pre-built bucket â€” no scanning, no LINQ.
 ///
 /// THREAD SAFETY
-/// ─────────────
+/// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 /// Not thread-safe. All entity mutations must happen on the simulation thread.
 /// When parallel system execution is added in v0.8+, systems within a phase
 /// will be allowed to READ concurrently but must WRITE via a command queue
@@ -27,7 +27,7 @@ public class EntityManager
     private readonly Dictionary<Type, HashSet<Entity>> _componentIndex  = new();
     private readonly ComponentStoreRegistry             _componentRegistry = new();
 
-    // ── Deterministic entity ID counter ──────────────────────────────────────
+    // â”€â”€ Deterministic entity ID counter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     //
     // Using a sequential counter instead of Guid.NewGuid() makes every entity
     // ID reproducible across runs: given the same bootstrapper code path, the
@@ -63,7 +63,13 @@ public class EntityManager
     /// </summary>
     public int ComponentTypeCount => _componentIndex.Count;
 
-    // ── Entity lifecycle ──────────────────────────────────────────────────────
+    /// <summary>Current value of the entity ID counter (for save/load round-trips).</summary>
+    public long IdCounter => _idCounter;
+
+    /// <summary>Restores the ID counter from a saved value so newly created entities continue from the right offset.</summary>
+    internal void RestoreIdCounter(long counter) => _idCounter = counter;
+
+    // â”€â”€ Entity lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Creates a new entity with a deterministic, counter-based ID.
@@ -115,7 +121,7 @@ public class EntityManager
         _entities.Remove(entity);
     }
 
-    // ── Query API ─────────────────────────────────────────────────────────────
+    // â”€â”€ Query API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Returns all entities that currently have component T.
@@ -132,7 +138,7 @@ public class EntityManager
     /// <summary>Returns every entity managed by this EntityManager.</summary>
     public IEnumerable<Entity> GetAllEntities() => _entities;
 
-    // ── Index maintenance ─────────────────────────────────────────────────────
+    // â”€â”€ Index maintenance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private void OnComponentChanged(Entity entity, Type componentType, bool added)
     {
