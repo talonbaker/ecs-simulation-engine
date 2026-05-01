@@ -17,6 +17,8 @@ public enum IntendedActionKind
     Work,
     /// <summary>NPC is moving to rescue an Incapacitated NPC (Heimlich, CPR, or door-unlock).</summary>
     Rescue
+    /// <summary>NPC is performing an assigned office chore.</summary>
+    ChoreWork
 }
 
 /// <summary>Conversational context associated with an <see cref="IntendedActionKind.Dialog"/> action.</summary>

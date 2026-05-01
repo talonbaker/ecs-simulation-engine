@@ -5,6 +5,7 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Mutation;
 using APIFramework.Systems;
+using APIFramework.Systems.Chores;
 using APIFramework.Systems.Coupling;
 using APIFramework.Systems.Dialog;
 using APIFramework.Systems.Lighting;
@@ -36,71 +37,74 @@ namespace APIFramework.Core;
 /// EnergyStart only take effect for entities spawned AFTER the reload. To test
 /// different starting conditions, restart the simulation.
 ///
-/// SYSTEM PIPELINE (phase â†’ execution order within phase)
-/// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-///  PreUpdate   (0)  InvariantSystem           â€” catch/clamp impossible state values
-///  PreUpdate   (0)  StructuralTaggingSystem   â€” one-shot: tag obstacles/walls/doors at boot
-///  PreUpdate   (0)  ScheduleSpawnerSystem     â€” attach default routines to scheduleless NPCs
-///  PreUpdate   (0)  StressInitializerSystem   â€” attach StressComponent to fresh NPCs
-///  PreUpdate   (0)  MaskInitializerSystem     â€” attach SocialMaskComponent (personality baseline)
-///  PreUpdate   (0)  WorkloadInitializerSystem â€” attach WorkloadComponent (per-archetype capacity)
-///  PreUpdate   (0)  LifeStateInitializerSystemâ€” attach LifeStateComponent = Alive
-///  PreUpdate   (0)  TaskGeneratorSystem       â€” spawn day's task batch at configured hour
-///  PreUpdate   (0)  LockoutDetectionSystem    â€” Phase 3: end-of-day exit reachability + starvation
-///  Spatial     (5)  SpatialIndexSyncSystem    â€” keep spatial index in sync with positions
-///  Spatial     (5)  RoomMembershipSystem      â€” derive per-NPC room residency
-///  Spatial     (5)  PathfindingCacheInvalidationSystem â€” clear cache on structural change
-///  Lighting    (7)  SunSystem                 â€” advance sun phase / day-phase boundary
-///  Lighting    (7)  LightSourceStateSystem    â€” flicker/dying state machines
-///  Lighting    (7)  ApertureBeamSystem        â€” compute aperture beams from sun + clock
-///  Lighting    (7)  IlluminationAccumulationSystem â€” combine source + aperture per room
-///  Lighting    (7)  ProximityEventSystem      â€” emit proximity signals against current illumination
-///  Coupling    (8)  LightingToDriveCouplingSystem â€” accumulate lighting â†’ drive deltas
-///  Physiology  (10) MetabolismSystem          â€” drain satiation / hydration
-///  Physiology  (10) EnergySystem              â€” drain/restore energy + sleepiness
-///  Physiology  (10) BladderFillSystem         â€” fill bladder at constant rate
-///  Condition   (20) BiologicalConditionSystem â€” set hunger/thirst/irritable tags
-///  Condition   (20) ScheduleSystem            â€” resolve active block before ActionSelection reads it
-///  Cognition   (30) MoodSystem                â€” decay emotions; apply Plutchik intensity tags
-///  Cognition   (30) BrainSystem               â€” score drives (incl. circadian, colon, bladder); pick dominant
-///  Cognition   (30) PhysiologyGateSystem      â€” write BlockedActionsComponent; inhibitions veto biology
-///  Cognition   (30) DriveDynamicsSystem       â€” decay/circadian-modulate social drives
-///  Cognition   (30) ActionSelectionSystem     â€” enumerate candidates, pick winner, write IntendedAction
-///  Cognition   (30) WillpowerSystem           â€” apply suppression cost / regen
-///  Cognition   (30) RelationshipLifecycleSystem â€” relationship intensity / lifecycle
-///  Cognition   (30) SocialMaskSystem          â€” drift mask in public, decay in private
-///  Behavior    (40) FeedingSystem             â€” act if Eat is dominant (skipped if Eat blocked)
-///  Behavior    (40) DrinkingSystem            â€” act if Drink is dominant
-///  Behavior    (40) SleepSystem               â€” toggle IsSleeping based on dominant desire
-///  Behavior    (40) DefecationSystem          â€” empty colon if Defecate is dominant
-///  Behavior    (40) UrinationSystem           â€” empty bladder if Pee is dominant
-///  Transit     (50) InteractionSystem         â€” convert held food to esophagus bolus
-///  Transit     (50) EsophagusSystem           â€” move transit entities toward stomach
-///  Transit     (50) DigestionSystem           â€” release nutrients; deposit chyme to small intestine
-///  Elimination (55) SmallIntestineSystem      â€” drain chyme; pass residue to large intestine
-///  Elimination (55) LargeIntestineSystem      â€” reabsorb water; form stool into colon
-///  Elimination (55) ColonSystem               â€” apply DefecationUrgeTag / BowelCriticalTag
-///  Elimination (55) BladderSystem             â€” apply UrinationUrgeTag / BladderCriticalTag
-///  World       (60) RotSystem                 â€” age food entities; apply RotTag at threshold
-///  World       (60) PathfindingTriggerSystem  â€” kick off A* requests for movement intents
-///  World       (60) MovementSpeedModifierSystem â€” derive per-NPC speed multiplier
-///  World       (60) StepAsideSystem           â€” perpendicular shift on near-miss
-///  World       (60) MovementSystem            â€” advance positions along paths
-///  World       (60) FacingSystem              â€” update facing from proximity signals
-///  World       (60) IdleMovementSystem        â€” jitter/posture for idle NPCs
-///  Narrative   (70) NarrativeEventDetector    â€” emit narrative candidates this tick
-///  Narrative   (70) PersistenceThresholdDetector â€” promote candidates to chronicle entries
-///  Narrative   (70) MemoryRecordingSystem     â€” route candidates to per-pair / personal memory buffers
-///  Dialog      (80) DialogContextDecisionSystem    â€” choose context, queue dialog attempts
-///  Dialog      (80) DialogFragmentRetrievalSystem  â€” pick fragments from corpus
-///  Dialog      (80) DialogCalcifySystem            â€” promote/decalcify catchphrases
-///  Cleanup     (90) StressSystem              â€” accumulate acute/chronic stress, apply tags
-///  Cleanup     (90) WorkloadSystem            â€” advance task progress; detect completion / overdue
-///  Cleanup     (90) MaskCrackSystem           â€” Phase 3: emit MaskCrack when pressure exceeds threshold
-///  Cleanup     (90) ChokingDetectionSystem    â€” Phase 3: bolus + distraction â†’ enqueue Incapacitated
-///  Cleanup     (90) LifeStateTransitionSystem â€” Phase 3: Alive â†’ Incapacitated â†’ Deceased
-///  Cleanup     (90) ChokingCleanupSystem      â€” Phase 3: clear choke tags after death
-///  Cleanup     (90) SlipAndFallSystem         â€” Phase 3: roll fall-risk hazards on settled positions
+/// SYSTEM PIPELINE (phase → execution order within phase)
+/// ────────────────────────────────────────────────────────
+///  PreUpdate   (0)  InvariantSystem           — catch/clamp impossible state values
+///  PreUpdate   (0)  StructuralTaggingSystem   — one-shot: tag obstacles/walls/doors at boot
+///  PreUpdate   (0)  ScheduleSpawnerSystem     — attach default routines to scheduleless NPCs
+///  PreUpdate   (0)  StressInitializerSystem   — attach StressComponent to fresh NPCs
+///  PreUpdate   (0)  MaskInitializerSystem     — attach SocialMaskComponent (personality baseline)
+///  PreUpdate   (0)  WorkloadInitializerSystem — attach WorkloadComponent (per-archetype capacity)
+///  PreUpdate   (0)  LifeStateInitializerSystem— attach LifeStateComponent = Alive
+///  PreUpdate   (0)  TaskGeneratorSystem       — spawn day's task batch at configured hour
+///  PreUpdate   (0)  ChoreInitializerSystem    — WP-3.2.3: spawn chore entities; attach ChoreHistoryComponent
+///  PreUpdate   (0)  ChoreAssignmentSystem     — WP-3.2.3: daily chore assignment at configured hour
+///  PreUpdate   (0)  LockoutDetectionSystem    — Phase 3: end-of-day exit reachability + starvation
+///  Spatial     (5)  SpatialIndexSyncSystem    — keep spatial index in sync with positions
+///  Spatial     (5)  RoomMembershipSystem      — derive per-NPC room residency
+///  Spatial     (5)  PathfindingCacheInvalidationSystem — clear cache on structural change
+///  Lighting    (7)  SunSystem                 — advance sun phase / day-phase boundary
+///  Lighting    (7)  LightSourceStateSystem    — flicker/dying state machines
+///  Lighting    (7)  ApertureBeamSystem        — compute aperture beams from sun + clock
+///  Lighting    (7)  IlluminationAccumulationSystem — combine source + aperture per room
+///  Lighting    (7)  ProximityEventSystem      — emit proximity signals against current illumination
+///  Coupling    (8)  LightingToDriveCouplingSystem — accumulate lighting → drive deltas
+///  Physiology  (10) MetabolismSystem          — drain satiation / hydration
+///  Physiology  (10) EnergySystem              — drain/restore energy + sleepiness
+///  Physiology  (10) BladderFillSystem         — fill bladder at constant rate
+///  Condition   (20) BiologicalConditionSystem — set hunger/thirst/irritable tags
+///  Condition   (20) ScheduleSystem            — resolve active block before ActionSelection reads it
+///  Cognition   (30) MoodSystem                — decay emotions; apply Plutchik intensity tags
+///  Cognition   (30) BrainSystem               — score drives (incl. circadian, colon, bladder); pick dominant
+///  Cognition   (30) PhysiologyGateSystem      — write BlockedActionsComponent; inhibitions veto biology
+///  Cognition   (30) DriveDynamicsSystem       — decay/circadian-modulate social drives
+///  Cognition   (30) ActionSelectionSystem     — enumerate candidates, pick winner, write IntendedAction
+///  Cognition   (30) WillpowerSystem           — apply suppression cost / regen
+///  Cognition   (30) RelationshipLifecycleSystem — relationship intensity / lifecycle
+///  Cognition   (30) SocialMaskSystem          — drift mask in public, decay in private
+///  Behavior    (40) FeedingSystem             — act if Eat is dominant (skipped if Eat blocked)
+///  Behavior    (40) DrinkingSystem            — act if Drink is dominant
+///  Behavior    (40) SleepSystem               — toggle IsSleeping based on dominant desire
+///  Behavior    (40) DefecationSystem          — empty colon if Defecate is dominant
+///  Behavior    (40) UrinationSystem           — empty bladder if Pee is dominant
+///  Transit     (50) InteractionSystem         — convert held food to esophagus bolus
+///  Transit     (50) EsophagusSystem           — move transit entities toward stomach
+///  Transit     (50) DigestionSystem           — release nutrients; deposit chyme to small intestine
+///  Elimination (55) SmallIntestineSystem      — drain chyme; pass residue to large intestine
+///  Elimination (55) LargeIntestineSystem      — reabsorb water; form stool into colon
+///  Elimination (55) ColonSystem               — apply DefecationUrgeTag / BowelCriticalTag
+///  Elimination (55) BladderSystem             — apply UrinationUrgeTag / BladderCriticalTag
+///  World       (60) RotSystem                 — age food entities; apply RotTag at threshold
+///  World       (60) PathfindingTriggerSystem  — kick off A* requests for movement intents
+///  World       (60) MovementSpeedModifierSystem — derive per-NPC speed multiplier
+///  World       (60) StepAsideSystem           — perpendicular shift on near-miss
+///  World       (60) MovementSystem            — advance positions along paths
+///  World       (60) FacingSystem              — update facing from proximity signals
+///  World       (60) IdleMovementSystem        — jitter/posture for idle NPCs
+///  Narrative   (70) NarrativeEventDetector    — emit narrative candidates this tick
+///  Narrative   (70) PersistenceThresholdDetector — promote candidates to chronicle entries
+///  Narrative   (70) MemoryRecordingSystem     — route candidates to per-pair / personal memory buffers
+///  Dialog      (80) DialogContextDecisionSystem    — choose context, queue dialog attempts
+///  Dialog      (80) DialogFragmentRetrievalSystem  — pick fragments from corpus
+///  Dialog      (80) DialogCalcifySystem            — promote/decalcify catchphrases
+///  Cleanup     (90) StressSystem              — accumulate acute/chronic stress, apply tags
+///  Cleanup     (90) WorkloadSystem            — advance task progress; detect completion / overdue
+///  Cleanup     (90) MaskCrackSystem           — Phase 3: emit MaskCrack when pressure exceeds threshold
+///  Cleanup     (90) ChokingDetectionSystem    — Phase 3: bolus + distraction → enqueue Incapacitated
+///  Cleanup     (90) LifeStateTransitionSystem — Phase 3: Alive → Incapacitated → Deceased
+///  Cleanup     (90) ChokingCleanupSystem      — Phase 3: clear choke tags after death
+///  Cleanup     (90) SlipAndFallSystem         — Phase 3: roll fall-risk hazards on settled positions
+///  Cleanup     (90) ChoreExecutionSystem      — WP-3.2.3: advance chore progress; detect completion / overrotation
 /// </summary>
 public class SimulationBootstrapper
 {
@@ -684,6 +688,7 @@ public class SimulationBootstrapper
     private void RegisterSystems()
     {
         var sys = Config.Systems;
+        var choreBiasTable = ChoreAcceptanceBiasTable.LoadDefault((float)Config.Chores.DefaultAcceptanceBias);
 
         // Spatial â€” sync index, room membership, cache invalidation (Phase 5).
         // ProximityEvent moves to Lighting (Phase 7) so it fires after illumination is current.
@@ -732,7 +737,14 @@ public class SimulationBootstrapper
         Engine.AddSystem(
             new TaskGeneratorSystem(Config.Workload, Clock, Random),               SystemPhase.PreUpdate);
 
-        // Physiology â€” raw biological resource drain/restore
+        // Chore initializer — spawns ChoreComponent entities and attaches ChoreHistoryComponent to NPCs.
+        Engine.AddSystem(new ChoreInitializerSystem(Config.Chores),                SystemPhase.PreUpdate);
+
+        // Chore assignment — assigns due chores to highest-bias NPCs once per game-day.
+        Engine.AddSystem(
+            new ChoreAssignmentSystem(Config.Chores, Clock, choreBiasTable, NarrativeBus), SystemPhase.PreUpdate);
+
+        // Physiology — raw biological resource drain/restore
         Engine.AddSystem(new MetabolismSystem(),                                   SystemPhase.Physiology);
         Engine.AddSystem(new EnergySystem(sys.Energy),                            SystemPhase.Physiology);
         Engine.AddSystem(new BladderFillSystem(),                                  SystemPhase.Physiology);
@@ -753,7 +765,8 @@ public class SimulationBootstrapper
         // Social cognition â€” drive dynamics, action selection, willpower, relationship lifecycle
         Engine.AddSystem(new DriveDynamicsSystem(Config.Social, Clock, Random, Config.Stress), SystemPhase.Cognition);
         Engine.AddSystem(new ActionSelectionSystem(
-            SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, Config.Schedule, EntityManager, Config.Workload),
+            SpatialIndex, RoomMembership, WillpowerEvents, Random, Config.ActionSelection, Config.Schedule,
+            EntityManager, Config.Workload, Config.Chores, choreBiasTable, NarrativeBus),
                                                                                    SystemPhase.Cognition);
         Engine.AddSystem(new WillpowerSystem(Config.Social, WillpowerEvents),      SystemPhase.Cognition);
         Engine.AddSystem(RelationshipLifecycleSystem.LoadFromFile(Config.Social),  SystemPhase.Cognition);
@@ -813,7 +826,8 @@ public class SimulationBootstrapper
         // Cleanup â€” stress accumulation; runs after WillpowerSystem (Cognition) and
         // NarrativeEventDetector (Narrative) so all tick state has settled.
         Engine.AddSystem(
-            new StressSystem(Config.Stress, Config.Workload, Clock, WillpowerEvents, NarrativeBus, EntityManager), SystemPhase.Cleanup);
+            new StressSystem(Config.Stress, Config.Workload, Clock, WillpowerEvents, NarrativeBus, EntityManager,
+                choreCfg: Config.Chores), SystemPhase.Cleanup);
 
         // Workload system â€” advances task progress, detects completion and overdue.
         Engine.AddSystem(
@@ -860,7 +874,11 @@ public class SimulationBootstrapper
                 Random),
             SystemPhase.Cleanup);
 
-        // Lockout detection â€” checks end-of-day reachability to exits and starvation status.
+        // Chore execution — advances assigned chore progress each tick; fires on ChoreWork intent.
+        Engine.AddSystem(
+            new ChoreExecutionSystem(Config.Chores, Clock, choreBiasTable, NarrativeBus), SystemPhase.Cleanup);
+
+        // Lockout detection — checks end-of-day reachability to exits and starvation status.
         // Runs in PreUpdate phase, once per game-day (gated internally by hour check).
         Engine.AddSystem(
             new LockoutDetectionSystem(

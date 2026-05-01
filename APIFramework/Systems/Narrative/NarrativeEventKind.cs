@@ -44,4 +44,16 @@ public enum NarrativeEventKind
     RescueAttempted,
     /// <summary>A rescuer attempted an intervention but the victim still died. Persistent — the rescuer carries this. Emitted by RescueExecutionSystem when roll fails and victim proceeds to Deceased.</summary>
     RescueFailed,
+
+    // ── Chore rotation events (WP-3.2.3) ─────────────────────────────────────
+    /// <summary>A chore was assigned to an NPC for the day. Emitted by ChoreAssignmentSystem. Not persistent — routine scheduling.</summary>
+    ChoreAssigned,
+    /// <summary>An NPC completed an assigned chore. Emitted by ChoreExecutionSystem. Not persistent — routine completion.</summary>
+    ChoreCompleted,
+    /// <summary>An NPC refused a chore assignment (acceptance-bias below threshold). Emitted by ActionSelectionSystem. Persistent.</summary>
+    ChoreRefused,
+    /// <summary>An NPC completed a chore at low quality. Emitted by ChoreExecutionSystem. Persistent.</summary>
+    ChoreBadlyDone,
+    /// <summary>An NPC was assigned the same chore beyond the overrotation threshold. Emitted by ChoreExecutionSystem. Persistent.</summary>
+    ChoreOverrotation,
 }
