@@ -49,6 +49,11 @@ public class ChokingDetectionSystemCoughGaspEmitTests
         npc.Add(new LifeStateComponent { State = LS.Alive });
         npc.Add(new MoodComponent());
 
+        // EsophagusTransitComponent lives on the bolus entity; TargetEntityId = the NPC swallowing it
+        var bolusEntity = em.CreateEntity();
+        bolusEntity.Add(new BolusComponent { Toughness = 0.8f }); // above threshold 0.5
+        bolusEntity.Add(new EsophagusTransitComponent { TargetEntityId = npc.Id, Progress = 0.5f, Speed = 0.1f });
+
         // Low energy → distracted
         npc.Add(new EnergyComponent { Energy = 20f }); // below EnergyThreshold 40
 

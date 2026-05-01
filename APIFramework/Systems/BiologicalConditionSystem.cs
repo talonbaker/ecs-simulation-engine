@@ -22,7 +22,6 @@ public class BiologicalConditionSystem : ISystem
     private readonly SoundTriggerBus?                _soundBus;
     private readonly SimulationClock?                _clock;
 
-    /// <summary>Constructs the system with its tag-threshold tuning.</summary>
     public BiologicalConditionSystem(BiologicalConditionSystemConfig cfg,
         SoundTriggerBus? soundBus = null, SimulationClock? clock = null)
     {

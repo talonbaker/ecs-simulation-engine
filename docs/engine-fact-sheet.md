@@ -1,7 +1,7 @@
 ﻿# ECS Simulation Engine — Fact Sheet
 
 **SimVersion:** ECS Simulation Engine  v0.7.2
-**Generated:** 2026-05-01T22:56:44.5900510+00:00
+**Generated:** 2026-05-01T22:47:51.4533617+00:00
 **TelemetrySchema:** world-state.schema.json v0.1.0
 
 ## Registered Systems
@@ -73,9 +73,10 @@
 | 63 | `ChokingCleanupSystem` | `Cleanup` | 80 |
 | 64 | `SlipAndFallSystem` | `Cleanup` | 80 |
 | 65 | `ChoreExecutionSystem` | `Cleanup` | 80 |
-| 66 | `LockoutDetectionSystem` | `PreUpdate` | 0 |
+| 66 | `PhysicsTickSystem` | `Cleanup` | 80 |
+| 67 | `LockoutDetectionSystem` | `PreUpdate` | 0 |
 
-**Total:** 66 systems
+**Total:** 67 systems
 
 ## Component Types
 
@@ -102,6 +103,8 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `BoredTag` | *(tag — no fields)* |
 | `BoundsRect` | `X: int`, `Y: int`, `Width: int`, `Height: int`, `Area: int` |
 | `BowelCriticalTag` | *(tag — no fields)* |
+| `BreakableComponent` | `HitEnergyThreshold: float`, `OnBreak: BreakageBehavior` |
+| `BreakableTag` | *(tag — no fields)* |
 | `BrokenItemComponent` | `OriginalKind: string`, `Breakage: BreakageKind`, `CreatedAtTick: Int64`, `ChronicleEntryId: string` |
 | `BrokenItemTag` | *(tag — no fields)* |
 | `BurnedOutFromWorkloadTag` | *(tag — no fields)* |
@@ -117,6 +120,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `CorpseComponent` | `DeathTick: Int64`, `OriginalNpcEntityId: Guid`, `LocationRoomId: string`, `HasBeenMoved: bool` |
 | `CorpseTag` | *(tag — no fields)* |
 | `CurrentScheduleBlockComponent` | `ActiveBlockIndex: int`, `AnchorEntityId: Guid`, `Activity: ScheduleActivityKind` |
+| `DebrisTag` | *(tag — no fields)* |
 | `DefecationUrgeTag` | *(tag — no fields)* |
 | `DehydratedTag` | *(tag — no fields)* |
 | `DialogHistoryComponent` | `UsesByFragmentId: Dictionary`2`, `UsesByListenerAndFragmentId: Dictionary`2` |
@@ -159,6 +163,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `LoathingTag` | *(tag — no fields)* |
 | `LockedInComponent` | `FirstDetectedTick: Int64`, `StarvationTickBudget: int` |
 | `LockedTag` | *(tag — no fields)* |
+| `MassComponent` | `MassKilograms: float` |
 | `MemoryEntry` | `Id: string`, `Tick: Int64`, `Kind: NarrativeEventKind`, `ParticipantIds: IReadOnlyList`1`, `RoomId: string`, `Detail: string`, `Persistent: bool` |
 | `MetabolismComponent` | `Satiation: float`, `Hydration: float`, `BodyTemp: float`, `Energy: float`, `NutrientStores: NutrientProfile`, `SatiationDrainRate: float`, `HydrationDrainRate: float`, `SleepMetabolismMultiplier: float`, `Hunger: float`, `Thirst: float` |
 | `MoodComponent` | `Joy: float`, `Trust: float`, `Fear: float`, `Surprise: float`, `Sadness: float`, `Disgust: float`, `Anger: float`, `Anticipation: float`, `PanicLevel: float`, `GriefLevel: float`, `HasAnyEmotion: bool`, `Valence: float` |
@@ -218,6 +223,8 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `TerrorTag` | *(tag — no fields)* |
 | `ThirstTag` | *(tag — no fields)* |
 | `ThirstyTag` | *(tag — no fields)* |
+| `ThrownTag` | *(tag — no fields)* |
+| `ThrownVelocityComponent` | `VelocityX: float`, `VelocityZ: float`, `VelocityY: float`, `DecayPerTick: float`, `ThrownAtTick: Int64`, `ThrownByEntityId: Guid` |
 | `TiredTag` | *(tag — no fields)* |
 | `ToiletComponent` | *(tag — no fields)* |
 | `TrustingTag` | *(tag — no fields)* |
@@ -227,7 +234,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `WillpowerComponent` | `Current: int`, `Baseline: int` |
 | `WorkloadComponent` | `ActiveTasks: IReadOnlyList`1`, `Capacity: int`, `CurrentLoad: int` |
 
-**Total:** 143 component types
+**Total:** 149 component types
 
 ## SimConfig Keys
 
@@ -550,4 +557,8 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Chores.MinChoreAcceptanceBias` | `double` | `0.2` |
 | `Chores.BadQualityThreshold` | `float` | `0.4` |
 | `Chores.DefaultAcceptanceBias` | `double` | `0.5` |
+| `Physics.GravityPerTick` | `float` | `1.5` |
+| `Physics.MinVelocity` | `float` | `0.05` |
+| `Physics.DefaultDecayPerTick` | `float` | `0.1` |
+| `Physics.WallHitClampMargin` | `float` | `0.01` |
 

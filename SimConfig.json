@@ -905,5 +905,20 @@
     "cameraRotateSpeed":         90.0,
     "cameraZoomSpeed":           2.0,
     "logTickRateEverySeconds":   10.0
+  },
+
+  // ── Physics (WP-3.2.2) ────────────────────────────────────────────────────
+  // PhysicsTickSystem tuning: gravity, velocity threshold, decay, collision margin.
+  // All values are per-tick (not per-second).
+  "physics": {
+    // Downward velocity added to VelocityY each tick
+    "gravityPerTick":      1.5,
+    // Velocity magnitude below which the entity is considered stopped
+    "minVelocity":         0.05,
+    // Default decay fraction applied per tick (not used directly by PhysicsTickSystem,
+    // but read by ThrowEntity when no explicit decay is provided)
+    "defaultDecayPerTick": 0.10,
+    // Margin from world-boundary walls for collision clamping
+    "wallHitClampMargin":  0.01
   }
 }

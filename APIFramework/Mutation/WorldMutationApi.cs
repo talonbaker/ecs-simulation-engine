@@ -142,6 +142,82 @@ public sealed class WorldMutationApi : IWorldMutationApi
             room.Bounds.X, room.Bounds.Y, newBounds.X, newBounds.Y, roomId, ++_seq);
     }
 
+    /// <inheritdoc/>
+    public void ThrowEntity(Guid entityId, float velocityX, float velocityZ, float velocityY, float decayPerTick)
+    {
+        var entity = FindById(entityId)
+            ?? throw new InvalidOperationException($"Entity {entityId} not found.");
+
+        entity.Add(new ThrownVelocityComponent
+        {
+            VelocityX       = velocityX,
+            VelocityZ       = velocityZ,
+            VelocityY       = velocityY,
+            DecayPerTick    = decayPerTick,
+            ThrownAtTick    = 0,
+            ThrownByEntityId = Guid.Empty
+        });
+
+        if (!entity.Has<ThrownTag>())
+            entity.Add(default(ThrownTag));
+    }
+
+    /// <inheritdoc/>
+    public Guid SpawnStain(string templateId, int tileX, int tileY)
+    {
+        var entity = _em.CreateEntity();
+        entity.Add(default(StainTag));
+        entity.Add(new PositionComponent { X = tileX, Y = 0f, Z = tileY });
+
+        float fallRisk;
+        string source;
+
+        switch (templateId)
+        {
+            case Systems.Physics.StainTemplates.WaterPuddle:
+                source   = "physics:liquid-spill";
+                fallRisk = 0.40f;
+                entity.Add(new StainComponent
+                {
+                    Source          = source,
+                    Magnitude       = 40,
+                    CreatedAtTick   = 0,
+                    ChronicleEntryId = string.Empty
+                });
+                entity.Add(new FallRiskComponent { RiskLevel = fallRisk });
+                break;
+
+            case Systems.Physics.StainTemplates.BrokenGlass:
+                source   = "physics:glass-shards";
+                fallRisk = 0.60f;
+                entity.Add(new StainComponent
+                {
+                    Source          = source,
+                    Magnitude       = 60,
+                    CreatedAtTick   = 0,
+                    ChronicleEntryId = string.Empty
+                });
+                entity.Add(new FallRiskComponent { RiskLevel = fallRisk });
+                break;
+
+            default:
+                entity.Add(new StainComponent
+                {
+                    Source          = $"physics:{templateId}",
+                    Magnitude       = 30,
+                    CreatedAtTick   = 0,
+                    ChronicleEntryId = string.Empty
+                });
+                entity.Add(new FallRiskComponent { RiskLevel = 0.30f });
+                break;
+        }
+
+        _bus.Emit(StructuralChangeKind.EntityAdded, entity.Id,
+            tileX, tileY, tileX, tileY, Guid.Empty, ++_seq);
+
+        return entity.Id;
+    }
+
     private Entity? FindById(Guid id) =>
         _em.GetAllEntities().FirstOrDefault(e => e.Id == id);
 }

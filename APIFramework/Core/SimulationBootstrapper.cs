@@ -15,6 +15,7 @@ using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using APIFramework.Systems.LifeState;
+using APIFramework.Systems.Physics;
 using System.Linq;
 using System.Reflection;
 using Warden.Contracts.Telemetry;
@@ -108,6 +109,7 @@ namespace APIFramework.Core;
 ///  Cleanup     (90) ChokingCleanupSystem      — Phase 3: clear choke tags after death
 ///  Cleanup     (90) SlipAndFallSystem         — Phase 3: roll fall-risk hazards on settled positions
 ///  Cleanup     (90) ChoreExecutionSystem      — WP-3.2.3: advance chore progress; detect completion / overrotation
+///  Cleanup     (90) PhysicsTickSystem         — WP-3.2.2: advance thrown entities; apply gravity/decay/breakage
 /// </summary>
 public class SimulationBootstrapper
 {
@@ -902,6 +904,16 @@ public class SimulationBootstrapper
         // Chore execution — advances assigned chore progress each tick; fires on ChoreWork intent.
         Engine.AddSystem(
             new ChoreExecutionSystem(Config.Chores, Clock, choreBiasTable, NarrativeBus), SystemPhase.Cleanup);
+
+        // Physics tick — advances thrown entities; gravity, decay, collision, breakage.
+        // Runs after ChoreExecutionSystem and SlipAndFallSystem so positions are settled.
+        var physicsCollision = new CollisionDetector(
+            Config.Physics,
+            Config.Spatial.WorldSize.Width,
+            Config.Spatial.WorldSize.Height);
+        Engine.AddSystem(
+            new PhysicsTickSystem(Config.Physics, physicsCollision, MutationApi, SoundBus, Clock),
+            SystemPhase.Cleanup);
 
         // Lockout detection — checks end-of-day reachability to exits and starvation status.
         // Runs in PreUpdate phase, once per game-day (gated internally by hour check).
