@@ -45,3 +45,30 @@ Save the prefab. Commit the tuned values.
   tracking the previous selection. Bug in OnSelectionChanged.
 - Click on empty space throws an exception → ray hit nothing path is not
   guarded.
+
+## Integration verification (after WP-3.1.S.1-INT)
+
+This step confirms NPC dots in MainScene are clickable and selection
+state is exposed.
+
+1. Open Assets/Scenes/MainScene.unity.
+2. Press Play. Engine ticks; NPCs render as dots.
+3. Click an NPC dot. Expect: outline appears around it (same colour as
+   sandbox tuning).
+4. Click another NPC dot. Expect: previous outline clears, new outline
+   appears.
+5. Click an empty floor area. Expect: outline clears.
+6. With the dev console open (if WARDEN build), type
+   `selection.entityId` (or open SelectionManager in the Inspector
+   while paused). Expect: SelectedEntityId equals the engine's
+   EntityId for the previously-clicked NPC.
+
+## If integration fails
+- Click on NPC does nothing → BoxCollider missing on the quad
+  (CreateNpcView didn't attach it), or LayerMask excluding the layer.
+- Outline appears but jitters with NPC movement → outline renderer
+  isn't following the dot's position. The prefab's outline should be
+  parented to the dot and inherit position.
+- SelectedEntityId always empty → NpcSelectableTag not attached or
+  SelectionManager isn't reading it. Check the SelectionManager's
+  OnSelectionChanged handler.
