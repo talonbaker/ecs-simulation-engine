@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using APIFramework.Components;
@@ -29,16 +29,16 @@ namespace Warden.Telemetry;
 /// wire-format <see cref="WorldStateDto"/> consumed by Tier-3 Haiku agents.
 ///
 /// DESIGN RULES
-/// ────────────
-/// • Pure function — no I/O, no side-effects, no mutable state.
-/// • Never calls <c>DateTime.UtcNow</c> or <c>Guid.NewGuid</c>.
+/// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+/// â€¢ Pure function â€” no I/O, no side-effects, no mutable state.
+/// â€¢ Never calls <c>DateTime.UtcNow</c> or <c>Guid.NewGuid</c>.
 ///   Both <paramref name="capturedAt"/> and <paramref name="tick"/> are explicit
 ///   caller inputs so two runs with identical parameters produce identical output.
-/// • Does not modify <c>APIFramework</c>. This is a projection, not a refactor.
+/// â€¢ Does not modify <c>APIFramework</c>. This is a projection, not a refactor.
 /// </summary>
 public static class TelemetryProjector
 {
-    // ── Public surface ────────────────────────────────────────────────────────
+    // â”€â”€ Public surface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /// <summary>
     /// Projects <paramref name="snap"/> to a <see cref="WorldStateDto"/>.
@@ -47,7 +47,7 @@ public static class TelemetryProjector
     /// </summary>
     /// <param name="snap">Immutable engine snapshot.</param>
     /// <param name="entityManager">
-    /// Optional — the same <see cref="EntityManager"/> that produced <paramref name="snap"/>.
+    /// Optional â€” the same <see cref="EntityManager"/> that produced <paramref name="snap"/>.
     /// When supplied, <see cref="SpeciesClassifier"/> uses tag-based classification and
     /// spatial entities (rooms, light sources, apertures, relationships) are projected.
     /// </param>
@@ -56,7 +56,7 @@ public static class TelemetryProjector
     /// <param name="seed">RNG seed the simulation was booted with.</param>
     /// <param name="simVersion">Value of <c>SimVersion.Full</c> at capture time.</param>
     /// <param name="sunStateService">
-    /// Optional — the <see cref="SunStateService"/> singleton from the same bootstrpper.
+    /// Optional â€” the <see cref="SunStateService"/> singleton from the same bootstrpper.
     /// When supplied, <c>clock.sun</c> is populated from <see cref="SunStateService.CurrentSunState"/>.
     /// </param>
     public static WorldStateDto Project(
@@ -71,7 +71,7 @@ public static class TelemetryProjector
     {
         return new WorldStateDto
         {
-            SchemaVersion  = "0.4.0",
+            SchemaVersion  = "0.5.0",
             CapturedAt     = capturedAt,
             Tick           = (int)tick,
             Seed           = seed,
@@ -96,7 +96,7 @@ public static class TelemetryProjector
     }
 
     /// <summary>
-    /// Overload without <see cref="EntityManager"/> — species always resolves to
+    /// Overload without <see cref="EntityManager"/> â€” species always resolves to
     /// <see cref="SpeciesType.Unknown"/>. Kept for callers that do not have direct
     /// access to the manager (e.g. replay replayers reading serialised snapshots).
     /// </summary>
@@ -108,7 +108,7 @@ public static class TelemetryProjector
         string             simVersion)
         => Project(snap, null, capturedAt, tick, seed, simVersion);
 
-    // ── Clock ─────────────────────────────────────────────────────────────────
+    // â”€â”€ Clock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static ClockStateDto ProjectClock(ClockSnapshot c, SunStateService? sunService) => new()
     {
@@ -127,7 +127,7 @@ public static class TelemetryProjector
         DayPhase     = (ContractDayPhase)(int)s.DayPhase,
     };
 
-    // ── Rooms ─────────────────────────────────────────────────────────────────
+    // â”€â”€ Rooms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static IReadOnlyList<RoomDto>? ProjectRooms(EntityManager em)
     {
@@ -166,7 +166,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Light sources ─────────────────────────────────────────────────────────
+    // â”€â”€ Light sources â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static IReadOnlyList<LightSourceDto>? ProjectLightSources(EntityManager em)
     {
@@ -195,7 +195,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Light apertures ───────────────────────────────────────────────────────
+    // â”€â”€ Light apertures â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static IReadOnlyList<LightApertureDto>? ProjectLightApertures(EntityManager em)
     {
@@ -222,13 +222,13 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Entities ──────────────────────────────────────────────────────────────
+    // â”€â”€ Entities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static List<EntityStateDto> ProjectEntities(
         IReadOnlyList<EntitySnapshot> snapshots,
         EntityManager?                em)
     {
-        // Build an ID→Entity lookup so SpeciesClassifier can resolve tags.
+        // Build an IDâ†’Entity lookup so SpeciesClassifier can resolve tags.
         Dictionary<Guid, Entity>? byId = null;
         if (em is not null)
         {
@@ -291,7 +291,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Social state ─────────────────────────────────────────────────────────
+    // â”€â”€ Social state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static SocialStateDto ProjectSocial(Entity e)
     {
@@ -375,7 +375,7 @@ public static class TelemetryProjector
         Baseline = SocialDrivesComponent.Clamp0100(d.Baseline),
     };
 
-    // ── Relationships ─────────────────────────────────────────────────────────
+    // â”€â”€ Relationships â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static List<RelationshipDto>? ProjectRelationships(EntityManager em)
     {
@@ -413,7 +413,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Memory events ─────────────────────────────────────────────────────────
+    // â”€â”€ Memory events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static List<MemoryEventDto>? ProjectMemoryEvents(EntityManager em)
     {
@@ -477,7 +477,7 @@ public static class TelemetryProjector
         return new Guid(bytes).ToString();
     }
 
-    // ── World items ───────────────────────────────────────────────────────────
+    // â”€â”€ World items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static List<WorldItemDto> ProjectWorldItems(IReadOnlyList<WorldItemSnapshot> items)
     {
@@ -495,7 +495,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── World objects ─────────────────────────────────────────────────────────
+    // â”€â”€ World objects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static List<WorldObjectDto> ProjectWorldObjects(IReadOnlyList<WorldObjectSnapshot> objects)
     {
@@ -516,7 +516,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Transit items ─────────────────────────────────────────────────────────
+    // â”€â”€ Transit items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static List<TransitItemDto>? ProjectTransitItems(IReadOnlyList<TransitItemSnapshot> items)
     {
@@ -536,7 +536,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Chronicle ─────────────────────────────────────────────────────────────
+    // â”€â”€ Chronicle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static IReadOnlyList<ChronicleEntryDto>? ProjectChronicle(ChronicleService svc)
     {
@@ -563,7 +563,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Enum mapping ──────────────────────────────────────────────────────────
+    // â”€â”€ Enum mapping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private static DominantDrive MapDominant(DesireType d) => d switch
     {

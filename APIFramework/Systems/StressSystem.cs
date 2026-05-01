@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Chores;
 using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 
@@ -36,6 +37,7 @@ public class StressSystem : ISystem
     private readonly StressConfig        _cfg;
     private readonly WorkloadConfig      _workloadCfg;
     private readonly BereavementConfig   _bereavementCfg;
+    private readonly ChoreConfig?        _choreCfg;
     private readonly SimulationClock     _clock;
     private readonly WillpowerEventQueue _queue;
 
@@ -55,13 +57,15 @@ public class StressSystem : ISystem
     /// <param name="narrativeBus">Bus subscribed to for LeftRoomAbruptly conflict signals.</param>
     /// <param name="em">Entity manager used to look up task entities by Guid.</param>
     /// <param name="bereavementCfg">Optional bereavement tuning; defaults to a fresh <see cref="BereavementConfig"/> when null.</param>
+    /// <param name="choreCfg">Optional chore tuning; enables ChoreOverrotationEventsToday stress branch.</param>
     public StressSystem(StressConfig cfg, WorkloadConfig workloadCfg, SimulationClock clock,
         WillpowerEventQueue queue, NarrativeEventBus narrativeBus,
-        EntityManager em, BereavementConfig? bereavementCfg = null)
+        EntityManager em, BereavementConfig? bereavementCfg = null, ChoreConfig? choreCfg = null)
     {
         _cfg            = cfg;
         _workloadCfg    = workloadCfg;
         _bereavementCfg = bereavementCfg ?? new BereavementConfig();
+        _choreCfg       = choreCfg;
         _clock          = clock;
         _queue          = queue;
         _em             = em;
@@ -182,6 +186,15 @@ public class StressSystem : ISystem
                 stress.BereavementEventsToday = 0; // one-shot: clear after application
             }
 
+            // 4.3. Chore overrotation — stress gain per over-rotation event (WP-3.2.3).
+            if (_choreCfg != null && stress.ChoreOverrotationEventsToday > 0)
+            {
+                double gain = stress.ChoreOverrotationEventsToday * _choreCfg.ChoreOverrotationStressGain * neuroFactor;
+                stress.AcuteLevel = Math.Clamp(
+                    (int)(stress.AcuteLevel + gain), 0, 100);
+                stress.ChoreOverrotationEventsToday = 0; // cleared on use
+            }
+
             // 5. Per-tick acute decay via fractional accumulator.
             if (!_decayAccum.TryGetValue(entity.Id, out var decayRemainder))
                 decayRemainder = 0.0;
@@ -205,8 +218,9 @@ public class StressSystem : ISystem
                 stress.DriveSpikeEventsToday     = 0;
                 stress.SocialConflictEventsToday = 0;
                 stress.OverdueTaskEventsToday    = 0;
-                stress.WitnessedDeathEventsToday = 0; // WP-3.0.2 (already cleared on use)
-                stress.BereavementEventsToday    = 0; // WP-3.0.2 (already cleared on use)
+                stress.WitnessedDeathEventsToday    = 0; // WP-3.0.2 (already cleared on use)
+                stress.BereavementEventsToday       = 0; // WP-3.0.2 (already cleared on use)
+                stress.ChoreOverrotationEventsToday = 0; // WP-3.2.3 (already cleared on use)
                 stress.LastDayUpdated = _clock.DayNumber;
             }
 

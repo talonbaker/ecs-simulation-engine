@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 
 namespace APIFramework.Systems.Lighting;
 
@@ -23,10 +24,16 @@ public sealed class LightSourceStateSystem : ISystem
 {
     private readonly SeededRandom   _rng;
     private readonly LightingConfig _cfg;
+    private readonly SoundTriggerBus? _soundBus;
+    private readonly int _bulbBuzzInterval;
 
     // per-entity effective intensity for the current tick (used by IlluminationAccumulationSystem)
     private readonly Dictionary<Entity, double> _effectiveIntensity = new();
 
+    // per-entity tick counter for BulbBuzz throttling
+    private readonly Dictionary<Entity, int> _flickerTick = new();
+
+    public LightSourceStateSystem(SeededRandom rng, LightingConfig cfg, SoundTriggerConfig? soundCfg = null, SoundTriggerBus? soundBus = null)
     /// <summary>
     /// Stores RNG and config references used per tick.
     /// </summary>
@@ -36,6 +43,8 @@ public sealed class LightSourceStateSystem : ISystem
     {
         _rng = rng;
         _cfg = cfg;
+        _soundBus = soundBus;
+        _bulbBuzzInterval = soundCfg?.BulbBuzzEmitIntervalTicks ?? 10;
     }
 
     /// <summary>
@@ -76,6 +85,20 @@ public sealed class LightSourceStateSystem : ISystem
                         ? comp.Intensity
                         : 0.0;
                     _effectiveIntensity[entity] = flickerEffective;
+
+                    // Emit BulbBuzz at the configured interval
+                    if (_soundBus != null)
+                    {
+                        _flickerTick.TryGetValue(entity, out var ft);
+                        ft++;
+                        if (ft >= _bulbBuzzInterval)
+                        {
+                            ft = 0;
+                            var pos = entity.Has<PositionComponent>() ? entity.Get<PositionComponent>() : default;
+                            _soundBus.Emit(SoundTriggerKind.BulbBuzz, entity.Id, pos.X, pos.Z, 0.2f, 0L);
+                        }
+                        _flickerTick[entity] = ft;
+                    }
                     break;
 
                 case LightState.Dying:

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "0.1.0",
+  "biases": {
+    "the-old-hand":        { "cleanMicrowave": 0.85, "cleanFridge": 0.70, "cleanBathroom": 0.65, "takeOutTrash": 0.50, "refillWaterCooler": 0.60, "restockSupplyCloset": 0.55, "replaceToner": 0.50 },
+    "the-cynic":           { "cleanMicrowave": 0.60, "cleanFridge": 0.55, "cleanBathroom": 0.45, "takeOutTrash": 0.65, "refillWaterCooler": 0.50, "restockSupplyCloset": 0.40, "replaceToner": 0.35 },
+    "the-newbie":          { "cleanMicrowave": 0.95, "cleanFridge": 0.90, "cleanBathroom": 0.92, "takeOutTrash": 0.85, "refillWaterCooler": 0.88, "restockSupplyCloset": 0.80, "replaceToner": 0.75 },
+    "the-founders-nephew": { "cleanMicrowave": 0.05, "cleanFridge": 0.05, "cleanBathroom": 0.05, "takeOutTrash": 0.05, "refillWaterCooler": 0.05, "restockSupplyCloset": 0.05, "replaceToner": 0.05 },
+    "the-climber":         { "cleanMicrowave": 0.40, "cleanFridge": 0.30, "cleanBathroom": 0.25, "takeOutTrash": 0.20, "refillWaterCooler": 0.35, "restockSupplyCloset": 0.30, "replaceToner": 0.25 },
+    "the-recovering":      { "cleanMicrowave": 0.70, "cleanFridge": 0.65, "cleanBathroom": 0.68, "takeOutTrash": 0.55, "refillWaterCooler": 0.60, "restockSupplyCloset": 0.58, "replaceToner": 0.50 },
+    "the-vent":            { "cleanMicrowave": 0.30, "cleanFridge": 0.25, "cleanBathroom": 0.22, "takeOutTrash": 0.20, "refillWaterCooler": 0.28, "restockSupplyCloset": 0.22, "replaceToner": 0.18 },
+    "the-hermit":          { "cleanMicrowave": 0.50, "cleanFridge": 0.45, "cleanBathroom": 0.40, "takeOutTrash": 0.40, "refillWaterCooler": 0.42, "restockSupplyCloset": 0.38, "replaceToner": 0.35 }
+  }
+}

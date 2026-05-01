@@ -36,7 +36,9 @@
       "Bash(find . -name \"NpcSaveDto.cs\")",
       "Bash(grep -v \".cs:.*//\")",
       "Bash(grep -rn \"class NpcSaveDto\\\\|record NpcSaveDto\\\\|struct NpcSaveDto\" --include=\"*.cs\")",
-      "Bash(grep -rn \"NpcSaveDto\" Warden.Contracts/)"
+      "Bash(grep -rn \"NpcSaveDto\" Warden.Contracts/)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(grep -rn *)"
     ]
   }
 }

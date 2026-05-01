@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using APIFramework.Components;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Coupling;
 
 namespace APIFramework.Config;
@@ -80,12 +81,18 @@ public class SimConfig
 
     /// <summary>End-of-day lockout detection (door reachability, starvation budget).</summary>
     public LockoutConfig          Lockout         { get; set; } = new();
+    public SoundTriggerConfig     SoundTriggers   { get; set; } = new();
 
     /// <summary>Bereavement stress gains and proximity-bereavement tuning.</summary>
     public BereavementConfig      Bereavement     { get; set; } = new();
 
     /// <summary>Fainting duration, fear threshold, and narrative emission tuning.</summary>
     public FaintingConfig         Fainting        { get; set; } = new();
+
+    /// <summary>Rescue mechanic tuning — bias threshold, awareness range, success rates.</summary>
+    public RescueConfig           Rescue          { get; set; } = new();
+    /// <summary>Chore rotation assignment, execution, and overrotation tuning.</summary>
+    public ChoreConfig            Chores          { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -1707,4 +1714,84 @@ public class FaintingConfig
     /// Default true.
     /// </summary>
     public bool EmitRegainedConsciousnessNarrative { get; set; } = true;
+}
+
+// ── Rescue system (WP-3.2.4) ─────────────────────────────────────────────────
+
+/// <summary>
+/// Configuration for the rescue mechanic (WP-3.2.4).
+/// Controls intent scoring thresholds, awareness range, and per-kind success rates.
+/// </summary>
+public class RescueConfig
+{
+    /// <summary>Minimum score for an NPC to commit to a rescue intent. Default 0.40.</summary>
+    public float RescueThreshold        { get; set; } = 0.40f;
+
+    /// <summary>Maximum tile distance at which a bystander notices an Incapacitated NPC. Default 3.0.</summary>
+    public float AwarenessRangeForRescue { get; set; } = 3.0f;
+
+    /// <summary>Rescuer's current willpower must be at or above this value. Default 20.</summary>
+    public int   MinRescueWillpower     { get; set; } = 20;
+
+    /// <summary>Rescuer's acute stress must be at or below this value. Default 80.</summary>
+    public float MaxRescueStress        { get; set; } = 80f;
+
+    /// <summary>Base probability of a successful Heimlich maneuver. Default 0.65.</summary>
+    public float HeimlichBaseSuccessRate   { get; set; } = 0.65f;
+
+    /// <summary>Base probability of a successful CPR attempt. Default 0.30.</summary>
+    public float CprBaseSuccessRate        { get; set; } = 0.30f;
+
+    /// <summary>Base probability of successfully unlocking a door. Default 0.95.</summary>
+    public float DoorUnlockBaseSuccessRate { get; set; } = 0.95f;
+}
+// ── Chore rotation system ─────────────────────────────────────────────────────
+
+/// <summary>
+/// ChoreAssignmentSystem / ChoreExecutionSystem tuning — chore frequencies,
+/// assignment weights, overrotation detection, and stress gain.
+/// </summary>
+public class ChoreConfig
+{
+    /// <summary>Game hour (0–24) at which ChoreAssignmentSystem runs each day. Default 18.0 (6 PM).</summary>
+    public double ChoreCheckHourOfDay { get; set; } = 18.0;
+
+    /// <summary>NextScheduledTick interval (in CurrentTick units) per chore kind.</summary>
+    public ChoreFrequencyConfig FrequencyTicks { get; set; } = new();
+
+    /// <summary>Base weight of the ChoreWork candidate in ActionSelectionSystem. Default 0.35.</summary>
+    public double ChoreActionBaseWeight { get; set; } = 0.35;
+
+    /// <summary>Times a chore must be done within the window before overrotation triggers. Default 3.</summary>
+    public int ChoreOverrotationThreshold { get; set; } = 3;
+
+    /// <summary>Game-day window for overrotation counting. Default 7.</summary>
+    public int ChoreOverrotationWindowGameDays { get; set; } = 7;
+
+    /// <summary>Acute stress gain per overrotation event (before neuroticism scaling). Default 1.5.</summary>
+    public double ChoreOverrotationStressGain { get; set; } = 1.5;
+
+    /// <summary>Base completion-level advance per game-second. Default 0.0001.</summary>
+    public double ChoreCompletionRatePerSecond { get; set; } = 0.0001;
+
+    /// <summary>Acceptance-bias below which ChoreWork candidate is not emitted (silent refusal). Default 0.20.</summary>
+    public double MinChoreAcceptanceBias { get; set; } = 0.20;
+
+    /// <summary>Completion quality below which ChoreBadlyDone narrative is emitted. Default 0.40.</summary>
+    public float BadQualityThreshold { get; set; } = 0.40f;
+
+    /// <summary>Default acceptance bias for archetypes/chore-kinds not listed in the JSON. Default 0.50.</summary>
+    public double DefaultAcceptanceBias { get; set; } = 0.50;
+}
+
+/// <summary>Per-chore NextScheduledTick frequency intervals (in CurrentTick units).</summary>
+public class ChoreFrequencyConfig
+{
+    public long CleanMicrowave    { get; set; } = 7_200_000;
+    public long CleanFridge       { get; set; } = 14_400_000;
+    public long CleanBathroom     { get; set; } = 3_600_000;
+    public long TakeOutTrash      { get; set; } = 1_440_000;
+    public long RefillWaterCooler { get; set; } = 2_880_000;
+    public long RestockSupplyCloset { get; set; } = 28_800_000;
+    public long ReplaceToner      { get; set; } = 14_400_000;
 }

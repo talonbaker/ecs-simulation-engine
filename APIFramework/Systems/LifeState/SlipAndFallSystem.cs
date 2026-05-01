@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 
 using LS = global::APIFramework.Components.LifeState;
 
@@ -28,19 +29,22 @@ public class SlipAndFallSystem : ISystem
     private readonly SlipAndFallConfig _config;
     private readonly LifeStateTransitionSystem _lifeStateTransitionSystem;
     private readonly SeededRandom _rng;
+    private readonly SoundTriggerBus? _soundBus;
 
     public SlipAndFallSystem(
         EntityManager entityManager,
         SimulationClock clock,
         SimConfig config,
         LifeStateTransitionSystem lifeStateTransitionSystem,
-        SeededRandom rng)
+        SeededRandom rng,
+        SoundTriggerBus? soundBus = null)
     {
         _entityManager = entityManager ?? throw new ArgumentNullException(nameof(entityManager));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _config = config?.SlipAndFall ?? throw new ArgumentNullException(nameof(config));
         _lifeStateTransitionSystem = lifeStateTransitionSystem ?? throw new ArgumentNullException(nameof(lifeStateTransitionSystem));
         _rng = rng ?? throw new ArgumentNullException(nameof(rng));
+        _soundBus = soundBus;
     }
 
     public void Update(EntityManager em, float deltaTime)
@@ -105,6 +109,15 @@ public class SlipAndFallSystem : ISystem
                         npc.Id,
                         LS.Deceased,
                         CauseOfDeath.SlippedAndFell);
+
+                    // Emit slip and thud sounds
+                    if (_soundBus != null)
+                    {
+                        var slipPos = npc.Get<PositionComponent>();
+                        _soundBus.Emit(SoundTriggerKind.Slip, npc.Id, slipPos.X, slipPos.Z, 0.8f, (long)_clock.TotalTime);
+                        _soundBus.Emit(SoundTriggerKind.Thud, npc.Id, slipPos.X, slipPos.Z, 0.9f, (long)_clock.TotalTime);
+                    }
+
                     // Only one slip per NPC per tick
                     break;
                 }
