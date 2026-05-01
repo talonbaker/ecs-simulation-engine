@@ -1,361 +1,384 @@
-﻿using APIFramework.Components;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.Chronicle;
+using APIFramework.Systems.Lighting;
+using Warden.Contracts.SchemaValidation;
 using Warden.Contracts.Telemetry;
 
 namespace Warden.Telemetry.SaveLoad;
 
 /// <summary>
-/// Produces a save-game <see cref="WorldStateDto"/> that captures ALL persistent component
-/// state needed for a faithful round-trip. Unlike <see cref="TelemetryProjector"/>, which
-/// produces an AI-consumable subset, this projector writes every mutable field.
+/// Projects the full engine state from <see cref="SimulationBootstrapper"/> into a
+/// <see cref="WorldStateDto"/> suitable for save/load round-trips (schema v0.5).
+///
+/// Unlike <see cref="TelemetryProjector"/>, which is designed for AI consumption,
+/// this projector captures ALL persistent component state.
 /// </summary>
-internal static class SaveProjector
+public static class SaveProjector
 {
-    internal static WorldStateDto Project(SimulationBootstrapper sim)
+    /// <summary>
+    /// Produces a complete save-format <see cref="WorldStateDto"/> from the running simulation.
+    /// Includes full NPC state, task entities, stain entities, locked doors, and the extended
+    /// clock state needed for exact restoration.
+    /// </summary>
+    public static WorldStateDto Project(SimulationBootstrapper sim)
     {
-        var snap     = sim.Capture();
-        var base_dto = TelemetryProjector.Project(
+        var capturedAt = DateTimeOffset.UtcNow;
+        var snap       = sim.Capture();
+
+        // Base telemetry projection (rooms, lights, relationships, chronicle, clock display)
+        var baseDto = TelemetryProjector.Project(
             snap,
             sim.EntityManager,
-            DateTimeOffset.UtcNow,
+            capturedAt,
             sim.Clock.CurrentTick,
-            0,
-            "save");
+            sim.Random.Seed,
+            APIFramework.Core.SimVersion.Full,
+            sim.SunState,
+            sim.Chronicle);
 
-        return base_dto with
+        return baseDto with
         {
-            SchemaVersion   = "0.5.0",
+            SchemaVersion   = SchemaVersions.WorldState,
             SaveTick        = sim.Clock.CurrentTick,
             SaveTotalTime   = sim.Clock.TotalTime,
             SaveTimeScale   = sim.Clock.TimeScale,
             EntityIdCounter = sim.EntityManager.IdCounter,
-            NpcSaveStates   = ProjectNpcs(sim),
-            TaskEntities    = ProjectTasks(sim),
-            StainEntities   = ProjectStains(sim),
-            LockedDoors     = ProjectLockedDoors(sim)
+            NpcSaveStates   = ProjectNpcs(sim.EntityManager),
+            TaskEntities    = ProjectTasks(sim.EntityManager),
+            StainEntities   = ProjectStains(sim.EntityManager),
+            LockedDoors     = ProjectLockedDoors(sim.EntityManager),
         };
     }
 
     // ── NPC entities ──────────────────────────────────────────────────────────
 
-    private static List<NpcSaveDto> ProjectNpcs(SimulationBootstrapper sim)
+    private static IReadOnlyList<NpcSaveDto> ProjectNpcs(EntityManager em)
     {
         var result = new List<NpcSaveDto>();
-        var em     = sim.EntityManager;
-
-        var seen = new HashSet<Entity>();
-        foreach (var e in em.Query<MetabolismComponent>()) seen.Add(e);
-        foreach (var e in em.Query<CorpseTag>())           seen.Add(e);
-
-        foreach (var entity in seen)
-            result.Add(ProjectNpc(entity));
-
+        foreach (var e in em.GetAllEntities()
+                             .Where(e => e.Has<MetabolismComponent>() || e.Has<CorpseTag>())
+                             .OrderBy(e => e.Id))
+        {
+            result.Add(ProjectNpc(e));
+        }
         return result;
     }
 
-    private static NpcSaveDto ProjectNpc(Entity entity)
+    private static NpcSaveDto ProjectNpc(Entity e)
     {
-        var id      = entity.Id.ToString();
-        var name    = entity.Has<IdentityComponent>() ? entity.Get<IdentityComponent>().Name : string.Empty;
-        var isHuman = entity.Has<HumanTag>();
+        var meta    = e.Has<MetabolismComponent>()      ? e.Get<MetabolismComponent>()      : default;
+        var energy  = e.Has<EnergyComponent>()           ? e.Get<EnergyComponent>()           : default;
+        var pos     = e.Has<PositionComponent>()         ? e.Get<PositionComponent>()         : default;
+        var stomach = e.Has<StomachComponent>()          ? e.Get<StomachComponent>()          : default;
+        var si      = e.Has<SmallIntestineComponent>()   ? e.Get<SmallIntestineComponent>()   : default;
+        var li      = e.Has<LargeIntestineComponent>()   ? e.Get<LargeIntestineComponent>()   : default;
+        var colon   = e.Has<ColonComponent>()            ? e.Get<ColonComponent>()            : default;
+        var bladder = e.Has<BladderComponent>()          ? e.Get<BladderComponent>()          : default;
 
-        float posX = 0f, posY = 0f, posZ = 0f;
-        if (entity.Has<PositionComponent>())
+        LifeStateSaveDto? lifeState = null;
+        if (e.Has<LifeStateComponent>())
         {
-            var pos = entity.Get<PositionComponent>();
-            posX = pos.X; posY = pos.Y; posZ = pos.Z;
+            var ls = e.Get<LifeStateComponent>();
+            lifeState = new LifeStateSaveDto
+            {
+                State                   = (int)ls.State,
+                LastTransitionTick      = ls.LastTransitionTick,
+                IncapacitatedTickBudget = ls.IncapacitatedTickBudget,
+                PendingDeathCause       = (int)ls.PendingDeathCause,
+            };
         }
 
-        float satiation = 0f, hydration = 0f, bodyTemp = 36.6f;
-        float satiationDrain = 0f, hydrationDrain = 0f;
-        if (entity.Has<MetabolismComponent>())
+        ChokeSaveDto? choking = null;
+        if (e.Has<ChokingComponent>())
         {
-            var m = entity.Get<MetabolismComponent>();
-            satiation = m.Satiation; hydration = m.Hydration; bodyTemp = m.BodyTemp;
-            satiationDrain = m.SatiationDrainRate; hydrationDrain = m.HydrationDrainRate;
+            var c = e.Get<ChokingComponent>();
+            choking = new ChokeSaveDto
+            {
+                ChokeStartTick = c.ChokeStartTick,
+                RemainingTicks = c.RemainingTicks,
+                BolusSize      = c.BolusSize,
+                PendingCause   = (int)c.PendingCause,
+            };
         }
 
-        float energy = 0f, sleepiness = 0f;
-        bool isSleeping = false;
-        if (entity.Has<EnergyComponent>())
+        FaintSaveDto? fainting = null;
+        if (e.Has<FaintingComponent>())
         {
-            var e2 = entity.Get<EnergyComponent>();
-            energy = e2.Energy; sleepiness = e2.Sleepiness; isSleeping = e2.IsSleeping;
+            var f = e.Get<FaintingComponent>();
+            fainting = new FaintSaveDto
+            {
+                FaintStartTick = f.FaintStartTick,
+                RecoveryTick   = f.RecoveryTick,
+            };
         }
 
-        float stomachVol = 0f, siVol = 0f, liVol = 0f, colonVol = 0f, bladderVol = 0f;
-        if (entity.Has<StomachComponent>())        stomachVol = entity.Get<StomachComponent>().CurrentVolumeMl;
-        if (entity.Has<SmallIntestineComponent>()) siVol      = entity.Get<SmallIntestineComponent>().ChymeVolumeMl;
-        if (entity.Has<LargeIntestineComponent>()) liVol      = entity.Get<LargeIntestineComponent>().ContentVolumeMl;
-        if (entity.Has<ColonComponent>())          colonVol   = entity.Get<ColonComponent>().StoolVolumeMl;
-        if (entity.Has<BladderComponent>())        bladderVol = entity.Get<BladderComponent>().VolumeML;
+        LockedInSaveDto? lockedIn = null;
+        if (e.Has<LockedInComponent>())
+        {
+            var li2 = e.Get<LockedInComponent>();
+            lockedIn = new LockedInSaveDto
+            {
+                FirstDetectedTick    = li2.FirstDetectedTick,
+                StarvationTickBudget = li2.StarvationTickBudget,
+            };
+        }
+
+        CauseOfDeathSaveDto? causeOfDeath = null;
+        if (e.Has<CauseOfDeathComponent>())
+        {
+            var cod = e.Get<CauseOfDeathComponent>();
+            causeOfDeath = new CauseOfDeathSaveDto
+            {
+                Cause          = (int)cod.Cause,
+                DeathTick      = cod.DeathTick,
+                WitnessedById  = cod.WitnessedByNpcId.ToString(),
+                LocationRoomId = cod.LocationRoomId.ToString(),
+            };
+        }
+
+        CorpseSaveDto? corpse = null;
+        if (e.Has<CorpseComponent>())
+        {
+            var c = e.Get<CorpseComponent>();
+            corpse = new CorpseSaveDto
+            {
+                DeathTick           = c.DeathTick,
+                OriginalNpcEntityId = c.OriginalNpcEntityId.ToString(),
+                LocationRoomId      = c.LocationRoomId,
+                HasBeenMoved        = c.HasBeenMoved,
+            };
+        }
+
+        StressSaveDto? stress = null;
+        if (e.Has<StressComponent>())
+        {
+            var s = e.Get<StressComponent>();
+            stress = new StressSaveDto
+            {
+                AcuteLevel                = s.AcuteLevel,
+                ChronicLevel              = s.ChronicLevel,
+                LastDayUpdated            = s.LastDayUpdated,
+                SuppressionEventsToday    = s.SuppressionEventsToday,
+                DriveSpikeEventsToday     = s.DriveSpikeEventsToday,
+                SocialConflictEventsToday = s.SocialConflictEventsToday,
+                OverdueTaskEventsToday    = s.OverdueTaskEventsToday,
+                WitnessedDeathEventsToday = s.WitnessedDeathEventsToday,
+                BereavementEventsToday    = s.BereavementEventsToday,
+                BurnoutLastAppliedDay     = s.BurnoutLastAppliedDay,
+            };
+        }
+
+        MaskSaveDto? mask = null;
+        if (e.Has<SocialMaskComponent>())
+        {
+            var m = e.Get<SocialMaskComponent>();
+            mask = new MaskSaveDto
+            {
+                IrritationMask = m.IrritationMask,
+                AffectionMask  = m.AffectionMask,
+                AttractionMask = m.AttractionMask,
+                LonelinessMask = m.LonelinessMask,
+                CurrentLoad    = m.CurrentLoad,
+                Baseline       = m.Baseline,
+                LastSlipTick   = m.LastSlipTick,
+            };
+        }
+
+        MoodSaveDto? mood = null;
+        if (e.Has<MoodComponent>())
+        {
+            var m = e.Get<MoodComponent>();
+            mood = new MoodSaveDto
+            {
+                Joy          = m.Joy,
+                Trust        = m.Trust,
+                Fear         = m.Fear,
+                Surprise     = m.Surprise,
+                Sadness      = m.Sadness,
+                Disgust      = m.Disgust,
+                Anger        = m.Anger,
+                Anticipation = m.Anticipation,
+                PanicLevel   = m.PanicLevel,
+                GriefLevel   = m.GriefLevel,
+            };
+        }
+
+        WillpowerSaveDto? willpower = null;
+        if (e.Has<WillpowerComponent>())
+        {
+            var w = e.Get<WillpowerComponent>();
+            willpower = new WillpowerSaveDto { Current = w.Current, Baseline = w.Baseline };
+        }
+
+        WorkloadSaveDto? workload = null;
+        if (e.Has<WorkloadComponent>())
+        {
+            var w = e.Get<WorkloadComponent>();
+            workload = new WorkloadSaveDto
+            {
+                ActiveTaskIds = (w.ActiveTasks ?? Array.Empty<Guid>())
+                                .Select(g => g.ToString()).ToList(),
+                Capacity    = w.Capacity,
+                CurrentLoad = w.CurrentLoad,
+            };
+        }
+
+        IReadOnlyList<string>? corpseIds = null;
+        if (e.Has<BereavementHistoryComponent>())
+        {
+            var bh = e.Get<BereavementHistoryComponent>();
+            if (bh.EncounteredCorpseIds?.Count > 0)
+                corpseIds = bh.EncounteredCorpseIds.Select(g => g.ToString()).ToList();
+        }
+
+        IReadOnlyList<ScheduleBlockSaveDto>? scheduleBlocks = null;
+        if (e.Has<ScheduleComponent>())
+        {
+            var sc = e.Get<ScheduleComponent>();
+            if (sc.Blocks?.Count > 0)
+            {
+                scheduleBlocks = sc.Blocks.Select(b => new ScheduleBlockSaveDto
+                {
+                    StartHour = b.StartHour,
+                    EndHour   = b.EndHour,
+                    AnchorId  = b.AnchorId,
+                    Activity  = (int)b.Activity,
+                }).ToList();
+            }
+        }
+
+        // Collect non-trivial structural tags
+        var tags = new List<string>();
+        if (e.Has<HumanTag>())      tags.Add("Human");
+        if (e.Has<CatTag>())        tags.Add("Cat");
+        if (e.Has<NpcTag>())        tags.Add("Npc");
+        if (e.Has<CorpseTag>())     tags.Add("Corpse");
+        if (e.Has<IsChokingTag>())  tags.Add("IsChoking");
+        if (e.Has<IsFaintingTag>()) tags.Add("IsFainting");
+        if (e.Has<SleepingTag>())   tags.Add("Sleeping");
 
         return new NpcSaveDto
         {
-            Id               = id,
-            Name             = name,
-            IsHuman          = isHuman,
-            PosX             = posX,
-            PosY             = posY,
-            PosZ             = posZ,
-            Satiation        = satiation,
-            Hydration        = hydration,
-            BodyTemp         = bodyTemp,
-            SatiationDrainRate  = satiationDrain,
-            HydrationDrainRate  = hydrationDrain,
-            Energy           = energy,
-            Sleepiness       = sleepiness,
-            IsSleeping       = isSleeping,
-            StomachVolumeMl  = stomachVol,
-            SiChymeVolumeMl  = siVol,
-            LiContentVolumeMl = liVol,
-            ColonStoolVolumeMl = colonVol,
-            BladderVolumeMl  = bladderVol,
-            LifeState        = ProjectLifeState(entity),
-            Choking          = ProjectChoking(entity),
-            Fainting         = ProjectFainting(entity),
-            LockedIn         = ProjectLockedIn(entity),
-            CauseOfDeath     = ProjectCauseOfDeath(entity),
-            Corpse           = ProjectCorpse(entity),
-            Stress           = ProjectStress(entity),
-            Mask             = ProjectMask(entity),
-            Mood             = ProjectMood(entity),
-            Willpower        = ProjectWillpower(entity),
-            Workload         = ProjectWorkload(entity),
-            ScheduleBlocks   = ProjectScheduleBlocks(entity),
-            EncounteredCorpseIds = ProjectEncounteredCorpses(entity)
+            Id                   = e.Id.ToString(),
+            Name                 = e.Has<IdentityComponent>() ? e.Get<IdentityComponent>().Name : e.ShortId,
+            PosX                 = pos.X,
+            PosY                 = pos.Y,
+            PosZ                 = pos.Z,
+            Satiation            = meta.Satiation,
+            Hydration            = meta.Hydration,
+            BodyTemp             = meta.BodyTemp,
+            Energy               = energy.Energy,
+            Sleepiness           = energy.Sleepiness,
+            IsSleeping           = energy.IsSleeping,
+            SatiationDrainRate   = meta.SatiationDrainRate,
+            HydrationDrainRate   = meta.HydrationDrainRate,
+            StomachVolumeMl      = stomach.CurrentVolumeMl,
+            SiChymeVolumeMl      = si.ChymeVolumeMl,
+            LiContentVolumeMl    = li.ContentVolumeMl,
+            ColonStoolVolumeMl   = colon.StoolVolumeMl,
+            BladderVolumeMl      = bladder.VolumeML,
+            LifeState            = lifeState,
+            Choking              = choking,
+            Fainting             = fainting,
+            LockedIn             = lockedIn,
+            CauseOfDeath         = causeOfDeath,
+            Corpse               = corpse,
+            Stress               = stress,
+            Mask                 = mask,
+            Mood                 = mood,
+            Willpower            = willpower,
+            Workload             = workload,
+            EncounteredCorpseIds = corpseIds,
+            Tags                 = tags.Count > 0 ? tags : null,
+            ScheduleBlocks       = scheduleBlocks,
         };
-    }
-
-    private static LifeStateSaveDto? ProjectLifeState(Entity entity)
-    {
-        if (!entity.Has<LifeStateComponent>()) return null;
-        var c = entity.Get<LifeStateComponent>();
-        return new LifeStateSaveDto
-        {
-            State                   = (SaveLifeState)(int)c.State,
-            LastTransitionTick      = c.LastTransitionTick,
-            IncapacitatedTickBudget = c.IncapacitatedTickBudget,
-            PendingDeathCause       = (SaveCauseOfDeath)(int)c.PendingDeathCause
-        };
-    }
-
-    private static ChokeSaveDto? ProjectChoking(Entity entity)
-    {
-        if (!entity.Has<ChokingComponent>()) return null;
-        var c = entity.Get<ChokingComponent>();
-        return new ChokeSaveDto
-        {
-            ChokeStartTick = c.ChokeStartTick,
-            RemainingTicks = c.RemainingTicks,
-            BolusSize      = c.BolusSize,
-            PendingCause   = (SaveCauseOfDeath)(int)c.PendingCause
-        };
-    }
-
-    private static FaintSaveDto? ProjectFainting(Entity entity)
-    {
-        if (!entity.Has<FaintingComponent>()) return null;
-        var c = entity.Get<FaintingComponent>();
-        return new FaintSaveDto { FaintStartTick = c.FaintStartTick, RecoveryTick = c.RecoveryTick };
-    }
-
-    private static LockedInSaveDto? ProjectLockedIn(Entity entity)
-    {
-        if (!entity.Has<LockedInComponent>()) return null;
-        var c = entity.Get<LockedInComponent>();
-        return new LockedInSaveDto { FirstDetectedTick = c.FirstDetectedTick, StarvationTickBudget = c.StarvationTickBudget };
-    }
-
-    private static CauseOfDeathSaveDto? ProjectCauseOfDeath(Entity entity)
-    {
-        if (!entity.Has<CauseOfDeathComponent>()) return null;
-        var c = entity.Get<CauseOfDeathComponent>();
-        return new CauseOfDeathSaveDto
-        {
-            Cause          = (SaveCauseOfDeath)(int)c.Cause,
-            DeathTick      = c.DeathTick,
-            WitnessedById  = c.WitnessedByNpcId == Guid.Empty ? string.Empty : c.WitnessedByNpcId.ToString(),
-            LocationRoomId = c.LocationRoomId   == Guid.Empty ? string.Empty : c.LocationRoomId.ToString()
-        };
-    }
-
-    private static CorpseSaveDto? ProjectCorpse(Entity entity)
-    {
-        if (!entity.Has<CorpseComponent>()) return null;
-        var c = entity.Get<CorpseComponent>();
-        return new CorpseSaveDto
-        {
-            DeathTick           = c.DeathTick,
-            OriginalNpcEntityId = c.OriginalNpcEntityId.ToString(),
-            LocationRoomId      = c.LocationRoomId,
-            HasBeenMoved        = c.HasBeenMoved
-        };
-    }
-
-    private static StressSaveDto? ProjectStress(Entity entity)
-    {
-        if (!entity.Has<StressComponent>()) return null;
-        var c = entity.Get<StressComponent>();
-        return new StressSaveDto
-        {
-            AcuteLevel                = c.AcuteLevel,
-            ChronicLevel              = c.ChronicLevel,
-            LastDayUpdated            = c.LastDayUpdated,
-            SuppressionEventsToday    = c.SuppressionEventsToday,
-            DriveSpikeEventsToday     = c.DriveSpikeEventsToday,
-            SocialConflictEventsToday = c.SocialConflictEventsToday,
-            OverdueTaskEventsToday    = c.OverdueTaskEventsToday,
-            BurnoutLastAppliedDay     = c.BurnoutLastAppliedDay,
-            WitnessedDeathEventsToday = c.WitnessedDeathEventsToday,
-            BereavementEventsToday    = c.BereavementEventsToday
-        };
-    }
-
-    private static MaskSaveDto? ProjectMask(Entity entity)
-    {
-        if (!entity.Has<SocialMaskComponent>()) return null;
-        var c = entity.Get<SocialMaskComponent>();
-        return new MaskSaveDto
-        {
-            IrritationMask = c.IrritationMask,
-            AffectionMask  = c.AffectionMask,
-            AttractionMask = c.AttractionMask,
-            LonelinessMask = c.LonelinessMask,
-            CurrentLoad    = c.CurrentLoad,
-            Baseline       = c.Baseline,
-            LastSlipTick   = c.LastSlipTick
-        };
-    }
-
-    private static MoodSaveDto? ProjectMood(Entity entity)
-    {
-        if (!entity.Has<MoodComponent>()) return null;
-        var c = entity.Get<MoodComponent>();
-        return new MoodSaveDto
-        {
-            Joy          = c.Joy,
-            Trust        = c.Trust,
-            Fear         = c.Fear,
-            Surprise     = c.Surprise,
-            Sadness      = c.Sadness,
-            Disgust      = c.Disgust,
-            Anger        = c.Anger,
-            Anticipation = c.Anticipation,
-            PanicLevel   = c.PanicLevel,
-            GriefLevel   = c.GriefLevel
-        };
-    }
-
-    private static WillpowerSaveDto? ProjectWillpower(Entity entity)
-    {
-        if (!entity.Has<WillpowerComponent>()) return null;
-        var c = entity.Get<WillpowerComponent>();
-        return new WillpowerSaveDto { Current = c.Current, Baseline = c.Baseline };
-    }
-
-    private static WorkloadSaveDto? ProjectWorkload(Entity entity)
-    {
-        if (!entity.Has<WorkloadComponent>()) return null;
-        var c = entity.Get<WorkloadComponent>();
-        var taskIds = c.ActiveTasks?.Select(g => g.ToString()).ToList();
-        return new WorkloadSaveDto
-        {
-            Capacity      = c.Capacity,
-            CurrentLoad   = c.CurrentLoad,
-            ActiveTaskIds = taskIds
-        };
-    }
-
-    private static List<ScheduleBlockSaveDto>? ProjectScheduleBlocks(Entity entity)
-    {
-        if (!entity.Has<ScheduleComponent>()) return null;
-        var blocks = entity.Get<ScheduleComponent>().Blocks;
-        if (blocks == null || blocks.Count == 0) return null;
-        return blocks.Select(b => new ScheduleBlockSaveDto
-        {
-            StartHour = b.StartHour,
-            EndHour   = b.EndHour,
-            AnchorId  = b.AnchorId,
-            Activity  = (SaveScheduleActivity)(int)b.Activity
-        }).ToList();
-    }
-
-    private static List<string>? ProjectEncounteredCorpses(Entity entity)
-    {
-        if (!entity.Has<BereavementHistoryComponent>()) return null;
-        var c = entity.Get<BereavementHistoryComponent>();
-        return c.EncounteredCorpseIds?.Select(g => g.ToString()).ToList();
     }
 
     // ── Task entities ─────────────────────────────────────────────────────────
 
-    private static List<TaskSaveDto> ProjectTasks(SimulationBootstrapper sim)
+    private static IReadOnlyList<TaskSaveDto>? ProjectTasks(EntityManager em)
     {
-        var result = new List<TaskSaveDto>();
-        foreach (var entity in sim.EntityManager.Query<TaskTag>())
+        var taskEntities = em.Query<TaskTag>()
+            .Where(e => e.Has<TaskComponent>())
+            .OrderBy(e => e.Id)
+            .ToList();
+
+        if (taskEntities.Count == 0) return null;
+
+        return taskEntities.Select(e =>
         {
-            if (!entity.Has<TaskComponent>()) continue;
-            var c = entity.Get<TaskComponent>();
-            result.Add(new TaskSaveDto
+            var t = e.Get<TaskComponent>();
+            return new TaskSaveDto
             {
-                Id            = entity.Id.ToString(),
-                EffortHours   = c.EffortHours,
-                DeadlineTick  = c.DeadlineTick,
-                Priority      = c.Priority,
-                Progress      = c.Progress,
-                QualityLevel  = c.QualityLevel,
-                AssignedNpcId = c.AssignedNpcId == Guid.Empty ? string.Empty : c.AssignedNpcId.ToString(),
-                CreatedTick   = c.CreatedTick
-            });
-        }
-        return result;
+                Id            = e.Id.ToString(),
+                EffortHours   = t.EffortHours,
+                DeadlineTick  = t.DeadlineTick,
+                Priority      = t.Priority,
+                Progress      = t.Progress,
+                QualityLevel  = t.QualityLevel,
+                AssignedNpcId = t.AssignedNpcId.ToString(),
+                CreatedTick   = t.CreatedTick,
+                IsOverdue     = e.Has<OverdueTag>(),
+            };
+        }).ToList();
     }
 
     // ── Stain entities ────────────────────────────────────────────────────────
 
-    private static List<StainEntitySaveDto> ProjectStains(SimulationBootstrapper sim)
+    private static IReadOnlyList<StainEntitySaveDto>? ProjectStains(EntityManager em)
     {
-        var result = new List<StainEntitySaveDto>();
-        foreach (var entity in sim.EntityManager.Query<StainTag>())
+        var stainEntities = em.Query<StainTag>()
+            .Where(e => e.Has<StainComponent>())
+            .OrderBy(e => e.Id)
+            .ToList();
+
+        if (stainEntities.Count == 0) return null;
+
+        return stainEntities.Select(e =>
         {
-            if (!entity.Has<StainComponent>()) continue;
-            var c   = entity.Get<StainComponent>();
-            var pos = entity.Has<PositionComponent>() ? entity.Get<PositionComponent>() : default;
-            result.Add(new StainEntitySaveDto
+            var s   = e.Get<StainComponent>();
+            var pos = e.Has<PositionComponent>() ? e.Get<PositionComponent>() : default;
+            return new StainEntitySaveDto
             {
-                Id               = entity.Id.ToString(),
+                Id               = e.Id.ToString(),
                 PosX             = pos.X,
+                PosY             = pos.Y,
                 PosZ             = pos.Z,
-                Source           = c.Source,
-                Magnitude        = c.Magnitude,
-                CreatedAtTick    = c.CreatedAtTick,
-                ChronicleEntryId = c.ChronicleEntryId,
-                FallRisk         = entity.Has<FallRiskComponent>() ? entity.Get<FallRiskComponent>().RiskLevel : (float?)null,
-                IsObstacle       = entity.Has<ObstacleTag>()
-            });
-        }
-        return result;
+                Source           = s.Source,
+                Magnitude        = s.Magnitude,
+                CreatedAtTick    = s.CreatedAtTick,
+                ChronicleEntryId = s.ChronicleEntryId,
+                FallRiskLevel    = e.Has<FallRiskComponent>() ? e.Get<FallRiskComponent>().RiskLevel : null,
+            };
+        }).ToList();
     }
 
-    // ── Locked-door entities ──────────────────────────────────────────────────
+    // ── Locked doors ──────────────────────────────────────────────────────────
 
-    private static List<LockedDoorSaveDto> ProjectLockedDoors(SimulationBootstrapper sim)
+    private static IReadOnlyList<LockedDoorSaveDto>? ProjectLockedDoors(EntityManager em)
     {
-        var result = new List<LockedDoorSaveDto>();
-        foreach (var entity in sim.EntityManager.Query<LockedTag>())
+        var doorEntities = em.Query<LockedTag>()
+            .Where(e => e.Has<PositionComponent>())
+            .OrderBy(e => e.Id)
+            .ToList();
+
+        if (doorEntities.Count == 0) return null;
+
+        return doorEntities.Select(e =>
         {
-            var pos  = entity.Has<PositionComponent>() ? entity.Get<PositionComponent>() : default;
-            var name = entity.Has<IdentityComponent>() ? entity.Get<IdentityComponent>().Name : null;
-            result.Add(new LockedDoorSaveDto
+            var pos = e.Get<PositionComponent>();
+            return new LockedDoorSaveDto
             {
-                Id   = entity.Id.ToString(),
+                Id   = e.Id.ToString(),
                 PosX = pos.X,
                 PosY = pos.Y,
                 PosZ = pos.Z,
-                Name = name
-            });
-        }
-        return result;
+                Name = e.Has<IdentityComponent>() ? e.Get<IdentityComponent>().Name : null,
+            };
+        }).ToList();
     }
 }

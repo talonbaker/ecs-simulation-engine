@@ -22,16 +22,15 @@ namespace APIFramework.Systems;
 /// </remarks>
 public class EsophagusSystem : ISystem
 {
-    private readonly SoundTriggerBus? _soundBus;
+    private readonly SoundTriggerBus?   _soundBus;
+    private readonly SimulationClock?   _clock;
 
-    public EsophagusSystem(SoundTriggerBus? soundBus = null)
+    public EsophagusSystem(SoundTriggerBus? soundBus = null, SimulationClock? clock = null)
     {
         _soundBus = soundBus;
+        _clock    = clock;
     }
 
-    /// <summary>Per-tick progress and deposit pass.</summary>
-    /// <param name="em">Entity manager backing this tick.</param>
-    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         var entities = em.Query<EsophagusTransitComponent>().ToList();
@@ -43,10 +42,8 @@ public class EsophagusSystem : ISystem
 
             if (transit.Progress >= 1.0f)
             {
-                // Find the consumer this bolus/liquid was headed for
                 var consumer = em.GetAllEntities().FirstOrDefault(e => e.Id == transit.TargetEntityId);
 
-                // WP-3.0.0: Deceased consumers no longer receive deposits; transit entity is still destroyed.
                 if (consumer != null && consumer.Has<StomachComponent>() && LifeStateGuard.IsBiologicallyTicking(consumer))
                 {
                     var stomach = consumer.Get<StomachComponent>();
@@ -54,9 +51,6 @@ public class EsophagusSystem : ISystem
                     if (entity.Has<LiquidComponent>())
                     {
                         var liquid = entity.Get<LiquidComponent>();
-                        // Physical volume enters the stomach; the full nutrient profile
-                        // (water + any dissolved macros/minerals) waits in NutrientsQueued
-                        // to be absorbed by DigestionSystem.
                         stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + liquid.VolumeMl, StomachComponent.MaxVolumeMl);
                         stomach.NutrientsQueued += liquid.Nutrients;
 
@@ -70,9 +64,6 @@ public class EsophagusSystem : ISystem
                     else if (entity.Has<BolusComponent>())
                     {
                         var bolus = entity.Get<BolusComponent>();
-                        // Physical volume enters the stomach; the full nutrient profile
-                        // (macros, water, vitamins, minerals) waits in NutrientsQueued
-                        // to be absorbed by DigestionSystem.
                         stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + bolus.Volume, StomachComponent.MaxVolumeMl);
                         stomach.NutrientsQueued += bolus.Nutrients;
 
@@ -92,6 +83,17 @@ public class EsophagusSystem : ISystem
             else
             {
                 entity.Add(transit);
+
+                if (_soundBus != null && _clock != null)
+                {
+                    var consumer = em.GetAllEntities().FirstOrDefault(e => e.Id == transit.TargetEntityId);
+                    if (consumer != null && consumer.Has<PositionComponent>())
+                    {
+                        var cpos = consumer.Get<PositionComponent>();
+                        var kind = entity.Has<BolusComponent>() ? SoundTriggerKind.Chew : SoundTriggerKind.Slurp;
+                        _soundBus.Emit(kind, consumer.Id, cpos.X, cpos.Z, 0.5f, (long)_clock.TotalTime);
+                    }
+                }
             }
         }
     }

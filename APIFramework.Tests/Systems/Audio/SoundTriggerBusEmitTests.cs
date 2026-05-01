@@ -4,6 +4,11 @@ using Xunit;
 
 namespace APIFramework.Tests.Systems.Audio;
 
+/// <summary>
+/// AT-STB-01: Emit invokes every subscribed handler with a correctly populated event.
+/// AT-STB-02: Intensity clamped to [0, 1].
+/// AT-STB-03: No subscribers — Emit does not throw.
+/// </summary>
 public class SoundTriggerBusEmitTests
 {
     [Fact]

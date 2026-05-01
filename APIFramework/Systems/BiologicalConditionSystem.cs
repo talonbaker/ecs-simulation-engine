@@ -8,10 +8,7 @@ namespace APIFramework.Systems;
 
 /// <summary>
 /// Condition phase. Observes physiology values (Hunger, Thirst) on
-/// <see cref="MetabolismComponent"/> and toggles sensation tags accordingly:
-/// <see cref="ThirstTag"/>, <see cref="DehydratedTag"/>, <see cref="HungerTag"/>,
-/// <see cref="StarvingTag"/>, and <see cref="IrritableTag"/>. Purely observational —
-/// spawns nothing.
+/// <see cref="MetabolismComponent"/> and toggles sensation tags accordingly.
 /// </summary>
 /// <remarks>
 /// Reads: <see cref="MetabolismComponent"/>, <see cref="LifeStateComponent"/>.<br/>
@@ -22,7 +19,8 @@ namespace APIFramework.Systems;
 public class BiologicalConditionSystem : ISystem
 {
     private readonly BiologicalConditionSystemConfig _cfg;
-    private readonly SoundTriggerBus? _soundBus;
+    private readonly SoundTriggerBus?                _soundBus;
+    private readonly SimulationClock?                _clock;
 
     public BiologicalConditionSystem(BiologicalConditionSystemConfig cfg, SoundTriggerBus? soundBus = null)
     {
@@ -30,28 +28,30 @@ public class BiologicalConditionSystem : ISystem
         _soundBus = soundBus;
     }
     /// <summary>Constructs the system with its tag-threshold tuning.</summary>
-    /// <param name="cfg">Hunger/thirst/irritable threshold values.</param>
-    public BiologicalConditionSystem(BiologicalConditionSystemConfig cfg) => _cfg = cfg;
+    public BiologicalConditionSystem(BiologicalConditionSystemConfig cfg,
+        SoundTriggerBus? soundBus = null, SimulationClock? clock = null)
+    {
+        _cfg      = cfg;
+        _soundBus = soundBus;
+        _clock    = clock;
+    }
 
     /// <summary>Per-tick observation pass that toggles biological-condition tags.</summary>
-    /// <param name="em">Entity manager backing this tick.</param>
-    /// <param name="deltaTime">Elapsed game time for this tick (seconds). No-op when zero or negative.</param>
     public void Update(EntityManager em, float deltaTime)
     {
         if (deltaTime <= 0) return;
 
         foreach (var entity in em.Query<MetabolismComponent>().ToList())
         {
-            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;  // WP-3.0.0: skip Deceased NPCs (Incapacitated still ticks)
+            if (!LifeStateGuard.IsBiologicallyTicking(entity)) continue;
 
             var meta = entity.Get<MetabolismComponent>();
 
-            // Hunger and Thirst are computed: Hunger = 100 - Satiation, Thirst = 100 - Hydration
-            ToggleTag<ThirstTag>   (entity, meta.Thirst >= _cfg.ThirstTagThreshold);
-            ToggleTag<DehydratedTag>(entity, meta.Thirst >= _cfg.DehydratedTagThreshold);
-            ToggleTag<HungerTag>   (entity, meta.Hunger >= _cfg.HungerTagThreshold);
-            ToggleTag<StarvingTag> (entity, meta.Hunger >= _cfg.StarvingTagThreshold);
-            ToggleTag<IrritableTag>(entity,
+            bool newThirst     = ToggleTagWithTransition<ThirstTag>   (entity, meta.Thirst >= _cfg.ThirstTagThreshold);
+            bool newDehydrated = ToggleTagWithTransition<DehydratedTag>(entity, meta.Thirst >= _cfg.DehydratedTagThreshold);
+            bool newHunger     = ToggleTagWithTransition<HungerTag>   (entity, meta.Hunger >= _cfg.HungerTagThreshold);
+            ToggleTagWithTransition<StarvingTag>(entity, meta.Hunger >= _cfg.StarvingTagThreshold);
+            bool newIrritable  = ToggleTagWithTransition<IrritableTag>(entity,
                 meta.Hunger > _cfg.IrritableThreshold ||
                 meta.Thirst > _cfg.IrritableThreshold);
 
@@ -75,9 +75,10 @@ public class BiologicalConditionSystem : ISystem
         }
     }
 
-    private static void ToggleTag<T>(Entity entity, bool condition) where T : struct
+    private static bool ToggleTagWithTransition<T>(Entity entity, bool condition) where T : struct
     {
-        if (condition && !entity.Has<T>())      entity.Add(new T());
-        else if (!condition && entity.Has<T>()) entity.Remove<T>();
+        if (condition && !entity.Has<T>()) { entity.Add(new T()); return true; }
+        if (!condition && entity.Has<T>()) entity.Remove<T>();
+        return false;
     }
 }

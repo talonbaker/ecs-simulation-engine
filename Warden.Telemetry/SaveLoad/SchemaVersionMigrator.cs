@@ -1,46 +1,46 @@
-﻿using Warden.Contracts.Telemetry;
+using Warden.Contracts.Telemetry;
 
 namespace Warden.Telemetry.SaveLoad;
 
 /// <summary>
-/// Upgrades persisted <see cref="WorldStateDto"/> documents to the current schema version.
-/// Only forward migrations are supported; loading a newer schema than the runtime understands
-/// throws <see cref="SaveLoadException"/> (fail-closed).
+/// Migrates older-version <see cref="WorldStateDto"/> saves to the current engine schema.
+/// Only supports v0.4 → v0.5. Higher-version saves fail-closed in <see cref="SaveLoadService"/>.
 /// </summary>
-internal static class SchemaVersionMigrator
+public static class SchemaVersionMigrator
 {
-    internal static WorldStateDto Migrate(WorldStateDto dto)
+    /// <summary>
+    /// Migrates <paramref name="dto"/> from its current schema version toward
+    /// <paramref name="targetVersion"/>. Returns a new DTO at the target version.
+    /// Throws <see cref="SaveLoadException"/> if the migration path is unsupported.
+    /// </summary>
+    public static WorldStateDto Migrate(WorldStateDto dto, string targetVersion)
     {
-        return dto.SchemaVersion switch
-        {
-            "0.5.0" => dto,
-            "0.4.0" => MigrateV04ToV05(dto),
-            _ when IsNewer(dto.SchemaVersion) =>
-                throw new SaveLoadException(
-                    $"Save file uses schema v{dto.SchemaVersion} which is newer than this runtime (v0.5.0). " +
-                    "Update the application to load this save."),
-            _ => throw new SaveLoadException(
-                    $"Unsupported schema version ''{dto.SchemaVersion}''. Cannot migrate.")
-        };
+        var current = dto.SchemaVersion ?? "0.0.0";
+
+        if (current == targetVersion)
+            return dto;
+
+        // v0.4 → v0.5: add default-filled save fields
+        if (current == "0.4.0" && targetVersion == "0.5.0")
+            return MigrateV04ToV05(dto);
+
+        throw new SaveLoadException(
+            $"No migration path from schema {current} to {targetVersion}.");
     }
 
+    // v0.4 → v0.5: new save-specific fields default to null (no full state captured).
+    // Loads from old saves restore only the telemetry subset (drives, physiology, positions).
     private static WorldStateDto MigrateV04ToV05(WorldStateDto dto) =>
         dto with
         {
-            SchemaVersion  = "0.5.0",
-            SaveTick       = null,
-            SaveTotalTime  = null,
-            SaveTimeScale  = null,
-            EntityIdCounter = null,
-            NpcSaveStates  = null,
-            TaskEntities   = null,
-            StainEntities  = null,
-            LockedDoors    = null
+            SchemaVersion    = "0.5.0",
+            SaveTick         = null,
+            SaveTotalTime    = null,
+            SaveTimeScale    = null,
+            EntityIdCounter  = null,
+            NpcSaveStates    = null,
+            TaskEntities     = null,
+            StainEntities    = null,
+            LockedDoors      = null,
         };
-
-    private static bool IsNewer(string version)
-    {
-        if (!Version.TryParse(version, out var v)) return false;
-        return v > new Version(0, 5, 0);
-    }
 }
