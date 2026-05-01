@@ -28,6 +28,9 @@ public sealed class SelectionManager : MonoBehaviour
     /// <summary>Currently selected object, or null if nothing is selected.</summary>
     public Selectable CurrentSelection { get; private set; }
 
+    /// <summary>EntityId of the selected NPC, or null/empty when nothing is selected.</summary>
+    public string SelectedEntityId { get; private set; }
+
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     private void Update()
@@ -75,6 +78,7 @@ public sealed class SelectionManager : MonoBehaviour
         if (CurrentSelection == null) return;
         CurrentSelection.Deselect();
         CurrentSelection = null;
+        SelectedEntityId = null;
         OnSelectionChanged?.Invoke(null);
     }
 
@@ -87,6 +91,7 @@ public sealed class SelectionManager : MonoBehaviour
             CurrentSelection.Deselect();
         CurrentSelection = sel;
         sel.Select();
+        SelectedEntityId = sel.GetComponent<NpcSelectableTag>()?.EntityId;
         OnSelectionChanged?.Invoke(sel);
     }
 }
