@@ -1,7 +1,7 @@
 ﻿# ECS Simulation Engine — Fact Sheet
 
 **SimVersion:** ECS Simulation Engine  v0.7.2
-**Generated:** 2026-04-28T04:43:33.8489342+00:00
+**Generated:** 2026-05-01T02:24:28.6350818+00:00
 **TelemetrySchema:** world-state.schema.json v0.1.0
 
 ## Registered Systems
@@ -69,8 +69,10 @@
 | 59 | `ChokingDetectionSystem` | `Cleanup` | 80 |
 | 60 | `LifeStateTransitionSystem` | `Cleanup` | 80 |
 | 61 | `ChokingCleanupSystem` | `Cleanup` | 80 |
+| 62 | `SlipAndFallSystem` | `Cleanup` | 80 |
+| 63 | `LockoutDetectionSystem` | `PreUpdate` | 0 |
 
-**Total:** 61 systems
+**Total:** 63 systems
 
 ## Component Types
 
@@ -88,6 +90,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `AnticipatingTag` | *(tag — no fields)* |
 | `ApprehensiveTag` | *(tag — no fields)* |
 | `BedComponent` | *(tag — no fields)* |
+| `BereavementHistoryComponent` | `EncounteredCorpseIds: HashSet`1` |
 | `BladderComponent` | `VolumeML: float`, `FillRate: float`, `UrgeThresholdMl: float`, `CapacityMl: float`, `Fill: float`, `HasUrge: bool`, `IsCritical: bool`, `IsEmpty: bool` |
 | `BladderCriticalTag` | *(tag — no fields)* |
 | `BlockedActionsComponent` | `Blocked: IReadOnlyCollection`1` |
@@ -106,6 +109,8 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `ColonComponent` | `UrgeThresholdMl: float`, `CapacityMl: float`, `StoolVolumeMl: float`, `Fill: float`, `HasUrge: bool`, `IsCritical: bool`, `IsEmpty: bool` |
 | `ConsumedRottenFoodTag` | *(tag — no fields)* |
 | `ContainerComponent` | `Contents: List`1`, `Count: int`, `IsEmpty: bool` |
+| `CorpseComponent` | `DeathTick: Int64`, `OriginalNpcEntityId: Guid`, `LocationRoomId: string`, `HasBeenMoved: bool` |
+| `CorpseTag` | *(tag — no fields)* |
 | `CurrentScheduleBlockComponent` | `ActiveBlockIndex: int`, `AnchorEntityId: Guid`, `Activity: ScheduleActivityKind` |
 | `DefecationUrgeTag` | *(tag — no fields)* |
 | `DehydratedTag` | *(tag — no fields)* |
@@ -119,6 +124,8 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `EsophagusTransitComponent` | `Progress: float`, `Speed: float`, `TargetEntityId: Guid`, `Position: int` |
 | `ExhaustedTag` | *(tag — no fields)* |
 | `FacingComponent` | `DirectionDeg: float`, `Source: FacingSource` |
+| `FaintingComponent` | `FaintStartTick: Int64`, `RecoveryTick: Int64` |
+| `FallRiskComponent` | `RiskLevel: float` |
 | `FearfulTag` | *(tag — no fields)* |
 | `FoodDesireTag` | *(tag — no fields)* |
 | `FoodObjectComponent` | `Name: string`, `NutrientsPerBite: NutrientProfile`, `BitesRemaining: int`, `Toughness: float` |
@@ -135,6 +142,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `InterestedTag` | *(tag — no fields)* |
 | `IrritableTag` | *(tag — no fields)* |
 | `IsChokingTag` | *(tag — no fields)* |
+| `IsFaintingTag` | *(tag — no fields)* |
 | `JoyfulTag` | *(tag — no fields)* |
 | `LargeIntestineComponent` | `ContentVolumeMl: float`, `WaterReabsorptionRate: float`, `MobilityRate: float`, `StoolFraction: float`, `Fill: float`, `IsEmpty: bool` |
 | `LifeStateComponent` | `State: LifeState`, `LastTransitionTick: Int64`, `IncapacitatedTickBudget: int`, `PendingDeathCause: CauseOfDeath` |
@@ -144,9 +152,11 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `LightSourceTag` | *(tag — no fields)* |
 | `LiquidComponent` | `VolumeMl: float`, `Nutrients: NutrientProfile`, `LiquidType: string` |
 | `LoathingTag` | *(tag — no fields)* |
+| `LockedInComponent` | `FirstDetectedTick: Int64`, `StarvationTickBudget: int` |
+| `LockedTag` | *(tag — no fields)* |
 | `MemoryEntry` | `Id: string`, `Tick: Int64`, `Kind: NarrativeEventKind`, `ParticipantIds: IReadOnlyList`1`, `RoomId: string`, `Detail: string`, `Persistent: bool` |
 | `MetabolismComponent` | `Satiation: float`, `Hydration: float`, `BodyTemp: float`, `Energy: float`, `NutrientStores: NutrientProfile`, `SatiationDrainRate: float`, `HydrationDrainRate: float`, `SleepMetabolismMultiplier: float`, `Hunger: float`, `Thirst: float` |
-| `MoodComponent` | `Joy: float`, `Trust: float`, `Fear: float`, `Surprise: float`, `Sadness: float`, `Disgust: float`, `Anger: float`, `Anticipation: float`, `PanicLevel: float`, `HasAnyEmotion: bool`, `Valence: float` |
+| `MoodComponent` | `Joy: float`, `Trust: float`, `Fear: float`, `Surprise: float`, `Sadness: float`, `Disgust: float`, `Anger: float`, `Anticipation: float`, `PanicLevel: float`, `GriefLevel: float`, `HasAnyEmotion: bool`, `Valence: float` |
 | `MovementComponent` | `Speed: float`, `ArrivalDistance: float`, `SpeedModifier: float`, `LastVelocityX: float`, `LastVelocityZ: float` |
 | `MovementTargetComponent` | `TargetEntityId: Guid`, `Label: string` |
 | `MutableTopologyTag` | *(tag — no fields)* |
@@ -193,7 +203,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `StarvingTag` | *(tag — no fields)* |
 | `StomachComponent` | `CurrentVolumeMl: float`, `DigestionRate: float`, `NutrientsQueued: NutrientProfile`, `Fill: float`, `IsEmpty: bool`, `IsFull: bool` |
 | `StoredTag` | *(tag — no fields)* |
-| `StressComponent` | `AcuteLevel: int`, `ChronicLevel: double`, `LastDayUpdated: int`, `SuppressionEventsToday: int`, `DriveSpikeEventsToday: int`, `SocialConflictEventsToday: int`, `OverdueTaskEventsToday: int`, `BurnoutLastAppliedDay: int` |
+| `StressComponent` | `AcuteLevel: int`, `ChronicLevel: double`, `LastDayUpdated: int`, `SuppressionEventsToday: int`, `DriveSpikeEventsToday: int`, `SocialConflictEventsToday: int`, `OverdueTaskEventsToday: int`, `BurnoutLastAppliedDay: int`, `WitnessedDeathEventsToday: int`, `BereavementEventsToday: int` |
 | `StressedTag` | *(tag — no fields)* |
 | `StructuralTag` | *(tag — no fields)* |
 | `SunStateRecord` | `AzimuthDeg: double`, `ElevationDeg: double`, `DayPhase: DayPhase` |
@@ -212,7 +222,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `WillpowerComponent` | `Current: int`, `Baseline: int` |
 | `WorkloadComponent` | `ActiveTasks: IReadOnlyList`1`, `Capacity: int`, `CurrentLoad: int` |
 
-**Total:** 133 component types
+**Total:** 141 component types
 
 ## SimConfig Keys
 
@@ -313,7 +323,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Systems.Digestion.SatiationPerCalorie` | `float` | `0.3` |
 | `Systems.Digestion.HydrationPerMl` | `float` | `2` |
 | `Systems.Digestion.ResidueFraction` | `float` | `0.2` |
-| `Systems.Sleep.WakeThreshold` | `float` | `15` |
+| `Systems.Sleep.WakeThreshold` | `float` | `20` |
 | `Systems.Interaction.BiteVolumeMl` | `float` | `50` |
 | `Systems.Interaction.EsophagusSpeed` | `float` | `0.3` |
 | `Systems.Mood.LowThreshold` | `float` | `10` |
@@ -356,7 +366,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Lighting.DyingDecayProb` | `double` | `0.05` |
 | `Lighting.ApertureRangeBase` | `int` | `5` |
 | `Lighting.SourceRangeBase` | `int` | `3` |
-| `Lighting.DriveCouplings` | `List` | `[6 entries]` |
+| `Lighting.DriveCouplings` | `List` | `[0 entries]` |
 | `Movement.StepAsideRadius` | `float` | `3` |
 | `Movement.StepAsideShift` | `float` | `0.4` |
 | `Movement.IdleJitterTiles` | `float` | `0.05` |
@@ -473,4 +483,26 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Choking.IncapacitationTicks` | `int` | `180` |
 | `Choking.PanicMoodIntensity` | `float` | `0.85` |
 | `Choking.EmitChokeStartedNarrative` | `bool` | `True` |
+| `SlipAndFall.GlobalSlipChanceScale` | `float` | `0.001` |
+| `SlipAndFall.StressDangerThreshold` | `int` | `60` |
+| `SlipAndFall.StressSlipMultiplier` | `float` | `2` |
+| `SlipAndFall.FallRiskBrokenItemDefault` | `float` | `0.5` |
+| `SlipAndFall.FallRiskWaterDefault` | `float` | `0.4` |
+| `SlipAndFall.FallRiskBloodDefault` | `float` | `0.6` |
+| `SlipAndFall.FallRiskOilDefault` | `float` | `0.85` |
+| `Lockout.LockoutCheckHour` | `float` | `18` |
+| `Lockout.LockoutHungerThreshold` | `int` | `95` |
+| `Lockout.StarvationTicks` | `int` | `5` |
+| `Lockout.ExitNamedAnchorTag` | `string` | `outdoor` |
+| `Bereavement.WitnessedDeathStressGain` | `double` | `5` |
+| `Bereavement.BereavementStressGain` | `double` | `3` |
+| `Bereavement.ProximityBereavementMinIntensity` | `int` | `20` |
+| `Bereavement.ProximityBereavementStressGain` | `double` | `8` |
+| `Bereavement.BereavementMinIntensity` | `int` | `25` |
+| `Bereavement.ColleagueBereavementGriefIntensity` | `double` | `40` |
+| `Bereavement.WitnessGriefIntensity` | `double` | `60` |
+| `Fainting.FearThreshold` | `float` | `70` |
+| `Fainting.FaintDurationTicks` | `int` | `180` |
+| `Fainting.EmitFaintedNarrative` | `bool` | `True` |
+| `Fainting.EmitRegainedConsciousnessNarrative` | `bool` | `True` |
 
