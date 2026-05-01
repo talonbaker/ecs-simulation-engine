@@ -3,6 +3,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -24,14 +25,30 @@ namespace APIFramework.Systems;
 /// system falls through to the old instant-conjure behaviour so non-spatial entities
 /// (tests, CLI) still work correctly.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="MetabolismComponent"/>, <see cref="DriveComponent"/>,
+/// <see cref="BlockedActionsComponent"/>, <see cref="StomachComponent"/>,
+/// <see cref="PositionComponent"/>, <see cref="FridgeComponent"/>,
+/// <see cref="EsophagusTransitComponent"/> (throat-busy check),
+/// <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="MovementTargetComponent"/> (steering toward the fridge),
+/// <see cref="FridgeComponent"/>.FoodCount; spawns banana bolus transit entities and
+/// applies <see cref="ConsumedRottenFoodTag"/> when biting rotten food.<br/>
+/// Phase: Behavior, after <see cref="BrainSystem"/> picks the dominant drive.
+/// </remarks>
 public class FeedingSystem : ISystem
 {
     private const float ProximityRadius = 1.5f;
 
     private readonly FeedingSystemConfig _cfg;
 
+    /// <summary>Constructs the feeding system with its tuning.</summary>
+    /// <param name="cfg">Feeding tuning (banana profile, queue caps, food freshness).</param>
     public FeedingSystem(FeedingSystemConfig cfg) => _cfg = cfg;
 
+    /// <summary>Per-tick feeding pass; routes hungry NPCs to food sources or fridge.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Locate the fridge entity (null if world has none).
@@ -43,6 +60,8 @@ public class FeedingSystem : ISystem
 
         foreach (var entity in em.Query<MetabolismComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip Incapacitated/Deceased NPCs
+
             // Only act if the brain has selected Eat as the dominant drive.
             if (!entity.Has<DriveComponent>()) continue;
             if (entity.Get<DriveComponent>().Dominant != DesireType.Eat) continue;

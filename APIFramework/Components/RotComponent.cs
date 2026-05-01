@@ -43,6 +43,7 @@ public struct RotComponent
     /// <summary>Normalised freshness (1.0 = perfectly fresh, 0.0 = completely rotten).</summary>
     public readonly float Freshness => MathF.Max(0f, 1f - RotLevel / 100f);
 
+    /// <summary>Debug-friendly age/rot/state summary.</summary>
     public override string ToString() =>
         $"Age: {AgeSeconds:F0}s  Rot: {RotLevel:F1}%  {(IsDecaying ? "DECAYING" : "fresh")}";
 }

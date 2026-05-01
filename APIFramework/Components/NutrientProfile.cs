@@ -38,27 +38,47 @@ namespace APIFramework.Components;
 public struct NutrientProfile
 {
     // ── Macronutrients (grams) ────────────────────────────────────────────────
+
+    /// <summary>Carbohydrates in grams.</summary>
     public float Carbohydrates;
+    /// <summary>Proteins in grams.</summary>
     public float Proteins;
+    /// <summary>Fats in grams.</summary>
     public float Fats;
+    /// <summary>Fiber in grams. Counted within carbohydrates by convention; not added to <see cref="Calories"/>.</summary>
     public float Fiber;
 
     // ── Hydration (ml) ────────────────────────────────────────────────────────
+
+    /// <summary>Water content in millilitres.</summary>
     public float Water;
 
     // ── Vitamins (mg) ─────────────────────────────────────────────────────────
+
+    /// <summary>Vitamin A in milligrams.</summary>
     public float VitaminA;
+    /// <summary>Vitamin B-complex in milligrams.</summary>
     public float VitaminB;
+    /// <summary>Vitamin C in milligrams.</summary>
     public float VitaminC;
+    /// <summary>Vitamin D in milligrams.</summary>
     public float VitaminD;
+    /// <summary>Vitamin E in milligrams.</summary>
     public float VitaminE;
+    /// <summary>Vitamin K in milligrams.</summary>
     public float VitaminK;
 
     // ── Minerals (mg) ─────────────────────────────────────────────────────────
+
+    /// <summary>Sodium in milligrams.</summary>
     public float Sodium;
+    /// <summary>Potassium in milligrams.</summary>
     public float Potassium;
+    /// <summary>Calcium in milligrams.</summary>
     public float Calcium;
+    /// <summary>Iron in milligrams.</summary>
     public float Iron;
+    /// <summary>Magnesium in milligrams.</summary>
     public float Magnesium;
 
     // ── Derived ───────────────────────────────────────────────────────────────
@@ -147,6 +167,7 @@ public struct NutrientProfile
     /// <summary>Commutative form of scalar multiplication.</summary>
     public static NutrientProfile operator *(float factor, NutrientProfile p) => p * factor;
 
+    /// <summary>Debug-friendly summary of the calorie/macros/water content.</summary>
     public override string ToString() =>
         $"{Calories:F0} kcal  C:{Carbohydrates:F1}g P:{Proteins:F1}g F:{Fats:F1}g  W:{Water:F0}ml";
 }

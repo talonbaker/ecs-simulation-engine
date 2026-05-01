@@ -9,36 +9,50 @@ namespace APIFramework.Systems;
 
 // ── Deserialization DTOs ──────────────────────────────────────────────────────
 
+/// <summary>Top-level deserialization shape for archetype-workload-capacity.json.</summary>
 internal sealed class WorkloadCapacityDto
 {
+    /// <summary>Schema version string from the source file.</summary>
     public string SchemaVersion { get; set; } = "";
+    /// <summary>Per-archetype capacity entries.</summary>
     public WorkloadCapacityEntryDto[] ArchetypeCapacity { get; set; } = Array.Empty<WorkloadCapacityEntryDto>();
 }
 
+/// <summary>Single archetype capacity entry deserialized from JSON.</summary>
 internal sealed class WorkloadCapacityEntryDto
 {
+    /// <summary>Archetype identifier the capacity applies to.</summary>
     public string ArchetypeId { get; set; } = "";
+    /// <summary>Maximum concurrent active tasks for the archetype (clamped to 1–10 on load).</summary>
     public int    Capacity    { get; set; } = 3;
 }
 
 // ── System ────────────────────────────────────────────────────────────────────
 
 /// <summary>
-/// Attaches <see cref="WorkloadComponent"/> to every NPC that has
-/// <see cref="NpcArchetypeComponent"/> but no workload state yet.
-/// Capacity is loaded from archetype-workload-capacity.json; defaults to 3 when unknown.
-/// Phase: PreUpdate — runs before any system that reads workload state.
-/// Idempotent: entities that already have <see cref="WorkloadComponent"/> are skipped.
+/// PreUpdate phase. Attaches <see cref="WorkloadComponent"/> to every NPC that has
+/// <see cref="NpcArchetypeComponent"/> but no workload state yet. Capacity is loaded
+/// from <c>archetype-workload-capacity.json</c>; defaults to 3 when unknown.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="NpcArchetypeComponent"/>.<br/>
+/// Writes: <see cref="WorkloadComponent"/> (single writer at attach time; idempotent).<br/>
+/// Phase: PreUpdate, before any system that reads workload state.
+/// </remarks>
 public class WorkloadInitializerSystem : ISystem
 {
     private readonly IReadOnlyDictionary<string, int> _capacities;
 
+    /// <summary>Constructs the initializer with a pre-loaded capacities dictionary.</summary>
+    /// <param name="capacities">Map of archetype id → max concurrent task capacity.</param>
     public WorkloadInitializerSystem(IReadOnlyDictionary<string, int> capacities)
     {
         _capacities = capacities;
     }
 
+    /// <summary>Per-tick idempotent attach pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<NpcTag>().ToList())

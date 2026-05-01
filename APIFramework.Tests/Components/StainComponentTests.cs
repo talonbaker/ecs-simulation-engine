@@ -4,6 +4,7 @@ using Xunit;
 
 namespace APIFramework.Tests.Components;
 
+/// <summary>Round-trip and invariant tests for <see cref="StainComponent"/> and the <see cref="EntityTemplates.Stain"/> factory — default values, field round-trip, magnitude clamping to 100, and the magnitude-based <see cref="ObstacleTag"/> threshold.</summary>
 public class StainComponentTests
 {
     [Fact]

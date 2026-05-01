@@ -16,6 +16,10 @@ namespace ECSCli.Ai;
 /// </summary>
 public static class AiCommand
 {
+    /// <summary>
+    /// Lazy holder for the wired <see cref="RootCommand"/>. The build runs once
+    /// on first access and is cached for the rest of the process lifetime.
+    /// </summary>
     private static readonly Lazy<RootCommand> _root = new(Build);
 
     /// <summary>The fully-wired <c>System.CommandLine</c> root command.</summary>

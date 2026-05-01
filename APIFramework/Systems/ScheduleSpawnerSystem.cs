@@ -9,24 +9,35 @@ using Newtonsoft.Json;
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Phase: PreUpdate (0). Runs before all other systems each tick.
-/// For each NPC with NpcArchetypeComponent and no ScheduleComponent, reads
-/// archetype-schedules.json and attaches the matching schedule. Idempotent:
-/// running multiple times is safe — existing schedules are never overwritten.
+/// PreUpdate phase. For each NPC with <see cref="NpcArchetypeComponent"/> and no
+/// <see cref="ScheduleComponent"/>, attaches the schedule loaded from
+/// <c>archetype-schedules.json</c> plus a fresh <see cref="CurrentScheduleBlockComponent"/>.
+/// Idempotent: existing schedules are never overwritten.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="NpcTag"/>, <see cref="NpcArchetypeComponent"/>.<br/>
+/// Writes: <see cref="ScheduleComponent"/> and
+/// <see cref="CurrentScheduleBlockComponent"/> (single writer for both at attach time).<br/>
+/// Phase: PreUpdate.
+/// </remarks>
 public sealed class ScheduleSpawnerSystem : ISystem
 {
     private readonly string _schedulesPath;
     private Dictionary<string, IReadOnlyList<ScheduleBlock>>? _schedulesByArchetype;
 
-    // Default path searched upward from CWD.
+    /// <summary>Default schedule-file location searched upward from the current working directory.</summary>
     public const string DefaultFileName = "docs/c2-content/schedules/archetype-schedules.json";
 
+    /// <summary>Constructs the schedule-spawner system.</summary>
+    /// <param name="schedulesPath">Optional explicit path to the schedule file; when null, the default location is searched upward from the CWD.</param>
     public ScheduleSpawnerSystem(string? schedulesPath = null)
     {
         _schedulesPath = schedulesPath ?? FindSchedulesFile() ?? "";
     }
 
+    /// <summary>Per-tick spawner pass; lazily loads schedules on first run, then attaches missing schedules to NPCs.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         if (_schedulesByArchetype == null)

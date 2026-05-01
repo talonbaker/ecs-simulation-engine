@@ -29,12 +29,23 @@ namespace APIFramework.Systems;
 /// also be read by MoodSystem to build Disgust even before consumption (smelling
 /// something rotten raises boredom-adjacent aversion without direct contact).
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="RotComponent"/>.<br/>
+/// Writes: <see cref="RotComponent"/> Age/RotLevel and <see cref="RotTag"/>
+/// (single writer of <see cref="RotTag"/>).<br/>
+/// Phase: World, after the Elimination pipeline.
+/// </remarks>
 public class RotSystem : ISystem
 {
     private readonly RotSystemConfig _cfg;
 
+    /// <summary>Constructs the rot system with its tuning.</summary>
+    /// <param name="cfg">Rot tuning (RotTagThreshold).</param>
     public RotSystem(RotSystemConfig cfg) => _cfg = cfg;
 
+    /// <summary>Per-tick aging pass over <see cref="RotComponent"/> entities.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<RotComponent>())

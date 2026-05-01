@@ -16,12 +16,24 @@ namespace APIFramework.Systems.Lighting;
 /// not a 0..1 day fraction. SunSystem reads GameTimeOfDay / SecondsPerDay instead,
 /// which is the true 0..1 position in the 24-hour cycle.
 /// </summary>
+/// <remarks>
+/// Reads <see cref="SimulationClock.GameTimeOfDay"/>; writes <see cref="SunStateService"/>.
+/// Single-writer rule for <see cref="SunStateService"/>: only this system updates it during
+/// the simulation. Tests may call <see cref="SunStateService.UpdateSunState"/> directly.
+/// Must run BEFORE <see cref="ApertureBeamSystem"/> and <see cref="IlluminationAccumulationSystem"/>.
+/// </remarks>
 public sealed class SunSystem : ISystem
 {
     private readonly SimulationClock  _clock;
     private readonly SunStateService  _service;
     private readonly LightingConfig   _cfg;
 
+    /// <summary>
+    /// Stores clock and service references used each tick.
+    /// </summary>
+    /// <param name="clock">Simulation clock — provides <c>GameTimeOfDay</c>.</param>
+    /// <param name="service">Service into which the computed sun state is written.</param>
+    /// <param name="cfg">Lighting tuning — supplies <c>DayPhaseBoundaries</c>.</param>
     public SunSystem(SimulationClock clock, SunStateService service, LightingConfig cfg)
     {
         _clock   = clock;
@@ -29,6 +41,12 @@ public sealed class SunSystem : ISystem
         _cfg     = cfg;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Computes the current sun state from the clock and writes it
+    /// to <see cref="SunStateService"/>.
+    /// </summary>
+    /// <param name="em">Entity manager (unused — sun state is global).</param>
+    /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         double dayFraction = _clock.GameTimeOfDay / SimulationClock.SecondsPerDay;
@@ -39,6 +57,9 @@ public sealed class SunSystem : ISystem
     /// <summary>
     /// Pure computation — exposed for unit tests that supply a day fraction directly.
     /// </summary>
+    /// <param name="dayFraction">Position in the 24-hour cycle (0..1).</param>
+    /// <param name="cfg">Lighting config — supplies day-phase boundaries.</param>
+    /// <returns>The sun state for the supplied day fraction.</returns>
     public static SunStateRecord ComputeFromDayFraction(double dayFraction, LightingConfig cfg)
     {
         // Orbital model (simplified):

@@ -24,7 +24,13 @@
 /// </summary>
 public class Entity
 {
+    /// <summary>Stable, deterministic identifier for this entity.</summary>
     public Guid   Id      { get; }
+
+    /// <summary>
+    /// First eight hexadecimal characters of <see cref="Id"/>, uppercased.
+    /// Convenient for log lines and debug overlays.
+    /// </summary>
     public string ShortId => Id.ToString().Substring(0, 8).ToUpper();
 
     private readonly ComponentStoreRegistry         _registry;
@@ -62,6 +68,13 @@ public class Entity
 
     // ── Component API ─────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Adds or overwrites the component of type <typeparamref name="T"/> on this entity.
+    /// The onChange callback fires only the first time <typeparamref name="T"/> is set
+    /// on this entity; subsequent overwrites mutate the value in place without firing.
+    /// </summary>
+    /// <typeparam name="T">Component value-type to store.</typeparam>
+    /// <param name="component">The component value to assign.</param>
     public void Add<T>(T component) where T : struct
     {
         var store = _registry.Store<T>();
@@ -78,15 +91,30 @@ public class Entity
         }
     }
 
+    /// <summary>Returns the component of type <typeparamref name="T"/> on this entity.</summary>
+    /// <typeparam name="T">Component value-type to retrieve.</typeparam>
+    /// <returns>The stored component value.</returns>
+    /// <exception cref="KeyNotFoundException">
+    /// Thrown when this entity does not have a component of type <typeparamref name="T"/>.
+    /// Call <see cref="Has{T}"/> first if presence is uncertain.
+    /// </exception>
     public T Get<T>() where T : struct
         => _registry.Store<T>().Get(Id);
 
+    /// <summary>Returns true if this entity has a component of type <typeparamref name="T"/>.</summary>
+    /// <typeparam name="T">Component value-type to test for.</typeparam>
+    /// <returns><c>true</c> if the component is present; otherwise <c>false</c>.</returns>
     public bool Has<T>() where T : struct
         => _registry.Store<T>().Has(Id);
 
     public void Set<T>(T value) where T : struct
         => _registry.Store<T>().Set(Id, value);
 
+    /// <summary>
+    /// Removes the component of type <typeparamref name="T"/> from this entity, if present.
+    /// Fires the onChange callback with <c>added=false</c> only when an actual removal occurs.
+    /// </summary>
+    /// <typeparam name="T">Component value-type to remove.</typeparam>
     public void Remove<T>() where T : struct
     {
         var store = _registry.Store<T>();
@@ -97,7 +125,26 @@ public class Entity
         }
     }
 
+    /// <summary>
+    /// Returns every component currently attached to this entity as a boxed
+    /// <see cref="object"/> sequence.
+    /// </summary>
+    /// <remarks>
+    /// The typed-array registry (WP-3.0.5) does not support untyped enumeration
+    /// without a type token. This method is a compatibility stub that returns an
+    /// empty sequence. Use <see cref="Get{T}"/> / <see cref="Has{T}"/> instead.
+    /// </remarks>
+    /// <returns>An empty enumerable (stub; typed-array registry does not support untyped enumeration).</returns>
     public IEnumerable<object> GetAll()             => GetAllComponents();
+
+    /// <summary>
+    /// Alias for <see cref="GetAll"/>. Returns every component currently attached
+    /// to this entity.
+    /// </summary>
+    /// <remarks>
+    /// Stub — returns an empty sequence. See <see cref="GetAll"/> for details.
+    /// </remarks>
+    /// <returns>An empty enumerable (stub; typed-array registry does not support untyped enumeration).</returns>
     public IEnumerable<object> GetAllComponents()   => [];  // Deprecated; not used in practice
 
     // ── Identity ──────────────────────────────────────────────────────────────

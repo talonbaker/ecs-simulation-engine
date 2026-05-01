@@ -348,6 +348,16 @@ public static class EntityTemplates
             CreatedAtTick    = createdAtTick,
             ChronicleEntryId = chronicleEntryId,
         });
+
+        // Attach FallRiskComponent if this stain type has a defined risk level
+        // Extract stain kind from source (if available); default to 0 if not in catalog
+        string stainKind = ExtractStainKindFromSource(source);
+        float riskLevel = APIFramework.Bootstrap.StainFallRiskLoader.GetFallRiskForKind(stainKind);
+        if (riskLevel > 0f)
+        {
+            entity.Add(new FallRiskComponent { RiskLevel = riskLevel });
+        }
+
         if (magnitude >= 50)
             entity.Add(new ObstacleTag());
         return entity;
@@ -356,6 +366,7 @@ public static class EntityTemplates
     /// <summary>
     /// Spawns a broken-item entity at the given position.
     /// Gets <see cref="BrokenItemTag"/>, <see cref="BrokenItemComponent"/>, and <see cref="PositionComponent"/>.
+    /// Some broken items (e.g., broken glass, shattered ceramic) carry fall risk.
     /// </summary>
     public static Entity BrokenItem(
         EntityManager manager,
@@ -377,6 +388,14 @@ public static class EntityTemplates
             CreatedAtTick    = createdAtTick,
             ChronicleEntryId = chronicleEntryId,
         });
+
+        // Attach FallRiskComponent if this broken item is a hazard type
+        float riskLevel = APIFramework.Bootstrap.StainFallRiskLoader.GetFallRiskForKind(originalKind);
+        if (riskLevel > 0f)
+        {
+            entity.Add(new FallRiskComponent { RiskLevel = riskLevel });
+        }
+
         return entity;
     }
 
@@ -479,5 +498,18 @@ public static class EntityTemplates
         });
 
         return entity;
+    }
+
+    /// <summary>
+    /// Extracts the stain kind from the source field.
+    /// Source format is typically "participant:7" or other metadata.
+    /// For now, returns the full source; in future, can parse specific formats.
+    /// </summary>
+    private static string ExtractStainKindFromSource(string source)
+    {
+        // For the MVP, stain kind is not embedded in source.
+        // This is a placeholder for future parsing if needed.
+        // For now, return empty so catalog lookup defaults to 0 risk.
+        return string.Empty;
     }
 }

@@ -4,18 +4,30 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems;
 
 /// <summary>
-/// Phase: Cleanup (80) — runs after ActionSelectionSystem (Cognition=30) and
-/// SocialMaskSystem (Cognition=30). When crackPressure exceeds the threshold,
-/// overrides IntendedActionComponent with Dialog(MaskSlip) and emits a
-/// MaskSlip narrative candidate. The override is unintentional — the NPC did not
-/// choose to speak; the mask failed.
+/// Cleanup phase. When mask + low-willpower + stress + burnout pressure exceeds the
+/// configured threshold, the social mask cracks: the system overrides
+/// <see cref="IntendedActionComponent"/> with a Dialog(MaskSlip) intent, emits a
+/// <see cref="NarrativeEventKind.MaskSlip"/> candidate, and resets the dominant masked
+/// drive to zero. The override is unintentional — the NPC did not choose to speak.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="SocialMaskComponent"/>, <see cref="WillpowerComponent"/>,
+/// <see cref="StressComponent"/>, <see cref="BurningOutTag"/>,
+/// <see cref="LifeStateComponent"/>, <see cref="RoomComponent"/>.<br/>
+/// Writes: <see cref="SocialMaskComponent"/> (slip cooldown, masked drives, current load),
+/// <see cref="IntendedActionComponent"/> (override), candidates onto
+/// <see cref="NarrativeEventBus"/>.<br/>
+/// Phase: Cleanup, after <see cref="ActionSelectionSystem"/> and
+/// <see cref="SocialMaskSystem"/> (both Cognition) so the override wins for the next
+/// Dialog phase.
+/// </remarks>
 public sealed class MaskCrackSystem : ISystem
 {
     private readonly EntityRoomMembership _roomMembership;
@@ -24,6 +36,10 @@ public sealed class MaskCrackSystem : ISystem
 
     private long _tick;
 
+    /// <summary>Constructs the mask-crack detector.</summary>
+    /// <param name="roomMembership">Room membership service used to enumerate co-located observers.</param>
+    /// <param name="narrativeBus">Bus that receives the resulting MaskSlip narrative candidate.</param>
+    /// <param name="cfg">Mask configuration (crack threshold, cooldown, contribution scales).</param>
     public MaskCrackSystem(
         EntityRoomMembership roomMembership,
         NarrativeEventBus    narrativeBus,
@@ -34,12 +50,16 @@ public sealed class MaskCrackSystem : ISystem
         _cfg            = cfg;
     }
 
+    /// <summary>Per-tick crack detection pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         _tick++;
 
         foreach (var entity in em.Query<NpcTag>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!entity.Has<SocialMaskComponent>()) continue;
             if (!entity.Has<WillpowerComponent>())  continue;
             if (!entity.Has<StressComponent>())     continue;
@@ -128,6 +148,12 @@ public sealed class MaskCrackSystem : ISystem
         return result;
     }
 
+    /// <summary>
+    /// Extracts the low-32-bit deterministic counter from an entity's Guid.
+    /// Used to populate participant lists in narrative candidates.
+    /// </summary>
+    /// <param name="entity">Entity whose Guid to convert.</param>
+    /// <returns>Low 32 bits of the Guid byte array, in little-endian order.</returns>
     public static int EntityIntId(Entity entity)
     {
         var b = entity.Id.ToByteArray();

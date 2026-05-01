@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -50,6 +51,14 @@ namespace APIFramework.Systems;
 ///   Urinate  ← PublicEmotion   (holding it through a public-facing scenario)
 ///   Defecate ← PublicEmotion
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="InhibitionsComponent"/>, <see cref="WillpowerComponent"/>,
+/// <see cref="StressComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="BlockedActionsComponent"/> (single writer; added when veto set
+/// is non-empty, removed otherwise).<br/>
+/// Phase: Cognition, after <see cref="BrainSystem"/> and before the Behavior phase
+/// systems consult the veto set.
+/// </remarks>
 public class PhysiologyGateSystem : ISystem
 {
     private readonly PhysiologyGateConfig _cfg;
@@ -63,13 +72,19 @@ public class PhysiologyGateSystem : ISystem
         (BlockedActionClass.Defecate, InhibitionClass.PublicEmotion),
     };
 
+    /// <summary>Constructs the physiology gate with its tuning.</summary>
+    /// <param name="cfg">Physiology-gate tuning (veto threshold, willpower-leakage start, stress relaxation).</param>
     public PhysiologyGateSystem(PhysiologyGateConfig cfg) => _cfg = cfg;
 
+    /// <summary>Per-tick gate computation; writes or removes <see cref="BlockedActionsComponent"/> per NPC.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Only NPCs with InhibitionsComponent are candidates for vetoes.
         foreach (var entity in em.Query<InhibitionsComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             var inhibitions = entity.Get<InhibitionsComponent>();
 
             // Read willpower — default to maximum if component absent (no leakage).

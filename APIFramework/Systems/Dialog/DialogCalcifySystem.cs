@@ -3,6 +3,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems.Dialog;
 
@@ -17,17 +18,32 @@ namespace APIFramework.Systems.Dialog;
 /// Decalcification fires when:
 ///   LastUseGameTimeSec is more than DecalcifyTimeoutDays game-days ago
 /// </summary>
+/// <remarks>
+/// Phase: Dialog (75), registered after <see cref="DialogContextDecisionSystem"/> and
+/// <see cref="DialogFragmentRetrievalSystem"/>. Reads and writes
+/// <c>DialogHistoryComponent.UsesByFragmentId[*].Calcified</c> only.
+/// Skips non-Alive NPCs.
+/// </remarks>
 public sealed class DialogCalcifySystem : ISystem
 {
     private readonly DialogConfig _cfg;
 
     private double _gameTimeSec;
 
+    /// <summary>
+    /// Stores the dialog config used for thresholds and timeouts.
+    /// </summary>
+    /// <param name="cfg">Dialog config — supplies CalcifyThreshold, CalcifyContextDominanceMin, DecalcifyTimeoutDays.</param>
     public DialogCalcifySystem(DialogConfig cfg)
     {
         _cfg = cfg;
     }
 
+    /// <summary>
+    /// Per-tick entry point. Updates calcified flags on every NPC's dialog history.
+    /// </summary>
+    /// <param name="em">Entity manager — queried for NPCs with dialog history.</param>
+    /// <param name="deltaTime">Tick delta in seconds; accumulated into the system's clock.</param>
     public void Update(EntityManager em, float deltaTime)
     {
         _gameTimeSec += deltaTime;
@@ -36,6 +52,7 @@ public sealed class DialogCalcifySystem : ISystem
 
         foreach (var entity in em.Query<DialogHistoryComponent>())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             var hist = entity.Get<DialogHistoryComponent>();
 
             foreach (var rec in hist.UsesByFragmentId.Values)

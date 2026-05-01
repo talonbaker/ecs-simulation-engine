@@ -12,24 +12,80 @@ namespace APIFramework.Config;
 /// </summary>
 public class SimConfig
 {
+    /// <summary>World/clock configuration (default time-scale, etc.).</summary>
     public WorldConfig            World          { get; set; } = new();
+
+    /// <summary>Per-entity (Human, Cat, …) starting biological values and rates.</summary>
     public EntitiesConfig         Entities       { get; set; } = new();
+
+    /// <summary>Per-system tuning bundle (thresholds, rates, etc.) for every simulation system.</summary>
     public SystemsConfig          Systems        { get; set; } = new();
+
+    /// <summary>Social-drive dynamics, willpower, and relationship tuning.</summary>
     public SocialSystemConfig     Social         { get; set; } = new();
+
+    /// <summary>Spatial index, world size, and proximity-range defaults.</summary>
     public SpatialConfig          Spatial        { get; set; } = new();
+
+    /// <summary>Toggles controlling when StructuralChangeEvents are emitted.</summary>
+    public StructuralChangeConfig StructuralChange { get; set; } = new();
+
+    /// <summary>Sun phase, light state machine, aperture/source ranges, and lighting-to-drive coupling table.</summary>
     public LightingConfig         Lighting       { get; set; } = new();
+
+    /// <summary>Movement, step-aside, idle-jitter, speed-modifier and pathfinding tuning.</summary>
     public MovementConfig         Movement       { get; set; } = new();
+
+    /// <summary>Thresholds and window sizes for the narrative event detector.</summary>
     public NarrativeConfig        Narrative      { get; set; } = new();
+
+    /// <summary>Cast generator drive-baseline ranges and seeded-relationship counts.</summary>
     public CastGeneratorConfig    CastGenerator  { get; set; } = new();
+
+    /// <summary>Persistent chronicle capacity, magnitude ranges, and threshold rules.</summary>
     public ChronicleConfig        Chronicle      { get; set; } = new();
+
+    /// <summary>Dialog phrase-selection, calcification, and corpus-loading tuning.</summary>
     public DialogConfig           Dialog         { get; set; } = new();
+
+    /// <summary>Action-selection candidate enumeration, suppression, and inversion thresholds.</summary>
     public ActionSelectionConfig  ActionSelection { get; set; } = new();
+
+    /// <summary>Acute/chronic stress accumulation, decay, and tag thresholds.</summary>
     public StressConfig           Stress          { get; set; } = new();
+
+    /// <summary>Schedule-driven anchor/linger weighting for ActionSelection.</summary>
     public ScheduleConfig         Schedule        { get; set; } = new();
+
+    /// <summary>Bounded relationship/personal memory capacities.</summary>
     public MemoryConfig           Memory          { get; set; } = new();
+
+    /// <summary>Task generation, work progress and quality decay tuning.</summary>
     public WorkloadConfig         Workload        { get; set; } = new();
+
+    /// <summary>Social-mask drift, decay, and crack-event thresholds.</summary>
     public SocialMaskConfig       SocialMask      { get; set; } = new();
+
+    /// <summary>Inhibition-driven physiology veto thresholds.</summary>
     public PhysiologyGateConfig   PhysiologyGate  { get; set; } = new();
+
+    /// <summary>Alive → Incapacitated → Deceased transition tuning.</summary>
+    public LifeStateConfig        LifeState       { get; set; } = new();
+
+    /// <summary>Choking detection thresholds and incapacitation length.</summary>
+    public ChokingConfig          Choking         { get; set; } = new();
+
+    /// <summary>Slip-and-fall hazard slip-chance scaling and per-stain default fall risks.</summary>
+    public SlipAndFallConfig      SlipAndFall     { get; set; } = new();
+
+    /// <summary>End-of-day lockout detection (door reachability, starvation budget).</summary>
+    public LockoutConfig          Lockout         { get; set; } = new();
+
+    /// <summary>Bereavement stress gains and proximity-bereavement tuning.</summary>
+    public BereavementConfig      Bereavement     { get; set; } = new();
+
+    /// <summary>Fainting duration, fear threshold, and narrative emission tuning.</summary>
+    public FaintingConfig         Fainting        { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -95,14 +151,22 @@ public class SimConfig
 //  ENTITY CONFIGS
 // ═════════════════════════════════════════════════════════════════════════════
 
+/// <summary>
+/// Per-species starting values and biological rates. Keys are species —
+/// Human and Cat are the only built-ins today. Values are deep-cloned at spawn time.
+/// </summary>
 public class EntitiesConfig
 {
+    /// <summary>Defaults applied to every spawned human (overridable in JSON).</summary>
     public EntityConfig Human { get; set; } = EntityConfig.DefaultHuman;
+
+    /// <summary>Defaults applied to every spawned cat (overridable in JSON).</summary>
     public EntityConfig Cat   { get; set; } = EntityConfig.DefaultCat;
 }
 
 // ── World / clock ─────────────────────────────────────────────────────────────
 
+/// <summary>Simulation clock and global time-scale configuration.</summary>
 public class WorldConfig
 {
     /// <summary>
@@ -112,17 +176,38 @@ public class WorldConfig
     public float DefaultTimeScale { get; set; } = 120f;
 }
 
+/// <summary>
+/// Bundle of starting biological values + rates for a single species.
+/// See <see cref="EntityConfig.DefaultHuman"/> and <see cref="EntityConfig.DefaultCat"/>
+/// for canonical examples; both are tuned for a TimeScale of 120 (2 game-min/real-sec).
+/// </summary>
 public class EntityConfig
 {
+    /// <summary>Hunger/thirst/body-temperature drain configuration.</summary>
     public MetabolismEntityConfig     Metabolism     { get; set; } = new();
+
+    /// <summary>Stomach digestion rate.</summary>
     public StomachEntityConfig        Stomach        { get; set; } = new();
+
+    /// <summary>Energy / sleepiness starting values and gain/drain rates.</summary>
     public EnergyEntityConfig         Energy         { get; set; } = new();
+
+    /// <summary>Plutchik mood starting values (joy/trust/fear/etc., 0–100).</summary>
     public MoodEntityConfig           Mood           { get; set; } = new();
+
+    /// <summary>Small-intestine absorption and residue-pass-through rates.</summary>
     public SmallIntestineEntityConfig SmallIntestine { get; set; } = new();
+
+    /// <summary>Large-intestine reabsorption / mobility / stool-fraction rates.</summary>
     public LargeIntestineEntityConfig LargeIntestine { get; set; } = new();
+
+    /// <summary>Colon urge and capacity thresholds (ml).</summary>
     public ColonEntityConfig          Colon          { get; set; } = new();
+
+    /// <summary>Bladder fill rate, urge threshold, and capacity (ml).</summary>
     public BladderEntityConfig        Bladder        { get; set; } = new();
 
+    /// <summary>Canonical human defaults — ~3 meals/day, ~7 drinks/day, 16h awake / 8h asleep.</summary>
     public static EntityConfig DefaultHuman => new()
     {
         Metabolism = new MetabolismEntityConfig
@@ -171,6 +256,7 @@ public class EntityConfig
         }
     };
 
+    /// <summary>Canonical cat defaults — slower drain, faster recovery, smaller bladder/colon.</summary>
     public static EntityConfig DefaultCat => new()
     {
         Metabolism = new MetabolismEntityConfig
@@ -218,6 +304,10 @@ public class EntityConfig
     };
 }
 
+/// <summary>
+/// Hunger / thirst / body-temperature starting values and drain rates.
+/// All drain rates are points-per-game-second at TimeScale 1.0.
+/// </summary>
 public class MetabolismEntityConfig
 {
     /// <summary>Starting satiation (0–100). 100 = fully fed.</summary>
@@ -242,12 +332,14 @@ public class MetabolismEntityConfig
     public float SleepMetabolismMultiplier { get; set; } = 0.10f;
 }
 
+/// <summary>Stomach digestion-rate configuration.</summary>
 public class StomachEntityConfig
 {
     /// <summary>ml of stomach content digested per game-second.</summary>
     public float DigestionRate { get; set; } = 0.017f;
 }
 
+/// <summary>Small-intestine absorption / pass-through rate configuration.</summary>
 public class SmallIntestineEntityConfig
 {
     /// <summary>ml of chyme processed (absorbed) per game-second in the small intestine.</summary>
@@ -260,6 +352,7 @@ public class SmallIntestineEntityConfig
     public float ResidueToLargeFraction { get; set; } = 0.4f;
 }
 
+/// <summary>Large-intestine reabsorption / mobility / stool-fraction configuration.</summary>
 public class LargeIntestineEntityConfig
 {
     /// <summary>ml of water recovered from LI content per game-second → Hydration.</summary>
@@ -275,6 +368,7 @@ public class LargeIntestineEntityConfig
     public float StoolFraction { get; set; } = 0.6f;
 }
 
+/// <summary>Colon urge and capacity thresholds.</summary>
 public class ColonEntityConfig
 {
     /// <summary>StoolVolumeMl at which DefecationUrgeTag is applied.</summary>
@@ -284,6 +378,7 @@ public class ColonEntityConfig
     public float CapacityMl { get; set; } = 200f;
 }
 
+/// <summary>Bladder fill rate and urge / capacity thresholds.</summary>
 public class BladderEntityConfig
 {
     /// <summary>ml of urine produced per game-second. At TimeScale 120, 0.010 ml/sec → urge in ~2 game-hours.</summary>
@@ -296,6 +391,7 @@ public class BladderEntityConfig
     public float CapacityMl { get; set; } = 100f;
 }
 
+/// <summary>Per-entity Energy / Sleepiness starting values and gain/drain rates (points-per-game-second).</summary>
 public class EnergyEntityConfig
 {
     /// <summary>Starting Energy (0–100). 85 = well rested.</summary>
@@ -321,23 +417,50 @@ public class EnergyEntityConfig
 //  SYSTEM CONFIGS
 // ═════════════════════════════════════════════════════════════════════════════
 
+/// <summary>
+/// Per-system tuning bundle (one inner config object per system).
+/// New systems should add their inner config here so live tuning + hot-reload come for free.
+/// </summary>
 public class SystemsConfig
 {
+    /// <summary>Hunger/thirst/dehydration/starving/irritable tag thresholds.</summary>
     public BiologicalConditionSystemConfig BiologicalCondition { get; set; } = new();
+
+    /// <summary>Tired/Exhausted tag thresholds.</summary>
     public EnergySystemConfig              Energy              { get; set; } = new();
+
+    /// <summary>Drive ceilings, urgency floors, and bored/sad/grief multipliers.</summary>
     public BrainSystemConfig               Brain               { get; set; } = new();
+
+    /// <summary>Hunger threshold, queue cap, freshness/rot rate, and the banana template.</summary>
     public FeedingSystemConfig             Feeding             { get; set; } = new();
+
+    /// <summary>Hydration queue cap and the water template.</summary>
     public DrinkingSystemConfig            Drinking            { get; set; } = new();
+
+    /// <summary>Calorie/water → satiation/hydration conversion factors.</summary>
     public DigestionSystemConfig           Digestion           { get; set; } = new();
+
+    /// <summary>Wake-threshold for SleepSystem.</summary>
     public SleepSystemConfig               Sleep               { get; set; } = new();
+
+    /// <summary>Bite volume and esophagus speed for InteractionSystem.</summary>
     public InteractionSystemConfig         Interaction         { get; set; } = new();
+
+    /// <summary>Plutchik intensity thresholds and per-emotion gain/decay rates.</summary>
     public MoodSystemConfig                Mood                { get; set; } = new();
+
+    /// <summary>RotTag threshold for food.</summary>
     public RotSystemConfig                 Rot                 { get; set; } = new();
     // Note: BladderFillSystem has no system-level config — all values live in BladderEntityConfig.
 }
 
 // ── BiologicalConditionSystem ─────────────────────────────────────────────────
 
+/// <summary>
+/// Thresholds at which BiologicalConditionSystem promotes physiology values into
+/// sensation tags (HungerTag, ThirstTag, DehydratedTag, StarvingTag, IrritableTag).
+/// </summary>
 public class BiologicalConditionSystemConfig
 {
     /// <summary>Thirst level (0–100) at which ThirstTag is applied.</summary>
@@ -358,6 +481,10 @@ public class BiologicalConditionSystemConfig
 
 // ── BrainSystem ───────────────────────────────────────────────────────────────
 
+/// <summary>
+/// BrainSystem drive-scoring ceilings and modifiers. Final per-drive scores
+/// are clamped to [0,1] and feed into ActionSelectionSystem.
+/// </summary>
 public class BrainSystemConfig
 {
     /// <summary>
@@ -411,6 +538,7 @@ public class BrainSystemConfig
 
 // ── FeedingSystem ─────────────────────────────────────────────────────────────
 
+/// <summary>FeedingSystem hunger/queue tuning plus the temporary hardcoded banana food source.</summary>
 public class FeedingSystemConfig
 {
     /// <summary>Hunger level (0–100) required before the brain considers eating.</summary>
@@ -439,6 +567,7 @@ public class FeedingSystemConfig
     public float FoodRotRate { get; set; } = 0.001f; // 100% rotten after ~27.8 game-hours of decay
 }
 
+/// <summary>Definition of a food item — physical volume, nutrient profile, toughness, and esophagus transit speed.</summary>
 public class FoodItemConfig
 {
     /// <summary>Physical volume that enters the stomach (ml).</summary>
@@ -472,6 +601,7 @@ public class FoodItemConfig
 
 // ── DrinkingSystem ────────────────────────────────────────────────────────────
 
+/// <summary>DrinkingSystem queue caps plus the temporary hardcoded water source.</summary>
 public class DrinkingSystemConfig
 {
     /// <summary>
@@ -492,6 +622,7 @@ public class DrinkingSystemConfig
     public DrinkItemConfig Water { get; set; } = new();
 }
 
+/// <summary>Definition of a single drink item — volume, nutrient profile, and esophagus transit speed.</summary>
 public class DrinkItemConfig
 {
     /// <summary>Physical volume that enters the stomach per gulp (ml).</summary>
@@ -543,6 +674,7 @@ public class DigestionSystemConfig
 
 // ── EnergySystem ─────────────────────────────────────────────────────────────
 
+/// <summary>EnergySystem TiredTag / ExhaustedTag thresholds.</summary>
 public class EnergySystemConfig
 {
     /// <summary>Energy threshold (0–100) below which TiredTag is applied.</summary>
@@ -554,6 +686,7 @@ public class EnergySystemConfig
 
 // ── SleepSystem ───────────────────────────────────────────────────────────────
 
+/// <summary>SleepSystem wake-threshold configuration.</summary>
 public class SleepSystemConfig
 {
     /// <summary>
@@ -565,6 +698,7 @@ public class SleepSystemConfig
 
 // ── InteractionSystem ─────────────────────────────────────────────────────────
 
+/// <summary>InteractionSystem bite-bolus volume and esophagus speed configuration.</summary>
 public class InteractionSystemConfig
 {
     /// <summary>Volume of a single bite bolus sent into the esophagus (ml).</summary>
@@ -583,13 +717,29 @@ public class InteractionSystemConfig
 public class MoodEntityConfig
 {
     // Starting intensities (0–100). Default: emotionally neutral.
+
+    /// <summary>Starting Joy intensity (0–100).</summary>
     public float JoyStart          { get; set; } = 0f;
+
+    /// <summary>Starting Trust intensity (0–100).</summary>
     public float TrustStart        { get; set; } = 0f;
+
+    /// <summary>Starting Fear intensity (0–100).</summary>
     public float FearStart         { get; set; } = 0f;
+
+    /// <summary>Starting Surprise intensity (0–100).</summary>
     public float SurpriseStart     { get; set; } = 0f;
+
+    /// <summary>Starting Sadness intensity (0–100).</summary>
     public float SadnessStart      { get; set; } = 0f;
+
+    /// <summary>Starting Disgust intensity (0–100).</summary>
     public float DisgustStart      { get; set; } = 0f;
+
+    /// <summary>Starting Anger intensity (0–100).</summary>
     public float AngerStart        { get; set; } = 0f;
+
+    /// <summary>Starting Anticipation intensity (0–100).</summary>
     public float AnticipationStart { get; set; } = 0f;
 }
 
@@ -651,6 +801,7 @@ public class MoodSystemConfig
 
 // ── RotSystem ─────────────────────────────────────────────────────────────────
 
+/// <summary>RotSystem RotTag threshold for food entities.</summary>
 public class RotSystemConfig
 {
     /// <summary>
@@ -713,6 +864,11 @@ public class DialogConfig
 
 // ── Social systems ────────────────────────────────────────────────────────────
 
+/// <summary>
+/// DriveDynamicsSystem / WillpowerSystem / RelationshipLifecycle tuning. Controls
+/// drive decay toward baseline, circadian shape per drive, willpower regen, and
+/// relationship intensity decay.
+/// </summary>
 public class SocialSystemConfig
 {
     /// <summary>Points per tick a drive's Current moves toward its Baseline (linear approach).</summary>
@@ -762,15 +918,31 @@ public class SocialSystemConfig
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Returns the circadian amplitude for the given drive (lowercase name),
+    /// or 0.0 when no entry is present.
+    /// </summary>
+    /// <param name="driveName">Lowercase drive name (e.g. "belonging", "loneliness").</param>
+    /// <returns>Amplitude in points; 0.0 means no circadian modulation.</returns>
     public double GetCircadianAmplitude(string driveName)
         => DriveCircadianAmplitudes.TryGetValue(driveName, out var v) ? v : 0.0;
 
+    /// <summary>
+    /// Returns the circadian phase (fraction-of-day, 0..1) for the given drive,
+    /// or 0.0 when no entry is present.
+    /// </summary>
+    /// <param name="driveName">Lowercase drive name.</param>
+    /// <returns>Phase in fraction-of-day; 0.0 = midnight, 0.5 = noon.</returns>
     public double GetCircadianPhase(string driveName)
         => DriveCircadianPhases.TryGetValue(driveName, out var v) ? v : 0.0;
 }
 
 // ── Movement systems ──────────────────────────────────────────────────────────
 
+/// <summary>
+/// MovementSystem / step-aside / idle-jitter / pathfinding tuning. Movement
+/// systems read this every tick — values can be hot-reloaded.
+/// </summary>
 public class MovementConfig
 {
     /// <summary>Radius (tiles) within which two approaching NPCs trigger step-aside logic.</summary>
@@ -785,19 +957,38 @@ public class MovementConfig
     /// <summary>Per-tick probability [0,1] that an idle NPC performs a posture shift (changes facing).</summary>
     public float IdlePostureShiftProb { get; set; } = 0.005f;
 
+    /// <summary>Speed-modifier weights applied per drive/personality point.</summary>
     public MovementSpeedModifierConfig SpeedModifier { get; set; } = new();
+
+    /// <summary>A* pathfinder tunables — discounts, tie-break noise, cache size.</summary>
     public MovementPathfindingConfig   Pathfinding   { get; set; } = new();
 }
 
+/// <summary>
+/// Per-point weights used by MovementSpeedModifierSystem to derive a movement-speed
+/// multiplier from drive levels and energy. Multipliers are clamped to [Min,Max].
+/// </summary>
 public class MovementSpeedModifierConfig
 {
+    /// <summary>Speed-multiplier gain per point of irritation drive (positive = faster when irritated).</summary>
     public float IrritationGainPerPoint { get; set; } = 0.005f;
+
+    /// <summary>Speed-multiplier loss per point of affection drive (slows down when affectionate).</summary>
     public float AffectionLossPerPoint  { get; set; } = 0.0033f;
+
+    /// <summary>Speed-multiplier loss per point of low energy (the lower the Energy, the slower the entity moves).</summary>
     public float LowEnergyLossPerPoint  { get; set; } = 0.005f;
+
+    /// <summary>Hard floor on the final speed multiplier.</summary>
     public float MinMultiplier          { get; set; } = 0.3f;
+
+    /// <summary>Hard ceiling on the final speed multiplier.</summary>
     public float MaxMultiplier          { get; set; } = 2.0f;
 }
 
+/// <summary>
+/// PathfindingService / A* tunables — cost shaping, tie-break noise, and cache configuration.
+/// </summary>
 public class MovementPathfindingConfig
 {
     /// <summary>F-cost discount applied to tiles that are doorways between rooms.</summary>
@@ -805,19 +996,54 @@ public class MovementPathfindingConfig
 
     /// <summary>Scale of seeded hash noise used to break A* f-cost ties (produces path variety).</summary>
     public float TieBreakNoiseScale { get; set; } = 0.1f;
+
+    /// <summary>Maximum number of entries in the pathfinding cache (LRU eviction).</summary>
+    public int CacheMaxEntries { get; set; } = 512;
+
+    /// <summary>Cache eviction strategy ("wipeOnChange" or future "regionScoped").</summary>
+    public string CacheEvictionStrategy { get; set; } = "wipeOnChange";
+
+    /// <summary>Log cache hit rate statistics every tick (dev-only telemetry).</summary>
+    public bool LogCacheHitRateEveryTick { get; set; } = false;
+
+    /// <summary>Warn if observed cache hit rate falls below this threshold (when telemetry is on).</summary>
+    public float WarnIfCacheHitRateBelow { get; set; } = 0.50f;
+}
+
+// ── Structural change system ──────────────────────────────────────────────────
+
+/// <summary>
+/// StructuralChangeBus emission toggles. Determines when the bus fires —
+/// subscribers (e.g. the pathfinding cache) listen and invalidate accordingly.
+/// </summary>
+public class StructuralChangeConfig
+{
+    /// <summary>Emit StructuralChangeEvent when an NPC moves (should always be false; documented for clarity).</summary>
+    public bool EmitOnNpcMovement { get; set; } = false;
+
+    /// <summary>Emit StructuralChangeEvent when a room's bounds change.</summary>
+    public bool EmitOnRoomBoundsChange { get; set; } = true;
 }
 
 // ── Spatial systems ───────────────────────────────────────────────────────────
 
+/// <summary>
+/// GridSpatialIndex configuration — cell size, world dimensions, and seed
+/// proximity ranges used at NPC spawn time.
+/// </summary>
 public class SpatialConfig
 {
     /// <summary>Side length of each spatial-index grid cell, in tiles. Default 4.</summary>
     public int CellSizeTiles { get; set; } = 4;
 
+    /// <summary>Width × height of the indexed world in tiles.</summary>
     public SpatialWorldSizeConfig       WorldSize              { get; set; } = new();
+
+    /// <summary>Default proximity-range bands (conversation / awareness / sight) at spawn.</summary>
     public ProximityRangeDefaultsConfig ProximityRangeDefaults { get; set; } = new();
 }
 
+/// <summary>Indexed world dimensions in tiles (set the spatial index capacity at boot).</summary>
 public class SpatialWorldSizeConfig
 {
     /// <summary>Horizontal tile extent of the indexed world. Default 512.</summary>
@@ -827,6 +1053,7 @@ public class SpatialWorldSizeConfig
     public int Height { get; set; } = 512;
 }
 
+/// <summary>Seed values for ProximityRangeComponent (overridable per NPC at spawn).</summary>
 public class ProximityRangeDefaultsConfig
 {
     /// <summary>Seed conversation range in tiles. Overridden per NPC at spawn. Default 2.</summary>
@@ -841,8 +1068,13 @@ public class ProximityRangeDefaultsConfig
 
 // ── Lighting systems ──────────────────────────────────────────────────────────
 
+/// <summary>
+/// Sun cycle, light-source state machine, aperture/source ranges, and the
+/// ordered lighting-to-drive coupling table.
+/// </summary>
 public class LightingConfig
 {
+    /// <summary>Day-phase boundary fractions used to derive <see cref="DayPhase"/> from time-of-day.</summary>
     public DayPhaseBoundariesConfig DayPhaseBoundaries { get; set; } = new();
 
     /// <summary>Probability (0–1) that a Flickering source emits at full intensity on a given tick.</summary>
@@ -864,13 +1096,28 @@ public class LightingConfig
     public List<LightingCouplingEntry> DriveCouplings { get; set; } = new();
 }
 
+/// <summary>
+/// Day-phase transition boundaries, expressed as fraction-of-day [0,1].
+/// SunSystem maps clock fraction to a <see cref="DayPhase"/> using these.
+/// </summary>
 public class DayPhaseBoundariesConfig
 {
+    /// <summary>Fraction-of-day at which EarlyMorning begins.</summary>
     public double EarlyMorningStart { get; set; } = 0.20;
+
+    /// <summary>Fraction-of-day at which MidMorning begins.</summary>
     public double MidMorningStart   { get; set; } = 0.30;
+
+    /// <summary>Fraction-of-day at which Afternoon begins.</summary>
     public double AfternoonStart    { get; set; } = 0.45;
+
+    /// <summary>Fraction-of-day at which Evening begins.</summary>
     public double EveningStart      { get; set; } = 0.65;
+
+    /// <summary>Fraction-of-day at which Dusk begins.</summary>
     public double DuskStart         { get; set; } = 0.80;
+
+    /// <summary>Fraction-of-day at which Night begins.</summary>
     public double NightStart        { get; set; } = 0.85;
 }
 
@@ -913,6 +1160,10 @@ public class NarrativeConfig
 
 // ── Cast generator ─────────────────────────────────────────────────────────────
 
+/// <summary>
+/// Tunables for <see cref="CastGenerator"/> — drive baselines per archetype tier
+/// and counts of seeded relationships across the cast at boot.
+/// </summary>
 public class CastGeneratorConfig
 {
     /// <summary>Baseline range [min,max] for chronically-elevated drives.</summary>
@@ -951,11 +1202,16 @@ public class CastGeneratorConfig
 
 // ── Chronicle systems ─────────────────────────────────────────────────────────
 
+/// <summary>
+/// Persistent ChronicleService capacity, magnitude ranges (stains, broken items),
+/// and the threshold-rules sub-config used by PersistenceThresholdDetector.
+/// </summary>
 public class ChronicleConfig
 {
     /// <summary>Maximum number of chronicle entries before oldest are dropped.</summary>
     public int MaxEntries { get; set; } = 4096;
 
+    /// <summary>Threshold rules used by PersistenceThresholdDetector when promoting candidates.</summary>
     public ChronicleThresholdRulesConfig ThresholdRules { get; set; } = new();
 
     /// <summary>Stain magnitude range [min, max]. Default [10, 80].</summary>
@@ -965,6 +1221,11 @@ public class ChronicleConfig
     public int[] BrokenItemMagnitudeRange { get; set; } = new[] { 20, 100 };
 }
 
+/// <summary>
+/// Threshold rules consulted by PersistenceThresholdDetector when deciding which
+/// narrative candidates "stick" (become chronicle entries) and when to spawn
+/// physical manifests (stains, broken items) from emotional events.
+/// </summary>
 public class ChronicleThresholdRulesConfig
 {
     /// <summary>Minimum relationship-intensity delta required to persist a relationship-changing candidate.</summary>
@@ -985,6 +1246,10 @@ public class ChronicleThresholdRulesConfig
 
 // ── Action-selection system ───────────────────────────────────────────────────
 
+/// <summary>
+/// ActionSelectionSystem candidate enumeration / suppression / inversion thresholds.
+/// All scores are 0–1 unless otherwise stated.
+/// </summary>
 public class ActionSelectionConfig
 {
     /// <summary>Drive.Current must exceed this to enumerate candidates. Default 60.</summary>
@@ -1020,6 +1285,10 @@ public class ActionSelectionConfig
 
 // ── Stress system ─────────────────────────────────────────────────────────────
 
+/// <summary>
+/// StressSystem acute/chronic accumulation, decay, and tag thresholds. Stress
+/// gain is multiplied by per-NPC neuroticism via <see cref="NeuroticismStressFactor"/>.
+/// </summary>
 public class StressConfig
 {
     /// <summary>AcuteLevel gain per SuppressionTick event (before neuroticism scaling). Default 1.5.</summary>
@@ -1067,6 +1336,11 @@ public class StressConfig
 
 // ── Schedule system ───────────────────────────────────────────────────────────
 
+/// <summary>
+/// Tunables for <see cref="ScheduleSystem"/> + ActionSelectionSystem schedule integration —
+/// how heavily the active schedule block influences candidate weighting and when an
+/// Approach to a schedule anchor turns into a Linger.
+/// </summary>
 public class ScheduleConfig
 {
     /// <summary>Weight assigned to a schedule-driven Approach/Linger candidate. Default 0.30.</summary>
@@ -1078,6 +1352,10 @@ public class ScheduleConfig
 
 // ── Workload system ───────────────────────────────────────────────────────────
 
+/// <summary>
+/// TaskGeneratorSystem / WorkloadSystem tuning — when tasks spawn, their effort/deadline
+/// distribution, base progress rate, quality decay, and overdue stress contribution.
+/// </summary>
 public class WorkloadConfig
 {
     /// <summary>Game-hour (0–24) at which TaskGeneratorSystem fires each day. Default 8.0 (8 AM).</summary>
@@ -1125,6 +1403,10 @@ public class WorkloadConfig
 
 // ── Memory system ─────────────────────────────────────────────────────────────
 
+/// <summary>
+/// MemoryRecordingSystem capacity caps. Per-pair / per-NPC ring buffers exceeding
+/// these counts drop the oldest entries.
+/// </summary>
 public class MemoryConfig
 {
     /// <summary>Maximum entries in RelationshipMemoryComponent.Recent before oldest is dropped.</summary>
@@ -1164,6 +1446,11 @@ public class PhysiologyGateConfig
 
 // ── Social mask system ────────────────────────────────────────────────────────
 
+/// <summary>
+/// SocialMaskSystem / MaskCrackSystem tuning — how quickly the mask drifts in
+/// public, how it decays in private, and what combination of stress + low willpower
+/// triggers an involuntary "crack".
+/// </summary>
 public class SocialMaskConfig
 {
     /// <summary>Maximum mask delta gained per tick when drive is elevated and exposure is full (0–100 scale).</summary>
@@ -1195,4 +1482,229 @@ public class SocialMaskConfig
 
     /// <summary>Minimum ticks between successive cracks for the same NPC. Default 1800.</summary>
     public int    SlipCooldownTicks            { get; set; } = 1800;
+}
+
+// ── Life state system ─────────────────────────────────────────────────────────
+
+/// <summary>
+/// Tuning knobs for LifeStateTransitionSystem — the layer that manages
+/// Alive → Incapacitated → Deceased transitions and the cause-of-death event surface.
+/// </summary>
+public class LifeStateConfig
+{
+    /// <summary>
+    /// Default number of ticks an NPC stays Incapacitated before transitioning to Deceased.
+    /// At 60 FPS / 20 game-ticks per second ≈ 9 seconds per game-tick, 180 ticks ≈ 3 game-minutes.
+    /// Default 180.
+    /// </summary>
+    public int DefaultIncapacitatedTicks { get; set; } = 180;
+
+    /// <summary>
+    /// Whether Incapacitated NPCs can autonomously void their bladder.
+    /// When true, BladderSystem bypasses the IsAlive guard for void (but UrinationSystem respects IsAlive for the trigger).
+    /// Default true.
+    /// </summary>
+    public bool IncapacitatedAllowsBladderVoid { get; set; } = true;
+
+    /// <summary>
+    /// Whether a Deceased NPC's PositionComponent is frozen (does not change position).
+    /// Used by MovementSystem and related pathfinding systems to decide if the corpse blocks movement.
+    /// Default true.
+    /// </summary>
+    public bool DeceasedFreezesPosition { get; set; } = true;
+
+    /// <summary>
+    /// Whether to emit an invariant check when an NPC transitions to Deceased.
+    /// Default true. Placeholder for 3.0.2+.
+    /// </summary>
+    public bool EmitDeathInvariantOnTransition { get; set; } = true;
+}
+
+/// <summary>
+/// Tuning knobs for <see cref="ChokingDetectionSystem"/> — when in-transit boluses
+/// trigger a choke, how long the resulting incapacitation lasts, and the panic
+/// mood spike applied. Phase 3 addition.
+/// </summary>
+/// <seealso cref="LifeStateConfig"/>
+public class ChokingConfig
+{
+    /// <summary>
+    /// Bolus size threshold (fraction of esophagus capacity, 0..1) above which choking is possible.
+    /// Default 0.65 (65% of esophagus).
+    /// </summary>
+    public float BolusSizeThreshold { get; set; } = 0.65f;
+
+    /// <summary>
+    /// Energy threshold below which an NPC is considered "distracted-tired" (one choke trigger).
+    /// Default 30.
+    /// </summary>
+    public int EnergyThreshold { get; set; } = 30;
+
+    /// <summary>
+    /// Acute stress threshold at or above which an NPC is considered "distracted-stressed" (one choke trigger).
+    /// Default 60.
+    /// </summary>
+    public int StressThreshold { get; set; } = 60;
+
+    /// <summary>
+    /// Irritation drive threshold at or above which an NPC is considered "frustrated-eating" (one choke trigger).
+    /// Default 70.
+    /// </summary>
+    public int IrritationThreshold { get; set; } = 70;
+
+    /// <summary>
+    /// Number of ticks the choking NPC remains Incapacitated before transitioning to Deceased(Choked).
+    /// ~3 game-minutes at current tick rate. Default 180.
+    /// This value overrides LifeStateConfig.DefaultIncapacitatedTicks for choke-specific incapacitation.
+    /// </summary>
+    public int IncapacitationTicks { get; set; } = 180;
+
+    /// <summary>
+    /// Mood panic intensity set on choke (0..1 scale). The existing mood system applies decay.
+    /// Default 0.85 (85% peak panic).
+    /// </summary>
+    public float PanicMoodIntensity { get; set; } = 0.85f;
+
+    /// <summary>
+    /// Dev kill-switch for choke-started narrative emission. Always true in production.
+    /// Default true.
+    /// </summary>
+    public bool EmitChokeStartedNarrative { get; set; } = true;
+}
+
+/// <summary>
+/// Configuration for the SlipAndFallSystem (WP-3.0.3).
+/// Controls fall-risk hazard detection and slip probability.
+/// </summary>
+public class SlipAndFallConfig
+{
+    /// <summary>
+    /// Global multiplier on slip chance. Scales the product of (risk * speed * stress).
+    /// Default 0.001 (very low baseline; high-risk stains at high speed are rare death).
+    /// </summary>
+    public float GlobalSlipChanceScale { get; set; } = 0.001f;
+
+    /// <summary>
+    /// Acute stress level above which StressSlipMultiplier applies.
+    /// Default 60.
+    /// </summary>
+    public int StressDangerThreshold { get; set; } = 60;
+
+    /// <summary>
+    /// Multiplier on slip chance when NPC's AcuteStress &gt;= StressDangerThreshold.
+    /// Default 2.0 (doubles slip chance under stress).
+    /// </summary>
+    public float StressSlipMultiplier { get; set; } = 2.0f;
+
+    /// <summary>
+    /// Default fall risk level for broken items (broken mug, shattered glass).
+    /// Default 0.50.
+    /// </summary>
+    public float FallRiskBrokenItemDefault { get; set; } = 0.50f;
+
+    /// <summary>Default fall risk level for water stains. Default 0.40.</summary>
+    public float FallRiskWaterDefault { get; set; } = 0.40f;
+
+    /// <summary>Default fall risk level for blood stains. Default 0.60.</summary>
+    public float FallRiskBloodDefault { get; set; } = 0.60f;
+
+    /// <summary>Default fall risk level for oil stains. Default 0.85.</summary>
+    public float FallRiskOilDefault { get; set; } = 0.85f;
+}
+
+/// <summary>
+/// Configuration for the LockoutDetectionSystem (WP-3.0.3).
+/// Controls door-lockout and starvation detection.
+/// </summary>
+public class LockoutConfig
+{
+    /// <summary>
+    /// Hour of the game-day (0..24) at which LockoutDetectionSystem runs.
+    /// Default 18.0 (6 PM — end of office day).
+    /// </summary>
+    public float LockoutCheckHour { get; set; } = 18.0f;
+
+    /// <summary>
+    /// Satiation threshold below which an NPC becomes "hungry" in the lockout sense.
+    /// LockoutDetectionSystem only triggers when Satiation &lt;= (100 - this value).
+    /// Default 95 (i.e., Hunger &gt;= 95).
+    /// </summary>
+    public int LockoutHungerThreshold { get; set; } = 95;
+
+    /// <summary>
+    /// Number of game-days an NPC can survive locked in before starvation death.
+    /// LockedInComponent.StarvationTickBudget counts down once per game-day.
+    /// Default 5 (5 game-days of lockout = death).
+    /// </summary>
+    public int StarvationTicks { get; set; } = 5;
+
+    /// <summary>
+    /// Named anchor tag used to identify outdoor exits (parking lot, smoking bench, etc.).
+    /// Default "outdoor".
+    /// </summary>
+    public string ExitNamedAnchorTag { get; set; } = "outdoor";
+}
+
+// ── Bereavement system ────────────────────────────────────────────────────
+
+/// <summary>
+/// Configuration for bereavement-driven stress and proximity-bereavement mechanics (WP-3.0.2).
+/// Controls stress gains from witnessing death / learning of death, and proximity-encounter tuning.
+/// </summary>
+public class BereavementConfig
+{
+    /// <summary>Acute stress gained per witnessed death event (before neuroticism scaling). Default 5.0.</summary>
+    public double WitnessedDeathStressGain { get; set; } = 5.0;
+
+    /// <summary>Acute stress gained per bereavement event (learned of death, before neuroticism scaling). Default 3.0.</summary>
+    public double BereavementStressGain { get; set; } = 3.0;
+
+    /// <summary>Minimum relationship intensity required for proximity-bereavement stress to apply. Default 20.</summary>
+    public int ProximityBereavementMinIntensity { get; set; } = 20;
+
+    /// <summary>Acute stress applied as one-shot when NPC encounters corpse of someone they had a relationship with. Default 8.0.</summary>
+    public double ProximityBereavementStressGain { get; set; } = 8.0;
+
+    /// <summary>Minimum relationship intensity required for bereavement system to apply grief. Default 25.</summary>
+    public int BereavementMinIntensity { get; set; } = 25;
+
+    /// <summary>Grief intensity set on witness when learning of a colleague's death. Default 40.0.</summary>
+    public double ColleagueBereavementGriefIntensity { get; set; } = 40.0;
+
+    /// <summary>Maximum grief intensity applied based on relationship intensity to deceased. Default 60.0.</summary>
+    public double WitnessGriefIntensity { get; set; } = 60.0;
+}
+
+// ── Fainting system ──────────────────────────────────────────────────────
+
+/// <summary>
+/// Configuration for the fainting system (WP-3.0.6). Controls fear thresholds,
+/// incapacitation duration, and narrative emission.
+/// </summary>
+public class FaintingConfig
+{
+    /// <summary>
+    /// Fear mood level at or above which fainting becomes possible.
+    /// Default 70 (high fear state required).
+    /// </summary>
+    public float FearThreshold { get; set; } = 70f;
+
+    /// <summary>
+    /// Number of ticks a fainted NPC remains Incapacitated before recovery.
+    /// At current tick rate (~20 ticks/game-second), 180 ticks ≈ 9 seconds real-time / ~3 game-minutes.
+    /// Default 180.
+    /// </summary>
+    public int FaintDurationTicks { get; set; } = 180;
+
+    /// <summary>
+    /// Whether to emit FaintedNow narrative when an NPC faints.
+    /// Default true.
+    /// </summary>
+    public bool EmitFaintedNarrative { get; set; } = true;
+
+    /// <summary>
+    /// Whether to emit RegainedConsciousness narrative when an NPC recovers from fainting.
+    /// Default true.
+    /// </summary>
+    public bool EmitRegainedConsciousnessNarrative { get; set; } = true;
 }

@@ -1,5 +1,6 @@
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 
 namespace APIFramework.Systems;
 
@@ -20,12 +21,24 @@ namespace APIFramework.Systems;
 ///
 /// Backwards-compatible: entities without BladderComponent are silently skipped.
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="DriveComponent"/>, <see cref="BladderComponent"/>,
+/// <see cref="BlockedActionsComponent"/>, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="BladderComponent"/>.VolumeML (zeroes it on action). Tag
+/// removal is delegated to <see cref="BladderSystem"/>.<br/>
+/// Phase: Behavior, after <see cref="BrainSystem"/> picks the dominant drive.
+/// </remarks>
 public class UrinationSystem : ISystem
 {
+    /// <summary>Per-tick action pass; empties the bladder for any NPC whose dominant drive is Pee.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds, unused).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         foreach (var entity in em.Query<DriveComponent>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip Incapacitated/Deceased NPCs (autonomous trigger only)
+
             var drives = entity.Get<DriveComponent>();
             if (drives.Dominant != DesireType.Pee) continue;
             if (!entity.Has<BladderComponent>()) continue;

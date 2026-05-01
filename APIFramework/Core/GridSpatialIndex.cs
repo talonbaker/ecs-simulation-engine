@@ -38,6 +38,16 @@ public sealed class GridSpatialIndex : ISpatialIndex
     // entity → (tileX, tileY) — kept for exact-distance filtering and QueryNearest
     private readonly Dictionary<Entity, (int x, int y)> _positions = new();
 
+    /// <summary>
+    /// Constructs a spatial index sized for a world of the given tile dimensions,
+    /// using square cells of <paramref name="cellSizeTiles"/> tiles per side.
+    /// The grid is sized to fully cover the world (rounded up).
+    /// </summary>
+    /// <param name="cellSizeTiles">
+    /// Width/height of each cell in tile units. Values <c>&lt;= 0</c> fall back to a default of 4.
+    /// </param>
+    /// <param name="worldWidth">World width in tiles.</param>
+    /// <param name="worldHeight">World height in tiles.</param>
     public GridSpatialIndex(int cellSizeTiles, int worldWidth, int worldHeight)
     {
         _cellSize   = cellSizeTiles > 0 ? cellSizeTiles : 4;
@@ -64,6 +74,7 @@ public sealed class GridSpatialIndex : ISpatialIndex
 
     // ── ISpatialIndex ─────────────────────────────────────────────────────────
 
+    /// <inheritdoc/>
     public void Register(Entity entity, int x, int y)
     {
         var (cx, cy) = TileToCell(x, y);
@@ -72,6 +83,7 @@ public sealed class GridSpatialIndex : ISpatialIndex
         _positions[entity] = (x, y);
     }
 
+    /// <inheritdoc/>
     public void Unregister(Entity entity)
     {
         if (!_positions.TryGetValue(entity, out var pos)) return;
@@ -84,6 +96,7 @@ public sealed class GridSpatialIndex : ISpatialIndex
         _positions.Remove(entity);
     }
 
+    /// <inheritdoc/>
     public void Update(Entity entity, int newX, int newY)
     {
         if (!_positions.TryGetValue(entity, out var oldPos))
@@ -108,6 +121,7 @@ public sealed class GridSpatialIndex : ISpatialIndex
         _positions[entity] = (newX, newY);
     }
 
+    /// <inheritdoc/>
     public IReadOnlyList<Entity> QueryRadius(int x, int y, int radius)
     {
         if (radius <= 0) return Array.Empty<Entity>();
@@ -141,6 +155,7 @@ public sealed class GridSpatialIndex : ISpatialIndex
         return result;
     }
 
+    /// <inheritdoc/>
     public IReadOnlyList<Entity> QueryNearest(int x, int y, int maxCount)
     {
         if (maxCount <= 0 || _positions.Count == 0) return Array.Empty<Entity>();

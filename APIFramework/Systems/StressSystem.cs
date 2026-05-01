@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 
 namespace APIFramework.Systems;
@@ -18,10 +19,23 @@ namespace APIFramework.Systems;
 /// Loop closure: when AcuteLevel ≥ stressedTagThreshold, one extra SuppressionTick lands in
 /// WillpowerEventQueue each tick. WillpowerSystem picks it up next tick (Cognition=30).
 /// </summary>
+/// <remarks>
+/// Reads: <see cref="StressComponent"/>, <see cref="PersonalityComponent"/>,
+/// <see cref="SocialDrivesComponent"/>, <see cref="WorkloadComponent"/> + per-task
+/// <see cref="OverdueTag"/>, <see cref="WillpowerEventQueue.LastDrainedBatch"/>,
+/// <see cref="NarrativeEventBus"/> candidates, <see cref="LifeStateComponent"/>.<br/>
+/// Writes: <see cref="StressComponent"/> (single writer of acute/chronic levels and
+/// daily counters), <see cref="StressedTag"/>, <see cref="OverwhelmedTag"/>,
+/// <see cref="BurningOutTag"/>; enqueues amplification SuppressionTicks on
+/// <see cref="WillpowerEventQueue"/>.<br/>
+/// Phase: Cleanup, after <see cref="WillpowerSystem"/> (Cognition) and
+/// <see cref="Narrative.NarrativeEventDetector"/> (Narrative).
+/// </remarks>
 public class StressSystem : ISystem
 {
     private readonly StressConfig        _cfg;
     private readonly WorkloadConfig      _workloadCfg;
+    private readonly BereavementConfig   _bereavementCfg;
     private readonly SimulationClock     _clock;
     private readonly WillpowerEventQueue _queue;
 
@@ -33,15 +47,24 @@ public class StressSystem : ISystem
 
     private readonly EntityManager _em;
 
+    /// <summary>Constructs the stress system and subscribes to the narrative bus for conflict signals.</summary>
+    /// <param name="cfg">Stress tuning (gains, thresholds, decay, neuroticism scale).</param>
+    /// <param name="workloadCfg">Workload tuning (used for overdue-task stress gain).</param>
+    /// <param name="clock">Simulation clock; provides DayNumber for per-day chronic update.</param>
+    /// <param name="queue">Willpower event queue; provides LastDrainedBatch and receives amplification events.</param>
+    /// <param name="narrativeBus">Bus subscribed to for LeftRoomAbruptly conflict signals.</param>
+    /// <param name="em">Entity manager used to look up task entities by Guid.</param>
+    /// <param name="bereavementCfg">Optional bereavement tuning; defaults to a fresh <see cref="BereavementConfig"/> when null.</param>
     public StressSystem(StressConfig cfg, WorkloadConfig workloadCfg, SimulationClock clock,
         WillpowerEventQueue queue, NarrativeEventBus narrativeBus,
-        EntityManager em)
+        EntityManager em, BereavementConfig? bereavementCfg = null)
     {
-        _cfg         = cfg;
-        _workloadCfg = workloadCfg;
-        _clock       = clock;
-        _queue       = queue;
-        _em          = em;
+        _cfg            = cfg;
+        _workloadCfg    = workloadCfg;
+        _bereavementCfg = bereavementCfg ?? new BereavementConfig();
+        _clock          = clock;
+        _queue          = queue;
+        _em             = em;
         narrativeBus.OnCandidateEmitted += OnNarrativeCandidate;
     }
 
@@ -54,6 +77,9 @@ public class StressSystem : ISystem
         }
     }
 
+    /// <summary>Per-tick stress accumulation and tag-update pass.</summary>
+    /// <param name="em">Entity manager backing this tick.</param>
+    /// <param name="deltaTime">Elapsed game time for this tick (seconds).</param>
     public void Update(EntityManager em, float deltaTime)
     {
         // Snapshot and clear the pending conflict set for this tick.
@@ -64,6 +90,7 @@ public class StressSystem : ISystem
 
         foreach (var entity in em.Query<NpcTag>().ToList())
         {
+            if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             if (!entity.Has<StressComponent>()) continue;
 
             var stress   = entity.Get<StressComponent>();
@@ -135,6 +162,26 @@ public class StressSystem : ISystem
                 }
             }
 
+            // 4.1. Witnessed death — one-shot bereavement stress for witnesses (WP-3.0.2).
+            // BereavementSystem sets WitnessedDeathEventsToday at death-event time.
+            // Applied and cleared here so the gain fires exactly once, not every tick.
+            if (stress.WitnessedDeathEventsToday > 0)
+            {
+                double gain = stress.WitnessedDeathEventsToday * _bereavementCfg.WitnessedDeathStressGain * neuroFactor;
+                stress.AcuteLevel = Math.Clamp(
+                    (int)(stress.AcuteLevel + gain), 0, 100);
+                stress.WitnessedDeathEventsToday = 0; // one-shot: clear after application
+            }
+
+            // 4.2. Colleague bereavement — one-shot hit for non-witness colleagues (WP-3.0.2).
+            if (stress.BereavementEventsToday > 0)
+            {
+                double gain = stress.BereavementEventsToday * _bereavementCfg.BereavementStressGain * neuroFactor;
+                stress.AcuteLevel = Math.Clamp(
+                    (int)(stress.AcuteLevel + gain), 0, 100);
+                stress.BereavementEventsToday = 0; // one-shot: clear after application
+            }
+
             // 5. Per-tick acute decay via fractional accumulator.
             if (!_decayAccum.TryGetValue(entity.Id, out var decayRemainder))
                 decayRemainder = 0.0;
@@ -158,6 +205,8 @@ public class StressSystem : ISystem
                 stress.DriveSpikeEventsToday     = 0;
                 stress.SocialConflictEventsToday = 0;
                 stress.OverdueTaskEventsToday    = 0;
+                stress.WitnessedDeathEventsToday = 0; // WP-3.0.2 (already cleared on use)
+                stress.BereavementEventsToday    = 0; // WP-3.0.2 (already cleared on use)
                 stress.LastDayUpdated = _clock.DayNumber;
             }
 

@@ -330,8 +330,18 @@
     },
     "pathfinding": {
       "doorwayDiscount":    1.0,
-      "tieBreakNoiseScale": 0.1
+      "tieBreakNoiseScale": 0.1,
+      "cacheMaxEntries":    512,
+      "cacheEvictionStrategy": "wipeOnChange",
+      "logCacheHitRateEveryTick": false,
+      "warnIfCacheHitRateBelow": 0.5
     }
+  },
+
+  // ── Structural change system ───────────────────────────────────────────────
+  "structuralChange": {
+    "emitOnNpcMovement":     false,
+    "emitOnRoomBoundsChange": true
   },
 
   // ── Spatial engine ─────────────────────────────────────────────────────────
@@ -653,6 +663,87 @@
     "stressMaxRelaxation":      0.7
   },
 
+  // ── Life state ─────────────────────────────────────────────────────────────
+  // WP-3.0.0: death substrate. Downstream packets (3.0.1+) tune per-cause values.
+  "lifeState": {
+    // Ticks an Incapacitated NPC has before automatic Deceased transition (~3 game-minutes)
+    "defaultIncapacitatedTicks":   180,
+    // Whether an Incapacitated NPC's bladder may void (physiologically realistic)
+    "incapacitatedAllowsBladderVoid": true,
+    // Whether Deceased NPC's PositionComponent is frozen (blocks MovementSystem)
+    "deceasedFreezesPosition":     true,
+    // Whether InvariantSystem emits a deceased-invariant check on each Deceased transition
+    "emitDeathInvariantOnTransition": true
+  },
+
+  // ── Choking scenario (WP-3.0.1) ───────────────────────────────────────────
+  // ChokingDetectionSystem runs at Cleanup phase before LifeStateTransitionSystem.
+  // A tough bolus + a distracted NPC (low energy OR high stress OR high irritation)
+  // triggers an incapacitation request with the per-cause tick budget below.
+  "choking": {
+    // BolusComponent.Toughness (0–1) at or above which a bolus is a choking hazard.
+    // Banana default is 0.2 — safe. Tough food (jerky ~0.8) is dangerous when distracted.
+    "bolusSizeThreshold":        0.65,
+    // EnergyComponent.Energy (0–100) strictly below which the NPC is fatigued enough to choke.
+    "energyThreshold":           40.0,
+    // StressComponent.AcuteLevel (0–100) at or above which motor coordination is impaired.
+    "stressThreshold":           70,
+    // SocialDrivesComponent.Irritation.Current (0–100) at or above which inattentive eating applies.
+    "irritationThreshold":       65,
+    // Ticks in Incapacitated before LifeStateTransitionSystem auto-promotes to Deceased.
+    // At TimeScale 120, 90 ticks ≈ 1.5 game-minutes (faster than the generic 180-tick default).
+    "incapacitationTicks":       90,
+    // Acute panic level (0..1) applied to MoodComponent.PanicLevel at choke onset.
+    // Decays each tick at MoodSystemConfig.NegativeDecayRate.
+    "panicMoodIntensity":        0.85,
+    // When true, emits a ChokeStarted narrative candidate so witnesses record the onset.
+    "emitChokeStartedNarrative": true
+  },
+
+  // ── Bereavement (WP-3.0.2) ────────────────────────────────────────────────
+  // Two-tier bereavement cascade:
+  //   Tier 1 (BereavementSystem)            — fires at death-event time; witnesses + colleagues.
+  //   Tier 2 (BereavementByProximitySystem) — fires when an NPC enters a corpse's room.
+  "bereavement": {
+    // Stress gain applied once to the witness of a death (StressSystem branch, one-shot).
+    "witnessedDeathStressGain":           20.0,
+    // Stress gain applied once per bereavement event to non-witness colleagues.
+    "bereavementStressGain":               5.0,
+    // GriefLevel (0–100) applied to witness immediately (Max with current).
+    "witnessGriefIntensity":              80.0,
+    // GriefLevel ceiling for colleagues before scaling by relationship intensity fraction.
+    "colleagueBereavementGriefIntensity": 40.0,
+    // Minimum relationship Intensity to trigger colleague bereavement (0–100).
+    "bereavementMinIntensity":            20,
+    // Minimum relationship Intensity to trigger proximity bereavement (0–100).
+    "proximityBereavementMinIntensity":   30,
+    // Direct AcuteLevel added (one-shot per NPC/corpse pair) on room entry.
+    "proximityBereavementStressGain":      8.0
+  },
+
+  // ── Corpse (WP-3.0.2) ─────────────────────────────────────────────────────
+  // Reserved for future per-cause or per-archetype corpse tuning.
+  "corpse": {},
+
+  // ── Fainting (WP-3.0.6) ───────────────────────────────────────────────────
+  // An NPC whose Fear emotion (0–100) exceeds fearThreshold faints:
+  // they enter Incapacitated for faintDurationTicks and then automatically
+  // recover to Alive. Fainting is never fatal.
+  "fainting": {
+    // MoodComponent.Fear (0–100) at or above which an Alive NPC faints (~terror level).
+    "fearThreshold":                      85.0,
+
+    // Ticks the NPC remains unconscious before automatic recovery.
+    // Budget is set to faintDurationTicks+1 so death-by-budget cannot fire first.
+    "faintDurationTicks":                 20,
+
+    // Emit a Fainted narrative candidate before the Incapacitated request is enqueued.
+    "emitFaintedNarrative":               true,
+
+    // Emit a RegainedConsciousness candidate before the Alive recovery request.
+    "emitRegainedConsciousnessNarrative": true
+  },
+
   // ── Action selection ───────────────────────────────────────────────────────
   "actionSelection": {
     // Drive.Current must exceed this to enumerate candidates
@@ -675,5 +766,61 @@
     "maxCandidatesPerTick":          32,
     // tiles the avoidance flee target is pushed away from the threat
     "avoidStandoffDistance":         4
+  },
+
+  // ── Life state system ──────────────────────────────────────────────────────
+  "lifeState": {
+    // Default number of ticks an NPC stays Incapacitated before transitioning to Deceased.
+    // At 60 FPS / 20 game-ticks per second ≈ 9 seconds per game-tick, 180 ticks ≈ 3 game-minutes.
+    "defaultIncapacitatedTicks": 180,
+    // Whether Incapacitated NPCs can autonomously void their bladder
+    "incapacitatedAllowsBladderVoid": true,
+    // Whether a Deceased NPC's PositionComponent is frozen (does not change position)
+    "deceasedFreezesPosition": true,
+    // Whether to emit an invariant check when an NPC transitions to Deceased
+    "emitDeathInvariantOnTransition": true
+  },
+  "choking": {
+    // Bolus size threshold (fraction of esophagus capacity, 0..1) above which choking is possible
+    "bolusSizeThreshold": 0.65,
+    // Energy threshold below which an NPC is considered distracted-tired
+    "energyThreshold": 30,
+    // Acute stress threshold at or above which an NPC is considered distracted-stressed
+    "stressThreshold": 60,
+    // Irritation drive threshold at or above which an NPC is considered frustrated-eating
+    "irritationThreshold": 70,
+    // Number of ticks the choking NPC remains Incapacitated before transition to Deceased
+    "incapacitationTicks": 180,
+    // Mood panic intensity set on choke (0..1 scale)
+    "panicMoodIntensity": 0.85,
+    // Dev kill-switch for choke-started narrative emission
+    "emitChokeStartedNarrative": true
+  },
+  "slipAndFall": {
+    // Global multiplier on slip chance. Scales the product of (risk * speed * stress).
+    // Default 0.001 (very low baseline; high-risk stains at high speed are rare death).
+    "globalSlipChanceScale": 0.001,
+    // Acute stress level above which StressSlipMultiplier applies
+    "stressDangerThreshold": 60,
+    // Multiplier on slip chance when NPC's AcuteStress >= StressDangerThreshold
+    "stressSlipMultiplier": 2.0,
+    // Default fall risk level for broken items
+    "fallRiskBrokenItemDefault": 0.50,
+    // Default fall risk level for water stains
+    "fallRiskWaterDefault": 0.40,
+    // Default fall risk level for blood stains
+    "fallRiskBloodDefault": 0.60,
+    // Default fall risk level for oil stains
+    "fallRiskOilDefault": 0.85
+  },
+  "lockout": {
+    // Hour of the game-day (0..24) at which LockoutDetectionSystem runs
+    "lockoutCheckHour": 18.0,
+    // Hunger threshold (Satiation <= 100 - this value triggers lockout detection)
+    "lockoutHungerThreshold": 95,
+    // Game-days an NPC can survive locked in before starvation death
+    "starvationTicks": 5,
+    // Named anchor tag used to identify outdoor exits
+    "exitNamedAnchorTag": "outdoor"
   }
 }
