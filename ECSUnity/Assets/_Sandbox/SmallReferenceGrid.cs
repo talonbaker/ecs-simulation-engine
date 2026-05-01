@@ -16,6 +16,10 @@ public sealed class SmallReferenceGrid : MonoBehaviour
     [Tooltip("Grid side length in tiles. E.g. 10 = 10×10 grid.")]
     [SerializeField] private int _sizeTiles = 10;
 
+    [Tooltip("Distance between grid lines in world units. 1.0 = one line per tile; 0.5 = two lines per tile.")]
+    [Range(0.1f, 5f)]
+    [SerializeField] private float _lineSpacing = 1.0f;
+
     // Lighter grey than the full-world grid to avoid visual distraction.
     private static readonly Color GridColour = new Color(0.45f, 0.45f, 0.45f);
 
@@ -49,14 +53,17 @@ public sealed class SmallReferenceGrid : MonoBehaviour
         GL.Begin(GL.LINES);
         GL.Color(GridColour);
 
-        for (int i = 0; i <= _sizeTiles; i++)
+        float size      = _sizeTiles;
+        int   lineCount = Mathf.RoundToInt(_sizeTiles / _lineSpacing);
+        for (int i = 0; i <= lineCount; i++)
         {
-            // Lines parallel to X (constant Z = i)
-            GL.Vertex3(0f,         0f, i);
-            GL.Vertex3(_sizeTiles, 0f, i);
-            // Lines parallel to Z (constant X = i)
-            GL.Vertex3(i, 0f, 0f);
-            GL.Vertex3(i, 0f, _sizeTiles);
+            float p = i * _lineSpacing;
+            // Lines parallel to X (constant Z = p)
+            GL.Vertex3(0f,  0f, p);
+            GL.Vertex3(size, 0f, p);
+            // Lines parallel to Z (constant X = p)
+            GL.Vertex3(p, 0f, 0f);
+            GL.Vertex3(p, 0f, size);
         }
 
         GL.End();
