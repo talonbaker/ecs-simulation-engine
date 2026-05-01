@@ -87,6 +87,8 @@ public class SimConfig
     /// <summary>Fainting duration, fear threshold, and narrative emission tuning.</summary>
     public FaintingConfig         Fainting        { get; set; } = new();
 
+    /// <summary>Rescue mechanic tuning — bias threshold, awareness range, success rates.</summary>
+    public RescueConfig           Rescue          { get; set; } = new();
     /// <summary>Chore rotation assignment, execution, and overrotation tuning.</summary>
     public ChoreConfig            Chores          { get; set; } = new();
 
@@ -1712,6 +1714,35 @@ public class FaintingConfig
     public bool EmitRegainedConsciousnessNarrative { get; set; } = true;
 }
 
+// ── Rescue system (WP-3.2.4) ─────────────────────────────────────────────────
+
+/// <summary>
+/// Configuration for the rescue mechanic (WP-3.2.4).
+/// Controls intent scoring thresholds, awareness range, and per-kind success rates.
+/// </summary>
+public class RescueConfig
+{
+    /// <summary>Minimum score for an NPC to commit to a rescue intent. Default 0.40.</summary>
+    public float RescueThreshold        { get; set; } = 0.40f;
+
+    /// <summary>Maximum tile distance at which a bystander notices an Incapacitated NPC. Default 3.0.</summary>
+    public float AwarenessRangeForRescue { get; set; } = 3.0f;
+
+    /// <summary>Rescuer's current willpower must be at or above this value. Default 20.</summary>
+    public int   MinRescueWillpower     { get; set; } = 20;
+
+    /// <summary>Rescuer's acute stress must be at or below this value. Default 80.</summary>
+    public float MaxRescueStress        { get; set; } = 80f;
+
+    /// <summary>Base probability of a successful Heimlich maneuver. Default 0.65.</summary>
+    public float HeimlichBaseSuccessRate   { get; set; } = 0.65f;
+
+    /// <summary>Base probability of a successful CPR attempt. Default 0.30.</summary>
+    public float CprBaseSuccessRate        { get; set; } = 0.30f;
+
+    /// <summary>Base probability of successfully unlocking a door. Default 0.95.</summary>
+    public float DoorUnlockBaseSuccessRate { get; set; } = 0.95f;
+}
 // ── Chore rotation system ─────────────────────────────────────────────────────
 
 /// <summary>
