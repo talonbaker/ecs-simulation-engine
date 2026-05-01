@@ -117,12 +117,9 @@ public sealed class PickupController : MonoBehaviour
 
         int tileX = Mathf.RoundToInt(worldPos.x);
         int tileY = Mathf.RoundToInt(worldPos.z);
-        bool ok   = _mutationApi.MoveEntity(entityId, tileX, tileY);
+        _mutationApi.MoveEntity(entityId, tileX, tileY);
 
-        if (!ok)
-            Debug.LogWarning($"[PickupController] MoveEntity({entityId}, {tileX}, {tileY}) returned false.");
-
-        return ok;
+        return true;
     }
 
     /// <summary>Cancel pickup — no mutation, just intent cleared.</summary>

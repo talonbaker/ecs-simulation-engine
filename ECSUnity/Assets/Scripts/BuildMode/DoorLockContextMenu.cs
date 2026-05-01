@@ -146,17 +146,17 @@ public sealed class DoorLockContextMenu : MonoBehaviour
     private void LockDoor(Guid entityId)
     {
         if (_mutationApi == null) return;
-        bool ok = _mutationApi.AttachObstacle(entityId);
-        if (ok) _targetIsLocked = true;
-        Debug.Log($"[DoorLockContextMenu] Lock({entityId}) → {ok}");
+        _mutationApi.AttachObstacle(entityId);
+        _targetIsLocked = true;
+        Debug.Log($"[DoorLockContextMenu] Lock({entityId}) → true");
     }
 
     private void UnlockDoor(Guid entityId)
     {
         if (_mutationApi == null) return;
-        bool ok = _mutationApi.DetachObstacle(entityId);
-        if (ok) _targetIsLocked = false;
-        Debug.Log($"[DoorLockContextMenu] Unlock({entityId}) → {ok}");
+        _mutationApi.DetachObstacle(entityId);
+        _targetIsLocked = false;
+        Debug.Log($"[DoorLockContextMenu] Unlock({entityId}) → true");
     }
 
     // ── Test accessors ────────────────────────────────────────────────────────
@@ -176,13 +176,15 @@ public sealed class DoorLockContextMenu : MonoBehaviour
     public bool DirectLock(Guid entityId)
     {
         if (_mutationApi == null) return false;
-        return _mutationApi.AttachObstacle(entityId);
+        _mutationApi.AttachObstacle(entityId);
+        return true;
     }
 
     /// <summary>Directly unlock a door entity by ID. Used in tests to bypass UI.</summary>
     public bool DirectUnlock(Guid entityId)
     {
         if (_mutationApi == null) return false;
-        return _mutationApi.DetachObstacle(entityId);
+        _mutationApi.DetachObstacle(entityId);
+        return true;
     }
 }
