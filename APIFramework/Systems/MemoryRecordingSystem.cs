@@ -204,6 +204,9 @@ public sealed class MemoryRecordingSystem : ISystem
         NarrativeEventKind.StarvedAlone      => true,
         NarrativeEventKind.Died              => true,
         NarrativeEventKind.ChokeStarted      => true,
+        NarrativeEventKind.ChoreRefused      => true,
+        NarrativeEventKind.ChoreBadlyDone    => true,
+        NarrativeEventKind.ChoreOverrotation => true,
         _                                    => false,
     };
 

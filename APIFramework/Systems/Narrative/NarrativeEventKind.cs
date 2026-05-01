@@ -38,4 +38,16 @@ public enum NarrativeEventKind
     RegainedConsciousness,
     /// <summary>An NPC experienced bereavement (learned of or witnessed the death of someone with whom they had a relationship). Emitted by BereavementSystem to record grief impact.</summary>
     BereavementImpact,
+
+    // ── Chore rotation events (WP-3.2.3) ─────────────────────────────────────
+    /// <summary>A chore was assigned to an NPC for the day. Emitted by ChoreAssignmentSystem. Not persistent — routine scheduling.</summary>
+    ChoreAssigned,
+    /// <summary>An NPC completed an assigned chore. Emitted by ChoreExecutionSystem. Not persistent — routine completion.</summary>
+    ChoreCompleted,
+    /// <summary>An NPC refused a chore assignment (acceptance-bias below threshold). Emitted by ActionSelectionSystem. Persistent.</summary>
+    ChoreRefused,
+    /// <summary>An NPC completed a chore at low quality. Emitted by ChoreExecutionSystem. Persistent.</summary>
+    ChoreBadlyDone,
+    /// <summary>An NPC was assigned the same chore beyond the overrotation threshold. Emitted by ChoreExecutionSystem. Persistent.</summary>
+    ChoreOverrotation,
 }

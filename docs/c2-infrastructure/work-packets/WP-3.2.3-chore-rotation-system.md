@@ -1,5 +1,7 @@
 # WP-3.2.3 — Chore Rotation System
 
+> **STATUS:** SHIPPED to staging 2026-04-30. Retained because pending packets depend on this spec: WP-3.2.4, WP-3.2.5.
+
 > **DO NOT DISPATCH UNTIL ALL OF PHASE 3.1.x IS MERGED.**
 > Couples to schedule (WP-2.2.A), workload (WP-2.6.A), memory (WP-2.3.A), bereavement / stress (WP-3.0.2).
 
