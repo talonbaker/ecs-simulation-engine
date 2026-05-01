@@ -148,7 +148,7 @@ public sealed class DoorLockContextMenu : MonoBehaviour
         if (_mutationApi == null) return;
         _mutationApi.AttachObstacle(entityId);
         _targetIsLocked = true;
-        Debug.Log($"[DoorLockContextMenu] Lock({entityId})");
+        Debug.Log($"[DoorLockContextMenu] Lock({entityId}) → true");
     }
 
     private void UnlockDoor(Guid entityId)
@@ -156,7 +156,7 @@ public sealed class DoorLockContextMenu : MonoBehaviour
         if (_mutationApi == null) return;
         _mutationApi.DetachObstacle(entityId);
         _targetIsLocked = false;
-        Debug.Log($"[DoorLockContextMenu] Unlock({entityId})");
+        Debug.Log($"[DoorLockContextMenu] Unlock({entityId}) → true");
     }
 
     // ── Test accessors ────────────────────────────────────────────────────────
