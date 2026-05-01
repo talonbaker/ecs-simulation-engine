@@ -8,6 +8,8 @@ using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.Audio;
 
 /// <summary>
@@ -44,16 +46,17 @@ public class ChokingDetectionSystemCoughGaspEmitTests
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
         npc.Add(new PositionComponent { X = 2f, Y = 0f, Z = 4f });
-        npc.Add(new LifeStateComponent { State = LifeState.Alive });
+        npc.Add(new LifeStateComponent { State = LS.Alive });
         npc.Add(new MoodComponent());
 
-        // EsophagusTransitComponent with large bolus target
-        var bolusEntity = em.CreateEntity();
-        bolusEntity.Add(new BolusComponent { Volume = 0.8f }); // above threshold 0.5
-        npc.Add(new EsophagusTransitComponent { TargetEntityId = bolusEntity.Id, Progress = 0.5f, Speed = 0.1f });
-
         // Low energy → distracted
-        npc.Add(new EnergyComponent { Energy = 20f }); // below threshold 40
+        npc.Add(new EnergyComponent { Energy = 20f }); // below EnergyThreshold 40
+
+        // EsophagusTransitComponent lives on the BOLUS entity; TargetEntityId = the NPC.
+        // Toughness > BolusSizeThreshold(0.5) triggers choke.
+        var bolusEntity = em.CreateEntity();
+        bolusEntity.Add(new BolusComponent { Toughness = 0.8f });
+        bolusEntity.Add(new EsophagusTransitComponent { TargetEntityId = npc.Id, Progress = 0.5f, Speed = 0.1f });
 
         return (em, npc, soundBus, sys, transition);
     }

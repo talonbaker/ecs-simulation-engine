@@ -85,10 +85,10 @@ public static class SaveProjector
             var ls = e.Get<LifeStateComponent>();
             lifeState = new LifeStateSaveDto
             {
-                State                   = (int)ls.State,
+                State                   = (SaveLifeState)(int)ls.State,
                 LastTransitionTick      = ls.LastTransitionTick,
                 IncapacitatedTickBudget = ls.IncapacitatedTickBudget,
-                PendingDeathCause       = (int)ls.PendingDeathCause,
+                PendingDeathCause       = (SaveCauseOfDeath)(int)ls.PendingDeathCause,
             };
         }
 
@@ -101,7 +101,7 @@ public static class SaveProjector
                 ChokeStartTick = c.ChokeStartTick,
                 RemainingTicks = c.RemainingTicks,
                 BolusSize      = c.BolusSize,
-                PendingCause   = (int)c.PendingCause,
+                PendingCause   = (SaveCauseOfDeath)(int)c.PendingCause,
             };
         }
 
@@ -133,7 +133,7 @@ public static class SaveProjector
             var cod = e.Get<CauseOfDeathComponent>();
             causeOfDeath = new CauseOfDeathSaveDto
             {
-                Cause          = (int)cod.Cause,
+                Cause          = (SaveCauseOfDeath)(int)cod.Cause,
                 DeathTick      = cod.DeathTick,
                 WitnessedById  = cod.WitnessedByNpcId.ToString(),
                 LocationRoomId = cod.LocationRoomId.ToString(),
@@ -246,20 +246,10 @@ public static class SaveProjector
                     StartHour = b.StartHour,
                     EndHour   = b.EndHour,
                     AnchorId  = b.AnchorId,
-                    Activity  = (int)b.Activity,
+                    Activity  = (SaveScheduleActivity)b.Activity,
                 }).ToList();
             }
         }
-
-        // Collect non-trivial structural tags
-        var tags = new List<string>();
-        if (e.Has<HumanTag>())      tags.Add("Human");
-        if (e.Has<CatTag>())        tags.Add("Cat");
-        if (e.Has<NpcTag>())        tags.Add("Npc");
-        if (e.Has<CorpseTag>())     tags.Add("Corpse");
-        if (e.Has<IsChokingTag>())  tags.Add("IsChoking");
-        if (e.Has<IsFaintingTag>()) tags.Add("IsFainting");
-        if (e.Has<SleepingTag>())   tags.Add("Sleeping");
 
         return new NpcSaveDto
         {
@@ -293,7 +283,6 @@ public static class SaveProjector
             Willpower            = willpower,
             Workload             = workload,
             EncounteredCorpseIds = corpseIds,
-            Tags                 = tags.Count > 0 ? tags : null,
             ScheduleBlocks       = scheduleBlocks,
         };
     }
@@ -322,7 +311,6 @@ public static class SaveProjector
                 QualityLevel  = t.QualityLevel,
                 AssignedNpcId = t.AssignedNpcId.ToString(),
                 CreatedTick   = t.CreatedTick,
-                IsOverdue     = e.Has<OverdueTag>(),
             };
         }).ToList();
     }
@@ -346,13 +334,12 @@ public static class SaveProjector
             {
                 Id               = e.Id.ToString(),
                 PosX             = pos.X,
-                PosY             = pos.Y,
                 PosZ             = pos.Z,
                 Source           = s.Source,
                 Magnitude        = s.Magnitude,
                 CreatedAtTick    = s.CreatedAtTick,
                 ChronicleEntryId = s.ChronicleEntryId,
-                FallRiskLevel    = e.Has<FallRiskComponent>() ? e.Get<FallRiskComponent>().RiskLevel : null,
+                FallRisk         = e.Has<FallRiskComponent>() ? e.Get<FallRiskComponent>().RiskLevel : null,
             };
         }).ToList();
     }
