@@ -1,5 +1,7 @@
 # WP-3.1.S.3 — Click-to-Inspect Popup Sandbox
 
+> **STATUS:** SHIPPED to staging 2026-04-30. Retained because pending packet `WP-3.1.S.3-INT` depends on this spec.
+
 > **Protocol:** Track 2 (visual sandbox) under `docs/UNITY-PACKET-PROTOCOL.md`.
 > **Position in sub-phase:** Fourth and final foundation sandbox packet. Establishes the click-reveals-data primitive on isolated geometry.
 
