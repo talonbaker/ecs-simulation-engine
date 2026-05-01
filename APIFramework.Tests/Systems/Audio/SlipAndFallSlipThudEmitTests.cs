@@ -8,6 +8,8 @@ using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.Audio;
 
 /// <summary>
@@ -39,7 +41,7 @@ public class SlipAndFallSlipThudEmitTests
         npc.Add(new NpcTag());
         npc.Add(new PositionComponent { X = 3f, Y = 0f, Z = 7f });
         npc.Add(new MovementComponent { Speed = 1f, SpeedModifier = 1.0f });
-        npc.Add(new LifeStateComponent { State = LifeState.Alive });
+        npc.Add(new LifeStateComponent { State = LS.Alive });
 
         // Create hazard at same tile
         var hazard = em.CreateEntity();

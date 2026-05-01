@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "0.1.0",
+  "objectMass": [
+    { "objectKind": "mug",          "massKg": 0.4,  "breakable": true,  "hitEnergyThreshold": 8.0,   "onBreak": "SpawnLiquidStain" },
+    { "objectKind": "stapler",      "massKg": 1.2,  "breakable": false, "hitEnergyThreshold": 0.0,   "onBreak": "Despawn" },
+    { "objectKind": "phone",        "massKg": 0.5,  "breakable": true,  "hitEnergyThreshold": 25.0,  "onBreak": "Despawn" },
+    { "objectKind": "chair",        "massKg": 10.0, "breakable": true,  "hitEnergyThreshold": 200.0, "onBreak": "SpawnDebris" },
+    { "objectKind": "wine-bottle",  "massKg": 1.4,  "breakable": true,  "hitEnergyThreshold": 6.0,   "onBreak": "SpawnLiquidStain" },
+    { "objectKind": "window-pane",  "massKg": 5.0,  "breakable": true,  "hitEnergyThreshold": 20.0,  "onBreak": "SpawnGlassShards" },
+    { "objectKind": "potted-plant", "massKg": 3.0,  "breakable": true,  "hitEnergyThreshold": 30.0,  "onBreak": "Despawn" }
+  ]
+}
