@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems.Movement;
@@ -20,15 +21,17 @@ public sealed class StepAsideSystem : ISystem
     private readonly EntityRoomMembership _rooms;
     private readonly int                  _stepAsideRadius;
     private readonly float                _stepAsideShift;
+    private readonly SoundTriggerBus?     _soundBus;
 
     private const float HeadOnCosThreshold = 0.866f; // cos(30°)
 
-    public StepAsideSystem(ISpatialIndex index, EntityRoomMembership rooms, MovementConfig cfg)
+    public StepAsideSystem(ISpatialIndex index, EntityRoomMembership rooms, MovementConfig cfg, SoundTriggerBus? soundBus = null)
     {
         _index           = index;
         _rooms           = rooms;
         _stepAsideRadius = (int)MathF.Ceiling(cfg.StepAsideRadius);
         _stepAsideShift  = cfg.StepAsideShift;
+        _soundBus        = soundBus;
     }
 
     public void Update(EntityManager em, float deltaTime)
@@ -96,6 +99,15 @@ public sealed class StepAsideSystem : ISystem
                 ApplyShift(entity, avx, avz, entity.Get<HandednessComponent>().Side);
                 // Apply perpendicular shift to B
                 ApplyShift(other,  bvx, bvz, other.Get<HandednessComponent>().Side);
+
+                // Emit ChairSqueak for each entity in the pair
+                if (_soundBus != null)
+                {
+                    var posAfterA = entity.Get<PositionComponent>();
+                    _soundBus.Emit(SoundTriggerKind.ChairSqueak, entity.Id, posAfterA.X, posAfterA.Z, 0.4f, 0L);
+                    var posAfterB = other.Get<PositionComponent>();
+                    _soundBus.Emit(SoundTriggerKind.ChairSqueak, other.Id, posAfterB.X, posAfterB.Z, 0.4f, 0L);
+                }
             }
         }
     }

@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Narrative;
 
 namespace APIFramework.Systems.LifeState;
@@ -31,19 +32,22 @@ public class ChokingDetectionSystem : ISystem
     private readonly SimulationClock _clock;
     private readonly ChokingConfig _cfg;
     private readonly EntityManager _em;
+    private readonly SoundTriggerBus? _soundBus;
 
     public ChokingDetectionSystem(
         LifeStateTransitionSystem transition,
         NarrativeEventBus narrative,
         SimulationClock clock,
         ChokingConfig cfg,
-        EntityManager em)
+        EntityManager em,
+        SoundTriggerBus? soundBus = null)
     {
         _transition = transition ?? throw new ArgumentNullException(nameof(transition));
         _narrative = narrative ?? throw new ArgumentNullException(nameof(narrative));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _cfg = cfg ?? throw new ArgumentNullException(nameof(cfg));
         _em = em ?? throw new ArgumentNullException(nameof(em));
+        _soundBus = soundBus;
     }
 
     public void Update(EntityManager em, float deltaTime)
@@ -99,7 +103,15 @@ public class ChokingDetectionSystem : ISystem
                 npc.Add(mood);
             }
 
-            // 3. Emit narrative BEFORE transition request (so subscribers see Alive at this instant)
+            // 3a. Emit choke sounds at onset
+            if (_soundBus != null)
+            {
+                var npcPos = npc.Has<PositionComponent>() ? npc.Get<PositionComponent>() : default;
+                _soundBus.Emit(SoundTriggerKind.Cough, npc.Id, npcPos.X, npcPos.Z, 0.6f, (long)_clock.TotalTime);
+                _soundBus.Emit(SoundTriggerKind.Gasp, npc.Id, npcPos.X, npcPos.Z, 0.7f, (long)_clock.TotalTime);
+            }
+
+            // 3b. Emit narrative BEFORE transition request (so subscribers see Alive at this instant)
             if (_cfg.EmitChokeStartedNarrative)
             {
                 var participants = FindParticipantsWithWitness(npc, em);

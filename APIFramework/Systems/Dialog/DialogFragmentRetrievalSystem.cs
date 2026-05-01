@@ -4,6 +4,7 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Spatial;
 
 namespace APIFramework.Systems.Dialog;
@@ -26,6 +27,7 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
     private readonly DialogCorpusService _corpus;
     private readonly ProximityEventBus   _bus;
     private readonly DialogConfig        _cfg;
+    private readonly SoundTriggerBus?    _soundBus;
 
     private long   _tick;
     private double _gameTimeSec;
@@ -34,12 +36,14 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
         PendingDialogQueue  queue,
         DialogCorpusService corpus,
         ProximityEventBus   bus,
-        DialogConfig        cfg)
+        DialogConfig        cfg,
+        SoundTriggerBus?    soundBus = null)
     {
-        _queue  = queue;
-        _corpus = corpus;
-        _bus    = bus;
-        _cfg    = cfg;
+        _queue    = queue;
+        _corpus   = corpus;
+        _bus      = bus;
+        _cfg      = cfg;
+        _soundBus = soundBus;
     }
 
     public void Update(EntityManager em, float deltaTime)
@@ -116,6 +120,20 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
             int speakerIntId = EntityIntId(speaker);
 
             _bus.RaiseSpokenFragment(new SpokenFragmentEvent(speaker, listener, best.Id, _tick));
+
+            // Emit SpeechFragment sound — intensity based on vocabulary register
+            if (_soundBus != null)
+            {
+                float speechIntensity = personality.VocabularyRegister switch
+                {
+                    VocabularyRegister.Crass  => 1.0f, // Loud
+                    VocabularyRegister.Folksy => 0.3f, // Quiet
+                    VocabularyRegister.Clipped => 0.3f, // Quiet
+                    _                         => 0.6f, // Normal
+                };
+                var speakerPos = speaker.Has<PositionComponent>() ? speaker.Get<PositionComponent>() : default;
+                _soundBus.Emit(SoundTriggerKind.SpeechFragment, speaker.Id, speakerPos.X, speakerPos.Z, speechIntensity, _tick);
+            }
 
             // Notify listener's RecognizedTicComponent
             if (listener.Has<RecognizedTicComponent>())

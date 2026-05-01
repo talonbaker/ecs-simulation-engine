@@ -4,6 +4,7 @@ using APIFramework.Bootstrap;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Systems;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Coupling;
 using APIFramework.Systems.Dialog;
 using APIFramework.Systems.Lighting;
@@ -110,6 +111,9 @@ public class SimulationBootstrapper
     /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
     public NarrativeEventBus NarrativeBus { get; }
 
+    /// <summary>Sound trigger bus. Subscribe to receive audio trigger events emitted each tick.</summary>
+    public SoundTriggerBus SoundBus { get; }
+
     // ── Chronicle services ────────────────────────────────────────────────────
 
     /// <summary>Global persistent narrative chronicle. Read by TelemetryProjector each tick.</summary>
@@ -211,6 +215,9 @@ public class SimulationBootstrapper
         // Narrative services
         NarrativeBus = new NarrativeEventBus();
 
+        // Sound trigger bus
+        SoundBus = new SoundTriggerBus();
+
         // Dialog services
         PendingDialogQueue = new PendingDialogQueue();
         var corpusPath = DialogCorpusService.FindCorpusFile(Config.Dialog.CorpusPath);
@@ -275,7 +282,7 @@ public class SimulationBootstrapper
 
         // Lighting — sun position, source state machines, aperture beams, room illumination,
         // then proximity events (which now see current illumination).
-        var lightSourceStates = new LightSourceStateSystem(Random, Config.Lighting);
+        var lightSourceStates = new LightSourceStateSystem(Random, Config.Lighting, Config.SoundTriggers, SoundBus);
         var apertureBeams     = new ApertureBeamSystem(SunState, Clock);
         Engine.AddSystem(new SunSystem(Clock, SunState, Config.Lighting),                           SystemPhase.Lighting);
         Engine.AddSystem(lightSourceStates,                                                          SystemPhase.Lighting);
@@ -318,7 +325,7 @@ public class SimulationBootstrapper
         Engine.AddSystem(new BladderFillSystem(),                                  SystemPhase.Physiology);
 
         // Condition — derive sensation tags from physiology values
-        Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition),  SystemPhase.Condition);
+        Engine.AddSystem(new BiologicalConditionSystem(sys.BiologicalCondition, SoundBus),  SystemPhase.Condition);
         // Schedule: resolve active block before ActionSelectionSystem reads it.
         Engine.AddSystem(new ScheduleSystem(Clock),                                SystemPhase.Condition);
 
@@ -348,7 +355,7 @@ public class SimulationBootstrapper
 
         // Transit — move content through the upper digestive pipeline
         Engine.AddSystem(new InteractionSystem(sys.Interaction),                  SystemPhase.Transit);
-        Engine.AddSystem(new EsophagusSystem(),                                   SystemPhase.Transit);
+        Engine.AddSystem(new EsophagusSystem(SoundBus),                           SystemPhase.Transit);
         Engine.AddSystem(new DigestionSystem(sys.Digestion),                      SystemPhase.Transit);
 
         // Elimination — lower digestive pipeline; intestines → colon/bladder → tags
@@ -363,8 +370,8 @@ public class SimulationBootstrapper
         // Movement quality pipeline (runs in World phase, in registration order)
         Engine.AddSystem(new PathfindingTriggerSystem(Pathfinding),                SystemPhase.World);
         Engine.AddSystem(new MovementSpeedModifierSystem(Config.Movement),         SystemPhase.World);
-        Engine.AddSystem(new StepAsideSystem(SpatialIndex, RoomMembership, Config.Movement), SystemPhase.World);
-        Engine.AddSystem(new MovementSystem(Random),                               SystemPhase.World);
+        Engine.AddSystem(new StepAsideSystem(SpatialIndex, RoomMembership, Config.Movement, SoundBus), SystemPhase.World);
+        Engine.AddSystem(new MovementSystem(Random, SoundBus),                     SystemPhase.World);
         Engine.AddSystem(new FacingSystem(ProximityBus),                           SystemPhase.World);
         Engine.AddSystem(new IdleMovementSystem(Random, Config.Movement),          SystemPhase.World);
 
@@ -383,7 +390,7 @@ public class SimulationBootstrapper
         if (CorpusService != null)
         {
             var decisionSys   = new DialogContextDecisionSystem(PendingDialogQueue, ProximityBus, Config.Dialog, Random);
-            var retrievalSys  = new DialogFragmentRetrievalSystem(PendingDialogQueue, CorpusService, ProximityBus, Config.Dialog);
+            var retrievalSys  = new DialogFragmentRetrievalSystem(PendingDialogQueue, CorpusService, ProximityBus, Config.Dialog, SoundBus);
             var calcifySys    = new DialogCalcifySystem(Config.Dialog);
             Engine.AddSystem(decisionSys,  SystemPhase.Dialog);
             Engine.AddSystem(retrievalSys, SystemPhase.Dialog);
@@ -405,7 +412,7 @@ public class SimulationBootstrapper
             new MaskCrackSystem(RoomMembership, NarrativeBus, Config.SocialMask),  SystemPhase.Cleanup);
 
         // Create a single LifeStateTransitionSystem instance for both choking and life-state management.
-        var lifeStateTransition = new LifeStateTransitionSystem(NarrativeBus, EntityManager, Clock, Config);
+        var lifeStateTransition = new LifeStateTransitionSystem(NarrativeBus, EntityManager, Clock, Config, SoundBus);
 
         // Choking detection — identifies choking conditions (bolus + distraction) and enqueues transition to Incapacitated.
         // Runs after EsophagusSystem (in Transit) so the bolus has had its chance to advance,
@@ -416,7 +423,8 @@ public class SimulationBootstrapper
                 NarrativeBus,
                 Clock,
                 Config.Choking,
-                EntityManager),
+                EntityManager,
+                SoundBus),
             SystemPhase.Cleanup);
 
         // Life state transitions — processes queued state changes (Alive→Incapacitated→Deceased);
@@ -437,7 +445,8 @@ public class SimulationBootstrapper
                 Clock,
                 Config,
                 lifeStateTransition,
-                Random),
+                Random,
+                SoundBus),
             SystemPhase.Cleanup);
 
         // Lockout detection — checks end-of-day reachability to exits and starvation status.

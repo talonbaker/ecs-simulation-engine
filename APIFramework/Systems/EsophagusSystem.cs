@@ -1,10 +1,18 @@
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 
 namespace APIFramework.Systems;
 
 public class EsophagusSystem : ISystem
 {
+    private readonly SoundTriggerBus? _soundBus;
+
+    public EsophagusSystem(SoundTriggerBus? soundBus = null)
+    {
+        _soundBus = soundBus;
+    }
+
     public void Update(EntityManager em, float deltaTime)
     {
         var entities = em.Query<EsophagusTransitComponent>().ToList();
@@ -31,6 +39,13 @@ public class EsophagusSystem : ISystem
                         // to be absorbed by DigestionSystem.
                         stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + liquid.VolumeMl, StomachComponent.MaxVolumeMl);
                         stomach.NutrientsQueued += liquid.Nutrients;
+
+                        // Emit Slurp when liquid arrives
+                        if (_soundBus != null)
+                        {
+                            var pos = consumer.Has<PositionComponent>() ? consumer.Get<PositionComponent>() : default;
+                            _soundBus.Emit(SoundTriggerKind.Slurp, consumer.Id, pos.X, pos.Z, 0.2f, 0L);
+                        }
                     }
                     else if (entity.Has<BolusComponent>())
                     {
@@ -40,6 +55,13 @@ public class EsophagusSystem : ISystem
                         // to be absorbed by DigestionSystem.
                         stomach.CurrentVolumeMl  = Math.Min(stomach.CurrentVolumeMl + bolus.Volume, StomachComponent.MaxVolumeMl);
                         stomach.NutrientsQueued += bolus.Nutrients;
+
+                        // Emit Chew when solid bolus arrives
+                        if (_soundBus != null)
+                        {
+                            var pos = consumer.Has<PositionComponent>() ? consumer.Get<PositionComponent>() : default;
+                            _soundBus.Emit(SoundTriggerKind.Chew, consumer.Id, pos.X, pos.Z, 0.15f, 0L);
+                        }
                     }
 
                     consumer.Add(stomach);

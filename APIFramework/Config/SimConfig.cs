@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using APIFramework.Components;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Coupling;
 
 namespace APIFramework.Config;
@@ -35,6 +36,7 @@ public class SimConfig
     public ChokingConfig          Choking         { get; set; } = new();
     public SlipAndFallConfig      SlipAndFall     { get; set; } = new();
     public LockoutConfig          Lockout         { get; set; } = new();
+    public SoundTriggerConfig     SoundTriggers   { get; set; } = new();
 
     // ── Loading ───────────────────────────────────────────────────────────────
 
