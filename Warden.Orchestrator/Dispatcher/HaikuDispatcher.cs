@@ -1,4 +1,5 @@
 using Warden.Contracts.Handshake;
+using Warden.Contracts.Telemetry;
 using Warden.Orchestrator.Batch;
 
 namespace Warden.Orchestrator.Dispatcher;
@@ -23,6 +24,8 @@ public sealed class HaikuDispatcher
     public Task<IReadOnlyList<HaikuResult>> RunAsync(
         string runId,
         IReadOnlyList<ScenarioBatch> batches,
-        CancellationToken ct)
-        => _scheduler.RunAsync(runId, batches, ct);
+        CancellationToken ct,
+        WorldStateDto? state          = null,
+        bool           spatialContext = false)
+        => _scheduler.RunAsync(runId, batches, ct, state, spatialContext);
 }

@@ -40,6 +40,7 @@
     "Do not add new archetypes."
   ],
   "needsHaikuValidation": true,
+  "spatialContext": true,
   "timeboxMinutes": 30,
   "workerBudgetUsd": 1.20
 }

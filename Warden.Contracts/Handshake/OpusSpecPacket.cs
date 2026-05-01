@@ -23,8 +23,9 @@ public sealed record OpusSpecPacket
     public double          WorkerBudgetUsd  { get; init; }
 
     // Optional
-    public List<string>?           NonGoals           { get; init; }
+    public List<string>?           NonGoals             { get; init; }
     public bool?                   NeedsHaikuValidation { get; init; }
+    public bool                    SpatialContext        { get; init; } = false;
 }
 
 public sealed record SpecInputs

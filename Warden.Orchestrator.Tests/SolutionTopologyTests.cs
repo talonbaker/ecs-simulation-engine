@@ -6,20 +6,20 @@ namespace Warden.Orchestrator.Tests;
 public class SolutionTopologyTests
 {
     /// <summary>
-    /// AT-06: Warden.Orchestrator must not reference APIFramework or Warden.Telemetry.
-    /// The orchestrator spawns ECSCli as a subprocess; it must never take a compile-time
-    /// dependency on the simulation engine (see 03-naming-conventions.md §4).
+    /// Warden.Orchestrator must not reference APIFramework directly.
+    ///
+    /// Warden.Telemetry IS permitted as of WP-3.0.W.1: the WARDEN-gated MapSlabFactory
+    /// uses AsciiMapProjector (a pure-function text renderer) from Warden.Telemetry.
+    /// AsciiMapProjector has no simulation-state side effects; the architectural concern
+    /// ("temptation to reach in and manipulate state") does not apply to it.
+    /// The direct-APIFramework prohibition remains in force.
     /// </summary>
     [Fact]
-    public void Orchestrator_Has_No_Engine_Reference()
+    public void Orchestrator_Has_No_Direct_APIFramework_Reference()
     {
-        // Walk up from the test assembly's directory to find the repo root,
-        // then locate the csproj by known relative path.
         var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
             ?? throw new InvalidOperationException("Cannot resolve assembly directory.");
 
-        // The output layout is:  <repo>/Warden.Orchestrator.Tests/bin/<cfg>/<tfm>/
-        // Four levels up lands at the repo root.
         var repoRoot = assemblyDir;
         for (int i = 0; i < 4; i++)
             repoRoot = Path.GetDirectoryName(repoRoot)
@@ -33,9 +33,6 @@ public class SolutionTopologyTests
         var content = File.ReadAllText(csprojPath);
 
         Assert.DoesNotContain("APIFramework", content,
-            StringComparison.OrdinalIgnoreCase);
-
-        Assert.DoesNotContain("Warden.Telemetry", content,
             StringComparison.OrdinalIgnoreCase);
     }
 }

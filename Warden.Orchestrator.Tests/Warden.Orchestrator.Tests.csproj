@@ -8,6 +8,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- WARDEN enables the #if WARDEN prompt-projection tests (MapSlabFactory, dispatcher injection). -->
+    <DefineConstants>$(DefineConstants);WARDEN</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

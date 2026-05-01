@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "0.1.0",
+  "specId": "spec-chore-validate",
+  "workerId": "sonnet-01",
+  "outcome": "ok",
+  "acceptanceTestResults": [
+    {
+      "id": "AT-01",
+      "passed": true,
+      "evidence": "Mock: chore-rotation NPCs reached target fixture glyphs within 60 game-seconds."
+    },
+    {
+      "id": "AT-02",
+      "passed": true,
+      "evidence": "Mock: no NPC traversed a wall tile during navigation."
+    },
+    {
+      "id": "AT-03",
+      "passed": true,
+      "evidence": "Mock: all inter-room transitions used door tiles."
+    },
+    {
+      "id": "AT-04",
+      "passed": true,
+      "evidence": "Mock: corridor tiles showed expected transit traffic patterns."
+    }
+  ],
+  "tokensUsed": {
+    "input": 4200,
+    "cachedRead": 48000,
+    "cacheWrite": 0,
+    "output": 1100
+  },
+  "scenarioBatch": {
+    "schemaVersion": "0.1.0",
+    "batchId": "batch-chore-validate",
+    "parentSpecId": "spec-chore-validate",
+    "scenarios": [
+      {
+        "scenarioId": "sc-06",
+        "seed": 201,
+        "durationGameSeconds": 60.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "npcCount", "op": ">=", "value": 1 }
+        ]
+      },
+      {
+        "scenarioId": "sc-07",
+        "seed": 202,
+        "durationGameSeconds": 60.0,
+        "assertions": [
+          { "id": "A-01", "kind": "at-end", "target": "npcCount", "op": ">=", "value": 1 }
+        ]
+      }
+    ]
+  }
+}

@@ -39,7 +39,7 @@ public class SlipAndFallSlipThudEmitTests
         npc.Add(new NpcTag());
         npc.Add(new PositionComponent { X = 3f, Y = 0f, Z = 7f });
         npc.Add(new MovementComponent { Speed = 1f, SpeedModifier = 1.0f });
-        npc.Add(new LifeStateComponent { State = LifeState.Alive });
+        npc.Add(new LifeStateComponent { State = APIFramework.Components.LifeState.Alive });
 
         // Create hazard at same tile
         var hazard = em.CreateEntity();

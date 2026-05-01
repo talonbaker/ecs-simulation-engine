@@ -10,7 +10,7 @@
     "inputs", "deliverables", "acceptanceTests", "nonGoals", "timeboxMinutes", "workerBudgetUsd"
   ],
   "properties": {
-    "schemaVersion":    { "type": "string", "const": "0.1.0" },
+    "schemaVersion":    { "type": "string", "enum": ["0.1.0", "0.1.1"] },
     "specId":           { "type": "string", "pattern": "^spec-[a-z0-9-]{1,48}$" },
     "missionId":        { "type": "string", "pattern": "^mission-[a-z0-9-]{1,48}$" },
     "title":            { "type": "string", "minLength": 1, "maxLength": 120 },
@@ -84,6 +84,12 @@
       "type": "boolean",
       "default": false,
       "description": "If true, Sonnet's Result must include a ScenarioBatch. If false, the mission is code-only."
+    },
+
+    "spatialContext": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, the orchestrator injects Stable/Volatile ASCII map slabs into the Sonnet and Haiku prompts (WP-3.0.W.1). Requires a WorldStateDto to be available at dispatch time."
     },
 
     "timeboxMinutes":  { "type": "integer", "minimum": 1, "maximum": 120, "description": "Orchestrator kills the job past this wall-clock limit." },

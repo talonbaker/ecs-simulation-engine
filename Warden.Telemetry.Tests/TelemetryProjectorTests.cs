@@ -73,7 +73,7 @@ public class TelemetryProjectorTests
     public void AT01_SchemaVersion_Is040()
     {
         var dto = Capture(MakeSim());
-        Assert.Equal("0.4.0", dto.SchemaVersion);
+        Assert.Equal("0.5.0", dto.SchemaVersion);
     }
 
     // ── AT-02: NPC social projection ─────────────────────────────────────────

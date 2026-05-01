@@ -4,8 +4,10 @@ using Warden.Anthropic;
 using Warden.Contracts;
 using Warden.Contracts.Handshake;
 using Warden.Contracts.SchemaValidation;
+using Warden.Contracts.Telemetry;
 using Warden.Orchestrator.Cache;
 using Warden.Orchestrator.Infrastructure;
+using Warden.Orchestrator.Prompts;
 // Disambiguate: Warden.Contracts.Handshake.TokenUsage vs Warden.Anthropic.TokenUsage
 using TokenUsage = Warden.Contracts.Handshake.TokenUsage;
 
@@ -63,7 +65,9 @@ public sealed class BatchScheduler
     public async Task<IReadOnlyList<HaikuResult>> RunAsync(
         string runId,
         IReadOnlyList<ScenarioBatch> batches,
-        CancellationToken ct)
+        CancellationToken ct,
+        WorldStateDto? state          = null,
+        bool           spatialContext = false)
     {
         // Step 1: Flatten — hard limit of 25 enforced here.
         // Each entry carries its parent BatchId so scenarios from different batches
@@ -96,13 +100,29 @@ public sealed class BatchScheduler
         // Step 3: Build one batch request (one entry per unique scenario).
         // custom_id is a composite "<batchId>::<scenarioId>" so Anthropic's result stream
         // can be parsed back to the correct ScenarioKey without any side-channel lookup.
+        IReadOnlyList<PromptSlab>? missionSlabs = null;
+        string? volatilePrefix = null;
+#if WARDEN
+        if (spatialContext && state is not null)
+        {
+            var (stable, volatile_) = MapSlabFactory.Build(state, isHaikuBatch: true);
+            missionSlabs  = [new PromptSlab("world-map-stable", stable.Text, stable.Cache)];
+            volatilePrefix = volatile_.Text + "\n\n";
+        }
+#endif
         var entries = uniquePairs
-            .Select(p => new BatchRequestEntry(
-                BuildCompositeId(p.BatchId, p.Scenario.ScenarioId),
-                _cache.BuildRequest(
-                    ModelId.HaikuV45,
-                    JsonSerializer.Serialize(p.Scenario, JsonOptions.Wire),
-                    expectedTotalLatency: TimeSpan.FromMinutes(30))))
+            .Select(p =>
+            {
+                var scenarioJson = JsonSerializer.Serialize(p.Scenario, JsonOptions.Wire);
+                var userTurn     = volatilePrefix is not null ? volatilePrefix + scenarioJson : scenarioJson;
+                return new BatchRequestEntry(
+                    BuildCompositeId(p.BatchId, p.Scenario.ScenarioId),
+                    _cache.BuildRequest(
+                        ModelId.HaikuV45,
+                        userTurn,
+                        missionSlabs,
+                        expectedTotalLatency: TimeSpan.FromMinutes(30)));
+            })
             .ToList();
 
         // Step 4: Submit

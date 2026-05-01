@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "0.1.0",
+  "specId": "spec-chore-validate",
+  "missionId": "mission-chore-validate",
+  "title": "Chore rotation spatial validation",
+  "rationale": "Validates that chore-rotation NPCs navigate to the correct room tiles using the ASCII floor plan as the spatial reference. Haiku asserts NPC positions against the stable map glyphs (M/F/S/T) to confirm route correctness.",
+  "inputs": {
+    "referenceFiles": [
+      "docs/c2-content/world-definitions/office-starter.json"
+    ]
+  },
+  "spatialContext": true,
+  "deliverables": [
+    {
+      "kind": "doc",
+      "path": "runs/chore-validate/report.md",
+      "description": "Per-scenario validation: NPC positions vs chore-target fixture glyphs, route correctness against stable ASCII map."
+    }
+  ],
+  "acceptanceTests": [
+    {
+      "id": "AT-01",
+      "assertion": "All chore-assigned NPCs are within 2 tiles of their target fixture glyph (M microwave, F fridge, S sink, T toilet) on the stable map within 60 game-seconds of assignment.",
+      "verification": "manual-review"
+    },
+    {
+      "id": "AT-02",
+      "assertion": "No NPC traverses a wall tile (inner wall ─ │ ┌ ┐ └ ┘ ┬ ┴ ├ ┤ ┼ or outer boundary ═ ║) during navigation.",
+      "verification": "manual-review"
+    },
+    {
+      "id": "AT-03",
+      "assertion": "NPCs use door tiles (· open, + closed) as transit points between rooms; no NPC path crosses a non-door wall position.",
+      "verification": "manual-review"
+    },
+    {
+      "id": "AT-04",
+      "assertion": "Corridor floor tiles (░) show expected NPC transit traffic; office floor tiles ( ) show expected idle/working positions.",
+      "verification": "manual-review"
+    }
+  ],
+  "nonGoals": [
+    "Do not validate non-chore NPC behaviours.",
+    "Do not generate new chore assignments.",
+    "Do not modify simulation config or source files."
+  ],
+  "needsHaikuValidation": true,
+  "timeboxMinutes": 30,
+  "workerBudgetUsd": 0.80
+}

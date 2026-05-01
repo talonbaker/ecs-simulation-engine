@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "0.1.0",
+  "scenarioId": "sc-06",
+  "parentBatchId": "batch-chore-validate",
+  "workerId": "haiku-01",
+  "outcome": "ok",
+  "assertionResults": [
+    { "id": "A-01", "passed": true, "observedValue": 3, "note": "Mock: NPC reached microwave tile within 45 game-seconds." }
+  ],
+  "tokensUsed": {
+    "input": 880,
+    "cachedRead": 19500,
+    "cacheWrite": 0,
+    "output": 210
+  }
+}

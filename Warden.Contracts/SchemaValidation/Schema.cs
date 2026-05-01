@@ -45,7 +45,7 @@ public enum Schema
 public static class SchemaVersions
 {
     public const string WorldState    = "0.5.0";
-    public const string OpusToSonnet  = "0.1.0";
+    public const string OpusToSonnet  = "0.1.1";
     public const string SonnetResult  = "0.1.0";
     public const string SonnetToHaiku = "0.1.0";
     public const string HaikuResult   = "0.1.0";

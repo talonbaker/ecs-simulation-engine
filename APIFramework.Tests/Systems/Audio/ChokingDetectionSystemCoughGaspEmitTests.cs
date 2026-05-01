@@ -44,7 +44,7 @@ public class ChokingDetectionSystemCoughGaspEmitTests
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
         npc.Add(new PositionComponent { X = 2f, Y = 0f, Z = 4f });
-        npc.Add(new LifeStateComponent { State = LifeState.Alive });
+        npc.Add(new LifeStateComponent { State = APIFramework.Components.LifeState.Alive });
         npc.Add(new MoodComponent());
 
         // EsophagusTransitComponent with large bolus target

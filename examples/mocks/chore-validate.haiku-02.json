@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "0.1.0",
+  "scenarioId": "sc-07",
+  "parentBatchId": "batch-chore-validate",
+  "workerId": "haiku-02",
+  "outcome": "ok",
+  "assertionResults": [
+    { "id": "A-01", "passed": true, "observedValue": 2, "note": "Mock: NPC reached fridge tile within 50 game-seconds." }
+  ],
+  "tokensUsed": {
+    "input": 860,
+    "cachedRead": 19500,
+    "cacheWrite": 0,
+    "output": 195
+  }
+}

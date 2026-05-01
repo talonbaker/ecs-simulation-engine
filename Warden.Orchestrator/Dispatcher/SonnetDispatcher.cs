@@ -5,8 +5,10 @@ using Warden.Anthropic;
 using Warden.Contracts;
 using Warden.Contracts.Handshake;
 using Warden.Contracts.SchemaValidation;
+using Warden.Contracts.Telemetry;
 using Warden.Orchestrator.Cache;
 using Warden.Orchestrator.Infrastructure;
+using Warden.Orchestrator.Prompts;
 using InlineOutcome = Warden.Orchestrator.Dispatcher.InlineReferenceFiles.Outcome;
 
 namespace Warden.Orchestrator.Dispatcher;
@@ -60,7 +62,8 @@ public sealed class SonnetDispatcher
         string            workerId,
         OpusSpecPacket    spec,
         bool              dryRun,
-        CancellationToken ct)
+        CancellationToken ct,
+        WorldStateDto?    state = null)
     {
         var specJson = JsonSerializer.Serialize(spec, JsonOptions.Wire);
 
@@ -90,7 +93,16 @@ public sealed class SonnetDispatcher
                 userTurnBody = inlineResult.InlinedBlock + specJson;
         }
 
-        var request = _cache.BuildRequest(ModelId.SonnetV46, userTurnBody);
+        IReadOnlyList<PromptSlab>? missionSlabs = null;
+#if WARDEN
+        if (spec.SpatialContext && state is not null)
+        {
+            var (stable, volatile_) = MapSlabFactory.Build(state);
+            missionSlabs  = [new PromptSlab("world-map-stable", stable.Text, stable.Cache)];
+            userTurnBody  = volatile_.Text + "\n\n" + userTurnBody;
+        }
+#endif
+        var request = _cache.BuildRequest(ModelId.SonnetV46, userTurnBody, missionSlabs);
 
         if (dryRun)
         {

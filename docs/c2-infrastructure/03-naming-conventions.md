@@ -111,10 +111,13 @@ Warden.Contracts       ── depends on nothing except System.Text.Json
 Warden.Telemetry       ── depends on APIFramework + Warden.Contracts
 Warden.Anthropic       ── depends on Warden.Contracts (for model ids + cost rates)
 Warden.Orchestrator    ── depends on Warden.Contracts + Warden.Anthropic
-                          NOT on Warden.Telemetry, NOT on APIFramework
+                          + Warden.Telemetry (#if WARDEN — ASCII map prompt injection)
+                          NOT on APIFramework directly
 ```
 
-**The orchestrator does not reference the simulation engine.** This is deliberate. The orchestrator's job is to spawn processes (ECSCli) and call an HTTP API. Giving it a compile-time handle on `APIFramework` would create a temptation to reach in and manipulate state directly — which would break determinism and the process-boundary story in `01-architecture-diagram.md`.
+**The orchestrator must not reference APIFramework directly.** Giving it a compile-time handle on `APIFramework` would create a temptation to reach in and manipulate simulation state directly — which would break determinism and the process-boundary story in `01-architecture-diagram.md`.
+
+`Warden.Telemetry` is permitted as of WP-3.0.W.1. `Warden.Telemetry.AsciiMap.AsciiMapProjector` is a pure-function text renderer with no simulation-state side effects. The WARDEN-gated `MapSlabFactory` in `Warden.Orchestrator.Prompts` uses it to inject ASCII floor-plan context into Sonnet/Haiku prompts. This does not give the orchestrator a handle on live simulation state.
 
 A Sonnet that wants to read live telemetry does so by running `ECSCli ai snapshot`, not by linking `APIFramework`.
 
