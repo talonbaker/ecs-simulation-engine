@@ -66,7 +66,7 @@ public class BuildModeDeterminismTests
         public Guid SpawnStructural(int tileX, int tileY)
         {
             _log.Add($"Spawn|{tileX}|{tileY}");
-            return Guid.NewGuid(); // new GUID each time — doesn't affect log comparison
+            return Guid.NewGuid();
         }
 
         public void MoveEntity(Guid entityId, int newTileX, int newTileY)

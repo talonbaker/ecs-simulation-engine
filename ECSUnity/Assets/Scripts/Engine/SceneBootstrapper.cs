@@ -59,7 +59,7 @@ public static class SceneBootstrapper
 
             // ── Camera + Light ────────────────────────────────────────────────
 
-            SetupCamera(host, configAsset);
+            // Camera setup removed in WP-3.1.S.0-INT — see CameraRig.prefab in MainScene.unity.
             SetupDirectionalLight();
 
             Debug.Log("[SceneBootstrapper] Scene bootstrapped: EngineHost + Renderers + Camera + Light.");
@@ -80,37 +80,6 @@ public static class SceneBootstrapper
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private static void SetupCamera(EngineHost host, SimConfigAsset configAsset)
-    {
-        Camera cam = Camera.main;
-
-        if (cam == null)
-        {
-            var go = new GameObject("Main Camera");
-            go.tag = "MainCamera";
-            cam    = go.AddComponent<Camera>();
-            go.AddComponent<AudioListener>();
-        }
-
-        cam.backgroundColor = new Color(0.08f, 0.08f, 0.10f);
-        cam.clearFlags      = CameraClearFlags.SolidColor;
-        cam.fieldOfView     = 60f;
-        cam.nearClipPlane   = 0.3f;
-        cam.farClipPlane    = 1000f;
-
-        // Add CameraController if not already present.
-        var controller = cam.gameObject.GetComponent<CameraController>()
-                      ?? cam.gameObject.AddComponent<CameraController>();
-
-        // Optionally wire the host so the controller can read HostConfig.
-        SetPrivateField(controller, "_engineHost", host);
-
-        // Position camera for office-starter layout (roughly 60x60 tile world).
-        // Start looking at the centre of the first floor at the default altitude.
-        var startFocus  = new UnityEngine.Vector3(30f, 0f, 20f);
-        SetPrivateField(controller, "_startFocusPoint", startFocus);
-    }
 
     private static void SetupDirectionalLight()
     {

@@ -118,6 +118,7 @@ public sealed class PickupController : MonoBehaviour
         int tileX = Mathf.RoundToInt(worldPos.x);
         int tileY = Mathf.RoundToInt(worldPos.z);
         _mutationApi.MoveEntity(entityId, tileX, tileY);
+
         return true;
     }
 

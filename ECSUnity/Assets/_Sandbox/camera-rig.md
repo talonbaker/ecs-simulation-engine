@@ -42,3 +42,25 @@ None — the scene already has CameraRig.prefab placed.
 - Grid not visible → ReferenceGrid script may show as missing (broken GUID).
   Delete the ReferenceGrid GameObject in the Hierarchy and drag
   Assets/_Sandbox/ReferenceGrid.cs onto a new empty GameObject.
+
+## Integration verification (after WP-3.1.S.0-INT)
+
+This step confirms the camera rig works in the live MainScene with the
+real engine.
+
+1. Open Assets/Scenes/MainScene.unity.
+2. Press Play. Engine ticks; rooms render; NPCs render as dots.
+3. Pan, rotate, zoom — same controls as the sandbox.
+4. Confirm the camera framing matches the sandbox feel — same altitudes,
+   same pan speed, same start focus point.
+5. Toggle wall fade by moving the camera close to a wall. Confirm walls
+   fade as expected (this proves _wallFadeController is wired).
+6. Confirm 60+ FPS with 30 NPCs (existing perf gate).
+
+If integration verification fails:
+- Camera doesn't move → CameraController._engineHost reference broken.
+  Re-wire in the Inspector.
+- Walls don't fade → CameraController._wallFadeController reference
+  broken. Re-wire.
+- Two cameras visible / "Two AudioListeners" warning → the old
+  Main Camera GameObject wasn't deleted. Delete it.
