@@ -824,6 +824,39 @@
     "exitNamedAnchorTag": "outdoor"
   },
 
+  // ── Chore rotation (WP-3.2.3) ────────────────────────────────────────────────
+  // ChoreAssignmentSystem / ChoreExecutionSystem tuning.
+  "chores": {
+    // Game hour at which ChoreAssignmentSystem assigns due chores. 18 = 6 PM.
+    "choreCheckHourOfDay":          18.0,
+    // Per-chore NextScheduledTick intervals (in engine CurrentTick units).
+    "frequencyTicks": {
+      "cleanMicrowave":           7200000,
+      "cleanFridge":              14400000,
+      "cleanBathroom":            3600000,
+      "takeOutTrash":             1440000,
+      "refillWaterCooler":        2880000,
+      "restockSupplyCloset":      28800000,
+      "replaceToner":             14400000
+    },
+    // Base weight of ChoreWork candidate in ActionSelectionSystem.
+    "choreActionBaseWeight":       0.35,
+    // NPC must perform same chore more than this many times in the window before overrotation fires.
+    "choreOverrotationThreshold":  3,
+    // Game-day window for overrotation counting.
+    "choreOverrotationWindowGameDays": 7,
+    // Acute stress gain per overrotation event (before neuroticism scaling).
+    "choreOverrotationStressGain": 1.5,
+    // CompletionLevel advance per game-second at full acceptance / no stress.
+    "choreCompletionRatePerSecond": 0.0001,
+    // Acceptance-bias below which the NPC silently refuses (no candidate emitted).
+    "minChoreAcceptanceBias":      0.20,
+    // Quality threshold below which ChoreBadlyDone narrative is emitted.
+    "badQualityThreshold":         0.40,
+    // Default bias for archetype/chore-kind combos absent from the JSON table.
+    "defaultAcceptanceBias":       0.50
+  },
+
   // ── Unity host (read by ECSUnity only; engine/CLI/Avalonia ignore this) ─────
   // These values configure the Unity-side host: FixedUpdate rate, camera, perf gate.
   // They extend SimConfig.json for discoverability but are NOT read by the engine.
