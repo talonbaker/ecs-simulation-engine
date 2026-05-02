@@ -535,7 +535,6 @@ GameObject:
   m_Component:
   - component: {fileID: 800000002}
   - component: {fileID: 800000003}
-  - component: {fileID: 800000004}
   m_Layer: 5
   m_Name: EventLog
   m_TagString: Untagged
@@ -572,19 +571,6 @@ MonoBehaviour:
   _host: {fileID: 100000003}
   _document: {fileID: 0}
   _iconCatalog: {fileID: 0}
-  _filters: {fileID: 800000004}
---- !u!114 &800000004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 800000001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 37e44ea60fb093540a13ac97af285c2a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
 --- !u!1 &900000001
 GameObject:
   m_ObjectHideFlags: 0
