@@ -126,17 +126,25 @@ public sealed class EngineHost : MonoBehaviour
             _projector = new WorldStateProjectorAdapter();
 
             // Produce an initial snapshot so renderers never see a null WorldState.
-            WorldState = _projector.Project(_bootstrapper, _tickCount);
-
             _alive = true;
 
-            int npcCount  = _bootstrapper.SpawnedNpcs?.Count ?? 0;
-            int totalEnts = _bootstrapper.EntityManager.Entities.Count;
+            int npcCount    = _bootstrapper.SpawnedNpcs?.Count ?? 0;
+            int totalEnts   = _bootstrapper.EntityManager.Entities.Count;
+            int metabCount  = System.Linq.Enumerable.Count(
+                                  _bootstrapper.EntityManager.Query<APIFramework.Components.MetabolismComponent>());
+            int wsEntCount  = WorldState?.Entities?.Count ?? -1;
+
             Debug.Log($"[EngineHost] Booted. " +
-                      $"Entities: {totalEnts} | NPCs: {npcCount} | " +
-                      $"World: {resolvedWorldPath ?? "defaults"} | " +
+                      $"Entities: {totalEnts} | NPCs(SpawnedNpcs): {npcCount} | " +
+                      $"MetabolismQuery: {metabCount} | " +
+                      $"WorldState.Entities: {wsEntCount} | " +
                       $"Catalog: {resolvedCatalogPath ?? "CWD-walk"} | " +
-                      $"Seed: {_seed} | FixedTimestep: {Time.fixedDeltaTime:F4}s");
+                      $"Seed: {_seed}");
+
+            // Re-project AFTER logging so WorldState is up-to-date for renderers.
+            WorldState = _projector.Project(_bootstrapper, _tickCount);
+            Debug.Log($"[EngineHost] Post-log WorldState.Entities: {WorldState?.Entities?.Count ?? -1}");
+
             if (npcCount == 0)
                 Debug.LogWarning("[EngineHost] 0 NPCs spawned. Check that archetypes.json " +
                                  "is in StreamingAssets and passes schema validation.");
