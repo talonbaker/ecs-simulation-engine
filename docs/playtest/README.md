@@ -9,13 +9,14 @@
 
 A continuous, structured manual-verification surface running in parallel with phase development. The xUnit suite verifies engine contracts. The Unity sandbox protocol verifies isolated visual primitives. **Neither can verify whether the integrated whole *feels* right** — and the 3.1.x bundle incident (eight packets compiled and tested clean against contracts, six follow-up fix commits required after Talon actually looked at the screen) is the cautionary tale.
 
-The Playtest Program addresses the gap with three artifacts:
+The Playtest Program addresses the gap with four artifacts:
 
 1. **A unified playable scene** (`Assets/Scenes/PlaytestScene.unity`) that exercises every shipped player-facing surface through normal play.
 2. **A WARDEN-only dev-console scenario menu** so Talon can trigger any death / rescue / chore / sound / build event on demand instead of waiting for organic occurrence.
 3. **A structured session-report flow** that captures observation, surfaces bugs in the canonical `BUG-NNN` shape (continuing from BUG-001 in `docs/known-bugs.md`), and feeds them into the existing dispatch flow.
+4. **A build-verification recipe** (`docs/playtest/BUILD-VERIFICATION-RECIPE.md`) that runs a RETAIL Standalone build outside the Editor and verifies SRD §8.7's host-agnostic + WARDEN-strip commitment. Added 2026-05-02 after the WP-PT.1 playtesting surfaced 960+ compile errors during a Standalone build attempt — exactly the kind of long-tail regression the parallel verification track is designed to catch.
 
-Sessions are **Talon-paced**. No calendar; no minimum cadence. Whenever Talon wants to play, he plays.
+Sessions are **Talon-paced**. No calendar; no minimum cadence. Whenever Talon wants to play, he plays. Build-verification is **periodic**: run before phase merges, after any packet that touches scripting defines / asmdefs / `#if WARDEN` boundaries, and at minimum once per phase wave.
 
 ---
 
@@ -128,6 +129,33 @@ The unified scene is designed to make every Phase 3 surface reachable. A session
 
 ---
 
+## Build verification (sibling recipe — runs separately from PT-NNN sessions)
+
+> Added 2026-05-02 in response to the discovery that Standalone Player builds were producing 960+ compile errors. The full recipe is in `docs/playtest/BUILD-VERIFICATION-RECIPE.md`.
+
+The Editor's Play mode always has WARDEN defined. It cannot detect **RETAIL strip drift** — the failure mode where `#if WARDEN`-gated code stops compiling-out cleanly when WARDEN is removed for a Standalone build. This is what bit Talon during WP-PT.1 testing.
+
+The **Build Verification Recipe** is the parallel-track answer: open Unity, switch target to Standalone, **remove WARDEN from the scripting defines**, build, run the .exe, verify the engine works without dev tooling, restore WARDEN, file failures as `BUG-NNN` (typically Critical given §8.7 is the violated axiom).
+
+**When to run it:**
+
+- Before any phase wave merges (`4.0.x → main`, `4.1.x → main`, etc.).
+- After any packet flagged `build-verified-by-recipe: YES` per Rule 7 of `UNITY-PACKET-PROTOCOL.md`.
+- Periodically as cumulative-drift hygiene — at minimum once per phase wave.
+- Whenever a Sonnet packet touches: `ProjectSettings.asset` (especially scripting defines), any `*.asmdef`, `#if WARDEN` blocks, the build's scene list, `Plugins/`, or adds `using UnityEditor;` to a runtime script.
+
+**When NOT to run it:**
+
+- Pure engine-internals packets (`APIFramework/` only, no Unity changes).
+- Pure doc / brief / spec packets.
+- Pure feel-tuning packets that change values without changing build configuration.
+
+PT-NNN feel sessions and build-verification runs are independent. A failed build-verification doesn't block a feel session (the Editor can still test feel even if the Player build is broken). A passing feel session doesn't validate ship-readiness without a passing build-verification run.
+
+**Cadence philosophy:** keep both lightweight. Don't gate every packet's merge on a 20-minute build run; reserve build verification for packets that actually risk RETAIL drift. The recipe's own §"When this recipe must be run" lists the mandatory triggers.
+
+---
+
 ## Cadence and integration with phase dispatch
 
 - **Sessions are Talon-paced.** No calendar.
@@ -142,13 +170,16 @@ The Unity Packet Protocol (`docs/UNITY-PACKET-PROTOCOL.md`) governs how Track 2 
 
 **Rule 6 of the Unity Packet Protocol** (added 2026-05-01) declares: when a packet's acceptance criteria contain feel-level claims — visual perception, motion perception, integrated-system behavior under sustained play — that packet must mark itself `feel-verified-by-playtest`. The flag does not gate merge (the playtest program is parallel). It declares that the next post-merge PT-NNN session evaluates the work and any bugs found feed the normal `BUG-NNN` intake.
 
-The two protocols compose:
+**Rule 7 of the Unity Packet Protocol** (added 2026-05-02) declares: when a packet touches scripting defines, asmdefs, `#if WARDEN` boundaries, scene build list, or `Plugins/`, that packet must mark itself `build-verified-by-recipe`. The flag means the **build-verification recipe** must be run against the merged result before that packet is considered fully accepted; failures file as `BUG-NNN` (typically Critical) and feed normal intake.
+
+The four verification surfaces compose:
 
 | Stage | Verifier | Failure surface |
 |---|---|---|
 | Contract correctness | xUnit | Logic bugs, transition errors, schema drift |
 | Visual primitive in isolation | Sandbox protocol — Talon's 5-minute recipe per `WP-3.1.S.NN` | Wiring, axis, scale, framing |
 | Integrated whole over time | Playtest program — PT-NNN session | Feel, cross-system interference, sustained-play emergent issues |
+| RETAIL ship-readiness | Build-verification recipe | Scripting-define drift, asmdef leakage, WARDEN-strip incorrectness, IL2CPP / reflection breakage |
 
 ---
 
@@ -168,6 +199,7 @@ docs/
   playtest/
     README.md                            ← this file
     PT-TEMPLATE.md                       ← canonical session-report template
+    BUILD-VERIFICATION-RECIPE.md         ← RETAIL Standalone build recipe (added 2026-05-02)
     PT-001-<slug>.md                     ← first session (post-WP-PT.0 merge)
     PT-002-<slug>.md
     ...

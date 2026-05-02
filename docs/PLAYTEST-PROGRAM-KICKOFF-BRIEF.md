@@ -346,6 +346,23 @@ Rationale: every primitive being composed has *already* shipped through the sand
 
 Going forward, any packet whose work involves visual output, motion, audio, or emergent gameplay surfaces will carry the flag. Pure engine-internals / schema-only / doc-only / algorithm-correctness packets carry NO. The trigger list is in Rule 6.
 
+### Calibration update (2026-05-02) — build-verification scoped into the program
+
+While playtesting WP-PT.1 (in progress), Talon ran a Standalone Player build outside the Editor. The build produced 960+ compile errors before it could even start — a regression against SRD §8.7 (host-agnostic engine; WARDEN strip clean) that nobody had been catching because the project's verification stack (xUnit, sandbox protocol, Editor Play mode) cannot detect RETAIL-strip drift. The Editor always has WARDEN defined; only a real Standalone build with WARDEN removed surfaces the failure mode.
+
+**Talon's call:** build-verification is in scope for the Playtest Program. It runs as a sibling recipe alongside PT-NNN feel sessions, with its own cadence and trigger list.
+
+**What shipped 2026-05-02:**
+
+- **`docs/playtest/BUILD-VERIFICATION-RECIPE.md`** — canonical recipe: switch target to Standalone, remove WARDEN from scripting defines, build, run the .exe, verify the engine works without dev tooling, restore WARDEN. ~15–25 minutes per run.
+- **`docs/playtest/README.md`** — added a "Build verification" section. The program now ships **four** artifacts (was three): playtest scene, scenario verbs, session report flow, and now build-verification recipe.
+- **`UNITY-PACKET-PROTOCOL.md`** — added **Rule 7**: packets touching scripting defines / asmdefs / `#if WARDEN` boundaries / scene build list / `Plugins/` declare `build-verified-by-recipe: YES`. Independent of Rule 6 (a packet can carry both flags).
+- **`_PACKET-COMPLETION-PROTOCOL.md`** Variant B — gained the matching `build-verified-by-recipe` acceptance footer.
+- **`BUG-002`** filed in `docs/known-bugs.md` — placeholder Critical entry for the 960-error regression. Pending error-log triage.
+- **`WP-FIX-BUG-002-retail-build-restore.md`** authored — Sonnet-dispatchable fix spec.
+
+**Scope clarification:** build-verification is **not** a per-session concern. PT-NNN sessions remain Editor-mode feel verification; build-verification is periodic (per phase wave + per Rule-7-flagged packet). The two surfaces share the program's bug ledger but run on independent cadences.
+
 ### Sessions — first move
 
 `PT-001` runs once `WP-PT.0` and `WP-PT.1` are both merged. Talon decides cadence; the program imposes none. The first-light recipe shipped with WP-PT.0 is the boot check; PT-001 is the first real session of the integrated whole.

@@ -133,6 +133,45 @@ If **none** of those is true — the packet is pure engine internals, schema-onl
 
 **See also:** `docs/playtest/README.md` for the program shape; `docs/c2-infrastructure/work-packets/_PACKET-COMPLETION-PROTOCOL.md` for how the flag interacts with the Variant B (Track 2) acceptance footer.
 
+### Rule 7 — RETAIL build correctness requires a build-verification recipe
+
+> **Authority:** Added 2026-05-02 in response to a discovery during WP-PT.1 playtesting that a Standalone Player build was producing 960+ compile errors. SRD §8.7 commits the engine to ship as RETAIL with `#if WARDEN`-gated code stripped clean. The Editor Play mode cannot detect when that strip is broken; only a real Standalone build can. See `docs/playtest/BUILD-VERIFICATION-RECIPE.md` for the canonical recipe.
+
+Some failure modes are invisible to xUnit, the sandbox 5-minute recipe, the PT-NNN feel session, and even the Editor's Play mode. They appear only when the project is built as a RETAIL Standalone target — i.e., with `WARDEN` removed from the scripting defines. Examples:
+
+- A non-`#if WARDEN`-guarded script references a WARDEN-only type. The reference compiles in the Editor (where WARDEN is defined). It fails to resolve in RETAIL — and cascades into hundreds of unrelated errors as dependent files fail to compile.
+- A test asmdef (`Tests/Edit/*.asmdef` or `Tests/Play/*.asmdef`) is configured with `Include Platforms` = `Any Platform` instead of restricted to `Editor`. The test code gets compiled into the Player build and fails because `nunit.framework` / `UnityEngine.TestTools` aren't shipped to Standalone.
+- A runtime script `using UnityEditor;` without an `#if UNITY_EDITOR` guard. The Editor doesn't notice; the Player build can't find the namespace.
+- IL2CPP code-stripping at `Managed Stripping Level >= Low` removes a reflection target that `SceneBootstrapper.cs` needs at runtime. Compiles clean; crashes at boot.
+- The build's scene list (`EditorBuildSettings.asset`) includes a `_Sandbox/*.unity` or `PlaytestScene.unity` that drags WARDEN-only dependencies into the build.
+
+These are **build-correctness** failures, not feel failures. The verification harness for them is the **Build Verification Recipe** at `docs/playtest/BUILD-VERIFICATION-RECIPE.md`: switch target to Standalone, **remove WARDEN from scripting defines**, build, run the .exe, verify the engine runs cleanly without dev tooling, restore WARDEN.
+
+**The rule:**
+
+A packet that touches any build-configuration surface listed below **must declare itself `build-verified-by-recipe`** in the packet header:
+
+```markdown
+**Build-verified-by-recipe:** YES
+**Why:** <which surface this packet touches — e.g., "adds new #if WARDEN files; modifies asmdef references">
+```
+
+Triggers (any one is sufficient):
+
+- The packet modifies `ProjectSettings/ProjectSettings.asset` (especially `scriptingDefineSymbols`).
+- The packet adds, removes, or modifies any `*.asmdef` file.
+- The packet introduces new `#if WARDEN` blocks or removes existing ones.
+- The packet adds files under `ECSUnity/Assets/Plugins/` or modifies plugin import settings.
+- The packet modifies the build's scene list (`EditorBuildSettings.asset`).
+- The packet adds new `using UnityEditor;` references in any runtime script under `Assets/Scripts/`.
+- The packet ships a new MonoBehaviour or runtime script that uses reflection on private fields (relevant to IL2CPP stripping).
+
+If **none** of those is true, the flag is `NO`. The recipe still runs periodically as phase-wave hygiene (see `docs/playtest/README.md`'s "When to run it" section), catching cumulative drift across packets that individually didn't trip the trigger.
+
+**Compatibility with Rule 6 (`feel-verified-by-playtest`):** the two flags are independent. A single packet can carry `feel-verified-by-playtest: YES` (visual primitive that needs feel evaluation) AND `build-verified-by-recipe: YES` (the same packet also touches asmdefs). Both verification surfaces run; both can produce bugs.
+
+**See also:** `docs/playtest/BUILD-VERIFICATION-RECIPE.md` for the recipe; `docs/c2-infrastructure/work-packets/_PACKET-COMPLETION-PROTOCOL.md` for how the flag appears in the Variant B (Track 2) acceptance footer.
+
 ---
 
 ## Naming and numbering

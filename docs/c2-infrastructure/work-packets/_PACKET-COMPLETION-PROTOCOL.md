@@ -185,6 +185,35 @@ If **NO**, the test recipe + xUnit are sufficient and no playtest session is owe
 
 The default for any Track 2 packet that ships visual output, motion, audio, or emergent gameplay is **YES**. Pure tooling / config / asset-import packets may declare NO with a sentence of justification.
 
+### Build-verified-by-recipe acceptance flag (when applicable)
+
+> Per Rule 7 of `docs/UNITY-PACKET-PROTOCOL.md`. Added 2026-05-02 after the WP-PT.1 playtesting surfaced 960+ compile errors during a Standalone Player build attempt. See `docs/playtest/BUILD-VERIFICATION-RECIPE.md` for the canonical recipe.
+
+The packet header **also** declares whether this packet touches any build-configuration surface that risks RETAIL-strip drift (SRD §8.7):
+
+```markdown
+**Build-verified-by-recipe:** YES | NO
+**Why:** <only when YES — which trigger this packet hits>
+```
+
+If **YES**, the post-merge build-verification recipe (`docs/playtest/BUILD-VERIFICATION-RECIPE.md`) must be run against the merged result before this packet is considered fully accepted. The flag does **not** gate this packet's merge into staging — but it does mean the next phase-wave merge (e.g., `4.0.x → main`) is gated on the recipe passing. Failures during the recipe file as `BUG-NNN` (typically Critical given §8.7's status as a load-bearing axiom) and feed normal intake.
+
+If **NO**, the recipe is not owed for this packet. (The recipe still runs periodically as phase-wave hygiene per the README.)
+
+**Triggers requiring YES** (any one is sufficient — the packet must declare YES):
+
+- Modifies `ProjectSettings/ProjectSettings.asset` (especially `scriptingDefineSymbols`).
+- Adds / removes / modifies any `*.asmdef` file.
+- Introduces or removes `#if WARDEN` blocks.
+- Adds files under `ECSUnity/Assets/Plugins/` or modifies plugin import settings.
+- Modifies the build's scene list (`EditorBuildSettings.asset`).
+- Adds new `using UnityEditor;` references in any runtime script.
+- Ships a new runtime script that uses reflection on private fields (relevant to IL2CPP stripping).
+
+**Independence from Rule 6:** the two flags are orthogonal. A packet can carry `feel-verified-by-playtest: YES` and `build-verified-by-recipe: YES` simultaneously. A typical Track 2 visual packet hits Rule 6 only; a packet that adds a new asmdef hits Rule 7 only; a packet that ships a new visualization with new plugin DLLs hits both.
+
+**Pure-engine (Track 1) packets:** these typically declare both flags `NO` because they don't touch the Unity build configuration. If a Track 1 packet does happen to add a `using UnityEditor;` (it shouldn't — the engine is host-agnostic per §8.7 — but if it does), the flag flips to YES.
+
 ### Cost envelope (1-5-25 Claude army)
 
 Target: **$0.50–$1.20** per packet wall-time on the orchestrator. Timebox is stated above in the packet header. If costs approach the upper bound without acceptance criteria nearing completion, **escalate to Talon** by stopping work and committing a `WP-X-blocker.md` note to the worktree explaining what burned the budget. Do not silently exceed the envelope.
