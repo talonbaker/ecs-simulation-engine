@@ -585,10 +585,9 @@ PlayerSettings:
   webGLCloseOnQuit: 0
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
-  scriptingDefineSymbols: {}
-  additionalCompilerArguments:
-    Standalone:
-    - WARDEN
+  scriptingDefineSymbols:
+    Standalone: WARDEN
+  additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
     Android: 0
