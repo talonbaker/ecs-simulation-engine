@@ -38,6 +38,12 @@ public sealed class DevConsolePanel : MonoBehaviour
     private int                           _cmdHistoryIdx = -1;
     private string                        _savedInput   = string.Empty;
 
+    // ── IMGUI fallback (used when _document is not assigned in the scene) ─────
+    private Vector2    _guiScrollPos;
+    private GUIStyle   _guiLabel;
+    private GUIStyle   _guiInput;
+    private Texture2D  _guiBg;
+
     // ── Services ──────────────────────────────────────────────────────────────
 
     private DevConsoleCommandDispatcher   _dispatcher;
@@ -384,6 +390,97 @@ public sealed class DevConsolePanel : MonoBehaviour
         var ctx = _dispatcher.Context ?? new DevCommandContext();
         ctx.MutationApi = api;
         _dispatcher.SetContext(ctx);
+    }
+
+    // ── IMGUI fallback ────────────────────────────────────────────────────────
+    // Activates only when _document is not wired in the scene. Provides the
+    // same command surface with a plain IMGUI panel so the console works
+    // without a UIDocument / PanelSettings asset.
+
+    private void OnGUI()
+    {
+        if (!_isVisible || _document != null) return;
+
+        // Lazy-init styles.
+        if (_guiLabel == null)
+        {
+            _guiLabel = new GUIStyle(GUI.skin.label) { richText = true, wordWrap = false };
+            _guiLabel.normal.textColor = new Color(0.87f, 0.87f, 0.87f);
+
+            _guiInput = new GUIStyle(GUI.skin.textField);
+            _guiInput.normal.textColor  = Color.white;
+            _guiInput.focused.textColor = Color.white;
+
+            _guiBg        = new Texture2D(1, 1);
+            _guiBg.SetPixel(0, 0, new Color(0.067f, 0.067f, 0.094f, 0.96f));
+            _guiBg.Apply();
+        }
+
+        float panelH  = Screen.height * (_config?.PanelHeightFraction ?? 0.45f);
+        float panelY  = Screen.height - panelH;
+        var   panel   = new Rect(0, panelY, Screen.width, panelH);
+
+        // Dark background.
+        GUI.DrawTexture(panel, _guiBg);
+
+        GUILayout.BeginArea(panel);
+
+        // Title bar.
+        GUILayout.Label(
+            "<color=#777788>WARDEN CONSOLE  ~: close | Enter: submit | ↑↓: history</color>",
+            _guiLabel);
+
+        // History scroll view.
+        const float kInputRowH = 28f;
+        const float kTitleH    = 22f;
+        _guiScrollPos = GUILayout.BeginScrollView(
+            _guiScrollPos,
+            GUILayout.Height(panelH - kTitleH - kInputRowH - 4f));
+
+        foreach (var entry in _history)
+        {
+            string hex = DevConsoleColorPalette.ToHex(DevConsoleColorPalette.FromKind(entry.Kind));
+            GUILayout.Label($"<color={hex}>{entry.Text}</color>", _guiLabel);
+        }
+        GUILayout.EndScrollView();
+
+        // Input row.
+        GUILayout.BeginHorizontal(GUILayout.Height(kInputRowH));
+        GUILayout.Label("<color=#3CB371>></color>", _guiLabel, GUILayout.Width(18));
+        GUI.SetNextControlName("warden-console-input");
+        _savedInput = GUILayout.TextField(_savedInput ?? string.Empty, _guiInput);
+
+        if (Event.current.type == EventType.KeyDown)
+        {
+            switch (Event.current.keyCode)
+            {
+                case KeyCode.Return:
+                case KeyCode.KeypadEnter:
+                    if (!string.IsNullOrWhiteSpace(_savedInput))
+                    {
+                        string toSubmit = _savedInput;
+                        _savedInput     = string.Empty;
+                        SubmitCommand(toSubmit);
+                        _guiScrollPos.y = float.MaxValue;
+                    }
+                    Event.current.Use();
+                    break;
+
+                case KeyCode.UpArrow:
+                    NavigateHistoryUp();
+                    Event.current.Use();
+                    break;
+
+                case KeyCode.DownArrow:
+                    NavigateHistoryDown();
+                    Event.current.Use();
+                    break;
+            }
+        }
+        GUILayout.EndHorizontal();
+        GUILayout.EndArea();
+
+        GUI.FocusControl("warden-console-input");
     }
 }
 
