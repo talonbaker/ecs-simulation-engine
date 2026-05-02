@@ -1,0 +1,341 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypes": [
+    {
+      "id": "the-vent",
+      "displayName": "The Vent",
+      "chronicallyElevatedDrives": ["belonging", "irritation"],
+      "chronicallyDepressedDrives": [],
+      "personalityRanges": {
+        "extraversion": [0, 2],
+        "neuroticism":  [0, 2],
+        "agreeableness": [-1, 1]
+      },
+      "vocabularyRegister": "casual",
+      "willpowerBaselineRange": [30, 55],
+      "dealOptions": [
+        "Eats lunch at her desk while stress-reading celebrity gossip.",
+        "Has a passive-aggressive sticky-note war with someone in accounting.",
+        "Keeps a printed photo of her dog on her monitor. The dog is her only real confidant.",
+        "Compulsively refills her coffee mug every forty minutes even when it is still full.",
+        "Has complained about the parking lot sign more than any other employee."
+      ],
+      "silhouetteFamily": {
+        "heights":          ["short", "average"],
+        "builds":           ["average", "stocky"],
+        "hair":             ["medium", "long", "distinctive"],
+        "headwear":         ["none", "glasses"],
+        "dominantColors":   ["burgundy", "teal", "purple", "brown"],
+        "distinctiveItems": ["coffee-mug", "lanyard", "clipboard"]
+      },
+      "starterInhibitions": [
+        { "class": "publicEmotion",  "strengthRange": [5,  20], "awareness": "hidden"  },
+        { "class": "vulnerability",  "strengthRange": [40, 65], "awareness": "hidden"  }
+      ]
+    },
+
+    {
+      "id": "the-hermit",
+      "displayName": "The Hermit",
+      "chronicallyElevatedDrives": ["loneliness"],
+      "chronicallyDepressedDrives": ["trust"],
+      "personalityRanges": {
+        "extraversion":  [-2, -1],
+        "openness":      [0,   2],
+        "agreeableness": [-2, -1]
+      },
+      "vocabularyRegister": "clipped",
+      "willpowerBaselineRange": [45, 65],
+      "dealOptions": [
+        "Has been maintaining a private server since 1997 and refuses to explain what it does.",
+        "Eats the same sandwich every day. Nobody knows who makes it.",
+        "Has a cactus on their desk that outlived three office plants that coworkers tried to give them.",
+        "Knows the office building's full electrical layout from memory.",
+        "Has never attended a single office birthday party. Not even their own."
+      ],
+      "silhouetteFamily": {
+        "heights":          ["short", "average"],
+        "builds":           ["slight", "average"],
+        "hair":             ["short", "bald", "medium"],
+        "headwear":         ["none", "glasses"],
+        "dominantColors":   ["grey", "navy", "black", "olive"],
+        "distinctiveItems": ["phone-glued-to-ear", "lanyard"]
+      },
+      "starterInhibitions": [
+        { "class": "vulnerability",     "strengthRange": [70, 90], "awareness": "hidden" },
+        { "class": "physicalIntimacy",  "strengthRange": [60, 80], "awareness": "hidden" }
+      ]
+    },
+
+    {
+      "id": "the-climber",
+      "displayName": "The Climber",
+      "chronicallyElevatedDrives": ["status"],
+      "chronicallyDepressedDrives": [],
+      "personalityRanges": {
+        "conscientiousness": [1,  2],
+        "agreeableness":     [0,  2],
+        "extraversion":      [0,  2],
+        "neuroticism":       [-1, 1]
+      },
+      "vocabularyRegister": "formal",
+      "willpowerBaselineRange": [60, 80],
+      "dealOptions": [
+        "Is networking with someone two rungs above their pay grade. Nobody knows why yet.",
+        "Takes notes in every meeting even if the meeting is about birthday cake.",
+        "Has already updated their LinkedIn twice this year despite not looking for jobs.",
+        "Arrives exactly fifteen minutes early to every meeting.",
+        "Keeps a 'wins' folder of every positive email they've ever received."
+      ],
+      "silhouetteFamily": {
+        "heights":          ["average", "tall"],
+        "builds":           ["average", "slight"],
+        "hair":             ["short", "medium"],
+        "headwear":         ["none", "glasses"],
+        "dominantColors":   ["navy", "charcoal", "white", "light-grey"],
+        "distinctiveItems": ["clipboard", "always-carrying-a-folder", "lanyard"]
+      },
+      "starterInhibitions": [
+        { "class": "publicEmotion", "strengthRange": [70, 90], "awareness": "known"  },
+        { "class": "infidelity",    "strengthRange": [10, 30], "awareness": "hidden" }
+      ]
+    },
+
+    {
+      "id": "the-cynic",
+      "displayName": "The Cynic",
+      "chronicallyElevatedDrives": [],
+      "chronicallyDepressedDrives": ["belonging", "status", "affection"],
+      "personalityRanges": {
+        "agreeableness": [-2, 0],
+        "neuroticism":   [-2, 0],
+        "conscientiousness": [-1, 1]
+      },
+      "vocabularyRegister": "clipped",
+      "willpowerBaselineRange": [70, 90],
+      "dealOptions": [
+        "Has been here longer than the current CEO has been alive.",
+        "Brings the best snacks to every meeting but acts like they don't care if anyone eats them.",
+        "Keeps a tally of how many times someone has said 'synergy' this quarter.",
+        "Has a copy of the original employee handbook from 1987 and refers to it ironically.",
+        "Is secretly mentoring someone without either of them admitting it."
+      ],
+      "silhouetteFamily": {
+        "heights":          ["short", "average", "tall"],
+        "builds":           ["average", "stocky"],
+        "hair":             ["short", "bald", "medium"],
+        "headwear":         ["none", "glasses"],
+        "dominantColors":   ["grey", "brown", "navy", "black"],
+        "distinctiveItems": ["coffee-mug", "always-carrying-a-folder"]
+      },
+      "starterInhibitions": [
+        { "class": "confrontation", "strengthRange": [10, 25], "awareness": "known" }
+      ]
+    },
+
+    {
+      "id": "the-newbie",
+      "displayName": "The Newbie",
+      "chronicallyElevatedDrives": [],
+      "chronicallyDepressedDrives": [],
+      "personalityRanges": {
+        "agreeableness":     [1,  2],
+        "conscientiousness": [-1, 0],
+        "openness":          [0,  2]
+      },
+      "vocabularyRegister": "casual",
+      "willpowerBaselineRange": [15, 35],
+      "dealOptions": [
+        "Still uses the employee handbook as a literal guide to expected behavior.",
+        "Sends follow-up emails within four minutes of any verbal conversation.",
+        "Has introduced themselves to the same person three times because they keep forgetting.",
+        "Brought homemade cookies on their second day. Nobody told them not to.",
+        "Has already found the one coworker who will explain everything and is over-relying on them."
+      ],
+      "silhouetteFamily": {
+        "heights":          ["short", "average"],
+        "builds":           ["slight", "average"],
+        "hair":             ["short", "medium", "long"],
+        "headwear":         ["none", "glasses"],
+        "dominantColors":   ["blue", "green", "yellow", "red"],
+        "distinctiveItems": ["lanyard", "clipboard"]
+      },
+      "starterInhibitions": [
+        { "class": "vulnerability",  "strengthRange": [40, 70], "awareness": "hidden" },
+        { "class": "confrontation",  "strengthRange": [50, 70], "awareness": "known"  }
+      ]
+    },
+
+    {
+      "id": "the-old-hand",
+      "displayName": "The Old Hand",
+      "chronicallyElevatedDrives": [],
+      "chronicallyDepressedDrives": [],
+      "personalityRanges": {
+        "neuroticism":       [-2, 0],
+        "conscientiousness": [1,  2],
+        "agreeableness":     [-1, 1]
+      },
+      "vocabularyRegister": "folksy",
+      "willpowerBaselineRange": [75, 95],
+      "dealOptions": [
+        "Remembers the layout of the building before the 2002 renovation. Refers to rooms by the old names.",
+        "Has a photo on their desk of themselves shaking hands with someone nobody can identify.",
+        "Eats lunch in their car. Has done this since 1998. Will do it until they retire.",
+        "Knows which copier is secretly broken and has never told anyone.",
+        "Fixed a long-standing process problem six years ago and nobody thanked them for it. They've moved on."
+      ],
+      "silhouetteFamily": {
+        "heights":          ["short", "average", "tall"],
+        "builds":           ["average", "stocky"],
+        "hair":             ["short", "bald", "medium"],
+        "headwear":         ["none", "glasses", "glasses+cap"],
+        "dominantColors":   ["khaki", "navy", "brown", "olive"],
+        "distinctiveItems": ["coffee-mug", "always-carrying-a-folder", "lanyard"]
+      },
+      "starterInhibitions": [
+        { "class": "publicEmotion", "strengthRange": [50, 70], "awareness": "hidden" }
+      ]
+    },
+
+    {
+      "id": "the-affair",
+      "displayName": "The Affair",
+      "chronicallyElevatedDrives": ["attraction"],
+      "chronicallyDepressedDrives": ["trust"],
+      "personalityRanges": {
+        "neuroticism":   [0,  2],
+        "agreeableness": [-1, 1],
+        "extraversion":  [-1, 1]
+      },
+      "vocabularyRegister": ["casual", "formal"],
+      "willpowerBaselineRange": [25, 50],
+      "dealOptions": [
+        "Uses two different phones and is overly casual about explaining why.",
+        "Leaves the office for 'calls' at the same time every Tuesday and Thursday.",
+        "Has told the same lie about their weekend plans to three different coworkers.",
+        "Is visibly calmer after receiving certain texts. Nobody has asked why.",
+        "Has a 'work friend' that nobody else has met."
+      ],
+      "silhouetteFamily": {
+        "heights":          ["short", "average", "tall"],
+        "builds":           ["slight", "average"],
+        "hair":             ["medium", "long", "short"],
+        "headwear":         ["none", "glasses"],
+        "dominantColors":   ["burgundy", "teal", "olive", "navy"],
+        "distinctiveItems": ["phone-glued-to-ear", "lanyard"]
+      },
+      "starterInhibitions": [
+        { "class": "infidelity",   "strengthRange": [10, 30], "awareness": "known"  },
+        { "class": "vulnerability","strengthRange": [70, 90], "awareness": "hidden" }
+      ],
+      "relationshipSpawnHints": {
+        "pattern": "activeAffair",
+        "targetArchetypePreferences": ["the-vent","the-climber","the-cynic","the-old-hand","the-recovering","the-crush"],
+        "isTarget": false
+      }
+    },
+
+    {
+      "id": "the-recovering",
+      "displayName": "The Recovering",
+      "chronicallyElevatedDrives": [],
+      "chronicallyDepressedDrives": [],
+      "personalityRanges": {
+        "conscientiousness": [0,  2],
+        "neuroticism":       [0,  2],
+        "agreeableness":     [-1, 1]
+      },
+      "vocabularyRegister": "formal",
+      "willpowerBaselineRange": [35, 55],
+      "dealOptions": [
+        "Keeps a sobriety chip in their desk drawer. It is not the first one.",
+        "Has a sponsor they call on smoke breaks even though they don't smoke anymore.",
+        "Their emergency contact has changed twice this year.",
+        "Takes a specific route through the office that avoids the supply closet.",
+        "Celebrates private anniversaries nobody else knows about."
+      ],
+      "silhouetteFamily": {
+        "heights":          ["short", "average", "tall"],
+        "builds":           ["slight", "average"],
+        "hair":             ["short", "medium"],
+        "headwear":         ["none", "glasses"],
+        "dominantColors":   ["grey", "white", "navy", "olive"],
+        "distinctiveItems": ["coffee-mug", "lanyard"]
+      },
+      "starterInhibitions": [
+        { "class": "vulnerability",  "strengthRange": [60, 80], "awareness": "hidden" },
+        { "class": "publicEmotion",  "strengthRange": [50, 70], "awareness": "hidden" },
+        { "class": "riskTaking",     "strengthRange": [30, 50], "awareness": "known"  }
+      ]
+    },
+
+    {
+      "id": "the-founders-nephew",
+      "displayName": "The Founder's Nephew",
+      "chronicallyElevatedDrives": [],
+      "chronicallyDepressedDrives": ["status", "affection"],
+      "personalityRanges": {
+        "conscientiousness": [-2, -1],
+        "agreeableness":     [-1,  1],
+        "openness":          [-1,  1]
+      },
+      "vocabularyRegister": "casual",
+      "willpowerBaselineRange": [45, 65],
+      "dealOptions": [
+        "Has a parking spot reserved under a name nobody recognizes. It is their uncle.",
+        "Once suggested a 'team synergy day' that cost $4,000 and achieved nothing. Still proud of it.",
+        "Leaves at 3pm every Friday. Nobody has ever said anything.",
+        "Has been 'working on a side project' for two years. It is a podcast that has never launched.",
+        "Receives packages at the office addressed to 'Mr. [Founder's Last Name]' and signs them."
+      ],
+      "silhouetteFamily": {
+        "heights":          ["average", "tall"],
+        "builds":           ["average", "stocky"],
+        "hair":             ["short", "medium"],
+        "headwear":         ["none", "cap"],
+        "dominantColors":   ["white", "light-grey", "blue", "tan"],
+        "distinctiveItems": ["coffee-mug", "phone-glued-to-ear"]
+      },
+      "starterInhibitions": [
+        { "class": "riskTaking",             "strengthRange": [10, 20], "awareness": "known"  },
+        { "class": "interpersonalConflict",  "strengthRange": [20, 40], "awareness": "hidden" }
+      ]
+    },
+
+    {
+      "id": "the-crush",
+      "displayName": "The Crush",
+      "chronicallyElevatedDrives": [],
+      "chronicallyDepressedDrives": [],
+      "personalityRanges": {
+        "agreeableness":     [0,  2],
+        "conscientiousness": [0,  2],
+        "extraversion":      [-1, 1]
+      },
+      "vocabularyRegister": "casual",
+      "willpowerBaselineRange": [40, 60],
+      "dealOptions": [
+        "Brings homemade cookies on Fridays without saying why.",
+        "Has a plant on their desk that looks suspiciously well-cared-for.",
+        "Laughs at everyone's jokes even when they are not funny.",
+        "Always has extra pens. Nobody knows where they come from.",
+        "Volunteers for every office task without being asked. Doesn't notice the pattern."
+      ],
+      "silhouetteFamily": {
+        "heights":          ["short", "average", "tall"],
+        "builds":           ["slight", "average"],
+        "hair":             ["medium", "long", "short", "distinctive"],
+        "headwear":         ["none", "glasses"],
+        "dominantColors":   ["blue", "green", "yellow", "red", "teal"],
+        "distinctiveItems": ["coffee-mug", "lanyard", "clipboard"]
+      },
+      "starterInhibitions": [],
+      "relationshipSpawnHints": {
+        "pattern": "secretCrush",
+        "targetArchetypePreferences": [],
+        "isTarget": true
+      }
+    }
+  ]
+}

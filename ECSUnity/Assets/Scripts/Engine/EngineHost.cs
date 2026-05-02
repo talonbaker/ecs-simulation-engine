@@ -109,15 +109,19 @@ public sealed class EngineHost : MonoBehaviour
 
         try
         {
-            string resolvedWorldPath = ResolveWorldPath(_worldDefinitionPath);
-            SimConfig config         = _configAsset.Config;
+            string resolvedWorldPath    = ResolveWorldPath(_worldDefinitionPath);
+            string resolvedCatalogPath  = ResolveWorldPath("archetypes.json");
+            string resolvedNamePoolPath = ResolveWorldPath("name-pool.json");
+            SimConfig config            = _configAsset.Config;
 
             // Construct the bootstrapper using IConfigProvider to keep the engine
             // decoupled from the filesystem. Unity supplies config via ScriptableObject.
             _bootstrapper = new SimulationBootstrapper(
-                configProvider:      new InMemoryConfigProvider(config),
-                seed:                _seed,
-                worldDefinitionPath: resolvedWorldPath);
+                configProvider:       new InMemoryConfigProvider(config),
+                seed:                 _seed,
+                worldDefinitionPath:  resolvedWorldPath,
+                archetypesCatalogPath: resolvedCatalogPath,
+                namePoolPath:         resolvedNamePoolPath);
 
             _projector = new WorldStateProjectorAdapter();
 

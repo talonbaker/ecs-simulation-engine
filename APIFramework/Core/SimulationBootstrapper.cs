@@ -268,7 +268,17 @@ public class SimulationBootstrapper
     /// via <see cref="WorldDefinitionLoader"/> and the cast is generated through
     /// <see cref="CastGenerator.SpawnAll"/>; <paramref name="humanCount"/> is ignored.
     /// </param>
-    public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null)
+    /// <param name="archetypesCatalogPath">
+    /// Optional absolute path to archetypes.json. When null, <see cref="ArchetypeCatalog.LoadDefault"/>
+    /// is used which walks up from CWD — works in tests but may fail in Unity where CWD
+    /// is the project folder. Pass <c>Application.streamingAssetsPath + "/archetypes.json"</c>
+    /// from EngineHost for reliable resolution.
+    /// </param>
+    /// <param name="namePoolPath">
+    /// Optional absolute path to name-pool.json. When null, <see cref="NamePoolLoader.LoadDefault"/>
+    /// is used; same Unity CWD caveat as <paramref name="archetypesCatalogPath"/>.
+    /// </param>
+    public SimulationBootstrapper(IConfigProvider configProvider, int humanCount = DefaultHumanCount, int seed = 0, string? worldDefinitionPath = null, string? archetypesCatalogPath = null, string? namePoolPath = null)
     {
         Config          = configProvider.GetConfig();
         EntityManager   = new EntityManager();
@@ -335,10 +345,15 @@ public class SimulationBootstrapper
             WorldLoadResult = WorldDefinitionLoader.LoadFromFile(worldDefinitionPath, EntityManager, Random);
             if (WorldLoadResult.NpcSlotCount > 0)
             {
-                var catalog = ArchetypeCatalog.LoadDefault();
+                var catalog = archetypesCatalogPath != null
+                    ? ArchetypeCatalog.LoadFromFile(archetypesCatalogPath)
+                    : ArchetypeCatalog.LoadDefault();
                 if (catalog != null)
                 {
-                    SpawnedNpcs       = CastGenerator.SpawnAll(catalog, EntityManager, Random, Config.CastGenerator);
+                    var namePool = namePoolPath != null
+                        ? NamePoolLoader.Load(namePoolPath)
+                        : NamePoolLoader.LoadDefault();
+                    SpawnedNpcs       = CastGenerator.SpawnAll(catalog, EntityManager, Random, Config.CastGenerator, namePool);
                     SeededRelationships = CastGenerator.SeedRelationships(SpawnedNpcs, catalog, EntityManager, Random, Config.CastGenerator);
                 }
             }
