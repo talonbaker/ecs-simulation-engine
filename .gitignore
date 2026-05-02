@@ -91,6 +91,14 @@ StyleCopReport.xml
 *_h.h
 *.ilk
 *.meta
+# Unity exception: Unity .meta files MUST be committed alongside their assets
+# or scene/prefab GUIDs become non-portable across checkouts. See BUG-003 for
+# the regression this rule caused (Sonnet fabricated GUIDs in PlaytestScene
+# because real meta files were silently ignored). The VS template's *.meta
+# is for VisualStudio C++ build metadata; the negation below restores Unity
+# meta files for the engine's Unity host.
+!ECSUnity/**/*.meta
+!UnityVisualizer/**/*.meta
 *.obj
 *.idb
 *.iobj
