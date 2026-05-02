@@ -1,0 +1,430 @@
+{
+  "schemaVersion": "0.1.0",
+  "worldId": "playtest-office",
+  "name": "The Office (Playtest Build)",
+  "seed": 20260101,
+
+  "floors": [
+    { "id": "floor-first", "name": "First Floor", "floorEnum": "first" }
+  ],
+
+  "rooms": [
+    {
+      "id": "cubicle-main",
+      "name": "Main Floor — Cubicle Area",
+      "category": "cubicleGrid",
+      "floorId": "floor-first",
+      "bounds": { "x": 0, "y": 0, "width": 20, "height": 14 },
+      "initialIllumination": { "ambientLevel": 70, "colorTemperatureK": 4000 },
+      "namedAnchorTag": "the-window",
+      "description": "Eight desks arranged in two rows. The window seat is contested every Monday. Someone has placed a plant on the shared printer.",
+      "smellTag": "stale-carpet"
+    },
+    {
+      "id": "managers-office",
+      "name": "Manager's Office",
+      "category": "managersOffice",
+      "floorId": "floor-first",
+      "bounds": { "x": 20, "y": 0, "width": 10, "height": 14 },
+      "initialIllumination": { "ambientLevel": 65, "colorTemperatureK": 3800 },
+      "namedAnchorTag": "the-managers-desk",
+      "description": "Candidate notification is delivered from this room. The door is always half-open. Nobody knocks.",
+      "smellTag": "air-freshener"
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "category": "breakroom",
+      "floorId": "floor-first",
+      "bounds": { "x": 0, "y": 14, "width": 12, "height": 8 },
+      "initialIllumination": { "ambientLevel": 58, "colorTemperatureK": 3900 },
+      "namedAnchorTag": "the-microwave",
+      "description": "The microwave has a smell older than three current employees. The fridge door seal is going. Nobody has reported this.",
+      "smellTag": "old-microwave",
+      "notesAttached": [
+        "PLEASE LABEL YOUR FOOD.",
+        "IF YOU COOK FISH IN THE MICROWAVE YOU WILL BE REPORTED TO HR."
+      ]
+    },
+    {
+      "id": "mens-bathroom",
+      "name": "Men's Bathroom",
+      "category": "bathroom",
+      "floorId": "floor-first",
+      "bounds": { "x": 12, "y": 14, "width": 6, "height": 8 },
+      "initialIllumination": { "ambientLevel": 72, "colorTemperatureK": 5000 },
+      "hasLockableDoor": true,
+      "lockComponent": "LockedInComponent",
+      "smellTag": "industrial-soap"
+    },
+    {
+      "id": "womens-bathroom",
+      "name": "Women's Bathroom",
+      "category": "bathroom",
+      "floorId": "floor-first",
+      "bounds": { "x": 18, "y": 14, "width": 6, "height": 8 },
+      "initialIllumination": { "ambientLevel": 72, "colorTemperatureK": 5000 },
+      "hasLockableDoor": true,
+      "lockComponent": "LockedInComponent",
+      "smellTag": "industrial-soap"
+    },
+    {
+      "id": "supply-closet",
+      "name": "Supply / Storage Closet",
+      "category": "supplyCloset",
+      "floorId": "floor-first",
+      "bounds": { "x": 24, "y": 14, "width": 6, "height": 8 },
+      "initialIllumination": { "ambientLevel": 45, "colorTemperatureK": 3500 },
+      "namedAnchorTag": "the-supply-closet",
+      "description": "Contains a printer from 2003 that technically still works. Nobody has tested this theory. The hazard ambient is real: the shelves are overloaded.",
+      "smellTag": "old-plastic"
+    }
+  ],
+
+  "lightSources": [
+    {
+      "id": "ls-main-floor-east",
+      "kind": "overheadFluorescent",
+      "state": "on",
+      "intensity": 72,
+      "colorTemperatureK": 4000,
+      "position": { "x": 6, "y": 4 },
+      "roomId": "cubicle-main"
+    },
+    {
+      "id": "ls-main-floor-west",
+      "kind": "overheadFluorescent",
+      "state": "on",
+      "intensity": 70,
+      "colorTemperatureK": 4000,
+      "position": { "x": 14, "y": 4 },
+      "roomId": "cubicle-main"
+    },
+    {
+      "id": "ls-main-floor-south",
+      "kind": "overheadFluorescent",
+      "state": "flickering",
+      "intensity": 65,
+      "colorTemperatureK": 4000,
+      "position": { "x": 10, "y": 10 },
+      "roomId": "cubicle-main"
+    },
+    {
+      "id": "ls-managers-office",
+      "kind": "deskLamp",
+      "state": "on",
+      "intensity": 65,
+      "colorTemperatureK": 3800,
+      "position": { "x": 25, "y": 5 },
+      "roomId": "managers-office"
+    },
+    {
+      "id": "ls-kitchen",
+      "kind": "breakroomStrip",
+      "state": "on",
+      "intensity": 58,
+      "colorTemperatureK": 3900,
+      "position": { "x": 6, "y": 18 },
+      "roomId": "kitchen"
+    },
+    {
+      "id": "ls-mens-bathroom",
+      "kind": "overheadFluorescent",
+      "state": "on",
+      "intensity": 72,
+      "colorTemperatureK": 5000,
+      "position": { "x": 15, "y": 18 },
+      "roomId": "mens-bathroom"
+    },
+    {
+      "id": "ls-womens-bathroom",
+      "kind": "overheadFluorescent",
+      "state": "on",
+      "intensity": 72,
+      "colorTemperatureK": 5000,
+      "position": { "x": 21, "y": 18 },
+      "roomId": "womens-bathroom"
+    },
+    {
+      "id": "ls-supply-closet",
+      "kind": "overheadFluorescent",
+      "state": "on",
+      "intensity": 45,
+      "colorTemperatureK": 3500,
+      "position": { "x": 27, "y": 18 },
+      "roomId": "supply-closet"
+    }
+  ],
+
+  "lightApertures": [
+    {
+      "id": "ap-north-window",
+      "position": { "x": 10, "y": 0 },
+      "roomId": "cubicle-main",
+      "facing": "north",
+      "areaSqTiles": 5.0
+    }
+  ],
+
+  "npcSlots": [
+    {
+      "id": "slot-donna-vent",
+      "roomId": "cubicle-main",
+      "x": 2, "y": 3,
+      "archetypeHint": "the-vent",
+      "nameHint": "Donna"
+    },
+    {
+      "id": "slot-greg-hermit",
+      "roomId": "cubicle-main",
+      "x": 6, "y": 3,
+      "archetypeHint": "the-hermit",
+      "nameHint": "Greg"
+    },
+    {
+      "id": "slot-kevin-climber",
+      "roomId": "cubicle-main",
+      "x": 10, "y": 3,
+      "archetypeHint": "the-climber",
+      "nameHint": "Kevin"
+    },
+    {
+      "id": "slot-frank-cynic",
+      "roomId": "cubicle-main",
+      "x": 14, "y": 3,
+      "archetypeHint": "the-cynic",
+      "nameHint": "Frank"
+    },
+    {
+      "id": "slot-amy-newbie",
+      "roomId": "cubicle-main",
+      "x": 2, "y": 8,
+      "archetypeHint": "the-newbie",
+      "nameHint": "Amy"
+    },
+    {
+      "id": "slot-bob-oldhand",
+      "roomId": "cubicle-main",
+      "x": 6, "y": 8,
+      "archetypeHint": "the-old-hand",
+      "nameHint": "Bob"
+    },
+    {
+      "id": "slot-sandra-affair",
+      "roomId": "cubicle-main",
+      "x": 10, "y": 8,
+      "archetypeHint": "the-affair",
+      "nameHint": "Sandra"
+    },
+    {
+      "id": "slot-nick-recovering",
+      "roomId": "cubicle-main",
+      "x": 14, "y": 8,
+      "archetypeHint": "the-recovering",
+      "nameHint": "Nick"
+    },
+    {
+      "id": "slot-derek-nephew",
+      "roomId": "managers-office",
+      "x": 22, "y": 5,
+      "archetypeHint": "the-founders-nephew",
+      "nameHint": "Derek"
+    },
+    {
+      "id": "slot-tia-crush",
+      "roomId": "cubicle-main",
+      "x": 2, "y": 12,
+      "archetypeHint": "the-crush",
+      "nameHint": "Tia"
+    },
+    {
+      "id": "slot-karen-vent2",
+      "roomId": "cubicle-main",
+      "x": 6, "y": 12,
+      "archetypeHint": "the-vent",
+      "nameHint": "Karen"
+    },
+    {
+      "id": "slot-steve-climber2",
+      "roomId": "managers-office",
+      "x": 26, "y": 9,
+      "archetypeHint": "the-climber",
+      "nameHint": "Steve"
+    },
+    {
+      "id": "slot-raj-newbie2",
+      "roomId": "cubicle-main",
+      "x": 10, "y": 12,
+      "archetypeHint": "the-newbie",
+      "nameHint": "Raj"
+    },
+    {
+      "id": "slot-linda-cynic2",
+      "roomId": "kitchen",
+      "x": 4, "y": 16,
+      "archetypeHint": "the-cynic",
+      "nameHint": "Linda"
+    },
+    {
+      "id": "slot-maria-hermit2",
+      "roomId": "cubicle-main",
+      "x": 14, "y": 12,
+      "archetypeHint": "the-hermit",
+      "nameHint": "Maria"
+    }
+  ],
+
+  "objectsAtAnchors": [
+    {
+      "id": "obj-microwave",
+      "roomId": "kitchen",
+      "description": "A microwave with a rotating tray that stopped rotating in 2022. Someone scotch-taped a note inside: 'COVER YOUR FOOD.' Nobody covers their food.",
+      "physicalType": "microwave",
+      "physicalState": "present",
+      "x": 2, "y": 15,
+      "foodItems": ["leftover-pasta", "mystery-container", "forgotten-soup"]
+    },
+    {
+      "id": "obj-fridge",
+      "roomId": "kitchen",
+      "description": "The shared refrigerator. The door seal is failing. The bottom shelf hosts a Tupperware from an earlier era.",
+      "physicalType": "fridge",
+      "physicalState": "present-degraded",
+      "x": 4, "y": 15,
+      "foodItems": ["labeled-salad", "unlabeled-tupperware", "birthday-cake-slice", "someone-elses-yogurt"]
+    },
+    {
+      "id": "obj-stain-kitchen",
+      "roomId": "kitchen",
+      "description": "A coffee ring and something amber that nobody is willing to identify. Slip hazard.",
+      "physicalType": "stain",
+      "physicalState": "present",
+      "x": 7, "y": 16,
+      "hazardType": "slip"
+    },
+    {
+      "id": "obj-stain-bathroom-mens",
+      "roomId": "mens-bathroom",
+      "description": "Near the entrance. Cause unknown. Slip hazard.",
+      "physicalType": "stain",
+      "physicalState": "present",
+      "x": 13, "y": 15,
+      "hazardType": "slip"
+    },
+    {
+      "id": "obj-stain-main-aisle",
+      "roomId": "cubicle-main",
+      "description": "Main aisle between the desk rows. Looks like spilled coffee, probably from last Tuesday. Slip hazard.",
+      "physicalType": "stain",
+      "physicalState": "present",
+      "x": 9, "y": 6,
+      "hazardType": "slip"
+    },
+    {
+      "id": "obj-mug-donna",
+      "roomId": "cubicle-main",
+      "description": "Donna's ceramic mug. 'World's Okayest Employee.' Breakable.",
+      "physicalType": "prop",
+      "physicalState": "present",
+      "x": 2, "y": 3,
+      "hasBreakableComponent": true,
+      "breakThreshold": 0.4
+    },
+    {
+      "id": "obj-glass-kevin",
+      "roomId": "cubicle-main",
+      "description": "A glass of water on Kevin's desk. He refills it obsessively. Breakable.",
+      "physicalType": "prop",
+      "physicalState": "present",
+      "x": 10, "y": 3,
+      "hasBreakableComponent": true,
+      "breakThreshold": 0.3
+    },
+    {
+      "id": "obj-photo-frame-bob",
+      "roomId": "cubicle-main",
+      "description": "Bob's ceramic photo frame. His kids at a lake. Has survived seventeen years of this office. Breakable.",
+      "physicalType": "prop",
+      "physicalState": "present",
+      "x": 6, "y": 8,
+      "hasBreakableComponent": true,
+      "breakThreshold": 0.5
+    },
+    {
+      "id": "obj-monitor-cubicle-3",
+      "roomId": "cubicle-main",
+      "description": "An old CRT monitor still on a desk no one sits at. Fragile and heavy simultaneously. Breakable.",
+      "physicalType": "prop",
+      "physicalState": "present-degraded",
+      "x": 14, "y": 3,
+      "hasBreakableComponent": true,
+      "breakThreshold": 0.6
+    },
+    {
+      "id": "obj-plant-printer",
+      "roomId": "cubicle-main",
+      "description": "A potted plant balanced on the shared printer. Who put this here. Breakable if knocked.",
+      "physicalType": "prop",
+      "physicalState": "present",
+      "x": 16, "y": 5,
+      "hasBreakableComponent": true,
+      "breakThreshold": 0.35
+    },
+    {
+      "id": "obj-award-trophy",
+      "roomId": "managers-office",
+      "description": "An acrylic 'Regional Excellence' award from 2018. Nobody remembers what it was for. Breakable.",
+      "physicalType": "prop",
+      "physicalState": "present",
+      "x": 24, "y": 3,
+      "hasBreakableComponent": true,
+      "breakThreshold": 0.45
+    },
+    {
+      "id": "obj-mens-bathroom-door",
+      "roomId": "mens-bathroom",
+      "description": "Bathroom door. Lock sticks. Has accidentally locked someone in at least once.",
+      "physicalType": "door",
+      "physicalState": "present",
+      "x": 12, "y": 14,
+      "lockComponent": "LockedInComponent",
+      "lockEnabled": true
+    },
+    {
+      "id": "obj-womens-bathroom-door",
+      "roomId": "womens-bathroom",
+      "description": "Bathroom door. Lock was replaced last year after the incident. Still sticks.",
+      "physicalType": "door",
+      "physicalState": "present",
+      "x": 18, "y": 14,
+      "lockComponent": "LockedInComponent",
+      "lockEnabled": true
+    },
+    {
+      "id": "obj-supply-closet-old-printer",
+      "roomId": "supply-closet",
+      "description": "A printer from 2003. The ink dried out around 2009. Might still technically work. Nobody will test this.",
+      "physicalType": "prop",
+      "physicalState": "present-greatly-degraded"
+    },
+    {
+      "id": "obj-floppy-box",
+      "roomId": "supply-closet",
+      "description": "A box of 3.5-inch floppy disks labelled 'Q3 1998 BACKUPS — DO NOT ERASE.' Present since before living memory.",
+      "physicalType": "prop",
+      "physicalState": "present-degraded"
+    }
+  ],
+
+  "choreRotation": {
+    "weekCounter": 1,
+    "dayCounter": 1,
+    "chores": ["cleanMicrowave", "cleanFridge", "cleanBathroom", "takeOutTrash", "refillWaterCooler", "restockSupplyCloset", "replaceToner"],
+    "acceptanceBiasSource": "chore-archetype-acceptance-bias.json",
+    "donnaArchetypeOverride": {
+      "npcId": "slot-donna-vent",
+      "chore": "cleanMicrowave",
+      "biasOverride": 0.05
+    }
+  }
+}

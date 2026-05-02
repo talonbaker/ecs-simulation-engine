@@ -1,5 +1,7 @@
 # WP-PT.0 — Unified Playtest Scene
 
+> **STATUS:** SHIPPED to staging 2026-05-02. Retained because pending packets depend on this spec: WP-PT.1.
+
 **Track:** 2 (Unity)
 **Phase:** Playtest Program (parallel to phase development; see `docs/PLAYTEST-PROGRAM-KICKOFF-BRIEF.md`)
 **Author:** Opus, 2026-05-01
