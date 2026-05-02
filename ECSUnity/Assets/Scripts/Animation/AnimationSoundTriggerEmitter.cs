@@ -39,7 +39,7 @@ public sealed class AnimationSoundTriggerEmitter : MonoBehaviour
     private void Start()
     {
         if (_host != null)
-            _soundBus = _host.Engine?.SoundBus;
+            _soundBus = _host.SoundBus;
     }
 
     // ── Animation event callbacks ──────────────────────────────────────────────
@@ -58,7 +58,7 @@ public sealed class AnimationSoundTriggerEmitter : MonoBehaviour
         if (!Guid.TryParse(_instance.EntityId, out var entityId)) return;
 
         var pos  = _instance.transform.position;
-        long tick = _host?.Engine?.Clock?.CurrentTick ?? 0L;
+        long tick = _host?.Clock?.CurrentTick ?? 0L;
         emitFn(_soundBus, entityId, pos.x, pos.z, tick);
     }
 }

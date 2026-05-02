@@ -3,6 +3,7 @@ using System.IO;
 using UnityEngine;
 using APIFramework.Core;
 using APIFramework.Config;
+using APIFramework.Systems.Audio;
 using Warden.Contracts.Telemetry;
 
 /// <summary>
@@ -80,6 +81,9 @@ public sealed class EngineHost : MonoBehaviour
 
     /// <summary>Direct access to the SimulationClock. Use only in tests and diagnostics.</summary>
     public SimulationClock Clock => _bootstrapper?.Clock;
+
+    /// <summary>Direct access to the SoundTriggerBus. Use only from MonoBehaviours that need to emit sounds.</summary>
+    public SoundTriggerBus SoundBus => _bootstrapper?.SoundBus;
 
     /// <summary>Total engine ticks elapsed since boot.</summary>
     public long TickCount => _tickCount;
