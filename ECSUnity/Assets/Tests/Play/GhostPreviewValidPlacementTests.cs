@@ -122,4 +122,6 @@ public sealed class FakeWorldMutationApi : IWorldMutationApi
     public void AttachObstacle(Guid entityId)   { AttachObstacleCount++; }
     public void DetachObstacle(Guid entityId)   { DetachObstacleCount++; }
     public void ChangeRoomBounds(Guid roomId, APIFramework.Components.BoundsRect newBounds) { }
+    public void ThrowEntity(Guid entityId, float velocityX, float velocityZ, float velocityY, float decayPerTick) { }
+    public Guid SpawnStain(string templateId, int tileX, int tileY) => Guid.Empty;
 }

@@ -78,5 +78,7 @@ public class BuildModeDeterminismTests
         public void AttachObstacle(Guid entityId)            { _log.Add($"Attach|{entityId}"); }
         public void DetachObstacle(Guid entityId)            { _log.Add($"Detach|{entityId}"); }
         public void ChangeRoomBounds(Guid roomId, APIFramework.Components.BoundsRect b) { _log.Add($"Bounds|{roomId}"); }
+        public void ThrowEntity(Guid entityId, float velocityX, float velocityZ, float velocityY, float decayPerTick) { }
+        public Guid SpawnStain(string templateId, int tileX, int tileY) => Guid.Empty;
     }
 }
