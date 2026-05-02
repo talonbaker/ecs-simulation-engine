@@ -1,5 +1,7 @@
 # Playtest Program Kickoff Brief — for a Fresh Opus Chat
 
+> **Status:** Live as of 2026-05-01. Kickoff calibration decisions recorded in §"Calibration decisions (2026-05-01)" near the bottom of this document. The kickoff bundle (WP-PT.0 spec, WP-PT.1 spec, `docs/playtest/` program docs, `UNITY-PACKET-PROTOCOL.md` Rule 6, `_PACKET-COMPLETION-PROTOCOL.md` feel-flag amendment) shipped 2026-05-01 on branch `worktree-opus-playtest-kickoff`. Future Opus sessions read this brief end-to-end **and** the calibration decisions before authoring further `WP-PT.NN` packets.
+
 You are picking up a new ongoing track for the C2 (Command & Control) infrastructure project on the ECS Simulation Engine: a structured **Playtest Program** that runs in parallel with Phase 4 development. Phases 0–3 shipped 23 work packets producing a Unity-hosted, headless-engine-driven 2.5D office sim with a death substrate, rescue surface, build mode, save/load, sound triggers, rudimentary physics, chore rotation, and silhouette renderer with animation states. The 30-NPCs-at-60-FPS gate holds. xUnit verifies the engine. The sandbox protocol verifies isolated visual primitives. **Nothing yet verifies the integrated whole at human-perception level** — and Phase 3's 3.1.x bundle incident (eight Sonnet packets shipped clean against tests, six follow-up fix commits required after Talon actually looked at the screen) is the cautionary tale that motivates this program.
 
 This brief is your bootstrap context. You are not picking up a phase — phases are the linear development arc; the Playtest Program is **continuous and parallel**, an always-on quality surface that runs alongside whatever phase ships next. Read `docs/PHASE-3-HANDOFF.md` and `docs/PHASE-4-KICKOFF-BRIEF.md` first to understand the development arc this program complements.
@@ -290,3 +292,72 @@ For packets with hard wave dependencies (e.g., `WP-PT.1` depends on `WP-PT.0` sh
 Don't restate the architectural axioms. Don't propose changing the Phase 4 dispatch order. Don't redesign the bibles. Don't ask permission to start — Talon's invocation of you is the permission.
 
 The Playtest Program begins now.
+
+---
+
+## Calibration decisions (2026-05-01)
+
+> Recorded by the kickoff Opus + Talon at program start. Future Opus sessions treat the decisions below as binding unless Talon overrides them in a follow-up calibration pass.
+
+### Naming — confirmed
+
+- **Program name:** Playtest Program. (Alternatives considered and rejected: *Field Test Track*, *Living Build Sessions*, *Manual Verification Track*, *Dogfood*. Reasons in the kickoff Opus's first response.)
+- **Session reports:** `PT-NNN` at `docs/playtest/PT-NNN-<short-slug>.md`.
+- **Program work packets:** `WP-PT.NN` in `docs/c2-infrastructure/work-packets/` — parallel namespace to `WP-3.x.x` and `WP-4.x.x`.
+- **Bug entries:** `BUG-NNN` in `docs/known-bugs.md`, continuing from BUG-001.
+- **Bug-fix work packets:** `WP-FIX-BUG-NNN-<slug>`.
+- **Worktrees:** `.claude/worktrees/sonnet-wp-pt.NN/` per the existing dispatch protocol.
+
+### Scene location — option (a) chosen
+
+**New dedicated scene** at `ECSUnity/Assets/Scenes/PlaytestScene.unity`. MainScene is the production / phase-development scene; PlaytestScene is the verification surface. They evolve on separate clocks.
+
+Rationale (recorded in WP-PT.0's "Rationale for protocol exception" section):
+
+1. Sandbox Protocol Rule 3 forbids modifying live engine scenes without packet-level rationale; (a) doesn't need one (it creates a new scene; rationale is in the packet body).
+2. The playtest seeding profile is intentionally hostile — pre-seeded stains, biased chore rotations, faked bereavement histories. That profile actively contaminates Phase 4 development if it lives in MainScene.
+3. The MainScene `SceneBootstrapper.cs` reflection workaround is documented as transitional — keeping the scenes forked preserves a clean retirement path.
+
+The cost: a re-validation packet (`WP-PT.NN`) after every Phase 4 wave to keep PlaytestScene parity with whatever new surface MainScene gained (multi-floor, shader pipeline, etc.). Worth it.
+
+### First three packets — dispatch order
+
+| Order | ID | Author | Status as of 2026-05-01 |
+|---|---|---|---|
+| 1 | `WP-PT.0` — Unified PlaytestScene composition | Sonnet | **Spec shipped, awaiting dispatch.** |
+| 2 | `WP-PT.1` — WARDEN dev-console scenario verbs | Sonnet | **Spec shipped, gated on WP-PT.0 merge.** Header carries `DO NOT DISPATCH UNTIL WP-PT.0 IS MERGED`. |
+| — | (program docs + protocol amendments) | Opus directly | **Shipped 2026-05-01 on `worktree-opus-playtest-kickoff` branch.** Includes `docs/playtest/README.md`, `docs/playtest/PT-TEMPLATE.md`, `UNITY-PACKET-PROTOCOL.md` Rule 6, `_PACKET-COMPLETION-PROTOCOL.md` feel-verified-by-playtest flag. |
+
+Note: the original brief proposed `WP-PT.2` as a packet. The kickoff Opus authored the program docs directly without a packet (the "WP-PT.2" slot is unused). The audit trail is the kickoff commit + the docs themselves.
+
+### Single packet vs sub-phase for WP-PT.0 — single packet chosen
+
+WP-PT.0 ships as one Sonnet-dispatchable packet with a stricter-than-typical first-light recipe (every Phase 3 surface gets a 30-second-per-item check). Failures during Talon's pre-merge recipe are filed as `BUG-NNN` against the appropriate fix wave; they do not require Sonnet rework.
+
+Rationale: every primitive being composed has *already* shipped through the sandbox protocol or the 3.1.x scaffold + fixes. The composition surface is "wire validated prefabs together," not "build new visuals." Splitting into a `WP-PT.0.S.0…N` sub-phase would multiply dispatch overhead without proportional risk reduction. (If the first-light recipe reveals systematic failure, the right move is a fresh sub-phase replan — same shape as the 3.1.x do-over — not Sonnet iteration on this packet.)
+
+### Process amendment shipped — feel-verified-by-playtest acceptance flag
+
+> **This is the most important durable artifact of the kickoff.**
+
+`UNITY-PACKET-PROTOCOL.md` gained **Rule 6**: any packet whose acceptance criteria contain feel-level claims must mark itself `feel-verified-by-playtest: YES` and list the surfaces a future PT-NNN session will evaluate. The flag does not gate merge (the playtest program is parallel); it declares that the next post-merge session is the formal feel acceptance, with bugs feeding normal `BUG-NNN` intake.
+
+`_PACKET-COMPLETION-PROTOCOL.md` Variant B (Track 2) gained the matching acceptance footer — every Track 2 packet from now on declares the flag YES or NO with justification.
+
+Going forward, any packet whose work involves visual output, motion, audio, or emergent gameplay surfaces will carry the flag. Pure engine-internals / schema-only / doc-only / algorithm-correctness packets carry NO. The trigger list is in Rule 6.
+
+### Sessions — first move
+
+`PT-001` runs once `WP-PT.0` and `WP-PT.1` are both merged. Talon decides cadence; the program imposes none. The first-light recipe shipped with WP-PT.0 is the boot check; PT-001 is the first real session of the integrated whole.
+
+---
+
+## Reading order for future Opus sessions picking this up
+
+1. This brief (end to end), including the calibration decisions above.
+2. `docs/playtest/README.md` — the program's living operational doc.
+3. `docs/UNITY-PACKET-PROTOCOL.md` Rule 6 — the feel-verified-by-playtest contract.
+4. `docs/c2-infrastructure/work-packets/_PACKET-COMPLETION-PROTOCOL.md` — packet acceptance protocol with the feel-flag footer.
+5. `docs/c2-infrastructure/PHASE-3-HANDOFF.md` — what Phase 3 shipped (the surface the program exercises).
+6. Any open `WP-PT.NN-*.md` packet specs in `docs/c2-infrastructure/work-packets/`.
+7. Any open PT-NNN session reports in `docs/playtest/`.

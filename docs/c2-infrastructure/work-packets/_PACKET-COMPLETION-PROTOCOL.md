@@ -168,6 +168,23 @@ Talon's pipeline (after Sonnet's push):
 
 **The Sonnet executor must not push a packet without confirming the test recipe is achievable.** If the recipe is infeasible against what was actually built (e.g., a prefab couldn't be serialized correctly), stop and document in the worktree before pushing.
 
+### Feel-verified-by-playtest acceptance flag (when applicable)
+
+> Per Rule 6 of `docs/UNITY-PACKET-PROTOCOL.md`. Added 2026-05-01 with the Playtest Program kickoff.
+
+The packet header declares whether this packet has feel-level acceptance criteria:
+
+```markdown
+**Feel-verified-by-playtest:** YES | NO
+**Surfaces evaluated by next PT-NNN:** <list — only when YES>
+```
+
+If **YES**, the test recipe in this spec covers *first-light* (does it boot, does it not throw, does the basic primitive function?) — but the formal feel acceptance is the next post-merge `PT-NNN` session of the Playtest Program (see `docs/playtest/README.md`). The flag does **not** gate this packet's merge; it declares that a session is owed evaluation of this work, and that bugs surfacing in that session feed normal `BUG-NNN` intake referencing this packet.
+
+If **NO**, the test recipe + xUnit are sufficient and no playtest session is owed. (Reserve NO for packets whose acceptance is purely contract / first-light. If you find yourself writing acceptance criteria with "feels," "reads as," "doesn't stutter," etc., the answer is YES.)
+
+The default for any Track 2 packet that ships visual output, motion, audio, or emergent gameplay is **YES**. Pure tooling / config / asset-import packets may declare NO with a sentence of justification.
+
 ### Cost envelope (1-5-25 Claude army)
 
 Target: **$0.50–$1.20** per packet wall-time on the orchestrator. Timebox is stated above in the packet header. If costs approach the upper bound without acceptance criteria nearing completion, **escalate to Talon** by stopping work and committing a `WP-X-blocker.md` note to the worktree explaining what burned the budget. Do not silently exceed the envelope.

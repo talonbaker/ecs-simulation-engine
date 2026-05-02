@@ -87,6 +87,52 @@ Every `[SerializeField]` field that Talon will tune in the Inspector must be:
 
 This is what makes "tune the prefab in the Inspector" a 60-second operation instead of a "what does this float do" archaeology session.
 
+### Rule 6 — Feel-level work requires a playtest session, not just xUnit
+
+> **Authority:** Added 2026-05-01 as part of the Playtest Program kickoff. See `docs/playtest/README.md` for the program shape.
+
+Some packet acceptance criteria cannot be verified by `dotnet test`, by a sandbox 5-minute recipe, or by reading a JSON list. They depend on **how something feels when you move around inside it.** Examples:
+
+- A camera rig that "pans smoothly without overshoot" can pass its sandbox recipe and still feel sluggish at ×4 with 30 NPCs and active build mode.
+- A selection cue that "appears on click and disappears when something else is clicked" can pass its recipe and still feel mushy when the camera is rotating.
+- Chore rotation that "produces refusal cascade" can pass xUnit (the cascade fires) and still fail to read as Donna grumbling because the animation timing or the chibi-emotion popup is off.
+- A new pixel-art shader that "renders the scene correctly" can pass every contract test and still look wrong because the dithering reads as banding at ×1 but as moiré at ×16.
+- An audio synthesis change that "emits the correct sound trigger" can pass and still be jarring because the attenuation curve is wrong.
+
+These are **integrated-whole, human-perception** claims. The verification harness for them is a human in front of the integrated scene over sustained play — i.e., a session of the Playtest Program.
+
+**The rule:**
+
+A packet whose acceptance criteria contain feel-level claims **must declare itself `feel-verified-by-playtest`** in the packet header. Specifically, the packet header includes:
+
+```markdown
+**Feel-verified-by-playtest:** YES
+**Surfaces evaluated by next PT-NNN:** <list — e.g., "camera pan-and-rotate at ×4 under load; selection-cue lag during camera motion">
+```
+
+When this flag is YES:
+
+- xUnit and the sandbox 5-minute recipe still ship — they verify *contract* and *first-light*.
+- The **next post-merge `PT-NNN` session** evaluates the surfaces listed and is the formal feel acceptance.
+- The flag does **not** gate merge. The Playtest Program runs in parallel; phase dispatch is unaffected unless a Critical bug surfaces (per `docs/playtest/README.md`'s severity rubric).
+- The flag **does** mean the packet is not "fully accepted" until a session evaluates it. Bugs found in that session feed normal `BUG-NNN` intake; the originating packet is referenced in the bug's `Discovered in:` field.
+
+**Triggers — when does a packet need this flag?**
+
+If any of the following is true, the answer is YES:
+
+- The packet ships visual output the player will see (renderers, shaders, animation, lighting, UI).
+- The packet ships motion or input-response behavior (camera, selection, drag, build placement, scrolling).
+- The packet ships audio synthesis or trigger routing.
+- The packet ships emergent gameplay surfaces where "does it read?" matters (chore rotation, bereavement cascade, plague propagation, fire spread).
+- The packet's acceptance criteria contain language like "feels right," "reads as," "is satisfying," "is responsive," "doesn't jitter," "doesn't stutter," "looks correct," "matches the bible's tone."
+
+If **none** of those is true — the packet is pure engine internals, schema-only, doc-only, or an algorithm-correctness change — the flag is NO and xUnit alone is sufficient.
+
+**Anti-pattern: hiding feel claims behind contract assertions.** A packet that asserts `cameraSpeedDegPerSec >= 90` *implements* a contract for camera speed, but it does not *verify* that 90 deg/sec feels right. The contract assertion is necessary; it is not sufficient. The packet declares `feel-verified-by-playtest: YES` and lets the session decide whether 90 is the right number.
+
+**See also:** `docs/playtest/README.md` for the program shape; `docs/c2-infrastructure/work-packets/_PACKET-COMPLETION-PROTOCOL.md` for how the flag interacts with the Variant B (Track 2) acceptance footer.
+
 ---
 
 ## Naming and numbering
