@@ -316,46 +316,6 @@ public sealed class DevConsolePanel : MonoBehaviour
         }
     }
 
-    // ── IMGUI fallback ────────────────────────────────────────────────────────
-
-    private string _imguiInput = string.Empty;
-
-    private void OnGUI()
-    {
-        if (_root != null || !_isVisible) return;
-
-        float panelH = Screen.height * _config.PanelHeightFraction;
-        float y      = Screen.height - panelH;
-
-        // Dark background.
-        GUI.Box(new Rect(0, y, Screen.width, panelH), GUIContent.none);
-
-        // History lines.
-        float lineH  = 16f;
-        int   maxVis = Mathf.FloorToInt((panelH - 28f) / lineH);
-        int   start  = Mathf.Max(0, _history.Count - maxVis);
-        for (int i = start; i < _history.Count; i++)
-        {
-            Color prev = GUI.contentColor;
-            GUI.contentColor = DevConsoleColorPalette.FromKind(_history[i].Kind);
-            GUI.Label(new Rect(4f, y + (i - start) * lineH, Screen.width - 8f, lineH),
-                _history[i].Text);
-            GUI.contentColor = prev;
-        }
-
-        // Input field.
-        GUI.SetNextControlName("DevConsoleInput");
-        _imguiInput = GUI.TextField(
-            new Rect(0, Screen.height - 22f, Screen.width - 60f, 20f),
-            _imguiInput);
-
-        if (GUI.Button(new Rect(Screen.width - 58f, Screen.height - 22f, 56f, 20f), "Submit"))
-        {
-            SubmitCommand(_imguiInput);
-            _imguiInput = string.Empty;
-        }
-    }
-
     // ── Internal helpers ──────────────────────────────────────────────────────
 
     private void RefreshContext()
