@@ -56,6 +56,7 @@ public sealed record NpcSaveDto
 
     public IReadOnlyList<ScheduleBlockSaveDto>? ScheduleBlocks      { get; init; }
     public IReadOnlyList<string>?               EncounteredCorpseIds { get; init; }
+    public IReadOnlyList<string>?               Tags                 { get; init; }
 }
 
 public sealed record LifeStateSaveDto
@@ -174,6 +175,7 @@ public sealed record TaskSaveDto
     public float  QualityLevel  { get; init; }
     public string AssignedNpcId { get; init; } = string.Empty;
     public long   CreatedTick   { get; init; }
+    public bool   IsOverdue     { get; init; }
 }
 
 // ── Stain entity ──────────────────────────────────────────────────────────────

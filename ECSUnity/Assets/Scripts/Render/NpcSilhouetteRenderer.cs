@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using APIFramework.Components;
 using APIFramework.Core;
+using APIFramework.Systems.Animation;
 using UnityEngine;
 using Warden.Contracts.Telemetry;
 
@@ -204,68 +205,15 @@ public sealed class NpcSilhouetteRenderer : MonoBehaviour
     // ── Animation state resolution ─────────────────────────────────────────────
 
     /// <summary>
-    /// Maps ECS component data to an <see cref="NpcAnimationState"/> enum value.
-    ///
-    /// Priority order (highest wins):
-    ///   Dead > Panic (choke or panic >= 0.5) > Sleep (incapacitated or IsSleeping)
-    ///   > Talk (dialog intent) > Sit (work/linger at desk) > Walk (approach + moving)
-    ///   > Idle
+    /// Delegates to <see cref="AnimationStateResolver.Resolve"/> — all priority logic lives there
+    /// so it can be unit-tested without Unity. See that class for the full priority order.
     /// </summary>
-    private static NpcAnimationState DetermineAnimationState(
-        Entity          ecsEntity,
-        EntityStateDto  dto)
-    {
-        // ── 1. Dead ───────────────────────────────────────────────────────────
-        if (ecsEntity.Has<LifeStateComponent>())
-        {
-            var ls = ecsEntity.Get<LifeStateComponent>();
-            if (ls.State == LifeState.Deceased)
-                return NpcAnimationState.Dead;
-        }
-
-        // ── 2. Panic: active choking OR high MoodComponent.PanicLevel ─────────
-        if (ecsEntity.Has<ChokingComponent>())
-            return NpcAnimationState.Panic;
-
-        if (ecsEntity.Has<MoodComponent>())
-        {
-            var mood = ecsEntity.Get<MoodComponent>();
-            if (mood.PanicLevel >= 0.5f)
-                return NpcAnimationState.Panic;
-        }
-
-        // ── 3. Sleep: incapacitated (fainting) OR physiology IsSleeping ───────
-        if (ecsEntity.Has<LifeStateComponent>())
-        {
-            var ls = ecsEntity.Get<LifeStateComponent>();
-            if (ls.State == LifeState.Incapacitated)
-                return NpcAnimationState.Sleep;
-        }
-
-        // Also drive Sleep from WorldStateDto physiology so it works in both projector paths.
-        if (dto.Physiology.IsSleeping)
-            return NpcAnimationState.Sleep;
-
-        // ── 4. Talk: Dialog intent ─────────────────────────────────────────────
-        if (ecsEntity.Has<IntendedActionComponent>())
-        {
-            var intent = ecsEntity.Get<IntendedActionComponent>();
-            if (intent.Kind == IntendedActionKind.Dialog)
-                return NpcAnimationState.Talk;
-
-            // ── 5. Walk: Approach + IsMoving ──────────────────────────────────
-            if (intent.Kind == IntendedActionKind.Approach &&
-                dto.Position.IsMoving == true)
-                return NpcAnimationState.Walk;
-
-            // ── 6. Sit: Work intent (assumed at-desk) ─────────────────────────
-            if (intent.Kind == IntendedActionKind.Work)
-                return NpcAnimationState.Sit;
-        }
-
-        // ── 7. Idle: default ──────────────────────────────────────────────────
-        return NpcAnimationState.Idle;
-    }
+    private NpcAnimationState DetermineAnimationState(Entity ecsEntity, EntityStateDto dto)
+        => AnimationStateResolver.Resolve(
+            entity:        ecsEntity,
+            isDtoMoving:   dto.Position.IsMoving == true,
+            isDtoSleeping: dto.Physiology.IsSleeping,
+            em:            _engineHost.Engine);
 
     // ── Entity map management ──────────────────────────────────────────────────
 

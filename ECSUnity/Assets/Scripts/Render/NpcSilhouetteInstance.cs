@@ -1,3 +1,4 @@
+using APIFramework.Components;
 using UnityEngine;
 
 /// <summary>
@@ -335,31 +336,4 @@ public sealed class NpcSilhouetteInstance : MonoBehaviour
     }
 }
 
-/// <summary>
-/// Animation states that map engine simulation state to Unity Animator states.
-/// Consumed by <see cref="NpcAnimatorController"/> which sets corresponding
-/// Animator bool parameters.
-/// </summary>
-public enum NpcAnimationState
-{
-    /// <summary>No intent; standing still. Default state.</summary>
-    Idle,
-
-    /// <summary>Moving toward a target (IntendedActionKind.Approach, velocity > 0).</summary>
-    Walk,
-
-    /// <summary>Seated at a desk or other anchor (Activity == AtDesk or similar).</summary>
-    Sit,
-
-    /// <summary>In active dialogue (IntendedActionKind.Dialog).</summary>
-    Talk,
-
-    /// <summary>Choking OR MoodComponent.PanicLevel >= 0.5. Frozen, facing forward.</summary>
-    Panic,
-
-    /// <summary>LifeState == Incapacitated (fainting) or scheduled sleep.</summary>
-    Sleep,
-
-    /// <summary>LifeState == Deceased. Static slumped pose; no animation.</summary>
-    Dead,
-}
+// NpcAnimationState enum moved to APIFramework.Components.NpcAnimationState (WP-3.2.6).

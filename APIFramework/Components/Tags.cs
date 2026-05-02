@@ -244,3 +244,12 @@ public struct IsChokingTag { }
 /// </summary>
 public struct LockedTag { }
 #endregion
+
+#region Physics Tags (WP-3.2.2)
+/// <summary>Marks an entity that can break on impact. PhysicsTickSystem reads BreakableComponent when this tag is present.</summary>
+public struct BreakableTag { }
+/// <summary>Marks an entity currently in flight (ThrownVelocityComponent attached). Removed by PhysicsTickSystem on landing or breaking.</summary>
+public struct ThrownTag { }
+/// <summary>Applied to an entity when BreakageBehavior.SpawnDebris fires; entity stays in the world as inert debris.</summary>
+public struct DebrisTag { }
+#endregion

@@ -8,6 +8,8 @@ using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.Audio;
 
 /// <summary>
@@ -31,7 +33,7 @@ public class LifeStateIncapacitationWheezeEmitTests
         npc.Add(new PositionComponent { X = 5f, Y = 0f, Z = 3f });
         npc.Add(new LifeStateComponent
         {
-            State                   = LifeState.Incapacitated,
+            State                   = LS.Incapacitated,
             IncapacitatedTickBudget = 100,
             PendingDeathCause       = CauseOfDeath.Choked,
         });
@@ -95,7 +97,7 @@ public class LifeStateIncapacitationWheezeEmitTests
 
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
-        npc.Add(new LifeStateComponent { State = LifeState.Alive });
+        npc.Add(new LifeStateComponent { State = LS.Alive });
         // No IsChokingTag
 
         var wheezeEvents = new List<SoundTriggerEvent>();
