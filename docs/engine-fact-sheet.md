@@ -1,7 +1,7 @@
 ﻿# ECS Simulation Engine — Fact Sheet
 
 **SimVersion:** ECS Simulation Engine  v0.7.2
-**Generated:** 2026-05-01T22:47:51.4533617+00:00
+**Generated:** 2026-05-02T08:09:37.7532833+00:00
 **TelemetrySchema:** world-state.schema.json v0.1.0
 
 ## Registered Systems
@@ -335,7 +335,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Systems.Digestion.SatiationPerCalorie` | `float` | `0.3` |
 | `Systems.Digestion.HydrationPerMl` | `float` | `2` |
 | `Systems.Digestion.ResidueFraction` | `float` | `0.2` |
-| `Systems.Sleep.WakeThreshold` | `float` | `20` |
+| `Systems.Sleep.WakeThreshold` | `float` | `15` |
 | `Systems.Interaction.BiteVolumeMl` | `float` | `50` |
 | `Systems.Interaction.EsophagusSpeed` | `float` | `0.3` |
 | `Systems.Mood.LowThreshold` | `float` | `10` |
@@ -378,7 +378,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Lighting.DyingDecayProb` | `double` | `0.05` |
 | `Lighting.ApertureRangeBase` | `int` | `5` |
 | `Lighting.SourceRangeBase` | `int` | `3` |
-| `Lighting.DriveCouplings` | `List` | `[0 entries]` |
+| `Lighting.DriveCouplings` | `List` | `[6 entries]` |
 | `Movement.StepAsideRadius` | `float` | `3` |
 | `Movement.StepAsideShift` | `float` | `0.4` |
 | `Movement.IdleJitterTiles` | `float` | `0.05` |
@@ -506,7 +506,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `Lockout.LockoutHungerThreshold` | `int` | `95` |
 | `Lockout.StarvationTicks` | `int` | `5` |
 | `Lockout.ExitNamedAnchorTag` | `string` | `outdoor` |
-| `SoundTriggers.BulbBuzzEmitIntervalTicks` | `int` | `30` |
+| `SoundTriggers.BulbBuzzEmitIntervalTicks` | `int` | `10` |
 | `SoundTriggers.FootstepIntensity` | `float` | `0.3` |
 | `SoundTriggers.ChairSqueakIntensity` | `float` | `0.4` |
 | `SoundTriggers.BulbBuzzIntensity` | `float` | `0.2` |
@@ -523,15 +523,15 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `SoundTriggers.SneezeIntensity` | `float` | `0.7` |
 | `SoundTriggers.YawnIntensity` | `float` | `0.4` |
 | `SoundTriggers.SighIntensity` | `float` | `0.3` |
-| `Bereavement.WitnessedDeathStressGain` | `double` | `5` |
-| `Bereavement.BereavementStressGain` | `double` | `3` |
-| `Bereavement.ProximityBereavementMinIntensity` | `int` | `20` |
+| `Bereavement.WitnessedDeathStressGain` | `double` | `20` |
+| `Bereavement.BereavementStressGain` | `double` | `5` |
+| `Bereavement.ProximityBereavementMinIntensity` | `int` | `30` |
 | `Bereavement.ProximityBereavementStressGain` | `double` | `8` |
-| `Bereavement.BereavementMinIntensity` | `int` | `25` |
+| `Bereavement.BereavementMinIntensity` | `int` | `20` |
 | `Bereavement.ColleagueBereavementGriefIntensity` | `double` | `40` |
-| `Bereavement.WitnessGriefIntensity` | `double` | `60` |
-| `Fainting.FearThreshold` | `float` | `70` |
-| `Fainting.FaintDurationTicks` | `int` | `180` |
+| `Bereavement.WitnessGriefIntensity` | `double` | `80` |
+| `Fainting.FearThreshold` | `float` | `85` |
+| `Fainting.FaintDurationTicks` | `int` | `20` |
 | `Fainting.EmitFaintedNarrative` | `bool` | `True` |
 | `Fainting.EmitRegainedConsciousnessNarrative` | `bool` | `True` |
 | `Rescue.RescueThreshold` | `float` | `0.4` |

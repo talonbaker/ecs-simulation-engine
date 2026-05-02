@@ -57,12 +57,6 @@ public class ChokingDetectionSystemCoughGaspEmitTests
         // Low energy → distracted
         npc.Add(new EnergyComponent { Energy = 20f }); // below EnergyThreshold 40
 
-        // EsophagusTransitComponent lives on the BOLUS entity; TargetEntityId = the NPC.
-        // Toughness > BolusSizeThreshold(0.5) triggers choke.
-        var bolusEntity = em.CreateEntity();
-        bolusEntity.Add(new BolusComponent { Toughness = 0.8f });
-        bolusEntity.Add(new EsophagusTransitComponent { TargetEntityId = npc.Id, Progress = 0.5f, Speed = 0.1f });
-
         return (em, npc, soundBus, sys, transition);
     }
 

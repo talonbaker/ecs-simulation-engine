@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,14 +6,14 @@ public sealed class InspectorPopup : MonoBehaviour
     [Tooltip("Root canvas of the popup. Must be Screen Space - Overlay.")]
     [SerializeField] private Canvas _canvas;
 
-    [Tooltip("TextMeshProUGUI field for the Name line.")]
-    [SerializeField] private TMP_Text _nameText;
+    [Tooltip("UI Text component for the Name line.")]
+    [SerializeField] private Text _nameText;
 
-    [Tooltip("TextMeshProUGUI field for the Drives line.")]
-    [SerializeField] private TMP_Text _drivesText;
+    [Tooltip("UI Text component for the Drives line.")]
+    [SerializeField] private Text _drivesText;
 
-    [Tooltip("TextMeshProUGUI field for the Mood line.")]
-    [SerializeField] private TMP_Text _moodText;
+    [Tooltip("UI Text component for the Mood line.")]
+    [SerializeField] private Text _moodText;
 
     [Tooltip("Pixel offset from cursor (positive x = right, positive y = downward).")]
     [SerializeField] private Vector2 _cursorOffset = new Vector2(20f, 20f);

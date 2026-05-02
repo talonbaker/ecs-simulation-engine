@@ -141,5 +141,5 @@ MonoBehaviour:
   _minAltitude: 5
   _maxAltitude: 50
   _pitchAngle: 50
-  _startFocusPoint: {x: 30, y: 0, z: 20}
+  _startFocusPoint: {x: 15, y: 0, z: 11}
   _startYaw: 0

@@ -59,6 +59,9 @@ public sealed class PerformanceGate : MonoBehaviour
     private IEnumerator Start()
     {
         if (_frameRateMonitor == null)
+            _frameRateMonitor = Object.FindObjectOfType<FrameRateMonitor>();
+
+        if (_frameRateMonitor == null)
         {
             Debug.LogError("[PerformanceGate] FrameRateMonitor is not assigned. Attach one in the Inspector.");
             yield break;

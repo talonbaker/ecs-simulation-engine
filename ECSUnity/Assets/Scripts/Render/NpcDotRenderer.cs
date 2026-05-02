@@ -67,9 +67,6 @@ public sealed class NpcDotRenderer : MonoBehaviour
     // Parent to keep hierarchy tidy.
     private Transform _npcRoot;
 
-    // Camera reference for billboarding.
-    private Camera _mainCamera;
-
     // ─────────────────────────────────────────────────────────────────────────
 
     private void Awake()
@@ -80,10 +77,9 @@ public sealed class NpcDotRenderer : MonoBehaviour
         _npcRoot.SetParent(transform, worldPositionStays: false);
     }
 
-    private void Start()
-    {
-        _mainCamera = Camera.main;
-    }
+    private void Start() { }
+
+    private bool _loggedOnce;
 
     private void Update()
     {
@@ -92,21 +88,31 @@ public sealed class NpcDotRenderer : MonoBehaviour
         var worldState = _engineHost.WorldState;
         if (worldState == null) return;
 
+        if (!_loggedOnce)
+        {
+            _loggedOnce = true;
+            int withPos = 0;
+            var posSnippet = new System.Text.StringBuilder();
+            foreach (var e in worldState.Entities)
+            {
+                if (e.Position.HasPosition)
+                {
+                    if (withPos < 3)
+                        posSnippet.Append($" {e.Name}({e.Position.X:F1},{e.Position.Z:F1})");
+                    withPos++;
+                }
+            }
+            Debug.Log($"[NpcDotRenderer] First frame: {worldState.Entities.Count} entities in WorldState, " +
+                      $"{withPos} with HasPosition=true." +
+                      (withPos > 0 ? $" First positions:{posSnippet}" : " — no dots will be created."));
+        }
+
         SyncNpcs(worldState.Entities);
     }
 
     private void LateUpdate()
     {
-        // Billboard: face each dot toward the camera after all movement has settled.
-        if (_mainCamera == null) _mainCamera = Camera.main;
-        if (_mainCamera == null) return;
-
-        foreach (var view in _npcViews.Values)
-        {
-            view.Go.transform.LookAt(
-                _mainCamera.transform.position,
-                _mainCamera.transform.up);
-        }
+        // Sphere primitives are visible from all angles — no billboarding required.
     }
 
     // ── NPC sync ──────────────────────────────────────────────────────────────
@@ -145,15 +151,15 @@ public sealed class NpcDotRenderer : MonoBehaviour
 
     private NpcView CreateNpcView(EntityStateDto npc)
     {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         go.name = $"NpcDot_{npc.Name}";
         go.transform.SetParent(_npcRoot, worldPositionStays: false);
         go.transform.localScale = Vector3.one * _dotSize;
 
-        // Replace the MeshCollider from CreatePrimitive with a BoxCollider for raycasting.
+        // Replace the MeshCollider from CreatePrimitive with a SphereCollider for raycasting.
         var col = go.GetComponent<Collider>();
         if (col != null) Destroy(col);
-        go.AddComponent<BoxCollider>();
+        go.AddComponent<SphereCollider>();
 
         // Wire selection components so SelectionManager can identify which NPC was clicked.
         go.AddComponent<Selectable>();

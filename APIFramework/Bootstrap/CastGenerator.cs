@@ -174,6 +174,7 @@ public static class CastGenerator
         EntityTemplates.WithCastSpawn(
             entity, drives, willpower, personality, inhibitions,
             silhouette, new NpcArchetypeComponent { ArchetypeId = archetype.Id }, deal);
+        EntityTemplates.WithPhysiology(entity);
 
         return entity;
     }

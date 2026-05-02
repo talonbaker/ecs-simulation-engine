@@ -3,6 +3,7 @@ using System.IO;
 using UnityEngine;
 using APIFramework.Core;
 using APIFramework.Config;
+using APIFramework.Systems.Audio;
 using Warden.Contracts.Telemetry;
 
 /// <summary>
@@ -81,6 +82,9 @@ public sealed class EngineHost : MonoBehaviour
     /// <summary>Direct access to the SimulationClock. Use only in tests and diagnostics.</summary>
     public SimulationClock Clock => _bootstrapper?.Clock;
 
+    /// <summary>Direct access to the SoundTriggerBus. Use only from MonoBehaviours that need to emit sounds.</summary>
+    public SoundTriggerBus SoundBus => _bootstrapper?.SoundBus;
+
     /// <summary>Total engine ticks elapsed since boot.</summary>
     public long TickCount => _tickCount;
 
@@ -105,28 +109,45 @@ public sealed class EngineHost : MonoBehaviour
 
         try
         {
-            string resolvedWorldPath = ResolveWorldPath(_worldDefinitionPath);
-            SimConfig config         = _configAsset.Config;
+            string resolvedWorldPath    = ResolveWorldPath(_worldDefinitionPath);
+            string resolvedCatalogPath  = ResolveWorldPath("archetypes.json");
+            string resolvedNamePoolPath = ResolveWorldPath("name-pool.json");
+            SimConfig config            = _configAsset.Config;
 
             // Construct the bootstrapper using IConfigProvider to keep the engine
             // decoupled from the filesystem. Unity supplies config via ScriptableObject.
             _bootstrapper = new SimulationBootstrapper(
-                configProvider:      new InMemoryConfigProvider(config),
-                seed:                _seed,
-                worldDefinitionPath: resolvedWorldPath);
+                configProvider:       new InMemoryConfigProvider(config),
+                seed:                 _seed,
+                worldDefinitionPath:  resolvedWorldPath,
+                archetypesCatalogPath: resolvedCatalogPath,
+                namePoolPath:         resolvedNamePoolPath);
 
             _projector = new WorldStateProjectorAdapter();
 
             // Produce an initial snapshot so renderers never see a null WorldState.
-            WorldState = _projector.Project(_bootstrapper, _tickCount);
-
             _alive = true;
 
+            int npcCount    = _bootstrapper.SpawnedNpcs?.Count ?? 0;
+            int totalEnts   = _bootstrapper.EntityManager.Entities.Count;
+            int metabCount  = System.Linq.Enumerable.Count(
+                                  _bootstrapper.EntityManager.Query<APIFramework.Components.MetabolismComponent>());
+            int wsEntCount  = WorldState?.Entities?.Count ?? -1;
+
             Debug.Log($"[EngineHost] Booted. " +
-                      $"Entities: {_bootstrapper.EntityManager.Entities.Count} | " +
-                      $"World: {resolvedWorldPath ?? "defaults"} | " +
-                      $"Seed: {_seed} | " +
-                      $"FixedTimestep: {Time.fixedDeltaTime:F4}s");
+                      $"Entities: {totalEnts} | NPCs(SpawnedNpcs): {npcCount} | " +
+                      $"MetabolismQuery: {metabCount} | " +
+                      $"WorldState.Entities: {wsEntCount} | " +
+                      $"Catalog: {resolvedCatalogPath ?? "CWD-walk"} | " +
+                      $"Seed: {_seed}");
+
+            // Re-project AFTER logging so WorldState is up-to-date for renderers.
+            WorldState = _projector.Project(_bootstrapper, _tickCount);
+            Debug.Log($"[EngineHost] Post-log WorldState.Entities: {WorldState?.Entities?.Count ?? -1}");
+
+            if (npcCount == 0)
+                Debug.LogWarning("[EngineHost] 0 NPCs spawned. Check that archetypes.json " +
+                                 "is in StreamingAssets and passes schema validation.");
         }
         catch (Exception ex)
         {
