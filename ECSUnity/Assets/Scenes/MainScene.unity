@@ -133,7 +133,6 @@ GameObject:
   m_Component:
   - component: {fileID: 100000002}
   - component: {fileID: 100000003}
-  - component: {fileID: 100000004}
   m_Layer: 0
   m_Name: SceneBootstrapper
   m_TagString: Untagged
@@ -164,25 +163,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 100000001}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000001, type: 3}
+  m_Script: {fileID: 11500000, guid: 64d1a12fb45194b4098efdf491467d69, type: 3}
   m_Name:
   m_EditorClassIdentifier:
   _configAsset: {fileID: 0}
   _worldDefinitionPath: office-starter.json
   _seed: 19990101
---- !u!114 &100000004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100000001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00000000000000000000000000000002, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  _engineHost: {fileID: 100000003}
 --- !u!1 &300000001
 GameObject:
   m_ObjectHideFlags: 0
