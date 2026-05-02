@@ -23,7 +23,7 @@
     {
       "id": "managers-office",
       "name": "Manager's Office",
-      "category": "managersOffice",
+      "category": "office",
       "floorId": "floor-first",
       "bounds": { "x": 20, "y": 0, "width": 10, "height": 14 },
       "initialIllumination": { "ambientLevel": 65, "colorTemperatureK": 3800 },
