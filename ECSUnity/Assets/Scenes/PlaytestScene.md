@@ -90,3 +90,16 @@
 If 80%+ of the above passes, the scene is mergeable; remaining items become BUG-NNN entries in known-bugs.md (severity per rubric) and feed PT-001's session focus.
 
 If less than 80% passes, return to Sonnet for a fix wave (the spec was incomplete or a primitive regressed).
+
+## Scenario verbs (3 minutes — added by WP-PT.1)
+
+1. Open dev console (`~`).
+2. `scenario` — full subverb list appears.
+3. `scenario kill <some-npc>` — they die. Bereavement cascade fires.
+4. `scenario choke <some-other-npc>` — they cough; choke timer visible if you select them.
+5. `scenario rescue <choking-npc>` — nearest bystander runs over, Heimlich animation plays, victim recovers.
+6. `scenario set-time dusk` — sim clock jumps; lighting shifts; office quiets.
+7. `scenario seed-stains 5` — 5 stains appear on random tiles.
+8. `scenario sound BulbBuzz` — bulb-buzz plays at camera focus.
+
+If any of these errors out or produces no visible effect, file as BUG-NNN.

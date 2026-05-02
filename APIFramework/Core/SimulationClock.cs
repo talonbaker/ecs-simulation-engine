@@ -144,4 +144,10 @@ public class SimulationClock
         CurrentTick = currentTick;
         TimeScale   = timeScale;
     }
+
+    /// <summary>
+    /// Jumps the wall-clock to a new TotalTime without changing CurrentTick or TimeScale.
+    /// Intended for the WARDEN dev-console <c>scenario set-time</c> command only.
+    /// </summary>
+    public void SetTotalTime(double totalTime) => TotalTime = totalTime;
 }

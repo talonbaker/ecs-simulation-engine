@@ -353,6 +353,7 @@ public sealed class DevConsolePanel : MonoBehaviour
         _dispatcher.RegisterCommand(new MoveCommand());
         _dispatcher.RegisterCommand(new ForceKillCommand());
         _dispatcher.RegisterCommand(new ForceFaintCommand());
+        _dispatcher.RegisterCommand(new ScenarioCommand());
         _dispatcher.RegisterCommand(new SetComponentCommand());
         _dispatcher.RegisterCommand(new LockCommand());
         _dispatcher.RegisterCommand(new UnlockCommand());
