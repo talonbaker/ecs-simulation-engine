@@ -43,6 +43,7 @@ public sealed class DevConsolePanel : MonoBehaviour
     private GUIStyle   _guiLabel;
     private GUIStyle   _guiInput;
     private Texture2D  _guiBg;
+    private int        _lastToggleFrame = -1;
 
     // ── Services ──────────────────────────────────────────────────────────────
 
@@ -66,6 +67,8 @@ public sealed class DevConsolePanel : MonoBehaviour
 
     private void Awake()
     {
+        Debug.Log($"[DevConsolePanel] Awake on '{gameObject.name}' — config={(_config != null ? _config.name : "null")} document={(_document != null ? "wired" : "null")} host={(_host != null ? "wired" : "null")}");
+
         _config ??= ScriptableObject.CreateInstance<DevConsoleConfig>();
 
         _dispatcher   = new DevConsoleCommandDispatcher();
@@ -102,9 +105,28 @@ public sealed class DevConsolePanel : MonoBehaviour
 
     private void Update()
     {
-        // Toggle key: BackQuote (`) or any configured toggle key.
-        if (Input.GetKeyDown(_config.ToggleKey))
-            Toggle();
+        // Toggle key via legacy Input Manager. Wrapped in try/catch because
+        // Input.GetKeyDown throws on projects with activeInputHandler=1
+        // (Input System Package only). OnGUI's event-based toggle covers
+        // that case independently. Frame guard in TryToggle() prevents
+        // double-toggle when both paths fire on the same press.
+        try
+        {
+            if (Input.GetKeyDown(_config.ToggleKey))
+                TryToggle("Update/Input.GetKeyDown");
+        }
+        catch (System.Exception)
+        {
+            // Legacy Input disabled. OnGUI handles the toggle.
+        }
+    }
+
+    private void TryToggle(string source)
+    {
+        if (Time.frameCount == _lastToggleFrame) return;
+        _lastToggleFrame = Time.frameCount;
+        Debug.Log($"[DevConsolePanel] Toggle via {source} (frame {Time.frameCount}, _isVisible {_isVisible} -> {!_isVisible})");
+        Toggle();
     }
 
     private void OnDestroy()
@@ -399,7 +421,23 @@ public sealed class DevConsolePanel : MonoBehaviour
 
     private void OnGUI()
     {
-        if (!_isVisible || _document != null) return;
+        // ── Toggle handling — works regardless of Input System configuration ──
+        // OnGUI receives Unity's IMGUI events directly, including KeyDown for
+        // unfocused controls. This is the reliable toggle path; Update()'s
+        // Input.GetKeyDown() may not fire if the project uses the new Input
+        // System exclusively.
+        if (Event.current != null
+            && Event.current.type == EventType.KeyDown
+            && (Event.current.keyCode == KeyCode.BackQuote
+                || (_config != null && Event.current.keyCode == _config.ToggleKey)))
+        {
+            TryToggle($"OnGUI/{Event.current.keyCode}");
+            Event.current.Use();
+            return;
+        }
+
+        if (_document != null) return;
+        if (!_isVisible) return;
 
         // Lazy-init styles.
         if (_guiLabel == null)
