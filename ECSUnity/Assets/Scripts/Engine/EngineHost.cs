@@ -130,11 +130,16 @@ public sealed class EngineHost : MonoBehaviour
 
             _alive = true;
 
+            int npcCount  = _bootstrapper.SpawnedNpcs?.Count ?? 0;
+            int totalEnts = _bootstrapper.EntityManager.Entities.Count;
             Debug.Log($"[EngineHost] Booted. " +
-                      $"Entities: {_bootstrapper.EntityManager.Entities.Count} | " +
+                      $"Entities: {totalEnts} | NPCs: {npcCount} | " +
                       $"World: {resolvedWorldPath ?? "defaults"} | " +
-                      $"Seed: {_seed} | " +
-                      $"FixedTimestep: {Time.fixedDeltaTime:F4}s");
+                      $"Catalog: {resolvedCatalogPath ?? "CWD-walk"} | " +
+                      $"Seed: {_seed} | FixedTimestep: {Time.fixedDeltaTime:F4}s");
+            if (npcCount == 0)
+                Debug.LogWarning("[EngineHost] 0 NPCs spawned. Check that archetypes.json " +
+                                 "is in StreamingAssets and passes schema validation.");
         }
         catch (Exception ex)
         {

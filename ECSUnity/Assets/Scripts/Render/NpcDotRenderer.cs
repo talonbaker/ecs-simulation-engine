@@ -85,12 +85,24 @@ public sealed class NpcDotRenderer : MonoBehaviour
         _mainCamera = Camera.main;
     }
 
+    private bool _loggedOnce;
+
     private void Update()
     {
         if (_engineHost == null) return;
 
         var worldState = _engineHost.WorldState;
         if (worldState == null) return;
+
+        if (!_loggedOnce)
+        {
+            _loggedOnce = true;
+            int withPos = 0;
+            foreach (var e in worldState.Entities)
+                if (e.Position.HasPosition) withPos++;
+            Debug.Log($"[NpcDotRenderer] First frame: {worldState.Entities.Count} entities in WorldState, " +
+                      $"{withPos} with HasPosition=true.");
+        }
 
         SyncNpcs(worldState.Entities);
     }
