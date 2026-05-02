@@ -61,6 +61,13 @@ public sealed class PlaytestSceneSeeder : MonoBehaviour
         var field = typeof(EngineHost).GetField("_worldDefinitionPath",
             BindingFlags.NonPublic | BindingFlags.Instance);
         field?.SetValue(host, _worldDefinitionPath);
+
+        // If _configAsset wasn't wired in the Inspector (e.g. fresh Library build),
+        // create a default in-memory instance so EngineHost.Start() doesn't bail.
+        var configField = typeof(EngineHost).GetField("_configAsset",
+            BindingFlags.NonPublic | BindingFlags.Instance);
+        if (configField != null && configField.GetValue(host) == null)
+            configField.SetValue(host, ScriptableObject.CreateInstance<SimConfigAsset>());
     }
 
     private void Start()
