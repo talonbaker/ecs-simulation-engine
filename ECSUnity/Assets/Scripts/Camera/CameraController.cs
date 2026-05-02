@@ -189,9 +189,9 @@ public sealed class CameraController : MonoBehaviour
 
         if (recenter)
         {
-            // Snap to world-space origin (30, 20 = rough centre of office-starter layout).
+            // Snap to centre of the playtest office layout (30×22 tile world).
             // Future: snap to selected entity position.
-            _focusPoint = new Vector3(30f, 0f, 20f);
+            _focusPoint = new Vector3(15f, 0f, 11f);
         }
     }
 
