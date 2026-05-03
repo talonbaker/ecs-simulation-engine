@@ -1,23 +1,23 @@
-// Soft multiply-blend blob shadow disc.
-// Attach to a flat quad positioned on the ground by BlobShadowCaster.
-// Darkens the ground smoothly so the Bayer dither post-process converts
-// the gradient into a dithered shadow matching the ball shading.
+// Contact-aware blob shadow disc.
+// UV.y = 0 → contact point (darkest), UV.y = 1 → far shadow end (lightest).
+// Disc is positioned by BlobShadowCaster so UV.y=0 sits at the ball's base.
+// Multiply-blend darkens the ground; the Bayer post-process dithers the gradient.
 Shader "Custom/BlobShadow"
 {
     Properties
     {
-        _Opacity  ("Shadow Opacity",  Range(0, 1))    = 0.65
-        _Softness ("Edge Softness",   Range(0.05, 1)) = 0.45
+        _Opacity ("Shadow Opacity",   Range(0, 1))    = 0.75
+        _Falloff ("Contact Falloff",  Range(0.3, 3))  = 1.5
     }
 
     SubShader
     {
         Tags
         {
-            "Queue"          = "Transparent"
-            "RenderType"     = "Transparent"
-            "RenderPipeline" = "UniversalPipeline"
-            "IgnoreProjector"= "True"
+            "Queue"           = "Transparent"
+            "RenderType"      = "Transparent"
+            "RenderPipeline"  = "UniversalPipeline"
+            "IgnoreProjector" = "True"
         }
 
         Pass
@@ -51,7 +51,7 @@ Shader "Custom/BlobShadow"
 
             CBUFFER_START(UnityPerMaterial)
                 float _Opacity;
-                float _Softness;
+                float _Falloff;
             CBUFFER_END
 
             Varyings Vert(Attributes input)
@@ -68,16 +68,19 @@ Shader "Custom/BlobShadow"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
-                // Radial distance from disc centre: 0 at centre, 1 at rim.
-                float2 center = input.uv - 0.5;
-                float  dist   = length(center) * 2.0;
+                float2 uv = input.uv;
 
-                // Smooth falloff: full shadow at centre, zero at rim.
-                float inner  = max(0.0, 1.0 - _Softness);
-                float shadow = saturate(1.0 - smoothstep(inner, 1.0, dist)) * _Opacity;
+                // Forward: UV.y = 0 at contact (full dark), 1 at far end (zero dark).
+                float forwardT  = uv.y;
+                float forward   = pow(max(0.0, 1.0 - forwardT), _Falloff);
 
-                // Multiply blend output: 1 = no change, approaching 0 = black.
-                float mult = 1.0 - shadow;
+                // Shadow narrows at the contact tip, widens toward the far end.
+                float halfW     = lerp(0.3, 1.0, saturate(forwardT * 1.4));
+                float lateralT  = abs(uv.x - 0.5) * 2.0;
+                float lateral   = saturate(1.0 - smoothstep(0.5, 1.0, lateralT / halfW));
+
+                float shadow    = forward * lateral * _Opacity;
+                float mult      = 1.0 - shadow;
                 return half4(mult, mult, mult, 1.0);
             }
             ENDHLSL

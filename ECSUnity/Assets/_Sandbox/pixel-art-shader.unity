@@ -904,8 +904,9 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   _shadowMaterial: {fileID: 2100000, guid: cc22bb33dd44ee55ff66aa77bb88cc99, type: 2}
   _lightDirection: {x: -0.37, y: -0.66, z: 0.65}
-  _radius: 1.5
-  _opacity: 0.65
+  _radius: 1.2
+  _lengthScale: 2.5
+  _opacity: 0.75
 --- !u!1 &860000001
 GameObject:
   m_ObjectHideFlags: 0
