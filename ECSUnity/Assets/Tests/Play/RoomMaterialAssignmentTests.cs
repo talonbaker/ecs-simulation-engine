@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using Warden.Contracts.Telemetry;
 using APIFramework.Components;
+using RoomCategory = APIFramework.Components.RoomCategory;
 
 /// <summary>
 /// AT-07: Each RoomCategory gets the correct material type from the catalog when rendered.
