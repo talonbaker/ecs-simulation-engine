@@ -1,0 +1,246 @@
+{
+  "schemaVersion": "0.1.0",
+  "states": [
+    {
+      "stateId": "Idle",
+      "frameDurationMs": 200,
+      "accentColor": "#a0a0a0",
+      "cueAffinity": ["sleep-z", "question-mark"],
+      "description": "Subtle weight shift; standing pose; no motion-blur."
+    },
+    {
+      "stateId": "Walk",
+      "frameDurationMs": 120,
+      "accentColor": "#c0c0c0",
+      "cueAffinity": [],
+      "description": "Forward lean + arm swing; clearly directional."
+    },
+    {
+      "stateId": "Sit",
+      "frameDurationMs": 300,
+      "accentColor": "#a0b0c0",
+      "cueAffinity": ["sleep-z"],
+      "description": "Seated at desk or anchor; static or minimal fidget."
+    },
+    {
+      "stateId": "Talk",
+      "frameDurationMs": 180,
+      "accentColor": "#c8c8ff",
+      "cueAffinity": ["exclamation", "question-mark"],
+      "description": "Active dialogue; gestural arm motion; head bob."
+    },
+    {
+      "stateId": "Panic",
+      "frameDurationMs": 80,
+      "accentColor": "#ff8040",
+      "cueAffinity": ["sweat", "exclamation"],
+      "description": "PanicLevel >= 0.5; frozen facing; high-speed tremble."
+    },
+    {
+      "stateId": "Sleep",
+      "frameDurationMs": 800,
+      "accentColor": "#8080ff",
+      "cueAffinity": ["sleep-z"],
+      "description": "Incapacitated or scheduled sleep; slow breathing cycle."
+    },
+    {
+      "stateId": "Dead",
+      "frameDurationMs": 9999,
+      "accentColor": "#707070",
+      "cueAffinity": [],
+      "description": "Deceased; static slumped pose; no animation."
+    },
+    {
+      "stateId": "Eating",
+      "frameDurationMs": 250,
+      "accentColor": "#d4a875",
+      "cueAffinity": ["sparkles", "exclamation"],
+      "description": "Hand-to-mouth motion; visible food item; head tilt."
+    },
+    {
+      "stateId": "Drinking",
+      "frameDurationMs": 230,
+      "accentColor": "#75a8d4",
+      "cueAffinity": ["sparkles"],
+      "description": "Hand-to-mouth with cup silhouette; head tilt."
+    },
+    {
+      "stateId": "DefecatingInCubicle",
+      "frameDurationMs": 400,
+      "accentColor": "#a0a0a0",
+      "cueAffinity": ["stink"],
+      "description": "Awkward seated pose; no sound."
+    },
+    {
+      "stateId": "SleepingAtDesk",
+      "frameDurationMs": 600,
+      "accentColor": "#8080ff",
+      "cueAffinity": ["sleep-z"],
+      "description": "Slumped at desk; head-on-arms; SleepZ cue active."
+    },
+    {
+      "stateId": "Working",
+      "frameDurationMs": 200,
+      "accentColor": "#a0d0a0",
+      "cueAffinity": [],
+      "description": "Seated at workstation; typing arm motion; slight head bob."
+    },
+    {
+      "stateId": "Crying",
+      "frameDurationMs": 160,
+      "accentColor": "#6080c0",
+      "cueAffinity": ["sweat"],
+      "description": "Head down; hand to face OR shoulder shake; tear-drop cue."
+    },
+    {
+      "stateId": "CoughingFit",
+      "frameDurationMs": 100,
+      "accentColor": "#c0a060",
+      "cueAffinity": ["sweat", "exclamation"],
+      "description": "Body shake; hand to mouth; bent-over cough."
+    },
+    {
+      "stateId": "Heimlich",
+      "frameDurationMs": 150,
+      "accentColor": "#ff6060",
+      "cueAffinity": ["exclamation"],
+      "description": "Two NPCs proximate; rescuer behind patient; arm-around-torso pose."
+    }
+  ],
+  "cues": [
+    {
+      "cueId": "anger-lines",
+      "iconKind": "Anger",
+      "spriteAsset": "cue_anger_lines.png",
+      "anchorOffset": [0.0, 1.6, 0.0],
+      "fadeAltitudeStart": 25.0,
+      "fadeAltitudeEnd": 35.0,
+      "minScaleMult": 1.0,
+      "description": "Tight radiating marks around head. Driven by Irritation >= 70."
+    },
+    {
+      "cueId": "sweat",
+      "iconKind": "Sweat",
+      "spriteAsset": "cue_sweat_drop.png",
+      "anchorOffset": [0.3, 1.5, 0.0],
+      "fadeAltitudeStart": 25.0,
+      "fadeAltitudeEnd": 35.0,
+      "minScaleMult": 1.25,
+      "description": "Arcing drops from forehead. Driven by PanicLevel >= 0.5 or high drive urgency."
+    },
+    {
+      "cueId": "sleep-z",
+      "iconKind": "SleepZ",
+      "spriteAsset": "cue_sleep_z.png",
+      "anchorOffset": [-0.2, 1.7, 0.0],
+      "fadeAltitudeStart": 40.0,
+      "fadeAltitudeEnd": 55.0,
+      "minScaleMult": 1.0,
+      "description": "Floating Z bubbles. Must remain visible at 25m altitude."
+    },
+    {
+      "cueId": "red-face-flush",
+      "iconKind": "RedFaceFlush",
+      "spriteAsset": "cue_red_face_flush.png",
+      "anchorOffset": [0.0, 1.4, 0.0],
+      "fadeAltitudeStart": 30.0,
+      "fadeAltitudeEnd": 45.0,
+      "minScaleMult": 1.5,
+      "description": "Red face flush. Driven by anger spike or embarrassment. Must remain visible at 25m."
+    },
+    {
+      "cueId": "green-face-nausea",
+      "iconKind": "GreenFaceNausea",
+      "spriteAsset": "cue_green_face_nausea.png",
+      "anchorOffset": [0.0, 1.4, 0.0],
+      "fadeAltitudeStart": 30.0,
+      "fadeAltitudeEnd": 45.0,
+      "minScaleMult": 1.5,
+      "description": "Green face nausea. Driven by Disgust or sickness state. Must remain visible at 25m."
+    },
+    {
+      "cueId": "heart",
+      "iconKind": "Heart",
+      "spriteAsset": "cue_heart.png",
+      "anchorOffset": [0.0, 1.8, 0.0],
+      "fadeAltitudeStart": 20.0,
+      "fadeAltitudeEnd": 30.0,
+      "minScaleMult": 1.0,
+      "description": "Floating pink heart. Driven by Attraction >= 80."
+    },
+    {
+      "cueId": "sparkles",
+      "iconKind": "Sparkle",
+      "spriteAsset": "cue_sparkles.png",
+      "anchorOffset": [0.2, 1.7, 0.0],
+      "fadeAltitudeStart": 20.0,
+      "fadeAltitudeEnd": 30.0,
+      "minScaleMult": 1.0,
+      "description": "Four-pointed star burst. Driven by Joy >= 0.9."
+    },
+    {
+      "cueId": "exclamation",
+      "iconKind": "Exclamation",
+      "spriteAsset": "cue_exclamation.png",
+      "anchorOffset": [0.0, 1.9, 0.0],
+      "fadeAltitudeStart": 35.0,
+      "fadeAltitudeEnd": 50.0,
+      "minScaleMult": 1.5,
+      "description": "Sudden ! for shock or alarm. Event-beat cue; must remain visible at 25m."
+    },
+    {
+      "cueId": "question-mark",
+      "iconKind": "QuestionMark",
+      "spriteAsset": "cue_question_mark.png",
+      "anchorOffset": [0.0, 1.8, 0.0],
+      "fadeAltitudeStart": 18.0,
+      "fadeAltitudeEnd": 28.0,
+      "minScaleMult": 1.0,
+      "description": "Floating ? for amazement or surprise."
+    }
+  ],
+  "transitions": [
+    {
+      "from": "Walk",
+      "to": "CoughingFit",
+      "intermediateFrames": [12, 13, 14],
+      "totalDurationMs": 360,
+      "description": "Walking mid-stride into sudden cough; forward-lean bridges into bent-over."
+    },
+    {
+      "from": "Eating",
+      "to": "CoughingFit",
+      "intermediateFrames": [8, 9],
+      "totalDurationMs": 240,
+      "description": "Eating to choking; hand-to-mouth smoothly transitions to cough-clutch."
+    },
+    {
+      "from": "Eating",
+      "to": "Panic",
+      "intermediateFrames": [8, 9, 10],
+      "totalDurationMs": 300,
+      "description": "Eating to choking panic; arm lowers then freezes in panic pose."
+    },
+    {
+      "from": "Working",
+      "to": "Idle",
+      "intermediateFrames": [4, 5],
+      "totalDurationMs": 200,
+      "description": "Push back from desk; transitional stand-up frames."
+    },
+    {
+      "from": "Walk",
+      "to": "Sit",
+      "intermediateFrames": [6, 7],
+      "totalDurationMs": 200,
+      "description": "Approaching and sitting down at a desk."
+    },
+    {
+      "from": "Idle",
+      "to": "CoughingFit",
+      "intermediateFrames": [2, 3],
+      "totalDurationMs": 200,
+      "description": "Standing idle into sudden cough."
+    }
+  ]
+}
