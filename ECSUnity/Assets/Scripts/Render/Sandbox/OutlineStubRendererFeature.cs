@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.RenderGraphModule;
 
 /// <summary>
 /// STUB — sandbox chain-validation only. Not integrated into MainScene or PlaytestScene.
@@ -36,23 +37,51 @@ public class OutlineStubRendererFeature : ScriptableRendererFeature
         Material _mat;
         bool _disposed;
 
+        class PassData { public TextureHandle src; public Material mat; }
+
         public OutlineStubRenderPass()
         {
-            renderPassEvent = RenderPassEvent.AfterRenderingPostProcessing + 1;
-            _mat = CoreUtils.CreateEngineMaterial("Custom/OutlineStub");
+            renderPassEvent          = RenderPassEvent.AfterRenderingPostProcessing + 1;
+            _mat                     = CoreUtils.CreateEngineMaterial("Custom/OutlineStub");
+            requiresIntermediateTexture = true;
         }
 
-        public override void Execute(ScriptableRenderContext ctx, ref RenderingData data)
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
             if (_mat == null) return;
-            var cmd    = CommandBufferPool.Get("Outline Stub Pass");
-            var target = data.cameraData.renderer.cameraColorTargetHandle;
-            Blitter.BlitCameraTexture(cmd, target, target, _mat, 0);
-            ctx.ExecuteCommandBuffer(cmd);
-            CommandBufferPool.Release(cmd);
-        }
 
-        public override void OnCameraCleanup(CommandBuffer cmd) { }
+            var resourceData = frameData.Get<UniversalResourceData>();
+            var cameraData   = frameData.Get<UniversalCameraData>();
+
+            // Temporary copy so we can read and write camera color in separate passes.
+            var desc = cameraData.cameraTargetDescriptor;
+            desc.depthBufferBits = 0;
+            desc.msaaSamples     = 1;
+            TextureHandle tempHandle = UniversalRenderer.CreateRenderGraphTexture(
+                renderGraph, desc, "_OutlineStubTemp", false);
+
+            // Step 1: copy active color to temp
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>("OutlineStub Copy", out var passData))
+            {
+                passData.src = resourceData.activeColorTexture;
+                builder.UseTexture(passData.src);
+                builder.SetRenderAttachment(tempHandle, 0);
+                builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
+                    Blitter.BlitTexture(ctx.cmd, data.src, new Vector4(1, 1, 0, 0), 0.0f));
+            }
+
+            // Step 2: apply red vignette from temp back to active color
+            Material mat = _mat;
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>("OutlineStub Vignette", out var passData))
+            {
+                passData.src = tempHandle;
+                passData.mat = mat;
+                builder.UseTexture(passData.src);
+                builder.SetRenderAttachment(resourceData.activeColorTexture, 0);
+                builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
+                    Blitter.BlitTexture(ctx.cmd, data.src, new Vector4(1, 1, 0, 0), data.mat, 0));
+            }
+        }
 
         public void Dispose()
         {

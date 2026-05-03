@@ -2,82 +2,96 @@ using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.RenderGraphModule;
 
-/// <summary>
-/// ScriptableRenderPass owned by <see cref="PixelArtRendererFeature"/>.
-/// Down-samples camera color to a low-res RTHandle (optionally palette-quantizing),
-/// then point-samples it back to fill the camera target — creating the pixel-art look.
-/// </summary>
 public class PixelArtRenderPass : ScriptableRenderPass, IDisposable
 {
-    static readonly int s_PaletteTexId    = Shader.PropertyToID("_PaletteTex");
-    static readonly int s_PaletteCountId  = Shader.PropertyToID("_PaletteCount");
+    static readonly int s_PaletteTexId   = Shader.PropertyToID("_PaletteTex");
+    static readonly int s_PaletteCountId = Shader.PropertyToID("_PaletteCount");
 
     readonly PixelArtRendererFeature.Settings _settings;
     Material _material;
-    RTHandle _lowResHandle;
     bool _disposed;
 
     public PixelArtRenderPass(PixelArtRendererFeature.Settings settings)
     {
         _settings = settings;
         _material = CoreUtils.CreateEngineMaterial("Custom/PixelArtQuantize");
+        requiresIntermediateTexture = true;
     }
 
-    public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData data)
+    class PassData
     {
+        public TextureHandle src;
+        public Material material;
+        public int pass;
+    }
+
+    public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+    {
+        if (_material == null) return;
+
+        var resourceData = frameData.Get<UniversalResourceData>();
+        var cameraData   = frameData.Get<UniversalCameraData>();
+
         Vector2Int res = ResolveResolution();
-        RenderTextureDescriptor desc = data.cameraData.cameraTargetDescriptor;
-        desc.width           = res.x;
-        desc.height          = res.y;
-        desc.depthBufferBits = 0;
-        desc.msaaSamples     = 1;
-        // FilterMode.Point on the low-res handle ensures point-sampled upscale.
-        RenderingUtils.ReAllocateHandleIfNeeded(
-            ref _lowResHandle, desc,
-            FilterMode.Point, TextureWrapMode.Clamp,
-            name: "_PixelArtLowRes");
-    }
-
-    public override void Execute(ScriptableRenderContext ctx, ref RenderingData data)
-    {
-        if (_material == null || _lowResHandle == null) return;
-
-        var cmd          = CommandBufferPool.Get("Pixel Art Pass");
-        var cameraTarget = data.cameraData.renderer.cameraColorTargetHandle;
 
         if (_settings.paletteTexture != null)
         {
             _material.SetTexture(s_PaletteTexId, _settings.paletteTexture);
             _material.SetFloat(s_PaletteCountId, _settings.paletteTexture.width);
         }
+        int downsamplePass = (_settings.paletteQuantize && _settings.paletteTexture != null) ? 0 : 1;
 
-        // Pass 0: down-sample + palette quantize.  Pass 1: down-sample only.
-        int pass = (_settings.paletteQuantize && _settings.paletteTexture != null) ? 0 : 1;
+        var desc = cameraData.cameraTargetDescriptor;
+        desc.width           = res.x;
+        desc.height          = res.y;
+        desc.depthBufferBits = 0;
+        desc.msaaSamples     = 1;
+        TextureHandle lowRes = UniversalRenderer.CreateRenderGraphTexture(
+            renderGraph, desc, "_PixelArtLowRes", false, FilterMode.Point);
 
-        Blitter.BlitCameraTexture(cmd, cameraTarget, _lowResHandle, _material, pass);
-        // Upscale back to camera target; FilterMode.Point on _lowResHandle does the work.
-        Blitter.BlitCameraTexture(cmd, _lowResHandle, cameraTarget);
+        // Pass A: downsample (+ optional palette quantize) to low-res buffer.
+        using (var builder = renderGraph.AddRasterRenderPass<PassData>("PixelArt Downsample", out var passData))
+        {
+            passData.src      = resourceData.activeColorTexture;
+            passData.material = _material;
+            passData.pass     = downsamplePass;
 
-        ctx.ExecuteCommandBuffer(cmd);
-        CommandBufferPool.Release(cmd);
+            builder.UseTexture(passData.src);
+            builder.SetRenderAttachment(lowRes, 0);
+
+            builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
+                Blitter.BlitTexture(ctx.cmd, data.src, new Vector4(1, 1, 0, 0), data.material, data.pass));
+        }
+
+        // Pass B: point-filter upscale back to camera target (shader pass 2 uses sampler_PointClamp).
+        using (var builder = renderGraph.AddRasterRenderPass<PassData>("PixelArt Upscale", out var passData))
+        {
+            passData.src      = lowRes;
+            passData.material = _material;
+            passData.pass     = 2;
+
+            builder.UseTexture(passData.src);
+            builder.SetRenderAttachment(resourceData.activeColorTexture, 0);
+
+            builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
+                Blitter.BlitTexture(ctx.cmd, data.src, new Vector4(1, 1, 0, 0), data.material, data.pass));
+        }
     }
-
-    public override void OnCameraCleanup(CommandBuffer cmd) { }
 
     Vector2Int ResolveResolution() =>
         _settings.preset switch
         {
-            PixelArtRendererFeature.PixelArtPreset.Crisp  => new Vector2Int(480, 270),
-            PixelArtRendererFeature.PixelArtPreset.Chunky => new Vector2Int(320, 180),
-            _                                              => _settings.customResolution,
+            PixelArtRendererFeature.PixelArtPreset.Crisp   => new Vector2Int(480, 270),
+            PixelArtRendererFeature.PixelArtPreset.Chunky  => new Vector2Int(320, 180),
+            _                                               => _settings.customResolution,
         };
 
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
-        _lowResHandle?.Release();
         if (_material != null) CoreUtils.Destroy(_material);
     }
 }

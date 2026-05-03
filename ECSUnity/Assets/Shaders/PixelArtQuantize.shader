@@ -76,7 +76,7 @@ Shader "Custom/PixelArtQuantize"
             ENDHLSL
         }
 
-        // ── Pass 1: blit only (no quantize) ────────────────────────────────
+        // ── Pass 1: blit only (no quantize, linear) ────────────────────────
         Pass
         {
             Name "PIXEL_ART_BLIT"
@@ -93,6 +93,29 @@ Shader "Custom/PixelArtQuantize"
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 return SAMPLE_TEXTURE2D_X(_BlitTexture,
                     sampler_LinearClamp, input.texcoord);
+            }
+            ENDHLSL
+        }
+
+        // ── Pass 2: point-filter upscale (pixel-art final blit) ─────────────
+        Pass
+        {
+            Name "PIXEL_ART_UPSCALE"
+
+            HLSLPROGRAM
+            #pragma vertex   Vert
+            #pragma fragment FragUpscale
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
+
+            SAMPLER(sampler_PointClamp);
+
+            half4 FragUpscale(Varyings input) : SV_Target
+            {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                return SAMPLE_TEXTURE2D_X(_BlitTexture,
+                    sampler_PointClamp, input.texcoord);
             }
             ENDHLSL
         }
