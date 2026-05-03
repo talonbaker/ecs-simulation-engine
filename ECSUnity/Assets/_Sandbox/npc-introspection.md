@@ -36,10 +36,10 @@ one-line "why" explanation. Three modes (Off / Selected / All) toggled by F2 or 
    have overlays. Overlays that would overlap are nudged apart vertically.
 6. Press **F2** once more.  
    **Expected:** all overlays disappear; mode pill disappears.
-7. Open the dev console (backtick/tilde), type `introspect on`, press Enter.  
-   **Expected:** overlays reappear (All mode); console prints `Introspection overlay: All`.
-8. Type `introspect selected` → all but selected overlay disappears.  
-   Type `introspect off` → all overlays off.
+7. *(Console step — sandbox only)* The sandbox scene has no DevConsolePanel, so
+   backtick/tilde does nothing here. The `introspect` command is covered by
+   `IntrospectCommandTests.cs` unit tests and will be manually verified in PlaytestScene
+   via the WP-4.0.F-INT integration packet.
 9. Press Play to stop.
 
 ## Expected
@@ -66,9 +66,8 @@ Adjust on the **NpcIntrospectionOverlay** Inspector:
   `_host` slot is populated (or let SceneBootstrapper auto-wire it on Play).
 - **Overlay pinned to screen corner, doesn't track NPCs** → `Camera.main` not set;
   ensure the Main Camera tag is on the camera in the scene.
-- **`introspect` command not found in console** → `IntrospectCommand` not registered;
-  verify DevConsolePanel has the `_introspectionOverlay` slot populated and that
-  `IntrospectCommand` is in `RegisterBuiltinCommands`.
+- **`introspect` command not found in console** → this sandbox has no DevConsolePanel;
+  console testing is deferred to WP-4.0.F-INT (PlaytestScene wiring).
 - **All text shows `—`** → NPCs may not have SocialDrivesComponent or
   IntendedActionComponent yet (early boot ticks); wait 2–3 seconds and press F2 again.
 - **FPS drops below 60 in All mode** → `_updateHz` too high or 30+ NPCs; lower
