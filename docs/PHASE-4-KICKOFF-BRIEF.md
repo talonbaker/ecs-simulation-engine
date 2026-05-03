@@ -53,7 +53,7 @@ A v0.2 UX/UI bible draft will land early in Phase 4 (your first or second packet
 
 ## Architectural axioms (these don't change)
 
-From SRD §8 (nine axioms — none added during Phase 3; the bibles' commitments held):
+From SRD §8 (ten axioms — §8.8 added 2026-05-02 codifying the Mod API pacing commitment; §8.7 codified during Phase 4 from Phase 3's de-facto adoption):
 
 1. **Anthropic API is design-time only** (8.1). Runtime engine has zero LLM dependency.
 2. **Save/load reuses WorldStateDto** (8.2). Hardened to v0.5 schema during Phase 3.2.0.
@@ -64,6 +64,7 @@ From SRD §8 (nine axioms — none added during Phase 3; the bibles' commitments
 7. **Emotion is content; spoken language is decorative** (Phase 1 derived).
 8. **Drives are necessary but not sufficient for action** (Phase 1 derived).
 9. **The engine is host-agnostic; telemetry is build-conditional** (8.7). WARDEN/RETAIL split enforced via Unity scripting defines + `#if WARDEN` everywhere.
+10. **API surfaces evolve incrementally; modder-extension points are recognized over time, not designed up front** (8.8). The engine ↔ content boundary is real but matured slowly; no premature repo split; no premature full Mod API; every cross-boundary packet leaves the boundary slightly more legible than it found it. A `MOD-API-CANDIDATES.md` ledger (to be authored when first surfaces stabilize) tracks candidate extension points organically. A formal Mod API sub-phase lands in Phase 5 or 6 territory after the gameplay loop matures.
 
 **Phase 4 carries-forward design memories** that are project-shaping. Read them as load-bearing:
 
@@ -93,46 +94,59 @@ From SRD §8 (nine axioms — none added during Phase 3; the bibles' commitments
 
 ## Phase 4 expectations and starter priorities
 
-Phase 4 is **gameplay deepening + content polish**. The simulation has its substrate; now it grows the depth the bibles promised. Five sub-phases, dispatched in dependency order:
+> **2026-05-02 restructure.** The original 4.0.x scope (UX bible v0.2 + multi-floor + shader pipeline) was reordered after Talon's playtest-driven realization: the single-floor scene isn't legible yet, NPCs bunch and clip, floors don't read as floors. Adding multi-floor on top would compound the unreadability. Lesson is the same as the 3.1.x bundle incident, generalized: **don't build on top of a foundation that isn't working**. Multi-floor is postponed to 4.2.x where emergent scenarios actually need it. The new 4.0.x is the *foundational polish* wave that makes a 5-NPC single-floor scene legible, responsive, and visually right. The shader pipeline is promoted to lead because the look-and-feel must land before subsequent polish work authors against silhouettes-on-flat-rectangles. SRD §8.8 (added 2026-05-02) commits the project to incremental Mod API surfacing during this wave: every foundational-polish packet carries a "Mod API surface" section; candidate extension points accumulate in `docs/c2-infrastructure/MOD-API-CANDIDATES.md`.
 
-### Phase 4.0.x — UX bible v0.2 + multi-floor + rendering pipeline
+Phase 4 is **gameplay deepening + content polish**, dispatched in this order:
 
-The foundational wave for everything that follows.
+### Phase 4.0.x — Foundational polish (NEW SCOPE)
 
-1. **WP-4.0.0 — UX/UI bible v0.2.** Resolves Q4 (notification carrier model + the gameplay-loop / challenge-surface decision), Q5 (player embodiment), Q6 (direct intervention scope). Talon authors; you critique. This is the bible packet, not a code packet.
-2. **WP-4.0.1 — Multi-floor topology.** Single-floor was v0.1; the world bible commits three (basement, ground, top). Engine extends `RoomComponent` and `PathfindingService` for multi-floor. Camera adds floor-switch verb (D-pad up / Q / E + smooth float-out-and-back). Stairwells become topology-traversable.
-3. **WP-4.0.2 — Pixel-art-from-3D shader pipeline.** Aesthetic bible's render commitment: low-poly 3D underlying geometry, pixel-art shader at output, real shadows from real light. Couples to URP migration (or stays on built-in if URP regresses the 30-FPS gate). Largest visual upgrade since 3.1.B.
+The wave that makes the single-floor 5-NPC scene functional, legible, and visually settled. Multi-floor is intentionally OUT of this wave; emergent gameplay (plague, fire, PIP, affairs) is intentionally OUT of this wave.
+
+- **WP-4.0.A — Pixel-art post-process sandbox** (Track 2 sandbox + companion -INT). The aesthetic bible's render commitment landed as a camera post-process effect on the existing built-in pipeline (URP migration deferred — pragmatism over architectural purity until evidence shows we need URP's tooling). Modder-extensible render-pass registration scaffolded.
+- **WP-4.0.B — NPC spatial behavior / anti-overlap** (Track 1 engine). Soft repulsion / personal-space component. NPCs may have nothing meaningful to do yet, but they shouldn't clip into each other while doing it. PersonalSpaceComponent becomes a Mod API extension surface.
+- **WP-4.0.C — Build prop footprint foundation** (Track 1.5). The substrate BUG-001's eventual fix needs: per-prop occupancy footprint as a first-class engine concept. Doesn't fix BUG-001 yet; lays the foundation.
+- **WP-4.0.D — Floor & room visual identity** (Track 2 sandbox + -INT). Floors that read as floors (carpet, linoleum, concrete); walls that read as walls; doors that read as doors. Couples to 4.0.A's pipeline.
+- **WP-4.0.E — NPC visual state communication** (Track 2 sandbox + -INT). Animation states from 3.2.6 are defined but not reading. Polish pass: emotion cues, activity legibility, two-second-glance answer to "what is this person doing right now."
+- **WP-4.0.F — NPC dev-mode introspection overlay** (Track 2 sandbox + -INT). WARDEN-only. What each NPC is doing, intends to do, drive vector, why-am-I-here. Talon's "refine in dev mode" call mechanized. Strips at ship.
+- **WP-4.0.G — Build mode v2 / BUG-001 fix** (Track 1.5). Prop-on-prop displacement resolved using 4.0.C's footprint substrate; multi-prop stacking; undo/redo. Lands after 4.0.C.
+- **WP-4.0.H — Particle vocabulary (steam / smoke / fire)** (Track 2 sandbox + -INT). Trailing steam from coffee; fire/smoke for the plague-week and fire scenarios that come later; modder-extensible particle registration. Lands after 4.0.A.
+
+The UX bible v0.2 work is paused (the v0.2 commitments captured in conversation are the working draft; formal v0.2 file revision lands when it's ready). The original WP-4.0.0 critique packet is implicitly fulfilled by iterative Talon ↔ Opus drafting; no separate critique-packet artifact unless audit trail demands one.
 
 ### Phase 4.1.x — Audio + voice profiles + content tuning
 
-4. **WP-4.1.0 — Per-archetype voice profile generation.** Sims-gibberish phoneme profile per archetype (the Old Hand sounds different from the Newbie). Reads from dialog corpus; emits via `SpeechFragment` sound trigger; host synthesises with archetype-specific timbre. Subtitle option per UX bible §4.5.
-5. **WP-4.1.1 — Ambient soundscape + music.** Diegetic-only at v0.1 (the buzz of fluorescents, the hum of the office); non-diegetic music as a future toggle. Couples to camera proximity.
-6. **WP-4.1.2 — Final art pipeline integration.** Replaces placeholder silhouette + chibi sprites with hand-drawn final pixel art. Per-archetype final designs from the cast bible. Coordinates with whoever Talon is collaborating with on art.
+- **WP-4.1.0 — Per-archetype voice profile generation.** Sims-gibberish phoneme profile per archetype.
+- **WP-4.1.1 — Ambient soundscape.** Diegetic-only first pass. Couples to camera proximity.
+- **WP-4.1.2 — Final art pipeline integration.** Replaces placeholder silhouettes + chibi sprites with hand-drawn final pixel art. Couples to 4.0.A.
 
-### Phase 4.2.x — Emergent gameplay deepening
+### Phase 4.2.x — Multi-floor + emergent gameplay deepening
 
-7. **WP-4.2.0 — Plague week.** A communicable-illness scenario. One NPC (likely the Newbie) arrives sick on day 1; transmission per proximity; productivity collapses by day 5; office quieter. Couples to existing `BiologicalConditionSystem`, `StressComponent`, schedule disruption. From `new-systems-ideas.md`.
-8. **WP-4.2.1 — PIP arc.** Performance Improvement Plan: an NPC's quality output tracked over weeks; HR threshold flagging; the office knows but doesn't talk about it. Long-arc gameplay; couples to workload + relationship + chronicle.
-9. **WP-4.2.2 — Fire / disaster.** A structural emergency: the kitchen catches fire (or pipes burst, or HVAC fails). NPCs evacuate per proximity + panic; rescue intervals fire; the office reorganizes around the damage. Test of `IWorldMutationApi` + `StructuralChangeBus` at scale.
-10. **WP-4.2.3 — Affair detection mechanic.** The world bible commits to office affairs. Their currently-implicit detection (per-pair memory accumulating positive intimate events) becomes an observable systemic behavior — gossip propagates, witnesses' relationship-affection toward the involved NPCs shifts, mask-slip events surface. Mature; carefully scoped.
+Multi-floor moved here from 4.0.x; the emergent scenarios that need it slot immediately after.
 
-### Phase 4.3.x — Player verb expansion (after UX bible v0.2 lands)
+- **WP-4.2.0 — Multi-floor topology** (was 4.0.1). Engine extends `RoomComponent` and `PathfindingService`. Camera floor-switch verb. Stairwells topology-traversable. Schema v0.5 → v0.6 bump.
+- **WP-4.2.1 — Plague week.**
+- **WP-4.2.2 — PIP arc.**
+- **WP-4.2.3 — Fire / disaster.** Test of multi-floor evacuation at scale.
+- **WP-4.2.4 — Affair detection mechanic.**
 
-11. **WP-4.3.0 — Player embodiment surface.** Whichever option v0.2 of the bible chose for Q5 (manager's office overlay is the leaning). The notification surface is finalised; the diegetic carriers (phone, fax, email) become player-actionable.
-12. **WP-4.3.1 — Soft-suggestions verb (if v0.2 picks (b) for Q6).** Player marks a task as urgent; player sends an NPC home; player suggests a chore. Light nudges, not commands. NPCs respond per personality/willpower.
-13. **WP-4.3.2 — Schedule editing.** Player edits an NPC's schedule blocks. Per UX bible Q6 leaning. NPCs react with stress / irritation / disruption.
+### Phase 4.3.x — Player verb expansion (after UX bible v0.2 formally lands)
+
+- **WP-4.3.0 — Player embodiment surface** (per Q5 resolution = pure ghost camera, captured in conversation; HUD elements determined per playtest evidence).
+- **WP-4.3.1 — Pick-up-NPC-and-drop intervention verb** (per Q6 resolution = physical placement primary; click-context-menu interim with Force/Urgent verbs).
+- **WP-4.3.2 — Schedule editing.**
 
 ### Phase 4.4.x — Hardcore mode + ship prep
 
-14. **WP-4.4.0 — Hardcore mode.** Time-limited off-hours build window; reduced save slots; auto-pause-off; higher hazard rates. Per UX bible §5.3.
-15. **WP-4.4.1 — Final balance + tuning passes.** Haiku batch validations across archetype-bias matrices. Cast-validate spec patterns from Phase 2 are the model.
-16. **WP-4.4.2 — Tutorial / first-launch experience.** Diegetic per UX bible — a tape-deck welcome, an HR letter on the manager's-office desk. Or no tutorial per axiom 1.3 rule 4. UX bible v0.2 takes the position.
+- **WP-4.4.0 — Hardcore mode.**
+- **WP-4.4.1 — Final balance + tuning passes.**
+- **WP-4.4.2 — Tutorial / first-launch experience.**
 
-**Starter priority order** (Talon will calibrate):
-1. Author the Phase 3 handoff document if it doesn't exist (mining `_completed-specs/` and `_completed/` for the cumulative state).
-2. Brief WP-4.0.0 (UX bible v0.2 critique packet) immediately.
-3. Wait for the bible v0.2 to land.
-4. Then dispatch WP-4.0.1 (multi-floor) and WP-4.0.2 (shader pipeline) in parallel.
+**Starter priority order (2026-05-02 calibration):**
+1. Wave 1 batch (dispatch immediately, parallel-safe — disjoint file surfaces): **WP-4.0.A** (shader sandbox), **WP-4.0.B** (NPC anti-overlap), **WP-4.0.C** (build footprint foundation).
+2. After 4.0.A merges and the pipeline is stable: **WP-4.0.A-INT** (integrate into PlaytestScene), then **WP-4.0.D** (floor identity) + **WP-4.0.E** (NPC readability) + **WP-4.0.H** (particle vocabulary) in parallel.
+3. After 4.0.C merges: **WP-4.0.G** (build mode v2 / BUG-001) using the footprint substrate.
+4. **WP-4.0.F** (dev-mode introspection) any time after 4.0.A; doesn't strictly depend on it but benefits from the new pipeline being settled.
+5. Phase 4.1.x dispatches when 4.0.x stabilizes.
 
 ---
 

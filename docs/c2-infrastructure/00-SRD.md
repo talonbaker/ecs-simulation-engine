@@ -377,3 +377,24 @@ The eventual gameplay is Sims/Rimworld/Prison Architect territory: drives, relat
 ### 8.6 The visual target is 2.5D top-down management sim
 
 The player is a ghost-camera, not a character. They pan, zoom, and follow workers around an office floor. The headless engine doesn't render, but it must expose enough spatial structure for the AI tier to reason about *places*, not just float coordinates. The v0.5 room-overlay bump is the first move on this axis.
+
+### 8.7 The engine is host-agnostic; telemetry is build-conditional
+
+The engine (`APIFramework`) carries no dependency on its host. Unity loads `APIFramework.dll` and ticks the engine in-process; `ECSCli` and headless test harnesses tick the same engine through different drivers; the orchestrator uses the engine's contracts but never its runtime. Every host is a peer; none is privileged in the engine's source.
+
+Dev-time observability (JSONL streams, AI-agent connection, debug consoles, ASCII map projector, scenario-trigger verbs, scene seeders) lives in `Warden.*` projects gated behind `#if WARDEN`. Shipped retail builds set the scripting define to exclude `WARDEN`; every `Warden.*` reference compiles out; the binary that reaches a player has zero observability surface beyond what the player is meant to see. The two-world boundary is enforced at compile time, not by convention.
+
+This axiom was confirmed during Phase 3 (Unity host integration validated; `AsciiMapProjector` shipped as the canonical pattern; the Track 1 / Track 2 split operated cleanly under it). Future packets that propose runtime telemetry, runtime LLM calls, or host-coupled engine code are rejected on architectural grounds.
+
+### 8.8 API surfaces evolve incrementally; modder-extension points are recognized over time, not designed up front
+
+The engine ↔ content boundary is real and load-bearing — content (archetypes, dialog corpus, schedules, hazards, narrative event vocabularies, sound triggers, animation states) is data on top of an engine substrate that knows nothing about offices, sneezes, or Donna. Over the project's lifetime this boundary will mature into a public **Mod API** that supports community contribution: a contributor adds sneezing as a self-contained extension — component, system, narrative event, animation state, archetype-tuning slot — and the host loads it without engine modification.
+
+The path to that API is **incremental and gradual**. We do not pre-design the full Mod API surface. We do not prematurely split the codebase into engine and content repositories (the coordination cost during active development outweighs any benefit until a real modder community exists post-ship). Instead:
+
+- **Every packet that defines a new component family, narrative event kind, sound trigger, archetype slot, animation state, or schedule primitive** is authored as if it were a future public extension point — clean naming, schema-validated where applicable, decoupled from caller specifics.
+- **A `MOD-API-CANDIDATES.md` ledger** (to be created in `docs/c2-infrastructure/` when the first surfaces stabilize) records each candidate extension point as it emerges from organic Phase 4+ development. It grows slowly. Entries graduate to the eventual Mod API surface only when they have proven stable across multiple consumers.
+- **A formal Mod API sub-phase** (Phase 5 or 6 territory, after the gameplay loop and content depth are mature enough that the API surface can stabilize) authors the loader, the manifest schema, the registration contracts, sandboxing, and reference documentation as a deliberate work package.
+- **Repository split, if undertaken at all, comes after the Mod API ships and a community exists to consume it.** The split's costs (versioned coordination, integration testing across repos, slower cross-cutting packets) are paid only when a public side genuinely benefits.
+
+This axiom is a **pacing commitment**: we recognize the future API as a real architectural concern starting now, but we evolve it slowly so that the structure isn't overwhelmed by premature abstraction. Every Phase 4+ packet that crosses the engine ↔ content boundary should leave the boundary slightly more legible than it found it. Future packets that propose to either ignore the boundary entirely *or* to formalize the entire Mod API in one push are both rejected on architectural grounds — the first defers the work; the second skips the necessary maturation period.
