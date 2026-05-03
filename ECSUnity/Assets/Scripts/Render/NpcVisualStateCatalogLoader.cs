@@ -59,6 +59,9 @@ public sealed class NpcVisualStateCatalogLoader : ScriptableObject
         }
     }
 
+    /// <summary>Empty catalog with safe defaults; used as fallback when JSON is unavailable.</summary>
+    public static NpcVisualStateCatalog Empty => NpcVisualStateCatalogLoader_Pure.Empty;
+
     // Expose pure-C# loader under a distinct name to avoid collision with the class name.
     private static class NpcVisualStateCatalogLoader_Pure
     {
