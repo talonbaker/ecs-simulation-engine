@@ -195,8 +195,11 @@ public sealed class RoomBoundaryTrimRenderer : MonoBehaviour
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
-    private string FloorMaterialName(RoomCategory cat)
+    // room.Category is Warden.Contracts.Telemetry.RoomCategory; loader and palette expect
+    // APIFramework.Components.RoomCategory — values are identical by design so cast is safe.
+    private string FloorMaterialName(RoomCategory wardenCat)
     {
+        var cat = (APIFramework.Components.RoomCategory)(int)wardenCat;
         if (_visualIdentityLoader == null) return cat.ToString();
         var mat = _visualIdentityLoader.GetFloorMaterial(cat);
         return mat != null ? mat.name : cat.ToString();
@@ -204,7 +207,6 @@ public sealed class RoomBoundaryTrimRenderer : MonoBehaviour
 
     private Color TrimColor(RoomDto a, RoomDto b)
     {
-        // Use the darker of the two floor colors as the trim base.
         Color ca = FloorColor(a.Category);
         Color cb = FloorColor(b.Category);
         float lumA = 0.299f * ca.r + 0.587f * ca.g + 0.114f * ca.b;
@@ -212,8 +214,9 @@ public sealed class RoomBoundaryTrimRenderer : MonoBehaviour
         return lumA < lumB ? ca : cb;
     }
 
-    private Color FloorColor(RoomCategory cat)
+    private Color FloorColor(RoomCategory wardenCat)
     {
+        var cat = (APIFramework.Components.RoomCategory)(int)wardenCat;
         if (_visualIdentityLoader == null) return RenderColorPalette.ForRoom(cat);
         var mat = _visualIdentityLoader.GetFloorMaterial(cat);
         if (mat == null) return RenderColorPalette.ForRoom(cat);

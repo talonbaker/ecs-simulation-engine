@@ -165,26 +165,19 @@ public static class RoomVisualIdentityAssetGenerator
             Object.DestroyImmediate(trim.GetComponent<Collider>());
         }
 
-        // Control panel UI (canvas with buttons).
-        BuildControlPanelUi();
+        // Control panel placeholder — FloorRoomIdentitySandboxController builds the UI at runtime.
+        // Add it to a ControlPanel GO; it lives in _Sandbox.asmdef so the editor script
+        // adds it via reflection to avoid an assembly-reference dependency.
+        var cpGo = new GameObject("ControlPanel");
+        var controllerType = System.Type.GetType("FloorRoomIdentitySandboxController, _Sandbox");
+        if (controllerType != null)
+            cpGo.AddComponent(controllerType);
+        else
+            Debug.LogWarning("[RoomVisualIdentityAssetGenerator] FloorRoomIdentitySandboxController " +
+                             "not found — add it manually to the ControlPanel GO.");
 
         EditorSceneManager.SaveScene(scene, scenePath);
         Debug.Log($"[RoomVisualIdentityAssetGenerator] Sandbox scene built and saved: {scenePath}");
-    }
-
-    // ── Private helpers ────────────────────────────────────────────────────────
-
-    private static void BuildControlPanelUi()
-    {
-        var canvasGo = new GameObject("ControlPanel");
-        var canvas   = canvasGo.AddComponent<UnityEngine.UI.Canvas>();
-        canvas.renderMode = UnityEngine.UI.RenderMode.ScreenSpaceOverlay;
-        canvasGo.AddComponent<UnityEngine.UI.CanvasScaler>();
-        canvasGo.AddComponent<UnityEngine.UI.GraphicRaycaster>();
-
-        // Altitude buttons and toggles are wired in FloorRoomIdentitySandboxController
-        // which is added to the ControlPanel GO.
-        canvasGo.AddComponent<FloorRoomIdentitySandboxController>();
     }
 
     private static void AssignTexturesToMaterials()

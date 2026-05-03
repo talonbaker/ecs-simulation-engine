@@ -140,11 +140,14 @@ public sealed class RoomRectangleRenderer : MonoBehaviour
         Color baseColor = RenderColorPalette.ForRoom(room.Category);
 
         // Choose template materials: catalog-sourced when loader is present.
+        // room.Category is Warden.Contracts.Telemetry.RoomCategory; loader expects
+        // APIFramework.Components.RoomCategory — values are identical by design so cast is safe.
+        var apiCategory = (APIFramework.Components.RoomCategory)(int)room.Category;
         Material floorTemplate = _visualIdentityLoader != null
-            ? _visualIdentityLoader.GetFloorMaterial(room.Category) ?? _floorMatTemplate
+            ? _visualIdentityLoader.GetFloorMaterial(apiCategory) ?? _floorMatTemplate
             : _floorMatTemplate;
         Material wallTemplate = _visualIdentityLoader != null
-            ? _visualIdentityLoader.GetWallMaterial(room.Category) ?? _wallMatTemplate
+            ? _visualIdentityLoader.GetWallMaterial(apiCategory) ?? _wallMatTemplate
             : _wallMatTemplate;
 
         // Floor quad -------------------------------------------------------
