@@ -134,10 +134,26 @@ These will land in the foundational polish wave (WP-4.0.A through WP-4.0.H). Eac
 ### MAC-012: Particle effect vocabulary
 
 - **What:** Trigger vocabulary for visual particle effects (steam from coffee, smoke from fire, sparks, dust kicked up). Engine emits triggers; Unity host spawns/manages particle systems. Parallel structure to SoundTriggerKind (MAC-003).
-- **Where:** WP-4.0.H introduces. `APIFramework/Visual/ParticleTriggerKind.cs`; `Warden.Telemetry/...` host consumer.
-- **Why a candidate:** Visual mods (a sneeze mod adds sneeze-mist particles; a fire mod adds custom flame), parallel to audio mods.
+- **Where:** WP-4.0.H introduces. `APIFramework/Visual/ParticleTriggerKind.cs`; `APIFramework/Visual/ParticleTriggerBus.cs`; `ECSUnity/Assets/Scripts/Render/Visual/ParticleTriggerSpawner.cs`.
+- **Why a candidate:** Visual mods (a sneeze mod adds sneeze-mist particles; a fire mod adds custom flame), parallel to audio mods. JSON catalog (`docs/c2-content/visual/particle-trigger-catalog.json`) is the data-driven extension surface.
 - **Stability:** fresh (lands with WP-4.0.H).
 - **Source packet:** WP-4.0.H (pending).
+
+### MAC-013: NPC visual state catalog (animation states + chibi cues + transitions)
+
+- **What:** JSON catalog (`docs/c2-content/animation/visual-state-catalog.json`) describing per-state visual treatment (frame timing, accent color, cue affinity), per-cue rendering parameters (sprite asset, anchor offset, fade altitude, scale multiplier), and per-pair state transition smoothing (intermediate frames, total duration). Modders adding new animation states + emotion cues extend the JSON.
+- **Where:** WP-4.0.E introduces. `docs/c2-content/animation/visual-state-catalog.json`; `ECSUnity/Assets/Scripts/Render/NpcVisualStateCatalogLoader.cs`; consumed by `SilhouetteAnimator` + `ChibiEmotionPopulator`.
+- **Why a candidate:** A sneeze mod adds the `Sneezing` state with frame timing + a sneeze cue; the catalog absorbs both without code changes. Pattern is consistent with MAC-001 (per-archetype tuning) and MAC-005 (SimConfig sections) — data-driven extension.
+- **Stability:** fresh (lands with WP-4.0.E).
+- **Source packet:** WP-4.0.E (pending).
+
+### MAC-014: Room visual identity catalog (floor / wall / door materials per RoomKind)
+
+- **What:** JSON catalog (`docs/c2-content/world-definitions/room-visual-identity.json`) mapping `RoomKind` to default floor/wall/door materials + boundary trim. Modders adding new room categories (e.g., "Server Room", "Reception") add an entry; modders authoring custom material packs reference custom materials.
+- **Where:** WP-4.0.D introduces. `docs/c2-content/world-definitions/room-visual-identity.json`; `ECSUnity/Assets/Scripts/Render/RoomVisualIdentityLoader.cs`.
+- **Why a candidate:** Visual mods + room-type mods are common categories. Data-driven extension consistent with MAC-001 / MAC-005 / MAC-013.
+- **Stability:** fresh (lands with WP-4.0.D).
+- **Source packet:** WP-4.0.D (pending).
 
 ---
 
