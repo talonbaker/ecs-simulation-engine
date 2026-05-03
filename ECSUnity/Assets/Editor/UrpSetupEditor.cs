@@ -17,6 +17,7 @@
 
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 [InitializeOnLoad]
@@ -48,24 +49,38 @@ public static class UrpSetupEditor
 
         bool changed = false;
 
-        if (GraphicsSettings.renderPipelineAsset != pipelineAsset)
+        // Set Graphics Settings via SerializedObject so the change persists to
+        // ProjectSettings/GraphicsSettings.asset without requiring a manual save.
+        var graphicsSO = new SerializedObject(
+            AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset")[0]);
+        var srpProp = graphicsSO.FindProperty("m_CustomRenderPipeline");
+        if (srpProp.objectReferenceValue != pipelineAsset)
         {
-            GraphicsSettings.renderPipelineAsset = pipelineAsset;
+            srpProp.objectReferenceValue = pipelineAsset;
+            graphicsSO.ApplyModifiedPropertiesWithoutUndo();
             changed = true;
         }
 
-        for (int i = 0; i < QualitySettings.count; i++)
+        // Set all QualitySettings tiers via SerializedObject (QualitySettings.SetRenderPipelineAssetAt
+        // is not available in all Unity 6 Editor contexts; SerializedObject is always reliable).
+        var qualitySO = new SerializedObject(
+            AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/QualitySettings.asset")[0]);
+        var tiersArray = qualitySO.FindProperty("m_QualitySettings");
+        for (int i = 0; i < tiersArray.arraySize; i++)
         {
-            if (QualitySettings.GetRenderPipelineAssetAt(i) != pipelineAsset)
+            var tierProp = tiersArray.GetArrayElementAtIndex(i)
+                                     .FindPropertyRelative("customRenderPipeline");
+            if (tierProp.objectReferenceValue != pipelineAsset)
             {
-                QualitySettings.SetRenderPipelineAssetAt(i, pipelineAsset);
+                tierProp.objectReferenceValue = pipelineAsset;
                 changed = true;
             }
         }
+        if (changed)
+            qualitySO.ApplyModifiedPropertiesWithoutUndo();
 
         if (changed)
         {
-            EditorUtility.SetDirty(pipelineAsset);
             AssetDatabase.SaveAssets();
             Debug.Log("[WP-4.0.A] Graphics and Quality Settings updated to use URP. " +
                       "Run the Render Pipeline Converter (Window > Rendering > Render Pipeline " +

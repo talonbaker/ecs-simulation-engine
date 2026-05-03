@@ -52,7 +52,7 @@ public class UrpPipelineConfigTests
     [Test]
     public void GraphicsSettings_UsesUrpPipelineAsset()
     {
-        var pipeline = GraphicsSettings.renderPipelineAsset;
+        var pipeline = GraphicsSettings.defaultRenderPipeline;
 
         Assert.IsNotNull(pipeline,
             "GraphicsSettings.renderPipelineAsset must not be null. " +
@@ -92,7 +92,7 @@ public class UrpPipelineConfigTests
     [Test]
     public void UrpPipelineAsset_HasRendererData()
     {
-        var pipeline = GraphicsSettings.renderPipelineAsset as UniversalRenderPipelineAsset;
+        var pipeline = GraphicsSettings.defaultRenderPipeline as UniversalRenderPipelineAsset;
 
         if (pipeline == null)
         {
