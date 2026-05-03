@@ -3,6 +3,7 @@ using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Audio;
+using APIFramework.Systems.Visual;
 
 namespace APIFramework.Systems.Lighting;
 
@@ -22,15 +23,17 @@ namespace APIFramework.Systems.Lighting;
 /// </remarks>
 public sealed class LightSourceStateSystem : ISystem
 {
-    private readonly SeededRandom   _rng;
-    private readonly LightingConfig _cfg;
-    private readonly SoundTriggerBus? _soundBus;
+    private readonly SeededRandom          _rng;
+    private readonly LightingConfig        _cfg;
+    private readonly SoundTriggerConfig?   _soundCfg;
+    private readonly SoundTriggerBus?      _soundBus;
+    private readonly ParticleTriggerBus?   _particleBus;
     private readonly int _bulbBuzzInterval;
 
     // per-entity effective intensity for the current tick (used by IlluminationAccumulationSystem)
     private readonly Dictionary<Entity, double> _effectiveIntensity = new();
 
-    // per-entity tick counter for BulbBuzz throttling
+    // per-entity tick counter for BulbBuzz / BulbFlicker throttling
     private readonly Dictionary<Entity, int> _flickerTick = new();
 
     /// <summary>
@@ -40,11 +43,14 @@ public sealed class LightSourceStateSystem : ISystem
     /// <param name="cfg">Lighting tuning — supplies <c>FlickerOnProb</c> and <c>DyingDecayProb</c>.</param>
     /// <param name="soundCfg">Optional sound tuning for BulbBuzz interval.</param>
     /// <param name="soundBus">Optional bus for BulbBuzz emission.</param>
-    public LightSourceStateSystem(SeededRandom rng, LightingConfig cfg, SoundTriggerConfig? soundCfg = null, SoundTriggerBus? soundBus = null)
+    /// <param name="particleBus">Optional bus for BulbFlicker particle emission.</param>
+    public LightSourceStateSystem(SeededRandom rng, LightingConfig cfg, SoundTriggerConfig? soundCfg = null, SoundTriggerBus? soundBus = null, ParticleTriggerBus? particleBus = null)
     {
-        _rng = rng;
-        _cfg = cfg;
-        _soundBus = soundBus;
+        _rng          = rng;
+        _cfg          = cfg;
+        _soundCfg     = soundCfg;
+        _soundBus     = soundBus;
+        _particleBus  = particleBus;
         _bulbBuzzInterval = soundCfg?.BulbBuzzEmitIntervalTicks ?? 10;
     }
 
@@ -87,8 +93,7 @@ public sealed class LightSourceStateSystem : ISystem
                         : 0.0;
                     _effectiveIntensity[entity] = flickerEffective;
 
-                    // Emit BulbBuzz at the configured interval
-                    if (_soundBus != null)
+                    // Emit BulbBuzz + BulbFlicker at the configured interval
                     {
                         _flickerTick.TryGetValue(entity, out var ft);
                         ft++;
@@ -96,7 +101,8 @@ public sealed class LightSourceStateSystem : ISystem
                         {
                             ft = 0;
                             var pos = entity.Has<PositionComponent>() ? entity.Get<PositionComponent>() : default;
-                            _soundBus.Emit(SoundTriggerKind.BulbBuzz, entity.Id, pos.X, pos.Z, 0.2f, 0L);
+                            _soundBus?.Emit(SoundTriggerKind.BulbBuzz, entity.Id, pos.X, pos.Z, 0.2f, 0L);
+                            _particleBus?.Emit(ParticleTriggerKind.BulbFlicker, entity.Id, pos.X, pos.Z, 0.6f, 0L);
                         }
                         _flickerTick[entity] = ft;
                     }

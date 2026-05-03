@@ -5,6 +5,7 @@ using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Mutation;
 using APIFramework.Systems.Audio;
+using APIFramework.Systems.Visual;
 
 namespace APIFramework.Systems.Physics;
 
@@ -15,24 +16,27 @@ namespace APIFramework.Systems.Physics;
 /// </summary>
 public sealed class PhysicsTickSystem : ISystem
 {
-    private readonly PhysicsConfig      _cfg;
-    private readonly CollisionDetector  _collision;
-    private readonly IWorldMutationApi  _mutationApi;
-    private readonly SoundTriggerBus    _soundBus;
-    private readonly SimulationClock    _clock;
+    private readonly PhysicsConfig        _cfg;
+    private readonly CollisionDetector    _collision;
+    private readonly IWorldMutationApi    _mutationApi;
+    private readonly SoundTriggerBus      _soundBus;
+    private readonly SimulationClock      _clock;
+    private readonly ParticleTriggerBus?  _particleBus;
 
     public PhysicsTickSystem(
-        PhysicsConfig      cfg,
-        CollisionDetector  collision,
-        IWorldMutationApi  mutationApi,
-        SoundTriggerBus    soundBus,
-        SimulationClock    clock)
+        PhysicsConfig        cfg,
+        CollisionDetector    collision,
+        IWorldMutationApi    mutationApi,
+        SoundTriggerBus      soundBus,
+        SimulationClock      clock,
+        ParticleTriggerBus?  particleBus = null)
     {
         _cfg         = cfg;
         _collision   = collision;
         _mutationApi = mutationApi;
         _soundBus    = soundBus;
         _clock       = clock;
+        _particleBus = particleBus;
     }
 
     public void Update(EntityManager em, float deltaTime)
@@ -83,6 +87,8 @@ public sealed class PhysicsTickSystem : ISystem
                     var breakable = entity.Get<BreakableComponent>();
                     if (hitEnergy >= breakable.HitEnergyThreshold)
                     {
+                        _particleBus?.Emit(ParticleTriggerKind.Sparks, entity.Id, hit.X, hit.Z,
+                            MathF.Min(1.0f, hitEnergy / breakable.HitEnergyThreshold), _clock.CurrentTick);
                         ApplyBreakage(entity, breakable, hit.X, hit.Z);
                         continue;
                     }
@@ -123,6 +129,7 @@ public sealed class PhysicsTickSystem : ISystem
             case BreakageBehavior.SpawnLiquidStain:
                 _mutationApi.DespawnStructural(entity.Id);
                 _mutationApi.SpawnStain(StainTemplates.WaterPuddle, (int)x, (int)z);
+                _particleBus?.Emit(ParticleTriggerKind.WaterSplash, entity.Id, x, z, 1.0f, 0L);
                 break;
 
             case BreakageBehavior.SpawnGlassShards:

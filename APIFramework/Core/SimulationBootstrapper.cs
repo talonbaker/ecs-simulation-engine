@@ -6,6 +6,7 @@ using APIFramework.Config;
 using APIFramework.Mutation;
 using APIFramework.Systems;
 using APIFramework.Systems.Audio;
+using APIFramework.Systems.Visual;
 using APIFramework.Systems.Chores;
 using APIFramework.Systems.Coupling;
 using APIFramework.Systems.Dialog;
@@ -208,6 +209,9 @@ public class SimulationBootstrapper
     /// <summary>Sound trigger bus. Subscribe to receive audio trigger events emitted each tick.</summary>
     public SoundTriggerBus SoundBus { get; }
 
+    /// <summary>Particle trigger bus. Subscribe to receive visual particle trigger events emitted each tick.</summary>
+    public ParticleTriggerBus ParticleBus { get; }
+
     // ── Chronicle services ────────────────────────────────────────────────────
 
     /// <summary>Global persistent narrative chronicle. Read by TelemetryProjector each tick.</summary>
@@ -327,6 +331,9 @@ public class SimulationBootstrapper
         // Sound trigger bus
         SoundBus = new SoundTriggerBus();
 
+        // Particle trigger bus
+        ParticleBus = new ParticleTriggerBus();
+
         // Dialog services
         PendingDialogQueue = new PendingDialogQueue();
         var corpusPath = DialogCorpusService.FindCorpusFile(Config.Dialog.CorpusPath);
@@ -420,6 +427,7 @@ public class SimulationBootstrapper
         Invariants = new InvariantSystem(Clock, Chronicle);
 
         NarrativeBus      = new NarrativeEventBus();
+        ParticleBus       = new ParticleTriggerBus();
         PendingDialogQueue = new PendingDialogQueue();
 
         var corpusPath = DialogCorpusService.FindCorpusFile(Config.Dialog.CorpusPath);
@@ -749,7 +757,7 @@ public class SimulationBootstrapper
 
         // Lighting â€” sun position, source state machines, aperture beams, room illumination,
         // then proximity events (which now see current illumination).
-        var lightSourceStates = new LightSourceStateSystem(Random, Config.Lighting, Config.SoundTriggers, SoundBus);
+        var lightSourceStates = new LightSourceStateSystem(Random, Config.Lighting, Config.SoundTriggers, SoundBus, ParticleBus);
         var apertureBeams     = new ApertureBeamSystem(SunState, Clock);
         Engine.AddSystem(new SunSystem(Clock, SunState, Config.Lighting),                           SystemPhase.Lighting);
         Engine.AddSystem(lightSourceStates,                                                          SystemPhase.Lighting);
@@ -874,7 +882,7 @@ public class SimulationBootstrapper
         if (CorpusService != null)
         {
             var decisionSys   = new DialogContextDecisionSystem(PendingDialogQueue, ProximityBus, Config.Dialog, Random);
-            var retrievalSys  = new DialogFragmentRetrievalSystem(PendingDialogQueue, CorpusService, ProximityBus, Config.Dialog, SoundBus);
+            var retrievalSys  = new DialogFragmentRetrievalSystem(PendingDialogQueue, CorpusService, ProximityBus, Config.Dialog, SoundBus, ParticleBus);
             var calcifySys    = new DialogCalcifySystem(Config.Dialog);
             Engine.AddSystem(decisionSys,  SystemPhase.Dialog);
             Engine.AddSystem(retrievalSys, SystemPhase.Dialog);
@@ -936,7 +944,7 @@ public class SimulationBootstrapper
 
         // Chore execution — advances assigned chore progress each tick; fires on ChoreWork intent.
         Engine.AddSystem(
-            new ChoreExecutionSystem(Config.Chores, Clock, choreBiasTable, NarrativeBus), SystemPhase.Cleanup);
+            new ChoreExecutionSystem(Config.Chores, Clock, choreBiasTable, NarrativeBus, ParticleBus), SystemPhase.Cleanup);
 
         // Spatial behavior — soft NPC-to-NPC repulsion; after MovementSystem (World 60) positions settle.
         Engine.AddSystem(new SpatialBehaviorSystem(), SystemPhase.Cleanup);
@@ -948,7 +956,7 @@ public class SimulationBootstrapper
             Config.Spatial.WorldSize.Width,
             Config.Spatial.WorldSize.Height);
         Engine.AddSystem(
-            new PhysicsTickSystem(Config.Physics, physicsCollision, MutationApi, SoundBus, Clock),
+            new PhysicsTickSystem(Config.Physics, physicsCollision, MutationApi, SoundBus, Clock, ParticleBus),
             SystemPhase.Cleanup);
 
         // Lockout detection — checks end-of-day reachability to exits and starvation status.

@@ -7,6 +7,7 @@ using APIFramework.Core;
 using APIFramework.Systems.Audio;
 using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Spatial;
+using APIFramework.Systems.Visual;
 
 namespace APIFramework.Systems.Dialog;
 
@@ -32,11 +33,12 @@ namespace APIFramework.Systems.Dialog;
 /// </remarks>
 public sealed class DialogFragmentRetrievalSystem : ISystem
 {
-    private readonly PendingDialogQueue  _queue;
-    private readonly DialogCorpusService _corpus;
-    private readonly ProximityEventBus   _bus;
-    private readonly DialogConfig        _cfg;
-    private readonly SoundTriggerBus?    _soundBus;
+    private readonly PendingDialogQueue   _queue;
+    private readonly DialogCorpusService  _corpus;
+    private readonly ProximityEventBus    _bus;
+    private readonly DialogConfig         _cfg;
+    private readonly SoundTriggerBus?     _soundBus;
+    private readonly ParticleTriggerBus?  _particleBus;
 
     private long   _tick;
     private double _gameTimeSec;
@@ -48,18 +50,22 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
     /// <param name="corpus">Phrase corpus consulted for matching fragments.</param>
     /// <param name="bus">Bus on which <see cref="SpokenFragmentEvent"/> is published.</param>
     /// <param name="cfg">Dialog config — supplies scoring weights and recency window.</param>
+    /// <param name="soundBus">Optional bus for SpeechFragment sound emission.</param>
+    /// <param name="particleBus">Optional bus for SpeechBubblePuff particle emission.</param>
     public DialogFragmentRetrievalSystem(
-        PendingDialogQueue  queue,
-        DialogCorpusService corpus,
-        ProximityEventBus   bus,
-        DialogConfig        cfg,
-        SoundTriggerBus?    soundBus = null)
+        PendingDialogQueue   queue,
+        DialogCorpusService  corpus,
+        ProximityEventBus    bus,
+        DialogConfig         cfg,
+        SoundTriggerBus?     soundBus     = null,
+        ParticleTriggerBus?  particleBus  = null)
     {
-        _queue    = queue;
-        _corpus   = corpus;
-        _bus      = bus;
-        _cfg      = cfg;
-        _soundBus = soundBus;
+        _queue       = queue;
+        _corpus      = corpus;
+        _bus         = bus;
+        _cfg         = cfg;
+        _soundBus    = soundBus;
+        _particleBus = particleBus;
     }
 
     /// <summary>
@@ -144,7 +150,8 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
 
             _bus.RaiseSpokenFragment(new SpokenFragmentEvent(speaker, listener, best.Id, _tick));
 
-            // Emit SpeechFragment sound — intensity based on vocabulary register
+            // Emit SpeechFragment sound + SpeechBubblePuff particle
+            var speakerPos = speaker.Has<PositionComponent>() ? speaker.Get<PositionComponent>() : default;
             if (_soundBus != null)
             {
                 float speechIntensity = personality.VocabularyRegister switch
@@ -154,9 +161,9 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
                     VocabularyRegister.Clipped => 0.3f, // Quiet
                     _                         => 0.6f, // Normal
                 };
-                var speakerPos = speaker.Has<PositionComponent>() ? speaker.Get<PositionComponent>() : default;
                 _soundBus.Emit(SoundTriggerKind.SpeechFragment, speaker.Id, speakerPos.X, speakerPos.Z, speechIntensity, _tick);
             }
+            _particleBus?.Emit(ParticleTriggerKind.SpeechBubblePuff, speaker.Id, speakerPos.X, speakerPos.Z, 1.0f, _tick);
 
             // Notify listener's RecognizedTicComponent
             if (listener.Has<RecognizedTicComponent>())

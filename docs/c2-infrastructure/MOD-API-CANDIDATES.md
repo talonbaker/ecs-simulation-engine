@@ -57,8 +57,8 @@ These were not designed as Mod API surfaces, but they have the right shape: data
 - **What:** Audio trigger vocabulary (`Cough`, `ChairSqueak`, `BulbBuzz`, `Footstep`, `SpeechFragment`, `Crash`, `Glass`, `Thud`, `Heimlich`, `DoorUnlock`). Engine emits via `SoundTriggerBus`; Unity host synthesises.
 - **Where:** `APIFramework/Audio/SoundTriggerKind.cs`; `APIFramework/Audio/SoundTriggerBus.cs`.
 - **Why a candidate:** A modder adds `Sneeze` audio by extending the enum, mapping it to a clip in the host's synth catalog, and emitting it from their new SneezeSystem. Mod API would formalize the registration.
-- **Stability:** stabilizing (10 entries; consistent emit pattern; one host consumer).
-- **Source packet:** WP-3.2.1.
+- **Stability:** stable (pattern peer-confirmed by MAC-012 parallel bus; two buses, identical shape, no breaking changes across WP-3.2.1 → WP-4.0.H).
+- **Source packet:** WP-3.2.1. **Revised: 2026-05-03 — WP-4.0.H ships ParticleTriggerBus as a parallel peer, demonstrating the bus pattern is settled. Stability bumped *stabilizing* → *stable*.**
 
 ### MAC-004: Animation state vocabulary
 
@@ -133,11 +133,11 @@ These will land in the foundational polish wave (WP-4.0.A through WP-4.0.H). Eac
 
 ### MAC-012: Particle effect vocabulary
 
-- **What:** Trigger vocabulary for visual particle effects (steam from coffee, smoke from fire, sparks, dust kicked up). Engine emits triggers; Unity host spawns/manages particle systems. Parallel structure to SoundTriggerKind (MAC-003).
-- **Where:** WP-4.0.H introduces. `APIFramework/Visual/ParticleTriggerKind.cs`; `APIFramework/Visual/ParticleTriggerBus.cs`; `ECSUnity/Assets/Scripts/Render/Visual/ParticleTriggerSpawner.cs`.
-- **Why a candidate:** Visual mods (a sneeze mod adds sneeze-mist particles; a fire mod adds custom flame), parallel to audio mods. JSON catalog (`docs/c2-content/visual/particle-trigger-catalog.json`) is the data-driven extension surface.
-- **Stability:** fresh (lands with WP-4.0.H).
-- **Source packet:** WP-4.0.H (pending).
+- **What:** Trigger vocabulary for visual particle effects (steam from coffee, smoke from fire, sparks, dust kicked up, water splash, bulb flicker, cleaning mist, speech bubble puff, breath puff). Engine emits typed triggers via `ParticleTriggerBus`; Unity host spawns VFX Graph instances at trigger location. Parallel structure to `SoundTriggerKind` (MAC-003). JSON catalog at `docs/c2-content/visual/particle-trigger-catalog.json` maps enum → VFX asset + spawn params; modder-extensible.
+- **Where:** `APIFramework/Systems/Visual/ParticleTriggerKind.cs`; `APIFramework/Systems/Visual/ParticleTriggerBus.cs`; `APIFramework/Systems/Visual/ParticleTriggerEvent.cs`; `ECSUnity/Assets/Scripts/Render/Visual/ParticleTriggerSpawner.cs`; `ECSUnity/Assets/Scripts/Render/Visual/ParticleTriggerCatalog.cs`.
+- **Why a candidate:** Visual mods (a sneeze mod adds sneeze-mist particles; a fire mod adds custom flame), parallel to audio mods. Modders extend the enum, author a VFX Graph asset, register in catalog JSON — no engine code change.
+- **Stability:** fresh (one consumer: WP-4.0.H; shipped 2026-05-03).
+- **Source packet:** WP-4.0.H. **Revised: 2026-05-03 — shipped. 10 particle kinds, 5 immediate producers (Sparks, WaterSplash, BulbFlicker, CleaningMist, SpeechBubblePuff), 5 stubs. Catalog JSON at `docs/c2-content/visual/particle-trigger-catalog.json`.**
 
 ### MAC-013: NPC visual state catalog (animation states + chibi cues + transitions)
 
