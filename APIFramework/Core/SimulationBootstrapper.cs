@@ -679,6 +679,13 @@ public class SimulationBootstrapper
                 .Where(g => g != Guid.Empty));
             entity.Add(new BereavementHistoryComponent { EncounteredCorpseIds = ids });
         }
+
+        if (dto.PersonalSpace != null)
+            entity.Add(new PersonalSpaceComponent
+            {
+                RadiusMeters      = dto.PersonalSpace.RadiusMeters,
+                RepulsionStrength = dto.PersonalSpace.RepulsionStrength
+            });
     }
 
     private static void RestoreTaskEntity(TaskSaveDto dto, EntityManager em)
@@ -774,6 +781,11 @@ public class SimulationBootstrapper
 
         // Life state initialization â€” attaches LifeStateComponent to newly-spawned NPCs with State == Alive.
         Engine.AddSystem(new LifeStateInitializerSystem(),                          SystemPhase.PreUpdate);
+
+        // Personal-space initialization — attaches PersonalSpaceComponent with per-archetype tuning.
+        Engine.AddSystem(
+            new SpatialBehaviorInitializerSystem(SpatialBehaviorInitializerSystem.LoadTuning()),
+            SystemPhase.PreUpdate);
 
         // Task generation â€” spawns new task entities once per game-day at the configured hour.
         Engine.AddSystem(
@@ -925,6 +937,9 @@ public class SimulationBootstrapper
         // Chore execution — advances assigned chore progress each tick; fires on ChoreWork intent.
         Engine.AddSystem(
             new ChoreExecutionSystem(Config.Chores, Clock, choreBiasTable, NarrativeBus), SystemPhase.Cleanup);
+
+        // Spatial behavior — soft NPC-to-NPC repulsion; after MovementSystem (World 60) positions settle.
+        Engine.AddSystem(new SpatialBehaviorSystem(), SystemPhase.Cleanup);
 
         // Physics tick — advances thrown entities; gravity, decay, collision, breakage.
         // Runs after ChoreExecutionSystem and SlipAndFallSystem so positions are settled.

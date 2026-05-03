@@ -118,10 +118,10 @@ These will land in the foundational polish wave (WP-4.0.A through WP-4.0.H). Eac
 ### MAC-010: PersonalSpaceComponent + spatial-behavior tuning
 
 - **What:** Component family for soft NPC repulsion. Modders add per-archetype radius / repulsion-strength tuning. Could later host introvert/extrovert traits, social-distancing behavior, illness-distancing.
-- **Where:** WP-4.0.B introduces. `APIFramework/Components/PersonalSpaceComponent.cs`; `APIFramework/Systems/Movement/SpatialBehaviorSystem.cs`.
+- **Where:** `APIFramework/Components/PersonalSpaceComponent.cs`; `APIFramework/Systems/Spatial/SpatialBehaviorSystem.cs`; `APIFramework/Systems/Spatial/SpatialBehaviorInitializerSystem.cs`; tuning JSON at `docs/c2-content/archetypes/archetype-personal-space.json`.
 - **Why a candidate:** Spatial-behavior tuning is a natural per-archetype data extension; couples to MAC-001.
-- **Stability:** fresh (lands with WP-4.0.B).
-- **Source packet:** WP-4.0.B (pending).
+- **Stability:** landed 2026-05-02 (WP-4.0.B).
+- **Source packet:** WP-4.0.B (landed 2026-05-02).
 
 ### MAC-011: BuildFootprintComponent + footprint-aware drop
 

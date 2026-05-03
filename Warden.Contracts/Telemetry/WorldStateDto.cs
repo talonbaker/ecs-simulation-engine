@@ -81,6 +81,15 @@ public sealed record EntityStateDto
 
     // v0.5.1 — optional build footprint (populated for prop entities; null for NPCs)
     public BuildFootprintDto? BuildFootprint { get; init; }
+    // v0.5.1 â€” optional personal-space telemetry
+    public PersonalSpaceStateDto? PersonalSpace { get; init; }
+}
+
+/// <summary>Telemetry view of <c>PersonalSpaceComponent</c> (radius and repulsion strength).</summary>
+public sealed record PersonalSpaceStateDto
+{
+    public float RadiusMeters      { get; init; }
+    public float RepulsionStrength { get; init; }
 }
 
 public sealed record PositionStateDto

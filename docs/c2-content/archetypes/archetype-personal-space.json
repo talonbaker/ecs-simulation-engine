@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "archetypePersonalSpace": [
+    { "archetype": "the-hermit",          "radiusMult": 1.40, "repulsionStrengthMult": 1.20 },
+    { "archetype": "the-cynic",           "radiusMult": 1.20, "repulsionStrengthMult": 1.10 },
+    { "archetype": "the-old-hand",        "radiusMult": 1.10, "repulsionStrengthMult": 1.0  },
+    { "archetype": "the-recovering",      "radiusMult": 1.10, "repulsionStrengthMult": 1.0  },
+    { "archetype": "the-affair",          "radiusMult": 0.95, "repulsionStrengthMult": 1.0  },
+    { "archetype": "the-climber",         "radiusMult": 1.0,  "repulsionStrengthMult": 1.0  },
+    { "archetype": "the-founders-nephew", "radiusMult": 1.0,  "repulsionStrengthMult": 1.0  },
+    { "archetype": "the-newbie",          "radiusMult": 0.85, "repulsionStrengthMult": 0.85 },
+    { "archetype": "the-vent",            "radiusMult": 0.80, "repulsionStrengthMult": 0.80 },
+    { "archetype": "the-crush",           "radiusMult": 0.75, "repulsionStrengthMult": 0.75 }
+  ]
+}

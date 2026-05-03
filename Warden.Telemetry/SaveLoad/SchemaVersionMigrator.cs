@@ -21,8 +21,16 @@ public static class SchemaVersionMigrator
             return dto;
 
         // v0.4 → v0.5: add default-filled save fields
-        if (current == "0.4.0" && targetVersion == "0.5.0")
-            return MigrateV04ToV05(dto);
+        if (current == "0.4.0" && targetVersion is "0.5.0" or "0.5.1")
+        {
+            dto = MigrateV04ToV05(dto);
+            current = "0.5.0";
+            if (targetVersion == "0.5.0") return dto;
+        }
+
+        // v0.5.0 → v0.5.1: personalSpace is additive-optional; no structural migration needed
+        if (current == "0.5.0" && targetVersion == "0.5.1")
+            return dto with { SchemaVersion = "0.5.1" };
 
         throw new SaveLoadException(
             $"No migration path from schema {current} to {targetVersion}.");

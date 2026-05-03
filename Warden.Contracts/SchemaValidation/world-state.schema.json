@@ -169,7 +169,18 @@
         },
 
         "social":         { "$ref": "#/$defs/socialState" },
-        "buildFootprint": { "$ref": "#/$defs/buildFootprint" }
+        "buildFootprint": { "$ref": "#/$defs/buildFootprint" },
+        "personalSpace": { "$ref": "#/$defs/personalSpace" }
+      }
+    },
+
+    "personalSpace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["radiusMeters", "repulsionStrength"],
+      "properties": {
+        "radiusMeters":      { "type": "number", "minimum": 0, "maximum": 5 },
+        "repulsionStrength": { "type": "number", "minimum": 0, "maximum": 1 }
       }
     },
 
