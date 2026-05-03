@@ -62,11 +62,11 @@ These were not designed as Mod API surfaces, but they have the right shape: data
 
 ### MAC-004: Animation state vocabulary
 
-- **What:** Silhouette animation states (`Idle`, `Walking`, `Eating`, `Drinking`, `Working`, `Crying`, `CoughingFit`, `Heimlich`). Driven by NPC state; rendered by silhouette renderer.
-- **Where:** `ECSUnity/Assets/Scripts/Render/SilhouetteAnimator.cs` (or equivalent); `APIFramework/Components/AnimationStateComponent.cs`.
-- **Why a candidate:** A modder adding a sneeze adds a `Sneezing` state with its own sprite frames and frame-timing. Mod API would formalize state registration + asset binding.
-- **Stability:** fresh (recently expanded in 3.2.6; pattern still settling — 4.0.E will polish).
-- **Source packet:** WP-3.2.6.
+- **What:** Silhouette animation states (`Idle`, `Walk`, `Eating`, `Drinking`, `Working`, `Crying`, `CoughingFit`, `Heimlich`, + 7 more in enum). Driven by NPC state; rendered by silhouette renderer.
+- **Where:** `ECSUnity/Assets/Scripts/Render/SilhouetteAnimator.cs`; `ECSUnity/Assets/Scripts/Animation/NpcAnimatorController.cs`; `APIFramework/Components/NpcAnimationState.cs`; per-state data in `docs/c2-content/animation/visual-state-catalog.json` (MAC-013).
+- **Why a candidate:** A modder adding a sneeze adds a `Sneezing` state with its own sprite frames and frame-timing. The catalog (MAC-013) absorbs per-state data without code changes; the enum and Animator controller need extending. Mod API would formalize state registration + asset binding.
+- **Stability:** stabilizing (2 consumers: WP-3.2.6 substrate + WP-4.0.E polish layer with data-driven catalog; pattern now settled around SilhouetteAnimator + NpcVisualStateCatalog).
+- **Source packet:** WP-3.2.6. **Revised: 2026-05-03 — WP-4.0.E adds second consumer (SilhouetteAnimator + NpcVisualStateCatalog); stability bumped from *fresh* to *stabilizing*.**
 
 ### MAC-005: SimConfig section pattern
 
@@ -144,8 +144,8 @@ These will land in the foundational polish wave (WP-4.0.A through WP-4.0.H). Eac
 - **What:** JSON catalog (`docs/c2-content/animation/visual-state-catalog.json`) describing per-state visual treatment (frame timing, accent color, cue affinity), per-cue rendering parameters (sprite asset, anchor offset, fade altitude, scale multiplier), and per-pair state transition smoothing (intermediate frames, total duration). Modders adding new animation states + emotion cues extend the JSON.
 - **Where:** WP-4.0.E introduces. `docs/c2-content/animation/visual-state-catalog.json`; `ECSUnity/Assets/Scripts/Render/NpcVisualStateCatalogLoader.cs`; consumed by `SilhouetteAnimator` + `ChibiEmotionPopulator`.
 - **Why a candidate:** A sneeze mod adds the `Sneezing` state with frame timing + a sneeze cue; the catalog absorbs both without code changes. Pattern is consistent with MAC-001 (per-archetype tuning) and MAC-005 (SimConfig sections) — data-driven extension.
-- **Stability:** fresh (lands with WP-4.0.E).
-- **Source packet:** WP-4.0.E (pending).
+- **Stability:** fresh (landed with WP-4.0.E, 2026-05-03).
+- **Source packet:** WP-4.0.E. **Revised: 2026-05-03 — shipped. Catalog has 15 state entries, 9 cue entries, 6 transition entries. `IconKind` extended with `RedFaceFlush` + `GreenFaceNausea` (enum values 9–10).**
 
 ### MAC-014: Room visual identity catalog (floor / wall / door materials per RoomKind)
 

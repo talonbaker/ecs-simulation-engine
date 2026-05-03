@@ -119,8 +119,38 @@ public sealed class ChibiEmotionSlot : MonoBehaviour
         _spriteRenderer.enabled = false;
     }
 
+    // ── Display parameter API (WP-4.0.E — altitude fade + scale + anchor) ─────
+
+    /// <summary>
+    /// Applies altitude-driven display parameters to this slot.
+    /// Call after <see cref="Show"/> each refresh tick to set per-cue visibility.
+    ///
+    /// <paramref name="alpha"/>       — sprite renderer alpha [0..1]. 0 = invisible.
+    /// <paramref name="scaleMult"/>   — local scale multiplier relative to default 1.0.
+    /// <paramref name="anchorOffset"/> — local position offset from the default head anchor.
+    /// </summary>
+    public void ApplyDisplayParams(float alpha, float scaleMult, Vector3 anchorOffset)
+    {
+        if (_spriteRenderer == null) return;
+
+        // Alpha: modulate into the current sprite color.
+        var col = _spriteRenderer.color;
+        col.a = Mathf.Clamp01(alpha);
+        _spriteRenderer.color = col;
+
+        // Scale: apply relative to identity (1,1,1) baseline.
+        float s = Mathf.Max(0.01f, scaleMult);
+        transform.localScale = new Vector3(s, s, s);
+
+        // Anchor offset: relative to parent EmotionOverlay position.
+        transform.localPosition = anchorOffset;
+    }
+
     // ── Test accessors ────────────────────────────────────────────────────────
 
     /// <summary>True if the slot's SpriteRenderer is currently enabled.</summary>
     public bool IsVisible => _spriteRenderer != null && _spriteRenderer.enabled;
+
+    /// <summary>Current alpha of the sprite renderer color channel.</summary>
+    public float CurrentAlpha => _spriteRenderer != null ? _spriteRenderer.color.a : 0f;
 }

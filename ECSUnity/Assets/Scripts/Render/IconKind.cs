@@ -50,4 +50,12 @@ public enum IconKind
 
     /// <summary>Stink lines — wavy lines. Driven by MoodComponent.Disgust at loathing-tier.</summary>
     Stink,
+
+    // ── WP-4.0.E additions — face-state chibi overlays ───────────────────────
+
+    /// <summary>Red face flush — cheek/face redness overlay. Driven by anger spike or embarrassment.</summary>
+    RedFaceFlush,
+
+    /// <summary>Green face nausea — green tinge overlay. Driven by Disgust threshold or sickness state.</summary>
+    GreenFaceNausea,
 }
