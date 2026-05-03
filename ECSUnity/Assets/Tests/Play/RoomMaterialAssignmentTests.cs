@@ -128,7 +128,7 @@ public class RoomMaterialAssignmentTests
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
-    private IEnumerator SpawnRoomAndVerify(RoomCategory category, string expectedFloor, string expectedWall)
+    private IEnumerator SpawnRoomAndVerify(APIFramework.Components.RoomCategory category, string expectedFloor, string expectedWall)
     {
         string roomId = SpawnTestRoom(category);
         yield return null;
@@ -148,7 +148,7 @@ public class RoomMaterialAssignmentTests
                 $"Expected wall material containing '{expectedWall}'; got '{wallMats[0].name}'.");
     }
 
-    private string SpawnTestRoom(RoomCategory category)
+    private string SpawnTestRoom(APIFramework.Components.RoomCategory category)
     {
         const string roomId = "test-room-001";
 
