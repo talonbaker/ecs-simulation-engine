@@ -450,29 +450,36 @@ public sealed class DevConsolePanel : MonoBehaviour
 
         if (Event.current.type == EventType.KeyDown)
         {
-            switch (Event.current.keyCode)
+            // Enter via character: the focused IMGUI TextField swallows
+            // KeyCode.Return on the same OnGUI tick (it consumes it for its
+            // own internal newline handling), so the keyCode-based switch
+            // never sees an unmodified Return. The '\n' character arrives
+            // in a follow-up KeyDown event after the TextField has committed
+            // its value to _savedInput. KeypadEnter is NOT consumed the same
+            // way and continues to work via keyCode.
+            bool isReturn = Event.current.character == '\n'
+                         || Event.current.keyCode == KeyCode.KeypadEnter;
+
+            if (isReturn)
             {
-                case KeyCode.Return:
-                case KeyCode.KeypadEnter:
-                    if (!string.IsNullOrWhiteSpace(_savedInput))
-                    {
-                        string toSubmit = _savedInput;
-                        _savedInput     = string.Empty;
-                        SubmitCommand(toSubmit);
-                        _guiScrollPos.y = float.MaxValue;
-                    }
-                    Event.current.Use();
-                    break;
-
-                case KeyCode.UpArrow:
-                    NavigateHistoryUp();
-                    Event.current.Use();
-                    break;
-
-                case KeyCode.DownArrow:
-                    NavigateHistoryDown();
-                    Event.current.Use();
-                    break;
+                if (!string.IsNullOrWhiteSpace(_savedInput))
+                {
+                    string toSubmit = _savedInput;
+                    _savedInput     = string.Empty;
+                    SubmitCommand(toSubmit);
+                    _guiScrollPos.y = float.MaxValue;
+                }
+                Event.current.Use();
+            }
+            else if (Event.current.keyCode == KeyCode.UpArrow)
+            {
+                NavigateHistoryUp();
+                Event.current.Use();
+            }
+            else if (Event.current.keyCode == KeyCode.DownArrow)
+            {
+                NavigateHistoryDown();
+                Event.current.Use();
             }
         }
         GUILayout.EndHorizontal();

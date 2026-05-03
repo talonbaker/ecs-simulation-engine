@@ -41,6 +41,11 @@ public sealed class CameraController : MonoBehaviour
              "Leave null to disable wall fade (walls stay fully opaque).")]
     [SerializeField] private WallFadeController _wallFadeController;
 
+    [Header("Selection Glide (BUG-005a)")]
+    [Tooltip("Optional — drag in SelectionController to enable double-click-to-glide on NPCs. " +
+             "Leave null and the camera falls back to F-key recenter only.")]
+    [SerializeField] private SelectionController _selectionController;
+
     [Header("Pan")]
     [Tooltip("World-units per second.")]
     [Range(0.1f, 100f)]
@@ -110,6 +115,35 @@ public sealed class CameraController : MonoBehaviour
         ApplyCameraTransform();
     }
 
+    private void OnEnable()
+    {
+        // Fallback to scene-wide find if Inspector didn't wire one. CameraRig is a
+        // prefab and prefab-instance overrides for cross-scene refs are brittle;
+        // locating the controller at runtime is more robust for hand-authored
+        // scenes (BUG-005a / BUG-004).
+        if (_selectionController == null)
+            _selectionController = FindObjectOfType<SelectionController>();
+
+        if (_selectionController != null)
+            _selectionController.GlideRequested += GlideTo;
+    }
+
+    private void OnDisable()
+    {
+        if (_selectionController != null)
+            _selectionController.GlideRequested -= GlideTo;
+    }
+
+    /// <summary>
+    /// Glide the camera focus point to the given world position. Wired to
+    /// <see cref="SelectionController.GlideRequested"/> so double-clicking an
+    /// NPC recentres on it. Y is forced to zero — the focus point is XZ only.
+    /// </summary>
+    public void GlideTo(Vector3 worldPoint)
+    {
+        _focusPoint = new Vector3(worldPoint.x, 0f, worldPoint.z);
+    }
+
     private void Update()
     {
         ApplyConfigFromAsset();   // cheap — reads cached ScriptableObject values
@@ -176,23 +210,12 @@ public sealed class CameraController : MonoBehaviour
 
     private void HandleRecenter()
     {
-        bool recenter = _input.RecenterPressed();
-
-        // Double-click detection
-        if (Input.GetMouseButtonDown(0))
-        {
-            float now = Time.realtimeSinceStartup;
-            if (now - _lastClickTime < DoubleClickInterval)
-                recenter = true;
-            _lastClickTime = now;
-        }
-
-        if (recenter)
-        {
-            // Snap to centre of the playtest office layout (30×22 tile world).
-            // Future: snap to selected entity position.
+        // F-key recenters to the office centre. Double-click-to-glide-on-NPC
+        // is now driven by SelectionController.GlideRequested → GlideTo() to
+        // avoid the previous bug where the camera's own polling double-click
+        // hardcoded a return-to-origin and ignored selection (BUG-005a).
+        if (_input.RecenterPressed())
             _focusPoint = new Vector3(15f, 0f, 11f);
-        }
     }
 
     // ── Transform application ─────────────────────────────────────────────────

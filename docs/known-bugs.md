@@ -97,6 +97,13 @@ The selection-cue cascade is illustrative: `OutlineRenderer` is wired (outline a
 
 **Discovered in:** PT-001 (`docs/playtest/PT-001-baseline.md`).
 
+**Resolution:** Fixed 2026-05-02 by Opus directly (no Sonnet dispatch needed). Five sub-fixes in this commit:
+1. Created `Assets/Settings/DefaultPlayerUIConfig.asset` (the missing ScriptableObject every panel's `_uiConfig` field needed) with GUID `2d6a716699994ddba9740130bd462600`.
+2. Replaced stale serialized fields on the existing `SelectionController` (PlaytestScene fileID 1300000004) and `SelectionHaloRenderer` (fileID 1300000003) with the current field shape (`_host`, `_uiConfig`, `_camera`, `_selectableLayer`, `DoubleClickInterval`).
+3. Added new `ObjectInspectorPanel` (fileID 1700000001) and `RoomInspectorPanel` (fileID 1800000001) GameObjects to PlaytestScene with `_host` wired and `_document: {fileID: 0}` (forces IMGUI fallback path).
+4. Patched all four other `_uiConfig: {fileID: 0}` references (TimeHudPanel, SettingsPanel, InspectorPanel, NotificationPanel) to point at the new asset.
+5. Added runtime `FindObjectOfType<SelectionController>()` subscription in `Start()` of `InspectorPanel`, `ObjectInspectorPanel`, `RoomInspectorPanel` so each receives `SelectionChanged` events without needing a scene-authored UnityEvent hook (which is hard to express in hand-authored YAML).
+
 ---
 
 ## Camera
@@ -126,6 +133,10 @@ The selection-cue cascade is illustrative: `OutlineRenderer` is wired (outline a
 
 **Discovered in:** PT-001.
 
+**Resolution (BUG-005a — double-click recenter):** Fixed 2026-05-02. `CameraController.cs` now exposes a public `GlideTo(Vector3)` method and subscribes to `SelectionController.GlideRequested` in `OnEnable()` (with `FindObjectOfType<SelectionController>()` fallback for prefab-instance scenes). The polling double-click in `HandleRecenter()` was deleted; F-key recenter to office centre (15, 0, 11) preserved.
+
+**Resolution (BUG-005b — pause input semantics):** Closed as N/A 2026-05-02. Verified by direct inspection: zero matches for `Time.timeScale`, `IsPaused`, or `paused` in `Assets/Scripts/Camera/`. No pause gate exists in the codebase. Talon's PT-001 observation may have been a different symptom. Will reassess if PT-002 surfaces it again.
+
 ---
 
 ## Audio
@@ -149,6 +160,8 @@ The selection-cue cascade is illustrative: `OutlineRenderer` is wired (outline a
 **Workaround:** None.
 
 **Discovered in:** PT-001.
+
+**Resolution:** Rescoped 2026-05-02. Investigation found `CameraRig.prefab:68` already has an `AudioListener` component, so the AudioListener-on-camera assumption was wrong. The actual issue is that **no MonoBehaviour anywhere in `Assets/Scripts/` subscribes to `SoundTriggerBus.Subscribe()`** — the engine emits sound triggers to a registry that is permanently empty on the host side. The host-side audio synthesis layer (SoundTriggerKind → AudioClip mapping, pooled AudioSources, falloff model) was never built. This is a missing feature, not a wiring bug. Refiled as **BUG-009** (host-side audio synthesis listener) in this same ledger; out of PT-001 fix scope.
 
 ---
 
@@ -182,6 +195,8 @@ The selection-cue cascade is illustrative: `OutlineRenderer` is wired (outline a
 
 **Discovered in:** PT-001.
 
+**Resolution:** Fixed 2026-05-02 by Opus directly. Root cause confirmed: the focused IMGUI `TextField` consumes `KeyCode.Return` on the same OnGUI tick for its own internal newline handling, so the `case KeyCode.Return:` branch in `DevConsolePanel.OnGUI()` never fired for unmodified Enter. Standard IMGUI fix applied: switched the submit branch to `Event.current.character == '\n'` (which arrives in a follow-up KeyDown event after the TextField commits its value to `_savedInput`). KeypadEnter is preserved via `keyCode` because it isn't consumed by the TextField the same way. See `DevConsolePanel.cs:451-484`.
+
 ---
 
 ## Save / Load
@@ -199,5 +214,37 @@ The selection-cue cascade is illustrative: `OutlineRenderer` is wired (outline a
 **Suggested fix wave:** Verified as part of `WP-FIX-BUG-004` acceptance. If keybinding issue persists post-fix, file as a follow-up bug.
 
 **Discovered in:** PT-001.
+
+---
+
+## Audio (Feature)
+
+### BUG-009: Host-side audio synthesis listener missing — engine emits sounds to a void
+
+**Symptom:** PlaytestScene is silent during gameplay — no footsteps, chair squeaks, fluorescent buzz, ambient hum, or NPC speech fragments. (This was originally reported as BUG-006 "no audio at all"; investigation showed the AudioListener is correctly present on `CameraRig.prefab` so this is not a wiring bug.)
+
+**Severity:** **Medium** — game is fully playable visually; audio is a feel-level surface that the bibles commit to (UX bible §3.7) but that doesn't gate any verification recipe. Promote to High when shipping anything player-facing.
+
+**Repro:** Open PlaytestScene → Play → focus camera on any NPC → wait 30s. Total silence.
+
+**Root cause (verified):** `APIFramework/Systems/Audio/SoundTriggerBus.cs:24` iterates a `_subscribers` list. The engine emits `SoundTriggerKind` events (Cough, ChairSqueak, BulbBuzz, Footstep, SpeechFragment, etc.) into the bus correctly — but no MonoBehaviour anywhere in `ECSUnity/Assets/Scripts/` calls `SoundTriggerBus.Subscribe()`. The subscriber registry is permanently empty. The engine emits to a void.
+
+**What's missing:**
+- A host-side MonoBehaviour (suggested name: `SoundTriggerHost` or `AudioSynthHost`) that subscribes to `SoundTriggerBus` on Awake, holds a `SoundTriggerKind → AudioClip` lookup table (likely a ScriptableObject catalog like `Assets/Settings/DefaultSoundCatalog.asset`), and on each event resolves the clip + spawns a pooled `AudioSource` at the trigger's world position to play it.
+- Per-archetype voice profiles for `SpeechFragment` (Phase 4.1.0 territory — defer).
+- Falloff model: trigger volume should attenuate with distance from camera focus per UX bible §3.7 ("camera-proximity attenuation").
+- Pool of ~16 AudioSources that round-robin to avoid GameObject churn.
+
+**Files relevant:**
+- `APIFramework/Systems/Audio/SoundTriggerBus.cs` — subscription API exists; no consumer
+- `ECSUnity/Assets/Scripts/Animation/AnimationSoundTriggerEmitter.cs` — engine-side emitter (works correctly; no fix needed here)
+- New file expected: `ECSUnity/Assets/Scripts/Audio/SoundTriggerHost.cs` (or similar)
+- New asset expected: `ECSUnity/Assets/Settings/DefaultSoundCatalog.asset` (SoundTriggerKind → AudioClip map)
+
+**Suggested fix wave:** Future feature packet `WP-PT.NN-audio-host-listener` or fold into Phase 4.1.0 (per-archetype voice profiles), since the catalog and pooling work overlap. Out of PT-001 fix scope.
+
+**Workaround:** None.
+
+**Discovered in:** PT-001 (originally as BUG-006); rescoped to BUG-009 on 2026-05-02 after investigation surfaced the missing-feature shape.
 
 ---

@@ -46,6 +46,8 @@ public sealed class InspectorPanel : MonoBehaviour
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
+    private SelectionController _selection;
+
     private void Start()
     {
         if (_document != null)
@@ -63,7 +65,20 @@ public sealed class InspectorPanel : MonoBehaviour
             _backBtn?.RegisterCallback<ClickEvent>(_ => SetTier(InspectorTier.Glance));
         }
 
+        // Auto-wire to SelectionController if Inspector didn't drag a UnityEvent
+        // hook (BUG-004). Hand-authored scenes can't easily express event hooks
+        // in YAML; runtime FindObjectOfType is the most robust path.
+        _selection = FindObjectOfType<SelectionController>();
+        if (_selection != null)
+            _selection.SelectionChanged += OnSelectionChanged;
+
         SetVisible(false);
+    }
+
+    private void OnDestroy()
+    {
+        if (_selection != null)
+            _selection.SelectionChanged -= OnSelectionChanged;
     }
 
     private void LateUpdate()

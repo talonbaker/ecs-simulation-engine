@@ -16,12 +16,25 @@ public sealed class RoomInspectorPanel : MonoBehaviour
     private VisualElement _root;
     private SelectableTag _current;
     private bool          _isVisible;
+    private SelectionController _selection;
 
     private void Start()
     {
         if (_document != null)
             _root = _document.rootVisualElement?.Q("room-inspector-root");
+
+        // Auto-wire to SelectionController (BUG-004).
+        _selection = FindObjectOfType<SelectionController>();
+        if (_selection != null)
+            _selection.SelectionChanged += OnSelectionChanged;
+
         SetVisible(false);
+    }
+
+    private void OnDestroy()
+    {
+        if (_selection != null)
+            _selection.SelectionChanged -= OnSelectionChanged;
     }
 
     private void LateUpdate()

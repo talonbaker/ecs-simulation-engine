@@ -18,12 +18,26 @@ public sealed class ObjectInspectorPanel : MonoBehaviour
     private VisualElement _root;
     private SelectableTag _current;
     private bool          _isVisible;
+    private SelectionController _selection;
 
     private void Start()
     {
         if (_document != null)
             _root = _document.rootVisualElement?.Q("object-inspector-root");
+
+        // Auto-wire to SelectionController (BUG-004). Hand-authored scene YAML
+        // doesn't express UnityEvent hooks well; runtime find is more robust.
+        _selection = FindObjectOfType<SelectionController>();
+        if (_selection != null)
+            _selection.SelectionChanged += OnSelectionChanged;
+
         SetVisible(false);
+    }
+
+    private void OnDestroy()
+    {
+        if (_selection != null)
+            _selection.SelectionChanged -= OnSelectionChanged;
     }
 
     private void LateUpdate()
