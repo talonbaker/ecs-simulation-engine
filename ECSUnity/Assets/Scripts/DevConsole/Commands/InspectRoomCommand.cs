@@ -56,7 +56,8 @@ public sealed class InspectRoomCommand : IDevConsoleCommand
         var sb = new StringBuilder();
         sb.AppendLine($"Room: {room.Id}");
         sb.AppendLine($"  Name:   {room.Name}");
-        sb.AppendLine($"  Bounds: origin ({room.X:F1}, {room.Z:F1})  size {room.Width:F1} x {room.Height:F1}");
+        // RoomDto's spatial fields live on the BoundsRect sub-record (X, Y, Width, Height — all ints).
+        sb.AppendLine($"  Bounds: origin ({room.BoundsRect.X}, {room.BoundsRect.Y})  size {room.BoundsRect.Width} x {room.BoundsRect.Height}");
 
         // Illumination block — only present when the lighting system has run.
         if (room.Illumination != null)

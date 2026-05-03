@@ -51,8 +51,9 @@ public sealed class HistoryCommand : IDevConsoleCommand
 
         for (int i = start; i < history.Count; i++)
         {
-            // ConsoleHistoryEntry.Text contains the rendered string for that entry.
-            string line = history[i]?.Text ?? "(empty)";
+            // ConsoleEntry is a struct (value type) — no null-conditional. Text
+            // itself is a non-null string set at construction.
+            string line = history[i].Text ?? "(empty)";
             sb.AppendLine($"  [{i,3}] {line}");
         }
 

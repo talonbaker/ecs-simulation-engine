@@ -57,15 +57,15 @@ public sealed class MoveCommand : IDevConsoleCommand
                 out float z))
             return $"ERROR: Invalid z '{args[2]}'.";
 
-        var newPos = new PositionComponent { X = x, Y = 0f, Z = z };
-        bool ok    = ctx.MutationApi.MoveEntity(entity.Id, newPos);
+        // IWorldMutationApi.MoveEntity now takes int tile coordinates and
+        // returns void; throws on invalid id / missing MutableTopologyTag /
+        // out-of-grid position. Dispatcher catches exceptions and converts
+        // them to ERROR output for us.
+        int tileX = UnityEngine.Mathf.RoundToInt(x);
+        int tileY = UnityEngine.Mathf.RoundToInt(z);
+        ctx.MutationApi.MoveEntity(entity.Id, tileX, tileY);
 
-        if (ok)
-            return $"Moved '{args[0]}' to ({x:F1}, {z:F1}).";
-
-        // Most likely failure: entity lacks MutableTopologyTag.
-        return $"ERROR: MoveEntity returned false for '{args[0]}'. " +
-               $"Entity may lack MutableTopologyTag, or the target position is outside the valid grid.";
+        return $"Moved '{args[0]}' to tile ({tileX}, {tileY}).";
     }
 
     // Tries Guid first, then falls back to case-insensitive IdentityComponent.Name match.
