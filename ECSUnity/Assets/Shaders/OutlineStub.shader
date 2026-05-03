@@ -22,6 +22,7 @@ Shader "Custom/OutlineStub"
         Cull   Off
         Blend  Off
 
+        // Pass 0: red vignette
         Pass
         {
             Name "OUTLINE_STUB_VIGNETTE"
@@ -46,6 +47,26 @@ Shader "Custom/OutlineStub"
 
                 col.rgb = lerp(col.rgb, half3(0.8, 0.1, 0.1), vignette * 0.6);
                 return col;
+            }
+            ENDHLSL
+        }
+
+        // Pass 1: plain copy (used internally by the C# pass to blit active color to temp)
+        Pass
+        {
+            Name "OUTLINE_STUB_COPY"
+
+            HLSLPROGRAM
+            #pragma vertex   Vert
+            #pragma fragment FragCopy
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
+
+            half4 FragCopy(Varyings input) : SV_Target
+            {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                return SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, input.texcoord);
             }
             ENDHLSL
         }

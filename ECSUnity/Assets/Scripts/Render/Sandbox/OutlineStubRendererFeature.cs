@@ -60,14 +60,15 @@ public class OutlineStubRendererFeature : ScriptableRendererFeature
             TextureHandle tempHandle = UniversalRenderer.CreateRenderGraphTexture(
                 renderGraph, desc, "_OutlineStubTemp", false);
 
-            // Step 1: copy active color to temp
+            // Step 1: copy active color to temp (shader pass 1 = plain blit)
             using (var builder = renderGraph.AddRasterRenderPass<PassData>("OutlineStub Copy", out var passData))
             {
                 passData.src = resourceData.activeColorTexture;
+                passData.mat = mat;
                 builder.UseTexture(passData.src);
                 builder.SetRenderAttachment(tempHandle, 0);
                 builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
-                    Blitter.BlitTexture(ctx.cmd, data.src, new Vector4(1, 1, 0, 0), 0.0f));
+                    Blitter.BlitTexture(ctx.cmd, data.src, new Vector4(1, 1, 0, 0), data.mat, 1));
             }
 
             // Step 2: apply red vignette from temp back to active color
