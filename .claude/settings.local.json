@@ -44,7 +44,8 @@
       "Bash(Out-Null)",
       "PowerShell(New-Item *)",
       "Read(//c/repos/_ecs-simulation-engine/docs/c2-infrastructure/**)",
-      "Read(//c/repos/_ecs-simulation-engine/docs/**)"
+      "Read(//c/repos/_ecs-simulation-engine/docs/**)",
+      "Bash(powershell *)"
     ]
   }
 }
