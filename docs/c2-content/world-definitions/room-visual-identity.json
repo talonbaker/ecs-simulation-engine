@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "0.1.0",
+  "defaultFloorMaterial": "Concrete",
+  "defaultWallMaterial": "StructuralWall",
+  "defaultDoorMaterial": "RegularDoor",
+  "roomCategories": [
+    {
+      "roomCategory": "CubicleGrid",
+      "defaultFloorMaterial": "Carpet",
+      "defaultWallMaterial": "CubicleWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "Breakroom",
+      "defaultFloorMaterial": "Linoleum",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": "tile-trim"
+    },
+    {
+      "roomCategory": "Bathroom",
+      "defaultFloorMaterial": "Linoleum",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RestroomDoor",
+      "trimMaterial": "tile-trim"
+    },
+    {
+      "roomCategory": "Hallway",
+      "defaultFloorMaterial": "OfficeTile",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "Office",
+      "defaultFloorMaterial": "Hardwood",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": "wood-trim"
+    },
+    {
+      "roomCategory": "ConferenceRoom",
+      "defaultFloorMaterial": "OfficeTile",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "SupplyCloset",
+      "defaultFloorMaterial": "Concrete",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "ItCloset",
+      "defaultFloorMaterial": "Concrete",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "Stairwell",
+      "defaultFloorMaterial": "Concrete",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "Elevator",
+      "defaultFloorMaterial": "OfficeTile",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "ParkingLot",
+      "defaultFloorMaterial": "Concrete",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "SmokingArea",
+      "defaultFloorMaterial": "Concrete",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "LoadingDock",
+      "defaultFloorMaterial": "Concrete",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "ProductionFloor",
+      "defaultFloorMaterial": "Concrete",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "Lobby",
+      "defaultFloorMaterial": "OfficeTile",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    },
+    {
+      "roomCategory": "Outdoor",
+      "defaultFloorMaterial": "Concrete",
+      "defaultWallMaterial": "StructuralWall",
+      "defaultDoorMaterial": "RegularDoor",
+      "trimMaterial": null
+    }
+  ],
+  "materialPaths": [
+    { "name": "Carpet",       "resourcesPath": "Materials/Floor_Carpet"    },
+    { "name": "Linoleum",     "resourcesPath": "Materials/Floor_Linoleum"  },
+    { "name": "OfficeTile",   "resourcesPath": "Materials/Floor_OfficeTile"},
+    { "name": "Concrete",     "resourcesPath": "Materials/Floor_Concrete"  },
+    { "name": "Hardwood",     "resourcesPath": "Materials/Floor_Hardwood"  },
+    { "name": "CubicleWall",  "resourcesPath": "Materials/Wall_Cubicle"    },
+    { "name": "StructuralWall","resourcesPath": "Materials/Wall_Structural" },
+    { "name": "WindowWall",   "resourcesPath": "Materials/Wall_Window"     },
+    { "name": "RegularDoor",  "resourcesPath": "Materials/Door_Regular"    },
+    { "name": "RestroomDoor", "resourcesPath": "Materials/Door_Restroom"   }
+  ]
+}

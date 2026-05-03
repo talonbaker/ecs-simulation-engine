@@ -32,6 +32,7 @@ Shader "ECSUnity/RoomTint"
     Properties
     {
         _Color         ("Base Color",       Color)       = (0.78, 0.74, 0.66, 1)
+        _MainTex       ("Texture (optional)", 2D)        = "white" {}
         _TintColor     ("Illumination Tint", Color)      = (1, 1, 1, 1)
         _TintIntensity ("Tint Intensity",   Range(0, 1)) = 0
         _Alpha         ("Alpha",            Range(0, 1)) = 1
@@ -83,10 +84,12 @@ Shader "ECSUnity/RoomTint"
             };
 
             // Shader properties — Unity injects values from the Material block above.
-            fixed4 _Color;
-            fixed4 _TintColor;
-            float  _TintIntensity;
-            float  _Alpha;
+            fixed4    _Color;
+            sampler2D _MainTex;
+            float4    _MainTex_ST;
+            fixed4    _TintColor;
+            float     _TintIntensity;
+            float     _Alpha;
 
             v2f vert(appdata v)
             {
@@ -94,17 +97,19 @@ Shader "ECSUnity/RoomTint"
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
                 o.pos = UnityObjectToClipPos(v.vertex);
-                o.uv  = v.uv;
+                o.uv  = TRANSFORM_TEX(v.uv, _MainTex);
                 return o;
             }
 
             fixed4 frag(v2f i) : SV_Target
             {
-                // Multiply the Kelvin tint onto the base palette color.
-                // lerp(a, b, t): at t=0 → pure palette; at t=1 → pure tint*palette.
-                fixed3 blended = lerp(_Color.rgb,
-                                      _TintColor.rgb * _Color.rgb,
-                                      _TintIntensity);
+                // Sample texture (white when none assigned) and multiply onto base color.
+                fixed4 texSample = tex2D(_MainTex, i.uv);
+                fixed3 baseRgb   = _Color.rgb * texSample.rgb;
+
+                // Multiply the Kelvin tint onto the combined base color.
+                // lerp(a, b, t): at t=0 → pure base; at t=1 → tint * base.
+                fixed3 blended = lerp(baseRgb, _TintColor.rgb * baseRgb, _TintIntensity);
 
                 // Apply the alpha from the _Alpha property (not from _Color.a).
                 // This lets WallFadeController drive transparency independently

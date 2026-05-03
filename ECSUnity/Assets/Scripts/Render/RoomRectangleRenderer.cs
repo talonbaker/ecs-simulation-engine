@@ -41,6 +41,10 @@ public sealed class RoomRectangleRenderer : MonoBehaviour
     private EngineHost _engineHost;
 
     [SerializeField]
+    [Tooltip("Optional catalog loader. When present, rooms use catalog materials instead of flat colors.")]
+    private RoomVisualIdentityLoader _visualIdentityLoader;
+
+    [SerializeField]
     [Tooltip("Y position of floor quads. Slightly above 0 prevents Z-fighting with floor plane.")]
     private float _floorY = 0.01f;
 
@@ -135,6 +139,14 @@ public sealed class RoomRectangleRenderer : MonoBehaviour
     {
         Color baseColor = RenderColorPalette.ForRoom(room.Category);
 
+        // Choose template materials: catalog-sourced when loader is present.
+        Material floorTemplate = _visualIdentityLoader != null
+            ? _visualIdentityLoader.GetFloorMaterial(room.Category) ?? _floorMatTemplate
+            : _floorMatTemplate;
+        Material wallTemplate = _visualIdentityLoader != null
+            ? _visualIdentityLoader.GetWallMaterial(room.Category) ?? _wallMatTemplate
+            : _wallMatTemplate;
+
         // Floor quad -------------------------------------------------------
         var floorGo  = GameObject.CreatePrimitive(PrimitiveType.Quad);
         floorGo.name = $"Room_{room.Name}";
@@ -144,8 +156,11 @@ public sealed class RoomRectangleRenderer : MonoBehaviour
         var fc = floorGo.GetComponent<Collider>();
         if (fc != null) Destroy(fc);
 
-        var floorMat = new Material(_floorMatTemplate);
-        floorMat.SetColor(ColorId,         baseColor);
+        // Clone the template so per-room tint/alpha modifications don't bleed across rooms.
+        var floorMat = new Material(floorTemplate);
+        // Only set _Color when using the flat-color fallback; catalog materials carry their color.
+        if (_visualIdentityLoader == null || floorTemplate == _floorMatTemplate)
+            floorMat.SetColor(ColorId, baseColor);
         floorMat.SetColor(TintColorId,     Color.white);
         floorMat.SetFloat(TintIntensityId, 0f);
         floorMat.SetFloat(AlphaId,         1f);
@@ -165,8 +180,10 @@ public sealed class RoomRectangleRenderer : MonoBehaviour
             wallGo.name = $"Wall_{room.Name}_{WallName(i)}";
             wallGo.transform.SetParent(wallRoot, worldPositionStays: false);
 
-            var wm = new Material(_wallMatTemplate);
-            wm.SetColor(ColorId,         baseColor * 0.85f);  // slightly darker than floor
+            var wm = new Material(wallTemplate);
+            // Only adjust color for fallback; catalog wall materials carry their own color.
+            if (_visualIdentityLoader == null || wallTemplate == _wallMatTemplate)
+                wm.SetColor(ColorId, baseColor * 0.85f);  // slightly darker than floor
             wm.SetColor(TintColorId,     Color.white);
             wm.SetFloat(TintIntensityId, 0f);
             wm.SetFloat(AlphaId,         1f);
