@@ -18,6 +18,8 @@ Issues confirmed but deferred — to be revisited when the relevant system is ma
 
 **Files relevant to fix:** `DragHandler.cs` (`GetSurfaceYAtXZ`, displacement logic), `DraggableProp.cs` (`SnapToSocketSilent`, `CancelDrag` — scaffolding already in place for a future attempt).
 
+**CLOSED:** Fixed in WP-4.0.G (2026-05-03). Footprint-aware placement validity using `BuildFootprintComponent` from WP-4.0.C; stacking happens when target prop has `CanStackOnTop = true` and footprints are compatible via `FootprintGeometry.CanStackOn`; all other prop-on-prop placements are rejected with ghost-preview red tint, CRT denial click, and `DraggableProp.CancelDrag` returning the prop to its pre-drag position. No auto-displacement (deliberate v0.2 design call).
+
 ---
 
 ## Project Hygiene — Unity Meta Files

@@ -54,9 +54,11 @@ public sealed class GhostPreview : MonoBehaviour
 
         _renderer = _ghostGo.GetComponent<MeshRenderer>();
 
-        // Build an unlit transparent material for the ghost.
-        // Using Standard with Fade rendering mode approximation via shader keywords.
-        _mat = new Material(Shader.Find("Unlit/Color") ?? Shader.Find("Standard"));
+        // Prefer the URP unlit shader; fall back to built-in for non-URP projects.
+        _mat = new Material(
+            Shader.Find("Universal Render Pipeline/Unlit") ??
+            Shader.Find("Unlit/Color") ??
+            Shader.Find("Standard"));
         _renderer.material = _mat;
 
         SetValid(true);

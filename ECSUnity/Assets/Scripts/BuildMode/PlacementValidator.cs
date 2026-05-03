@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using APIFramework.Build;
+using APIFramework.Components;
 using UnityEngine;
 using Warden.Contracts.Telemetry;
 
@@ -54,13 +56,28 @@ public sealed class PlacementValidator : MonoBehaviour
         // Lift slightly above the floor so we don't clip the floor collider.
         Vector3 checkPos = new Vector3(worldPos.x, _overlapHalfExtents.y, worldPos.z);
 
-        // 1. Solid structure collision.
+        // 1. Solid structure collision — allow if all solid hits are stackable props.
         Collider[] solidHits = Physics.OverlapBox(checkPos, _overlapHalfExtents,
             Quaternion.identity, _solidLayer);
         if (solidHits.Length > 0)
         {
-            reason = $"Tile occupied by: {solidHits[0].gameObject.name}";
-            return false;
+            bool allStackable = true;
+            foreach (var col in solidHits)
+            {
+                var bridge = col.GetComponentInParent<PropFootprintBridge>();
+                if (bridge == null || !bridge.CanStackOnTop)
+                {
+                    allStackable = false;
+                    break;
+                }
+            }
+
+            if (!allStackable)
+            {
+                reason = $"Tile occupied by: {solidHits[0].gameObject.name}";
+                return false;
+            }
+            // All solid hits are stackable props — placement on top is allowed.
         }
 
         // 2. NPC occupancy.
