@@ -111,9 +111,10 @@ These will land in the foundational polish wave (WP-4.0.A through WP-4.0.H). Eac
 - **What:** Unity's documented `ScriptableRendererFeature` extension surface. Modders implement a `ScriptableRendererFeature` subclass and add it to the URP renderer data asset's Feature list. Each feature owns `ScriptableRenderPass` instances that inject into URP's frame at named injection points.
 - **Where:** Built into URP (`com.unity.render-pipelines.universal`). Project's URP setup in `ECSUnity/Assets/Settings/URP-PipelineAsset.asset` + `URP-PipelineAsset_Renderer.asset`. First in-project consumer: `PixelArtRendererFeature` from WP-4.0.A1.
 - **Why a candidate:** Visual mods (CRT scanline, film grain, outline pass, custom emotion-cue overlay shader) are a common mod category. URP's ScriptableRendererFeature is the standard, documented, transferable extension surface. Better than a custom interface — modders learn a Unity-standard skill, we don't carry a bespoke maintenance burden.
-- **Stability:** fresh (foundation lands with WP-4.0.A; first consumer with WP-4.0.A1; bumps to *stabilizing* when a third consumer lands — likely WP-4.0.D/E adding a rim-light or tile-edge pass).
-- **Source packets:** WP-4.0.A (foundation — URP migration), WP-4.0.A1 (first consumer — pixel-art feature).
-- **Revision history:** *Originally drafted 2026-05-02 as "ICameraRenderPass (custom interface)"; revised same day after Talon's URP-from-the-start architectural call. Custom interface deprecated in favor of URP standard.*
+- **Stability:** stabilizing (foundation WP-4.0.A; first consumer WP-4.0.A1 shipped; bumps to *stable* when a third consumer lands — likely WP-4.0.D/E adding a rim-light or tile-edge pass).
+- **Source packets:** WP-4.0.A (foundation — URP migration), WP-4.0.A1 (first consumer — pixel-art feature, shipped 2026-05-03).
+- **In-project example:** `ECSUnity/Assets/Scripts/Render/PixelArtRendererFeature.cs` + `PixelArtRenderPass.cs`. Sandbox renderer data: `Assets/_Sandbox/SandboxURP-Renderer.asset`. Stub chain-validation feature: `Assets/Scripts/Render/Sandbox/OutlineStubRendererFeature.cs`.
+- **Revision history:** *Originally drafted 2026-05-02 as "ICameraRenderPass (custom interface)"; revised same day after Talon's URP-from-the-start architectural call. Custom interface deprecated in favor of URP standard. WP-4.0.A1 confirms pattern with two chained features in sandbox.*
 
 ### MAC-010: PersonalSpaceComponent + spatial-behavior tuning
 
