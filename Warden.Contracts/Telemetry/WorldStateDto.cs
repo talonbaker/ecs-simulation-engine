@@ -13,7 +13,7 @@ namespace Warden.Contracts.Telemetry;
 /// </summary>
 public sealed record WorldStateDto
 {
-    public string                      SchemaVersion { get; init; } = "0.5.0";
+    public string                      SchemaVersion { get; init; } = "0.5.1";
     public DateTimeOffset              CapturedAt    { get; init; }
     public int                         Tick          { get; init; }
     public ClockStateDto               Clock         { get; init; } = default!;
@@ -78,6 +78,9 @@ public sealed record EntityStateDto
 
     // v0.2 â€” optional social state
     public SocialStateDto?    Social     { get; init; }
+
+    // v0.5.1 — optional build footprint (populated for prop entities; null for NPCs)
+    public BuildFootprintDto? BuildFootprint { get; init; }
 }
 
 public sealed record PositionStateDto
@@ -164,6 +167,22 @@ public sealed record InvariantEventDto
     public int    Tick    { get; init; }
     public string Kind    { get; init; } = string.Empty;
     public string Message { get; init; } = string.Empty;
+}
+
+// â”€â”€ Build footprint (v0.5.1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+/// <summary>
+/// Serialised form of <c>APIFramework.Components.BuildFootprintComponent</c>.
+/// Populated on prop entities only; null on NPC entities.
+/// </summary>
+public sealed record BuildFootprintDto
+{
+    public int    WidthTiles        { get; init; }
+    public int    DepthTiles        { get; init; }
+    public float  BottomHeight      { get; init; }
+    public float  TopHeight         { get; init; }
+    public bool   CanStackOnTop     { get; init; }
+    public string FootprintCategory { get; init; } = string.Empty;
 }
 
 // â”€â”€ Enums â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
