@@ -216,10 +216,10 @@ public sealed class RoomBoundaryTrimRenderer : MonoBehaviour
 
     private Color FloorColor(RoomCategory wardenCat)
     {
-        var cat = (APIFramework.Components.RoomCategory)(int)wardenCat;
-        if (_visualIdentityLoader == null) return RenderColorPalette.ForRoom(cat);
-        var mat = _visualIdentityLoader.GetFloorMaterial(cat);
-        if (mat == null) return RenderColorPalette.ForRoom(cat);
-        return mat.HasProperty(ColorId) ? mat.GetColor(ColorId) : RenderColorPalette.ForRoom(cat);
+        var apiCat = (APIFramework.Components.RoomCategory)(int)wardenCat;
+        if (_visualIdentityLoader == null) return RenderColorPalette.ForRoom(wardenCat);
+        var mat = _visualIdentityLoader.GetFloorMaterial(apiCat);
+        if (mat == null) return RenderColorPalette.ForRoom(wardenCat);
+        return mat.HasProperty(ColorId) ? mat.GetColor(ColorId) : RenderColorPalette.ForRoom(wardenCat);
     }
 }
