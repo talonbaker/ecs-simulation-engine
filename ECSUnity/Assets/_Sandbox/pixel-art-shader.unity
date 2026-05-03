@@ -1566,7 +1566,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  _feature: {fileID: 1376256781234567, guid: c9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4, type: 2}
+  _feature: {fileID: 1376256781234568, guid: 87f056d836ce98d4aaf4e17737846ca0, type: 2}
   _toggleKey: 112
   _statsText: {fileID: 920000004}
-  _sandboxRendererIndex: 1

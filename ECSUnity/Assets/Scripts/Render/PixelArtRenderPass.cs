@@ -6,8 +6,9 @@ using UnityEngine.Rendering.RenderGraphModule;
 
 public class PixelArtRenderPass : ScriptableRenderPass, IDisposable
 {
-    static readonly int s_PaletteTexId   = Shader.PropertyToID("_PaletteTex");
-    static readonly int s_PaletteCountId = Shader.PropertyToID("_PaletteCount");
+    static readonly int s_PaletteTexId     = Shader.PropertyToID("_PaletteTex");
+    static readonly int s_PaletteCountId   = Shader.PropertyToID("_PaletteCount");
+    static readonly int s_DitherStrengthId = Shader.PropertyToID("_DitherStrength");
 
     readonly PixelArtRendererFeature.Settings _settings;
     Material _material;
@@ -23,8 +24,8 @@ public class PixelArtRenderPass : ScriptableRenderPass, IDisposable
     class PassData
     {
         public TextureHandle src;
-        public Material material;
-        public int pass;
+        public Material      material;
+        public int           pass;
     }
 
     public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -34,43 +35,42 @@ public class PixelArtRenderPass : ScriptableRenderPass, IDisposable
         var resourceData = frameData.Get<UniversalResourceData>();
         var cameraData   = frameData.Get<UniversalCameraData>();
 
-        Vector2Int res = ResolveResolution();
-
         if (_settings.paletteTexture != null)
         {
-            _material.SetTexture(s_PaletteTexId, _settings.paletteTexture);
-            _material.SetFloat(s_PaletteCountId, _settings.paletteTexture.width);
+            _material.SetTexture(s_PaletteTexId,   _settings.paletteTexture);
+            _material.SetFloat(s_PaletteCountId,   _settings.paletteTexture.width);
         }
-        int downsamplePass = (_settings.paletteQuantize && _settings.paletteTexture != null) ? 0 : 1;
+        _material.SetFloat(s_DitherStrengthId, _settings.ditherStrength);
+
+        // Pass 0 = dither + palette snap; pass 1 = plain blit (fallback when no palette).
+        int ditherPass = (_settings.paletteQuantize && _settings.paletteTexture != null) ? 0 : 1;
 
         var desc = cameraData.cameraTargetDescriptor;
-        desc.width           = res.x;
-        desc.height          = res.y;
         desc.depthBufferBits = 0;
         desc.msaaSamples     = 1;
-        TextureHandle lowRes = UniversalRenderer.CreateRenderGraphTexture(
-            renderGraph, desc, "_PixelArtLowRes", false, FilterMode.Point);
+        TextureHandle tempHandle = UniversalRenderer.CreateRenderGraphTexture(
+            renderGraph, desc, "_PixelArtTemp", false);
 
-        // Pass A: downsample (+ optional palette quantize) to low-res buffer.
-        using (var builder = renderGraph.AddRasterRenderPass<PassData>("PixelArt Downsample", out var passData))
+        // Step 1: copy active color to temp (pass 1 = plain blit).
+        using (var builder = renderGraph.AddRasterRenderPass<PassData>("PixelArt Copy", out var passData))
         {
             passData.src      = resourceData.activeColorTexture;
             passData.material = _material;
-            passData.pass     = downsamplePass;
+            passData.pass     = 1;
 
             builder.UseTexture(passData.src);
-            builder.SetRenderAttachment(lowRes, 0);
+            builder.SetRenderAttachment(tempHandle, 0);
 
             builder.SetRenderFunc(static (PassData data, RasterGraphContext ctx) =>
                 Blitter.BlitTexture(ctx.cmd, data.src, new Vector4(1, 1, 0, 0), data.material, data.pass));
         }
 
-        // Pass B: point-filter upscale back to camera target (shader pass 2 uses sampler_PointClamp).
-        using (var builder = renderGraph.AddRasterRenderPass<PassData>("PixelArt Upscale", out var passData))
+        // Step 2: Bayer-dither from temp back to active color.
+        using (var builder = renderGraph.AddRasterRenderPass<PassData>("PixelArt Dither", out var passData))
         {
-            passData.src      = lowRes;
+            passData.src      = tempHandle;
             passData.material = _material;
-            passData.pass     = 2;
+            passData.pass     = ditherPass;
 
             builder.UseTexture(passData.src);
             builder.SetRenderAttachment(resourceData.activeColorTexture, 0);
@@ -79,14 +79,6 @@ public class PixelArtRenderPass : ScriptableRenderPass, IDisposable
                 Blitter.BlitTexture(ctx.cmd, data.src, new Vector4(1, 1, 0, 0), data.material, data.pass));
         }
     }
-
-    Vector2Int ResolveResolution() =>
-        _settings.preset switch
-        {
-            PixelArtRendererFeature.PixelArtPreset.Crisp   => new Vector2Int(480, 270),
-            PixelArtRendererFeature.PixelArtPreset.Chunky  => new Vector2Int(320, 180),
-            _                                               => _settings.customResolution,
-        };
 
     public void Dispose()
     {
