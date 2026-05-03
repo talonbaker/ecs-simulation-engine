@@ -32,11 +32,9 @@ public class SandboxToggle : MonoBehaviour
 
     void Start()
     {
-        // Switch main camera to the sandbox renderer variant
-        var cameraData = Camera.main != null
-            ? Camera.main.GetComponent<UniversalAdditionalCameraData>()
-            : null;
-        cameraData?.SetRenderer(_sandboxRendererIndex);
+        // Camera.main requires the "MainCamera" tag; fall back to any active camera.
+        Camera cam = Camera.main != null ? Camera.main : FindFirstObjectByType<Camera>();
+        cam?.GetComponent<UniversalAdditionalCameraData>()?.SetRenderer(_sandboxRendererIndex);
     }
 
     void Update()
