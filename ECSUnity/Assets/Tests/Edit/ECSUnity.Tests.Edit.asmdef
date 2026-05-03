@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "ECSUnity",
+        "Unity.RenderPipelines.Universal.Runtime",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

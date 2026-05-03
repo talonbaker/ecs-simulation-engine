@@ -39,7 +39,10 @@
       "Bash(grep -rn \"NpcSaveDto\" Warden.Contracts/)",
       "Bash(echo \"exit:$?\")",
       "Bash(grep -rn *)",
-      "PowerShell(dotnet test *)"
+      "PowerShell(dotnet test *)",
+      "Bash(New-Item -ItemType Directory -Path \"C:\\\\repos\\\\_ecs-simulation-engine\\\\.claude\\\\worktrees\\\\sonnet-wp-4.0.a\\\\ECSUnity\\\\Assets\\\\Editor\" -Force)",
+      "Bash(Out-Null)",
+      "PowerShell(New-Item *)"
     ]
   }
 }
