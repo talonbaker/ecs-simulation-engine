@@ -99,5 +99,16 @@ public sealed class CameraInputBindings
     // ── Recenter ──────────────────────────────────────────────────────────────
 
     /// <summary>Returns true on the frame the user presses the recenter key.</summary>
-    public bool RecenterPressed() => Input.GetKeyDown(KeyCode.F);
+    public bool RecenterPressed()
+    {
+        // Suppress while the dev console is open so typing 'f' in a command
+        // doesn't yank the camera (BUG-011). Try/catch wraps the legacy
+        // Input.GetKeyDown for projects with activeInputHandler=1 where it
+        // throws.
+        #if WARDEN
+        if (DevConsolePanel.AnyVisible) return false;
+        #endif
+        try { return Input.GetKeyDown(KeyCode.F); }
+        catch { return false; }
+    }
 }

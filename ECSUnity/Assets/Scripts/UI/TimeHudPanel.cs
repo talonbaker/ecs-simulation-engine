@@ -73,8 +73,16 @@ public sealed class TimeHudPanel : MonoBehaviour
 
     private void Update()
     {
-        // Keyboard shortcuts.
-        if (Keyboard.current != null)
+        // Keyboard shortcuts. Suppress while the dev console is open so that
+        // typing space / number keys into a command doesn't pause the sim or
+        // shift the time scale (BUG-011).
+        #if WARDEN
+        bool consoleEatsKeyboard = DevConsolePanel.AnyVisible;
+        #else
+        bool consoleEatsKeyboard = false;
+        #endif
+
+        if (Keyboard.current != null && !consoleEatsKeyboard)
         {
             if (Keyboard.current.spaceKey.wasPressedThisFrame) SetPaused(!_isPaused);
             if (Keyboard.current.digit1Key.wasPressedThisFrame) SetTimeScale(1f);

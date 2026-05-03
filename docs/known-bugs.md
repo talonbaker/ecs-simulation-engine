@@ -248,3 +248,82 @@ The selection-cue cascade is illustrative: `OutlineRenderer` is wired (outline a
 **Discovered in:** PT-001 (originally as BUG-006); rescoped to BUG-009 on 2026-05-02 after investigation surfaced the missing-feature shape.
 
 ---
+
+## PlaytestScene — Iter 2 findings
+
+> Surfaced by PT-001-iter-2 (after the BUG-004/005a/007 commit `afd7172`). Talon re-ran the recipe; console worked but selection chain was still broken.
+
+### BUG-010: NPCs have NpcSelectableTag, not SelectableTag — SelectionController can't find them
+
+**Symptom:** After BUG-004's wiring fix landed, clicking an NPC produced an outline (legacy SelectionManager fired) but no inspector opened, and double-clicking still didn't glide the camera. The newer SelectionController (and everything that subscribes to it: InspectorPanel, ObjectInspectorPanel, RoomInspectorPanel, CameraController) never received SelectionChanged or GlideRequested events.
+
+**Severity:** **High** — selection is the primary player verb; without it the entire inspector and camera-glide UX is dark.
+
+**Root cause:** `NpcDotRenderer.CreateNpcView()` adds `NpcSelectableTag` (older API used by `SelectionManager`) but **not** `SelectableTag` (newer unified API used by `SelectionController`, `BuildModeController`, `DoorLockContextMenu`, `ChibiEmotionPopulator`, etc.). They're two separate MonoBehaviour classes with no inheritance. SelectionController.Update raycasts and calls `hit.collider.GetComponentInParent<SelectableTag>()` — returns null for NPCs because the NPC GameObject only carries `NpcSelectableTag`. The OutlineRenderer subscribes to SelectionManager (via NpcSelectableTag) so the outline still appears, masking the deeper failure.
+
+**Repro:**
+1. Open PlaytestScene → Play → click an NPC dot.
+2. Outline appears on the NPC (legacy path works).
+3. Inspector does NOT slide in (newer SelectionController never fires SelectionChanged).
+4. Double-click NPC: camera does not glide (CameraController subscribed to SelectionController.GlideRequested — same chain).
+
+**Files relevant:**
+- `ECSUnity/Assets/Scripts/Render/NpcDotRenderer.cs:167` — adds NpcSelectableTag only
+- `ECSUnity/Assets/Scripts/UI/SelectionController.cs:72` — looks for SelectableTag via GetComponentInParent
+- `ECSUnity/Assets/Scripts/BuildMode/SelectableTag.cs` — the unified class
+- `ECSUnity/Assets/Scripts/Selection/NpcSelectableTag.cs` — the older NPC-specific class
+
+**Resolution:** Fixed in this commit (PT-001-iter-2 fix bundle). `NpcDotRenderer.CreateNpcView` now adds **both** `NpcSelectableTag` (for SelectionManager / OutlineRenderer compat) AND `SelectableTag` (for SelectionController + downstream subscribers). Each carries the same EntityId; SelectableTag also carries the DisplayName. Both selection systems work in parallel until a future cleanup unifies them.
+
+**Discovered in:** PT-001-iter-2 (`docs/playtest/PT-001-baseline.md` — to be appended with iter-2 notes).
+
+---
+
+### BUG-011: Console keyboard bleed — game hotkeys still fire while console is open
+
+**Symptom:** With the dev console open, pressing space pauses the sim; pressing F recenters the camera; pressing 1/2/3 changes time scale; pressing F5/F9 quick-saves/loads. The keys also reach the IMGUI TextField correctly, but the parallel keybindings in TimeHudPanel / CameraInputBindings / SaveLoadPanel fire too.
+
+**Severity:** **Medium** — annoying but workaround-able (don't use those keys while typing). Becomes High during scenario testing because typing `set-time dusk` includes a space which pauses the sim mid-command.
+
+**Root cause:** Each keyboard handler polls Input.GetKeyDown / Keyboard.current.* independently. Nothing tells them "the console has focus, suppress your hotkeys."
+
+**Resolution:** Fixed in this commit. `DevConsolePanel` now exposes a static `AnyVisible` property that flips to true on `SetVisible(true)`. Five sites added an early-return gate on `DevConsolePanel.AnyVisible` (each guarded with `#if WARDEN` so RETAIL builds don't reference the WARDEN-only DevConsolePanel type):
+
+- `TimeHudPanel.Update` — gates space-pause + 1/2/3 time-scale
+- `CameraInputBindings.RecenterPressed` — gates F-recenter (also wraps Input.GetKeyDown in try/catch for activeInputHandler=1 projects)
+- `BuildModeController.Update` — gates B-toggle and all build-mode interaction
+- `SaveLoadPanel.Update` — gates F5/F9
+
+**Mouse interactions still pass through** intentionally — clicking outside the console panel area should still select / interact. If that proves problematic later, file as a follow-up.
+
+**Discovered in:** PT-001-iter-2.
+
+---
+
+### BUG-012: Build mode toggles state but no visible palette
+
+**Symptom:** Pressing `B` flips the BuildModeController's `_isBuildMode` flag (visible in Inspector at runtime), but no build palette appears, no world tint, no ghost preview. The build-mode UX is functionally unreachable.
+
+**Severity:** **High** — build mode is one of the four core player verbs.
+
+**Root cause (suspected — needs investigation packet):** BuildModeController has six unwired serialized references in PlaytestScene: `_pickup`, `_doorLock`, `_config`, `_camera`, `_dragHandler`, `_catalog` (verified via direct scene-file inspection during the BUG-004 work). When `SetBuildMode(true)` runs, it tries to call `_palette?.SetVisible(true)` etc. — most calls are null-safe but the cascade of unwired refs means no actual UI activates. Possibly also missing GameObjects (BuildOverlay, GhostPreview, PlacementValidator may be partially present, partially absent).
+
+**Suggested fix wave:** Defer to a follow-up packet `WP-FIX-BUG-012-buildmode-wiring.md` (to be authored). Build mode polish is intentionally out of scope for the BUG-004 fix per the kickoff plan; bundle into the future build-mode-v2 packet alongside BUG-001's stacking-prop fix.
+
+**Discovered in:** PT-001-iter-2.
+
+---
+
+### BUG-013: Bereavement cascade fires but no chibi-emotion cues render on witnesses
+
+**Symptom:** `scenario kill <npc>` correctly transitions the NPC to Deceased and the engine emits `BereavementWitnessed` events for nearby NPCs. But witnesses show no visual response — no chibi-emotion cues (sweat drop / tear / red face) appear above their heads. No log entries scroll into the event log either (gated on EventLogPanel rendering).
+
+**Severity:** **Medium** — engine logic is correct (verifiable via `inspect <witness>`'s drive vector); only the visualization is missing.
+
+**Root cause (suspected):** `ChibiEmotionPopulator` (`Assets/Scripts/Render/ChibiEmotionPopulator.cs`) is responsible for rendering chibi cues by iterating `ChibiEmotionSlot` GameObjects and reading the engine's mood/emotion state. PlaytestScene likely doesn't have a ChibiEmotionPopulator GameObject — it was missing from the scene-composition pass that landed PlaytestScene initially.
+
+**Suggested fix wave:** Defer. Bundle into the same future build-mode-v2 / panel-polish packet that addresses BUG-012, OR roll up under a follow-up "PlaytestScene complete render-chain" packet.
+
+**Discovered in:** PT-001-iter-2.
+
+---

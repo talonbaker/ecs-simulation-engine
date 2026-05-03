@@ -63,6 +63,15 @@ public sealed class DevConsolePanel : MonoBehaviour
     public IReadOnlyList<ConsoleEntry>  GetHistory() => _history;
     public string                       CurrentInput => _inputField?.value ?? _savedInput;
 
+    /// <summary>
+    /// True when any DevConsolePanel instance is currently visible. Used by
+    /// other input handlers (TimeHudPanel space-pause, CameraInputBindings
+    /// F-recenter, BuildModeController B-toggle, SaveLoadPanel F5/F9, etc.) to
+    /// gate keyboard input while the player is typing into the console.
+    /// Surfaced by PT-001-iter-2 as BUG-011 (keyboard bleed).
+    /// </summary>
+    public static bool AnyVisible { get; private set; }
+
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     private void Awake()
@@ -144,6 +153,7 @@ public sealed class DevConsolePanel : MonoBehaviour
     public void SetVisible(bool v)
     {
         _isVisible = v;
+        AnyVisible = v;
         if (_root != null)
             _root.style.display = v ? DisplayStyle.Flex : DisplayStyle.None;
 

@@ -40,9 +40,12 @@ public sealed class SaveCommand : IDevConsoleCommand
 
         // Allow multi-word slot names: "save before experiment" -> "before experiment"
         string slot = string.Join(" ", args);
-        ctx.SaveLoad.Save(slot);
+        bool ok = ctx.SaveLoad.Save(slot);
+        string dir = SaveLoadPanel.SaveDirectoryPath;
 
-        return $"Saved to slot '{slot}'.";
+        return ok
+            ? $"Saved to slot '{slot}'.\n  Path: {dir}\\{slot}.json"
+            : $"ERROR: Save to slot '{slot}' failed (target dir: {dir}). See Editor Console for details.";
     }
 }
 #endif

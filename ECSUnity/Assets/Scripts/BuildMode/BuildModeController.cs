@@ -107,11 +107,18 @@ public sealed class BuildModeController : MonoBehaviour
         // Inject mutation API once the engine is alive.
         if (!_mutationApiReady) TryInjectMutationApi();
 
+        // Suppress keyboard while the dev console is open (BUG-011).
+        #if WARDEN
+        bool consoleEatsKeyboard = DevConsolePanel.AnyVisible;
+        #else
+        bool consoleEatsKeyboard = false;
+        #endif
+
         // Toggle build mode with B key.
-        if (Keyboard.current != null && Keyboard.current.bKey.wasPressedThisFrame)
+        if (!consoleEatsKeyboard && Keyboard.current != null && Keyboard.current.bKey.wasPressedThisFrame)
             ToggleBuildMode();
 
-        if (_isBuildMode)
+        if (_isBuildMode && !consoleEatsKeyboard)
         {
             HandleBuildModeInput();
         }

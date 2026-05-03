@@ -228,3 +228,33 @@ PT-002 should run after `WP-FIX-BUG-004`, `WP-FIX-BUG-005`, and `WP-FIX-BUG-007`
 
 - **WP-PT.0** (PlaytestScene composition) — ⚠ PARTIAL ACCEPTANCE: scene boots, perf gate holds, but multiple surfaces missing per BUG-004. The packet's first-light recipe checked structure but not the wiring depth needed to actually render the panels. Recipe revision suggested: each panel section should explicitly verify the panel's GameObject is in the scene hierarchy AND its IMGUI fallback path renders.
 - **WP-PT.1** (dev-console scenario verbs) — ❌ RETURN FOR FIX (via BUG-007): the scenario verbs may be correctly implemented but cannot be exercised because the IMGUI submit path doesn't actually dispatch.
+
+---
+
+## Iter 2 notes (after `afd7172` fix bundle)
+
+After Talon pulled `afd7172` (BUG-004/005a/007 fix) and ran the recipe again:
+
+**What improved:**
+- Dev console: backtick opens, commands execute, history scrolls. **BUG-007 verified.**
+- All earlier "still no console" pain resolved.
+
+**What's still broken (filed below as new BUGs in `known-bugs.md`):**
+- **BUG-010** — Inspector + camera glide still don't fire. Outline appears (legacy SelectionManager works); but newer SelectionController never fires events. Root cause: NpcDotRenderer adds `NpcSelectableTag` only, not the unified `SelectableTag` that SelectionController raycasts against. **Fixed in iter-2 commit (this same one).**
+- **BUG-011** — Keyboard bleed. Pressing space while typing a command pauses the sim. **Fixed in iter-2 commit** by adding `DevConsolePanel.AnyVisible` static + 4 gate sites (TimeHudPanel, CameraInputBindings, BuildModeController, SaveLoadPanel).
+- **BUG-012** — Build mode toggles in code but renders nothing. Deferred to a follow-up packet alongside BUG-001's build-mode-v2 work.
+- **BUG-013** — `scenario kill <name>` works but witnesses show no chibi-emotion cues. ChibiEmotionPopulator likely missing from scene. Deferred.
+
+**Iter-2 quality-of-life adds (in this same commit):**
+- New `scenario list-npcs` subverb so Talon can discover names without an inspector.
+- Save/load commands now print the on-disk path in the response (`%USERPROFILE%\AppData\LocalLow\<Company>\<ProjectName>\Saves\<slot>.json`).
+- New `docs/wiki/dev-console-commands.md` — single-page reference Talon can skim mid-session.
+- Audio: re-confirmed silent (BUG-009 — host synth listener missing; out of fix scope).
+
+**Pass criteria after iter-2 fix:** still <80% pre-test until Talon retests. Predicted improvements:
+- Inspector should now open on click (BUG-010 fix).
+- Camera should now glide on double-click (BUG-010 fix unlocks the GlideRequested chain).
+- Typing space in console should NOT pause sim (BUG-011 fix).
+- `scenario list-npcs` reveals NPC names; subsequent `scenario kill Donna` etc. should work as before.
+- `save mytest` prints the file path so Talon knows where saves land.
+- Build mode + audio + chibi cues remain dark (deferred).

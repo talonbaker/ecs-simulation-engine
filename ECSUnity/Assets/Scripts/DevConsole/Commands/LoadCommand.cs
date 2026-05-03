@@ -41,9 +41,12 @@ public sealed class LoadCommand : IDevConsoleCommand
             return "ERROR: SaveLoadPanel not available.";
 
         string slot = string.Join(" ", args);
-        ctx.SaveLoad.Load(slot);
+        bool ok = ctx.SaveLoad.Load(slot);
+        string dir = SaveLoadPanel.SaveDirectoryPath;
 
-        return $"Loaded slot '{slot}'.";
+        return ok
+            ? $"Loaded slot '{slot}' (engine restart needed for full state restore).\n  Path: {dir}\\{slot}.json"
+            : $"ERROR: Load from slot '{slot}' failed — file not found at {dir}\\{slot}.json.";
     }
 }
 #endif

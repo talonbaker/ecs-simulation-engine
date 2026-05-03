@@ -58,6 +58,11 @@ public sealed class SaveLoadPanel : MonoBehaviour
     {
         if (Keyboard.current == null) return;
 
+        // Suppress F5/F9 while the dev console is open (BUG-011).
+        #if WARDEN
+        if (DevConsolePanel.AnyVisible) return;
+        #endif
+
         if (Keyboard.current.f5Key.wasPressedThisFrame) QuickSave();
         if (Keyboard.current.f9Key.wasPressedThisFrame) QuickLoad();
     }
@@ -124,16 +129,25 @@ public sealed class SaveLoadPanel : MonoBehaviour
     /// <summary>F5 quick-save.</summary>
     public void QuickSave()
     {
-        Save("quicksave");
-        Debug.Log("[SaveLoadPanel] Quick-saved.");
+        bool ok = Save("quicksave");
+        string dir = SaveDirectory();
+        Debug.Log(ok
+            ? $"[SaveLoadPanel] Quick-saved to {dir}/quicksave.json"
+            : $"[SaveLoadPanel] Quick-save FAILED — see prior errors. Target dir: {dir}");
     }
 
     /// <summary>F9 quick-load (most recent autosave).</summary>
     public void QuickLoad()
     {
-        Load("quicksave");
-        Debug.Log("[SaveLoadPanel] Quick-loaded.");
+        bool ok = Load("quicksave");
+        string dir = SaveDirectory();
+        Debug.Log(ok
+            ? $"[SaveLoadPanel] Quick-loaded from {dir}/quicksave.json (engine restart needed for full state restore)"
+            : $"[SaveLoadPanel] Quick-load FAILED — file not found at {dir}/quicksave.json");
     }
+
+    /// <summary>Public accessor — used by SaveCommand/LoadCommand to print the path in console output.</summary>
+    public static string SaveDirectoryPath => SaveDirectory();
 
     /// <summary>List all save slot names. Returns string[] (not List) so tests can use Array.Exists.</summary>
     public string[] GetSlotNames()

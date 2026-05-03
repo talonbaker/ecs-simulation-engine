@@ -34,6 +34,7 @@ public sealed class ScenarioCommand : IDevConsoleCommand
         _registry.Register(new SetTimeSubverb());
         _registry.Register(new SeedStainsSubverb());
         _registry.Register(new SeedBereavementSubverb());
+        _registry.Register(new ListNpcsSubverb());
     }
 
     public string Execute(string[] args, DevCommandContext ctx)

@@ -167,6 +167,17 @@ public sealed class NpcDotRenderer : MonoBehaviour
         var tag = go.AddComponent<NpcSelectableTag>();
         tag.EntityId = npc.Id;
 
+        // Also add the unified SelectableTag (BuildMode/SelectableTag.cs) so the
+        // newer SelectionController can pick this NPC up via raycast. Without
+        // this, only the legacy SelectionManager path works — meaning outline
+        // appears (subscribed to SelectionManager) but Inspector + camera glide
+        // never fire (those subscribe to SelectionController). Surfaced by
+        // PT-001-iter-2 as BUG-010.
+        var selectable = go.AddComponent<SelectableTag>();
+        selectable.Kind = SelectableKind.Npc;
+        selectable.EntityId = npc.Id;
+        selectable.DisplayName = npc.Name;
+
         // Assign archetype color.
         Color dotColor = RenderColorPalette.ForNpc(npc.Name);
         if (!_materialCache.TryGetValue(dotColor, out var mat))
