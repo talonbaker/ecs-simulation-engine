@@ -1,5 +1,7 @@
 # WP-4.0.C — Build Prop Footprint Foundation
 
+> **STATUS:** SHIPPED to staging 2026-05-02. Retained because pending packets depend on this spec: WP-4.0.G.
+
 > **Wave 1 of the Phase 4.0.x foundational polish wave.** Per the 2026-05-02 brief restructure: BUG-001 (prop-on-prop displacement) was deferred to "build mode v2" because the underlying engine has no concept of per-prop occupancy. This packet ships the foundation — `BuildFootprintComponent` as a first-class engine concept — without yet fixing BUG-001. WP-4.0.G (the actual BUG-001 fix) will consume this substrate. Track 1.5 packet (engine + minor Unity reads).
 
 **Tier:** Sonnet

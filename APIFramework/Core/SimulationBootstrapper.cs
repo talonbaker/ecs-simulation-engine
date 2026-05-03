@@ -14,6 +14,8 @@ using APIFramework.Systems.Movement;
 using APIFramework.Systems.Chronicle;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
+using APIFramework.Build;
+using APIFramework.Systems.Build;
 using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Physics;
 using System.Linq;
@@ -788,6 +790,10 @@ public class SimulationBootstrapper
         // Task generation â€” spawns new task entities once per game-day at the configured hour.
         Engine.AddSystem(
             new TaskGeneratorSystem(Config.Workload, Clock, Random),               SystemPhase.PreUpdate);
+
+        // Build footprint initializer — attaches BuildFootprintComponent to prop entities by propTypeId.
+        Engine.AddSystem(
+            new BuildFootprintInitializerSystem(BuildFootprintCatalog.LoadDefault()), SystemPhase.PreUpdate);
 
         // Chore initializer — spawns ChoreComponent entities and attaches ChoreHistoryComponent to NPCs.
         Engine.AddSystem(new ChoreInitializerSystem(Config.Chores),                SystemPhase.PreUpdate);

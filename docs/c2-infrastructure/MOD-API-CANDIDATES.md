@@ -128,8 +128,8 @@ These will land in the foundational polish wave (WP-4.0.A through WP-4.0.H). Eac
 - **What:** Per-prop occupancy footprint (the tile area a prop covers, surface heights, stack-on-top compatibility). The substrate the build mode v2 BUG-001 fix needs.
 - **Where:** WP-4.0.C introduces. `APIFramework/Components/BuildFootprintComponent.cs`; build-mode drop logic consumes.
 - **Why a candidate:** Modders adding new props need a uniform way to declare footprint. Future custom-furniture mods, custom-room-template mods all touch this.
-- **Stability:** fresh (lands with WP-4.0.C).
-- **Source packet:** WP-4.0.C (pending).
+- **Stability:** fresh (landed with WP-4.0.C; shipped to staging 2026-05-02).
+- **Source packet:** WP-4.0.C (shipped 2026-05-02).
 
 ### MAC-012: Particle effect vocabulary
 

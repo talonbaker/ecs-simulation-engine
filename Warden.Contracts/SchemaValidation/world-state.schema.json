@@ -168,7 +168,8 @@
           }
         },
 
-        "social":        { "$ref": "#/$defs/socialState" },
+        "social":         { "$ref": "#/$defs/socialState" },
+        "buildFootprint": { "$ref": "#/$defs/buildFootprint" },
         "personalSpace": { "$ref": "#/$defs/personalSpace" }
       }
     },
@@ -469,6 +470,20 @@
       "properties": {
         "x": { "type": "integer", "minimum": 0, "maximum": 512 },
         "y": { "type": "integer", "minimum": 0, "maximum": 512 }
+      }
+    },
+
+    "buildFootprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["widthTiles", "depthTiles", "bottomHeight", "topHeight", "canStackOnTop"],
+      "properties": {
+        "widthTiles":        { "type": "integer", "minimum": 1 },
+        "depthTiles":        { "type": "integer", "minimum": 1 },
+        "bottomHeight":      { "type": "number",  "minimum": 0 },
+        "topHeight":         { "type": "number",  "minimum": 0 },
+        "canStackOnTop":     { "type": "boolean" },
+        "footprintCategory": { "type": "string",  "maxLength": 64 }
       }
     },
 

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -20,11 +21,25 @@ public sealed class DragHandler : MonoBehaviour
     private bool          _active = true;
     private float         _dragPlaneY; // surface Y the prop is currently above; used as the projection plane
 
+    // Optional footprint-aware surface query. When set, GetSurfaceYAtXZ consults it
+    // before falling back to geometry raycasting. Injected by BuildModeController
+    // after the engine boots. Signature: (worldX, worldZ) → topHeight or null if
+    // no footprint data is available at that tile.
+    private Func<float, float, float?> _footprintQuery;
+
     /// <summary>Allow this handler to process drag input. Called by BuildModeController on build-mode enter.</summary>
     public void Activate()   => _active = true;
 
     /// <summary>Suppress all drag input. Called by BuildModeController on build-mode exit.</summary>
     public void Deactivate() => _active = false;
+
+    /// <summary>
+    /// Injects a footprint-aware surface query. When provided, GetSurfaceYAtXZ
+    /// consults this callback before falling back to geometry raycasting.
+    /// The callback returns the highest prop top-surface Y at (worldX, worldZ),
+    /// or null when no footprint data is available for that tile.
+    /// </summary>
+    public void SetFootprintQuery(Func<float, float, float?> query) => _footprintQuery = query;
 
     private void Awake()
     {
@@ -123,12 +138,25 @@ public sealed class DragHandler : MonoBehaviour
     // Shoot a ray straight down; return the Y of the highest surface below (x, z).
     // Excludes the dragged prop and its entire child hierarchy (e.g. a banana parented
     // to a table socket) so neither the prop nor its passengers count as surfaces.
+    // When a footprint query is injected, it is consulted first; its result wins if
+    // it exceeds the geometry result. Falls back to geometry cast when query is null
+    // or returns null (no footprint data for that tile).
     private float GetSurfaceYAtXZ(float x, float z)
     {
+        float topY = _floorPlaneY;
+
+        // Footprint-aware path (additive — no behaviour change when query is null).
+        if (_footprintQuery != null)
+        {
+            float? footprintY = _footprintQuery(x, z);
+            if (footprintY.HasValue && footprintY.Value > topY)
+                topY = footprintY.Value;
+        }
+
+        // Geometry-cast path (always runs; footprint path may have already raised topY).
         var hits = Physics.RaycastAll(
             new Vector3(x, 1000f, z), Vector3.down, 2000f, _dragLayerMask);
 
-        float topY = _floorPlaneY;
         foreach (var hit in hits)
         {
             if (_currentDrag != null &&
