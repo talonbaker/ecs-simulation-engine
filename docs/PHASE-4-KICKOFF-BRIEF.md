@@ -102,7 +102,8 @@ Phase 4 is **gameplay deepening + content polish**, dispatched in this order:
 
 The wave that makes the single-floor 5-NPC scene functional, legible, and visually settled. Multi-floor is intentionally OUT of this wave; emergent gameplay (plague, fire, PIP, affairs) is intentionally OUT of this wave.
 
-- **WP-4.0.A — Pixel-art post-process sandbox** (Track 2 sandbox + companion -INT). The aesthetic bible's render commitment landed as a camera post-process effect on the existing built-in pipeline (URP migration deferred — pragmatism over architectural purity until evidence shows we need URP's tooling). Modder-extensible render-pass registration scaffolded.
+- **WP-4.0.A — URP migration foundation** (Track 2 pipeline-migration). Adopt URP from the start per Talon's 2026-05-02 architectural call (zero-cost-now vs compounding-cost-later; CPU efficiency for the heavy ECS backend; multi-platform readiness; access to Shader Graph + VFX Graph). Migrates the four existing custom shaders; visual parity required. Foundation for all subsequent visual packets.
+- **WP-4.0.A1 — Pixel-art Renderer Feature sandbox** (Track 2 sandbox + companion -INT). The aesthetic bible's render commitment as a URP `ScriptableRendererFeature`. Depends on WP-4.0.A merging. First consumer of MAC-009 (URP ScriptableRendererFeature pattern, standardized).
 - **WP-4.0.B — NPC spatial behavior / anti-overlap** (Track 1 engine). Soft repulsion / personal-space component. NPCs may have nothing meaningful to do yet, but they shouldn't clip into each other while doing it. PersonalSpaceComponent becomes a Mod API extension surface.
 - **WP-4.0.C — Build prop footprint foundation** (Track 1.5). The substrate BUG-001's eventual fix needs: per-prop occupancy footprint as a first-class engine concept. Doesn't fix BUG-001 yet; lays the foundation.
 - **WP-4.0.D — Floor & room visual identity** (Track 2 sandbox + -INT). Floors that read as floors (carpet, linoleum, concrete); walls that read as walls; doors that read as doors. Couples to 4.0.A's pipeline.
@@ -141,11 +142,11 @@ Multi-floor moved here from 4.0.x; the emergent scenarios that need it slot imme
 - **WP-4.4.1 — Final balance + tuning passes.**
 - **WP-4.4.2 — Tutorial / first-launch experience.**
 
-**Starter priority order (2026-05-02 calibration):**
-1. Wave 1 batch (dispatch immediately, parallel-safe — disjoint file surfaces): **WP-4.0.A** (shader sandbox), **WP-4.0.B** (NPC anti-overlap), **WP-4.0.C** (build footprint foundation).
-2. After 4.0.A merges and the pipeline is stable: **WP-4.0.A-INT** (integrate into PlaytestScene), then **WP-4.0.D** (floor identity) + **WP-4.0.E** (NPC readability) + **WP-4.0.H** (particle vocabulary) in parallel.
+**Starter priority order (2026-05-02 calibration, revised post-URP decision):**
+1. Wave 1 batch (dispatch immediately, parallel-safe — disjoint file surfaces): **WP-4.0.A** (URP migration foundation), **WP-4.0.B** (NPC anti-overlap, engine-only), **WP-4.0.C** (build footprint foundation, engine + additive Unity read).
+2. After 4.0.A merges (URP active): **WP-4.0.A1** (pixel-art Renderer Feature sandbox), then **WP-4.0.A1-INT** (integrate into MainScene/PlaytestScene), then **WP-4.0.D** (floor identity) + **WP-4.0.E** (NPC readability) + **WP-4.0.H** (particle vocabulary, likely VFX Graph) in parallel.
 3. After 4.0.C merges: **WP-4.0.G** (build mode v2 / BUG-001) using the footprint substrate.
-4. **WP-4.0.F** (dev-mode introspection) any time after 4.0.A; doesn't strictly depend on it but benefits from the new pipeline being settled.
+4. **WP-4.0.F** (dev-mode introspection) any time after 4.0.A; doesn't strictly depend on it but benefits from URP being settled.
 5. Phase 4.1.x dispatches when 4.0.x stabilizes.
 
 ---

@@ -106,13 +106,14 @@ These were not designed as Mod API surfaces, but they have the right shape: data
 
 These will land in the foundational polish wave (WP-4.0.A through WP-4.0.H). Each packet ships with a "Mod API surface" section that adds an entry here.
 
-### MAC-009: ICameraRenderPass (custom render passes)
+### MAC-009: URP ScriptableRendererFeature pattern (standardized)
 
-- **What:** Interface for modder-registered camera render passes (post-process effects layered on top of the pixel-art shader). A modder adds a CRT-scanline effect, a film-grain effect, an outline effect, etc.
-- **Where:** WP-4.0.A introduces. Likely `ECSUnity/Assets/Scripts/Render/ICameraRenderPass.cs`.
-- **Why a candidate:** Visual mods are one of the most common mod categories in management sims. Render-pass extension is the surface they need.
-- **Stability:** fresh (lands with WP-4.0.A).
-- **Source packet:** WP-4.0.A (pending).
+- **What:** Unity's documented `ScriptableRendererFeature` extension surface. Modders implement a `ScriptableRendererFeature` subclass and add it to the URP renderer data asset's Feature list. Each feature owns `ScriptableRenderPass` instances that inject into URP's frame at named injection points.
+- **Where:** Built into URP (`com.unity.render-pipelines.universal`). Project's URP setup in `ECSUnity/Assets/Settings/URP-PipelineAsset.asset` + `URP-PipelineAsset_Renderer.asset`. First in-project consumer: `PixelArtRendererFeature` from WP-4.0.A1.
+- **Why a candidate:** Visual mods (CRT scanline, film grain, outline pass, custom emotion-cue overlay shader) are a common mod category. URP's ScriptableRendererFeature is the standard, documented, transferable extension surface. Better than a custom interface — modders learn a Unity-standard skill, we don't carry a bespoke maintenance burden.
+- **Stability:** fresh (foundation lands with WP-4.0.A; first consumer with WP-4.0.A1; bumps to *stabilizing* when a third consumer lands — likely WP-4.0.D/E adding a rim-light or tile-edge pass).
+- **Source packets:** WP-4.0.A (foundation — URP migration), WP-4.0.A1 (first consumer — pixel-art feature).
+- **Revision history:** *Originally drafted 2026-05-02 as "ICameraRenderPass (custom interface)"; revised same day after Talon's URP-from-the-start architectural call. Custom interface deprecated in favor of URP standard.*
 
 ### MAC-010: PersonalSpaceComponent + spatial-behavior tuning
 
