@@ -10,4 +10,5 @@ public enum SoundTriggerKind
     FaxChug = 44, EmailBeep = 45, BulbBuzz = 46,
     OfficeAmbient = 50,
     SpeechFragment = 60,
+    PlacementDenied = 70,
 }
