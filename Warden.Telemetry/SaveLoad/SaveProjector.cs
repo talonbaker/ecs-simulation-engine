@@ -24,7 +24,7 @@ internal static class SaveProjector
 
         return base_dto with
         {
-            SchemaVersion   = "0.5.0",
+            SchemaVersion   = "0.5.1",
             SaveTick        = sim.Clock.CurrentTick,
             SaveTotalTime   = sim.Clock.TotalTime,
             SaveTimeScale   = sim.Clock.TimeScale,
@@ -121,6 +121,7 @@ internal static class SaveProjector
             Mood             = ProjectMood(entity),
             Willpower        = ProjectWillpower(entity),
             Workload         = ProjectWorkload(entity),
+            PersonalSpace    = ProjectPersonalSpace(entity),
             ScheduleBlocks   = ProjectScheduleBlocks(entity),
             EncounteredCorpseIds = ProjectEncounteredCorpses(entity)
         };
@@ -278,6 +279,17 @@ internal static class SaveProjector
             AnchorId  = b.AnchorId,
             Activity  = (SaveScheduleActivity)(int)b.Activity
         }).ToList();
+    }
+
+    private static PersonalSpaceSaveDto? ProjectPersonalSpace(Entity entity)
+    {
+        if (!entity.Has<PersonalSpaceComponent>()) return null;
+        var c = entity.Get<PersonalSpaceComponent>();
+        return new PersonalSpaceSaveDto
+        {
+            RadiusMeters      = c.RadiusMeters,
+            RepulsionStrength = c.RepulsionStrength
+        };
     }
 
     private static List<string>? ProjectEncounteredCorpses(Entity entity)

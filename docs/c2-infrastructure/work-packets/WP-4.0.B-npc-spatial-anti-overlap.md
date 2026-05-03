@@ -1,5 +1,7 @@
 # WP-4.0.B — NPC Spatial Behavior / Anti-Overlap
 
+> **Status: LANDED 2026-05-02** — branch `sonnet-wp-4.0.b`, all 43 spatial tests green, full suite 1470/1470 pass.
+
 > **Wave 1 of the Phase 4.0.x foundational polish wave.** Per the 2026-05-02 brief restructure: NPCs currently bunch and clip into each other in the playtest scene, even though they have no purposeful tasks yet. This is a foundational legibility issue. This packet adds a soft-repulsion personal-space layer so NPCs visually maintain space without a continuous physics solver. Track 1 engine packet.
 
 **Tier:** Sonnet

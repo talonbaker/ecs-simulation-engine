@@ -54,9 +54,16 @@ public sealed record NpcSaveDto
     public WillpowerSaveDto?    Willpower    { get; init; }
     public WorkloadSaveDto?     Workload     { get; init; }
 
-    public IReadOnlyList<ScheduleBlockSaveDto>? ScheduleBlocks      { get; init; }
+    public PersonalSpaceSaveDto?                 PersonalSpace        { get; init; }
+    public IReadOnlyList<ScheduleBlockSaveDto>? ScheduleBlocks       { get; init; }
     public IReadOnlyList<string>?               EncounteredCorpseIds { get; init; }
     public IReadOnlyList<string>?               Tags                 { get; init; }
+}
+
+public sealed record PersonalSpaceSaveDto
+{
+    public float RadiusMeters      { get; init; }
+    public float RepulsionStrength { get; init; }
 }
 
 public sealed record LifeStateSaveDto

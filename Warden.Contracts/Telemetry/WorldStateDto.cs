@@ -13,7 +13,7 @@ namespace Warden.Contracts.Telemetry;
 /// </summary>
 public sealed record WorldStateDto
 {
-    public string                      SchemaVersion { get; init; } = "0.5.0";
+    public string                      SchemaVersion { get; init; } = "0.5.1";
     public DateTimeOffset              CapturedAt    { get; init; }
     public int                         Tick          { get; init; }
     public ClockStateDto               Clock         { get; init; } = default!;
@@ -78,6 +78,16 @@ public sealed record EntityStateDto
 
     // v0.2 â€” optional social state
     public SocialStateDto?    Social     { get; init; }
+
+    // v0.5.1 â€” optional personal-space telemetry
+    public PersonalSpaceStateDto? PersonalSpace { get; init; }
+}
+
+/// <summary>Telemetry view of <c>PersonalSpaceComponent</c> (radius and repulsion strength).</summary>
+public sealed record PersonalSpaceStateDto
+{
+    public float RadiusMeters      { get; init; }
+    public float RepulsionStrength { get; init; }
 }
 
 public sealed record PositionStateDto
