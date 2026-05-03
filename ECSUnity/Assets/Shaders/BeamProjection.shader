@@ -38,6 +38,7 @@ Shader "ECSUnity/BeamProjection"
         {
             "Queue"           = "Transparent+1"
             "RenderType"      = "Transparent"
+            "RenderPipeline"  = "UniversalPipeline"
             "IgnoreProjector" = "True"
         }
 
@@ -53,57 +54,59 @@ Shader "ECSUnity/BeamProjection"
             ZTest  LEqual
             Cull   Off
 
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex   vert
             #pragma fragment frag
             #pragma multi_compile_instancing
 
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            struct appdata
+            struct Attributes
             {
-                float4 vertex : POSITION;
-                float2 uv     : TEXCOORD0;
+                float4 positionOS : POSITION;
+                float2 uv         : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            struct v2f
+            struct Varyings
             {
-                float4 pos : SV_POSITION;
-                float2 uv  : TEXCOORD0;
+                float4 positionHCS : SV_POSITION;
+                float2 uv          : TEXCOORD0;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
-            fixed4 _Color;
-            float  _FalloffPower;
+            CBUFFER_START(UnityPerMaterial)
+                half4 _Color;
+                float _FalloffPower;
+            CBUFFER_END
 
-            v2f vert(appdata v)
+            Varyings vert(Attributes IN)
             {
-                v2f o;
-                UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-                o.pos = UnityObjectToClipPos(v.vertex);
-                o.uv  = v.uv;
-                return o;
+                Varyings OUT;
+                UNITY_SETUP_INSTANCE_ID(IN);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
+                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.uv = IN.uv;
+                return OUT;
             }
 
-            fixed4 frag(v2f i) : SV_Target
+            half4 frag(Varyings IN) : SV_Target
             {
                 // Distance from centre in U direction (cross-beam width falloff).
                 // u=0..1; distance from centre = |u - 0.5| * 2 → 0 at centre, 1 at edges.
-                float edgeDist = abs(i.uv.x - 0.5) * 2.0;
+                float edgeDist  = abs(IN.uv.x - 0.5) * 2.0;
                 float widthFade = 1.0 - pow(edgeDist, _FalloffPower);
 
                 // V falloff: beam fades as it travels into the room (V=1 = far end).
-                float lengthFade = 1.0 - pow(i.uv.y, _FalloffPower);
+                float lengthFade = 1.0 - pow(IN.uv.y, _FalloffPower);
 
                 float alpha = _Color.a * widthFade * lengthFade;
 
-                return fixed4(_Color.rgb, saturate(alpha));
+                return half4(_Color.rgb, saturate(alpha));
             }
-            ENDCG
+            ENDHLSL
         }
     }
 
-    Fallback "Particles/Additive"
+    FallBack Off
 }

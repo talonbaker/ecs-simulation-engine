@@ -1,5 +1,7 @@
 # WP-4.0.A — URP Migration Foundation
 
+> **STATUS:** SHIPPED to staging 2026-05-02. Retained because pending packets depend on this spec: WP-4.0.A1, WP-4.0.B, WP-4.0.C.
+
 > **Wave 1 of the Phase 4.0.x foundational polish wave.** Per the 2026-05-02 calibration: the project adopts URP (Universal Render Pipeline) immediately rather than later, before custom-built-in-shader inventory grows further. URP migration now is bounded; URP migration after WP-4.0.D / E / H ship custom built-in pipeline content would compound into a multi-week refactor. This packet lays the rendering substrate every subsequent visual packet (4.0.A1 pixel-art Renderer Feature, 4.0.D floor identity, 4.0.E NPC visual readability, 4.0.H particle vocabulary, 4.1.x art pipeline) authors against. Track 2 (Unity) packet — but a *pipeline-migration* packet, not a typical sandbox-feature packet.
 
 **Tier:** Sonnet

@@ -44,6 +44,7 @@ Shader "ECSUnity/RoomTint"
         {
             "Queue"           = "Transparent"
             "RenderType"      = "Transparent"
+            "RenderPipeline"  = "UniversalPipeline"
             "IgnoreProjector" = "True"
         }
 
@@ -61,60 +62,61 @@ Shader "ECSUnity/RoomTint"
             // in the isometric view when the camera is high.
             Cull Off
 
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex   vert
             #pragma fragment frag
             #pragma multi_compile_instancing
 
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            struct appdata
+            struct Attributes
             {
-                float4 vertex : POSITION;
-                float2 uv     : TEXCOORD0;
+                float4 positionOS : POSITION;
+                float2 uv         : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            struct v2f
+            struct Varyings
             {
-                float4 pos : SV_POSITION;
-                float2 uv  : TEXCOORD0;
+                float4 positionHCS : SV_POSITION;
+                float2 uv          : TEXCOORD0;
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
-            // Shader properties — Unity injects values from the Material block above.
-            fixed4 _Color;
-            fixed4 _TintColor;
-            float  _TintIntensity;
-            float  _Alpha;
+            CBUFFER_START(UnityPerMaterial)
+                half4 _Color;
+                half4 _TintColor;
+                float _TintIntensity;
+                float _Alpha;
+            CBUFFER_END
 
-            v2f vert(appdata v)
+            Varyings vert(Attributes IN)
             {
-                v2f o;
-                UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-                o.pos = UnityObjectToClipPos(v.vertex);
-                o.uv  = v.uv;
-                return o;
+                Varyings OUT;
+                UNITY_SETUP_INSTANCE_ID(IN);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
+                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.uv = IN.uv;
+                return OUT;
             }
 
-            fixed4 frag(v2f i) : SV_Target
+            half4 frag(Varyings IN) : SV_Target
             {
                 // Multiply the Kelvin tint onto the base palette color.
                 // lerp(a, b, t): at t=0 → pure palette; at t=1 → pure tint*palette.
-                fixed3 blended = lerp(_Color.rgb,
-                                      _TintColor.rgb * _Color.rgb,
-                                      _TintIntensity);
+                half3 blended = lerp(_Color.rgb,
+                                     _TintColor.rgb * _Color.rgb,
+                                     _TintIntensity);
 
                 // Apply the alpha from the _Alpha property (not from _Color.a).
                 // This lets WallFadeController drive transparency independently
                 // of the color values set by RoomAmbientTintApplier.
-                return fixed4(blended, _Alpha);
+                return half4(blended, _Alpha);
             }
-            ENDCG
+            ENDHLSL
         }
     }
 
-    // Fallback to a plain unlit transparent shader in case the CGPROGRAM fails.
-    Fallback "Transparent/Diffuse"
+    // Fallback to a plain unlit transparent shader in case the HLSLPROGRAM fails.
+    FallBack Off
 }
