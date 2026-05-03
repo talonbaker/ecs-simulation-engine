@@ -28,7 +28,8 @@ public sealed class DevConsolePanel : MonoBehaviour
     [SerializeField] private EngineHost         _host;
     [SerializeField] private SaveLoadPanel      _saveLoadPanel;
     [SerializeField] private TimeHudPanel       _timeHudPanel;
-    [SerializeField] private JsonlStreamEmitter _emitter;
+    [SerializeField] private JsonlStreamEmitter        _emitter;
+    [SerializeField] private NpcIntrospectionOverlay   _introspectionOverlay;
 
     // ── State ─────────────────────────────────────────────────────────────────
 
@@ -332,12 +333,13 @@ public sealed class DevConsolePanel : MonoBehaviour
     {
         _dispatcher.SetContext(new DevCommandContext
         {
-            Host       = _host,
+            Host        = _host,
             MutationApi = null, // wired by SceneBootstrapper or Inspector
-            SaveLoad   = _saveLoadPanel,
-            TimeHud    = _timeHudPanel,
-            Console    = this,
-            Emitter    = _emitter,
+            SaveLoad    = _saveLoadPanel,
+            TimeHud     = _timeHudPanel,
+            Console     = this,
+            Emitter     = _emitter,
+            Overlay     = _introspectionOverlay,
         });
     }
 
@@ -364,6 +366,7 @@ public sealed class DevConsolePanel : MonoBehaviour
         _dispatcher.RegisterCommand(new ClearCommand());
         _dispatcher.RegisterCommand(new HistoryCommand());
         _dispatcher.RegisterCommand(new QuitCommand());
+        _dispatcher.RegisterCommand(new IntrospectCommand());
     }
 
     // ── Test accessors ─────────────────────────────────────────────────────────

@@ -42,6 +42,12 @@ public sealed class DevCommandContext
     /// Null in RETAIL (the entire emitter is stripped) but we guard against null here.
     /// </summary>
     public JsonlStreamEmitter Emitter;
+
+    /// <summary>
+    /// NPC introspection overlay — used by the `introspect` console verb to set the
+    /// display mode. Null when the overlay is not in the scene (headless tests, etc.).
+    /// </summary>
+    public NpcIntrospectionOverlay Overlay;
 }
 
 #endif
