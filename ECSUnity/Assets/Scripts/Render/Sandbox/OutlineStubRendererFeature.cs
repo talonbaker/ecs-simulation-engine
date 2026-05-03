@@ -53,6 +53,8 @@ public class OutlineStubRendererFeature : ScriptableRendererFeature
             var resourceData = frameData.Get<UniversalResourceData>();
             var cameraData   = frameData.Get<UniversalCameraData>();
 
+            Material mat = _mat;
+
             // Temporary copy so we can read and write camera color in separate passes.
             var desc = cameraData.cameraTargetDescriptor;
             desc.depthBufferBits = 0;
@@ -72,7 +74,6 @@ public class OutlineStubRendererFeature : ScriptableRendererFeature
             }
 
             // Step 2: apply red vignette from temp back to active color
-            Material mat = _mat;
             using (var builder = renderGraph.AddRasterRenderPass<PassData>("OutlineStub Vignette", out var passData))
             {
                 passData.src = tempHandle;
