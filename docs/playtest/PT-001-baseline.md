@@ -258,3 +258,25 @@ After Talon pulled `afd7172` (BUG-004/005a/007 fix) and ran the recipe again:
 - `scenario list-npcs` reveals NPC names; subsequent `scenario kill Donna` etc. should work as before.
 - `save mytest` prints the file path so Talon knows where saves land.
 - Build mode + audio + chibi cues remain dark (deferred).
+
+---
+
+## Iter 3 notes (after `a547661` fix bundle)
+
+Talon's verdict: "much has improved." Verified working post-iter-2:
+
+- ✅ Inspector opens on NPC click (BUG-010 fix verified).
+- ✅ Camera glides on double-click (BUG-010 ripple verified — Talon didn't note it as broken this round).
+- ✅ Console keyboard bleed gone.
+- ✅ `save <slot>` works and prints the file path.
+- ✅ `scenario list-npcs` reveals names.
+
+Three new bugs surfaced (filed in `known-bugs.md`):
+
+- **BUG-014** (High) — Save round-trip broken. `save` writes the file; `load` is a v0.1 stub that requires engine restart, but restarting drops the in-memory save buffer first. Effectively: you can save but never load.
+- **BUG-015** (Medium) — Room inspector doesn't open on empty-floor click. Likely RoomRectangleRenderer needs to add a `Collider` + `SelectableTag(Kind=Room)` to room GameObjects (mirrors the BUG-010 fix shape).
+- **BUG-016** (Medium) — Inspector drill / deep buttons don't expand content. IMGUI fallback in `InspectorPanel.OnGUI()` likely renders glance only; the tier-switcher logic was authored against UI Toolkit and didn't get ported to the fallback.
+
+All three are filed for later, not blocking. PT-001 is approaching close — the broken core surfaces (selection, console submit, scene UI wiring) are now fixed. Remaining bugs are polish + the still-deferred BUG-009 (audio synthesis) / BUG-012 (build mode) / BUG-013 (chibi cues).
+
+PT-001 verdict so far (running): ~70% pass with iter-3, up from <40% at first run. The Playtest Program's first session is doing exactly what the program was designed for.
