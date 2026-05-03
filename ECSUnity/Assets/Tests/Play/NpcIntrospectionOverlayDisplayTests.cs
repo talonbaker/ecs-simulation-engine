@@ -84,7 +84,7 @@ public class NpcIntrospectionOverlayDisplayTests
         if (em == null) { yield return null; Assert.Pass("Engine not ready."); yield break; }
 
         // Find an Alive entity and force Deceased on it.
-        APIFramework.Core.Entity? target = null;
+        APIFramework.Core.Entity target = null;
         foreach (var e in em.Entities)
         {
             if (e.Has<LifeStateComponent>() && e.Get<LifeStateComponent>().State == LifeState.Alive)
@@ -94,7 +94,7 @@ public class NpcIntrospectionOverlayDisplayTests
             }
         }
 
-        if (!target.HasValue) { yield return null; Assert.Pass("No Alive entities found."); yield break; }
+        if (target == null) { yield return null; Assert.Pass("No Alive entities found."); yield break; }
 
         // Count rows before forcing Deceased.
         _overlay.SetMode(NpcIntrospectionMode.All);
@@ -102,8 +102,7 @@ public class NpcIntrospectionOverlayDisplayTests
         int before = _overlay.ActiveRowCount;
 
         // Force Deceased via direct component write.
-        var t = target.Value;
-        t.Set(new LifeStateComponent { State = LifeState.Deceased });
+        target.Set(new LifeStateComponent { State = LifeState.Deceased });
 
         yield return null; // allow LateUpdate
 
