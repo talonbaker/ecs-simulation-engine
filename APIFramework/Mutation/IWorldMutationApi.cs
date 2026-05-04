@@ -49,4 +49,45 @@ public interface IWorldMutationApi
     /// Returns the new entity's ID.
     /// </summary>
     Guid SpawnStain(string templateId, int tileX, int tileY);
+
+    // ── Author-mode extensions (WP-4.0.J) ────────────────────────────────────────
+
+    /// <summary>
+    /// Spawns a new room entity with the given category, floor, and bounds.
+    /// Returns the new room entity's ID. Emits StructuralChangeKind.EntityAdded.
+    /// </summary>
+    Guid CreateRoom(RoomCategory category, BuildingFloor floor, BoundsRect bounds, string? name = null);
+
+    /// <summary>
+    /// Despawns a room. <paramref name="policy"/> controls whether contents are orphaned
+    /// or cascade-deleted (NPC slots are never cascade-deleted regardless of policy).
+    /// Emits StructuralChangeKind.EntityRemoved for each despawned entity.
+    /// </summary>
+    void DespawnRoom(Guid roomId, RoomDespawnPolicy policy);
+
+    /// <summary>
+    /// Spawns a light source in the named room at the given tile.
+    /// Returns the new light entity's ID.
+    /// </summary>
+    Guid CreateLightSource(string roomId, int tileX, int tileY,
+                           LightKind kind, LightState state, int intensity, int colorTempK);
+
+    /// <summary>
+    /// Mutates a light source's tunable properties in place (state, intensity, color temperature).
+    /// Throws InvalidOperationException if the entity is not a light source.
+    /// </summary>
+    void TuneLightSource(Guid lightId, LightState state, int intensity, int colorTempK);
+
+    /// <summary>
+    /// Spawns a light aperture (window/skylight) on the boundary of a room.
+    /// Returns the new aperture entity's ID.
+    /// </summary>
+    Guid CreateLightAperture(string roomId, int tileX, int tileY,
+                             ApertureFacing facing, double areaSqTiles);
+
+    /// <summary>
+    /// Despawns a light source or aperture entity.
+    /// Throws InvalidOperationException if the entity is neither.
+    /// </summary>
+    void DespawnLight(Guid lightId);
 }
