@@ -46,9 +46,11 @@ public class RoomVisualIdentityLoaderTests
     [Test]
     public void Loader_IsLoaded_AfterAwake()
     {
-        // Awake is called by AddComponent, so IsLoaded should be true immediately.
+        // Edit-mode tests don't invoke Awake automatically (no [ExecuteAlways]).
+        // The first Get* call triggers lazy-load; IsLoaded must be true afterward.
+        _loader.GetFloorMaterial(RoomCategory.CubicleGrid);
         Assert.IsTrue(_loader.IsLoaded,
-            "RoomVisualIdentityLoader.IsLoaded should be true after Awake.");
+            "RoomVisualIdentityLoader.IsLoaded should be true after loading.");
     }
 
     [Test]
