@@ -155,6 +155,22 @@ These will land in the foundational polish wave (WP-4.0.A through WP-4.0.H). Eac
 - **Stability:** fresh (lands with WP-4.0.D).
 - **Source packet:** WP-4.0.D (pending).
 
+### MAC-015: Author-mode palette + IWorldMutationApi authoring extensions
+
+- **What:** Modder-extensible palette of in-game authoring tools (rooms / light sources / light apertures / NPC archetypes), plus the `IWorldMutationApi` operations that back them: `CreateRoom`, `DespawnRoom` (with `RoomDespawnPolicy`), `CreateLightSource`, `TuneLightSource`, `CreateLightAperture`, `DespawnLight`, `CreateNpc`, `DespawnNpc`, `RenameNpc`. Catalog JSON at `docs/c2-content/build/author-mode-palette.json` is the data extension surface (9 room kinds, 9 light kinds, 4 aperture sizes, archetype list auto-discovered from `TuningCatalog`). Modders adding a new room kind extend the palette JSON + the loader's `RoomKind` parser + the room visual identity catalog (MAC-014) — three coordinated additions, all data-driven.
+- **Where:** `APIFramework/Mutation/IWorldMutationApi.cs` (extensions); `APIFramework/Mutation/WorldMutationApi.cs` (5-arg constructor with cast deps); `APIFramework/Mutation/RoomDespawnPolicy.cs`; `APIFramework/Build/AuthorModePaletteData.cs`; `APIFramework/Build/AuthorModePaletteLoader.cs`; `APIFramework/Bootstrap/CastNamePool.cs`; `docs/c2-content/build/author-mode-palette.json`; `ECSUnity/Assets/Scripts/BuildMode/AuthorModeController.cs`.
+- **Why a candidate:** Author-mode tools are the most direct community-contribution surface — a level designer authoring a custom office is the canonical mod use case Talon called out 2026-05-03. Palette is data-driven (consistent with MAC-001 / MAC-005 / MAC-013 / MAC-014 / MAC-016). Mutation operations build on MAC-007 (`IWorldMutationApi`) — same emission discipline (StructuralChangeEvent on bus where pathfinding-relevant), same fail-closed validation.
+- **Stability:** fresh (engine substrate landed with WP-4.0.J + WP-4.0.K, 2026-05-03; user-facing palette UI deferred to Editor follow-up).
+- **Source packets:** WP-4.0.J (room/light/aperture mutations + AuthorModeController + palette catalog), WP-4.0.K (NPC mutations + CastNamePool + NameHint round-trip).
+
+### MAC-016: World-definition file format (load + write round-trip)
+
+- **What:** JSON schema describing a complete authorable scene — floors, rooms, light sources, light apertures, NPC slots (with `nameHint` and `archetypeHint`), anchor objects. `WorldDefinitionLoader` spawns from JSON; `WorldDefinitionWriter` (WP-4.0.I) serializes the live ECS world back to JSON. Round-trip-validated against `office-starter.json` and `playtest-office.json`. Modders authoring custom scenes (or scene packs) add JSON files under `docs/c2-content/world-definitions/`; the existing dev-console / author-mode Save toolbar makes them live without recompile.
+- **Where:** `APIFramework/Bootstrap/WorldDefinitionLoader.cs`; `APIFramework/Bootstrap/WorldDefinitionWriter.cs`; `APIFramework/Bootstrap/WorldDefinitionDto.cs`; `docs/c2-content/world-definitions/*.json`.
+- **Why a candidate:** The clearest modder surface in the project. A "custom office" mod is a single JSON file; a "scene pack" mod is a directory of them. Pattern is consistent with MAC-001 / MAC-005 / MAC-013 / MAC-014 / MAC-017 — data-driven, schema-validated, registered through file discovery.
+- **Stability:** stabilizing (loader stable since Phase 1; writer + round-trip discipline lands with WP-4.0.I; second consumer = author-mode UI in WP-4.0.J Save toolbar).
+- **Source packets:** Phase 1 substrate (loader); WP-4.0.I (writer + round-trip discipline); WP-4.0.K (NameHint round-trip — repaired the loader's silent dropping of the field).
+
 ### MAC-017: Cast name data catalog (probabilistic six-tier name + title generator)
 
 - **What:** JSON catalog (`docs/c2-content/cast/name-data.json`) feeding the `CastNameGenerator` library. Six-tier rarity model — Common 55% / Uncommon 27% / Rare 12% / Epic 4% / Legendary 1.5% / Mythic 0.5% — producing first name + surname + optional title with per-tier structure (vanilla / fused / hyphenated / corp-titled / divine-rooted / "Executive VP Kratos, The Doom-Slayer"). Tier thresholds are JSON-tunable; modders can tilt rarity curves without code changes. A "fantasy office" mod replaces the catalog content (elves / dwarves / wizards) and the engine consumes them transparently. The tier-on-result also seeds the future "reroll for a better hire" loot-box mechanic — the deterministic seedable `Generate(Random)` overload is the seam.
