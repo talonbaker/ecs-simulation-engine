@@ -59,6 +59,18 @@ public sealed class NpcVisualStateCatalogLoader : ScriptableObject
         }
     }
 
+    /// <summary>Empty catalog with safe defaults; used as fallback when JSON is unavailable.</summary>
+    public static NpcVisualStateCatalog Empty => NpcVisualStateCatalogLoader_Pure.Empty;
+
+    /// <summary>Parses a catalog from a JSON string.</summary>
+    public static NpcVisualStateCatalog ParseJson(string json) => NpcVisualStateCatalogLoader_Pure.ParseJson(json);
+
+    /// <summary>Loads a catalog from a file path.</summary>
+    public static NpcVisualStateCatalog Load(string path) => NpcVisualStateCatalogLoader_Pure.Load(path);
+
+    /// <summary>Finds the default catalog JSON path by walking up from the application data path.</summary>
+    public static string FindDefaultPath() => NpcVisualStateCatalogLoader_Pure.FindDefaultPath();
+
     // Expose pure-C# loader under a distinct name to avoid collision with the class name.
     private static class NpcVisualStateCatalogLoader_Pure
     {

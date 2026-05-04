@@ -6,6 +6,7 @@ using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
+using APIFramework.Systems.Visual;
 
 namespace APIFramework.Systems.Chores;
 
@@ -24,17 +25,20 @@ public sealed class ChoreExecutionSystem : ISystem
     private readonly SimulationClock          _clock;
     private readonly ChoreAcceptanceBiasTable _biasTable;
     private readonly NarrativeEventBus        _bus;
+    private readonly ParticleTriggerBus?      _particleBus;
 
     public ChoreExecutionSystem(
         ChoreConfig              cfg,
         SimulationClock          clock,
         ChoreAcceptanceBiasTable biasTable,
-        NarrativeEventBus        bus)
+        NarrativeEventBus        bus,
+        ParticleTriggerBus?      particleBus = null)
     {
-        _cfg       = cfg;
-        _clock     = clock;
-        _biasTable = biasTable;
-        _bus       = bus;
+        _cfg         = cfg;
+        _clock       = clock;
+        _biasTable   = biasTable;
+        _bus         = bus;
+        _particleBus = particleBus;
     }
 
     public void Update(EntityManager em, float deltaTime)
@@ -84,6 +88,12 @@ public sealed class ChoreExecutionSystem : ISystem
                 CheckOverrotation(npc, chore.Kind);
 
                 int npcIntId = EntityIntId(npc);
+
+                if (_particleBus != null && npc.Has<PositionComponent>())
+                {
+                    var pos = npc.Get<PositionComponent>();
+                    _particleBus.Emit(ParticleTriggerKind.CleaningMist, npc.Id, pos.X, pos.Z, quality, _clock.CurrentTick);
+                }
 
                 // ChoreCompleted (non-persistent).
                 _bus.RaiseCandidate(new NarrativeEventCandidate(
