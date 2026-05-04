@@ -86,7 +86,7 @@ public sealed class LightSourceHaloRenderer : MonoBehaviour
         var ws = _injectedWorldState ?? _engineHost?.WorldState;
         if (ws?.LightSources == null) return;
 
-        long tick = _engineHost.TickCount;
+        long tick = _engineHost != null ? _engineHost.TickCount : 0L;
 
         // Read config with fallbacks.
         float maxRadius       = _config != null ? _config.haloMaxRadius            : 2.5f;
