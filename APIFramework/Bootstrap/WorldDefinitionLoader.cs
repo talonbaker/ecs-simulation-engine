@@ -126,6 +126,7 @@ public static class WorldDefinitionLoader
                 Y             = slot.Y,
                 ArchetypeHint = slot.ArchetypeHint,
                 RoomId        = slot.RoomId,
+                NameHint      = slot.NameHint,
             });
             entity.Add(new PositionComponent { X = slot.X, Y = 0f, Z = slot.Y });
             npcSlotCount++;

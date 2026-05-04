@@ -228,6 +228,7 @@ public static class WorldDefinitionWriter
                 X             = (int)System.Math.Floor(pos.X),
                 Y             = (int)System.Math.Floor(pos.Z),
                 ArchetypeHint = arch,
+                NameHint      = nameHint,
             });
         }
 

@@ -90,4 +90,29 @@ public interface IWorldMutationApi
     /// Throws InvalidOperationException if the entity is neither.
     /// </summary>
     void DespawnLight(Guid lightId);
+
+    // ── NPC authoring (WP-4.0.K) ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Spawns a new NPC of the given archetype at the tile, in the named room.
+    /// All archetype-derived components (drives, personality, inhibitions, silhouette,
+    /// deal) are sampled per the existing CastGenerator semantics; <paramref name="name"/>
+    /// becomes the NPC's IdentityComponent.Name.
+    /// Returns the new NPC's entity ID.
+    /// Requires the WorldMutationApi to have been constructed with the cast deps —
+    /// throws InvalidOperationException otherwise.
+    /// </summary>
+    Guid CreateNpc(string roomId, int tileX, int tileY, string archetypeId, string name);
+
+    /// <summary>
+    /// Despawns an NPC entity.
+    /// Throws InvalidOperationException if the entity has no NpcArchetypeComponent.
+    /// </summary>
+    void DespawnNpc(Guid npcId);
+
+    /// <summary>
+    /// Renames an existing NPC's IdentityComponent.
+    /// Throws InvalidOperationException if the entity has no IdentityComponent.
+    /// </summary>
+    void RenameNpc(Guid npcId, string newName);
 }
