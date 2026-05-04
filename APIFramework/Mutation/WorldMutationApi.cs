@@ -218,6 +218,201 @@ public sealed class WorldMutationApi : IWorldMutationApi
         return entity.Id;
     }
 
+    // ── Author-mode extensions (WP-4.0.J) ────────────────────────────────────────
+
+    /// <inheritdoc/>
+    public Guid CreateRoom(RoomCategory category, BuildingFloor floor, BoundsRect bounds, string? name = null)
+    {
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+            throw new InvalidOperationException(
+                $"CreateRoom: bounds must have positive width and height; got {bounds.Width}x{bounds.Height}.");
+
+        // Authored room id — short, unique, predictable for save round-trip.
+        var entity = _em.CreateEntity();
+        var roomId = $"authored-room-{entity.Id:N}".Substring(0, 24);
+        var roomName = name ?? SynthesizeRoomName(category);
+
+        entity.Add(new RoomTag());
+        entity.Add(new RoomComponent
+        {
+            Id           = roomId,
+            Name         = roomName,
+            Category     = category,
+            Floor        = floor,
+            Bounds       = bounds,
+            Illumination = default,
+        });
+        entity.Add(new PositionComponent
+        {
+            X = bounds.X + bounds.Width  * 0.5f,
+            Y = 0f,
+            Z = bounds.Y + bounds.Height * 0.5f,
+        });
+
+        _bus.Emit(StructuralChangeKind.EntityAdded, entity.Id,
+            bounds.X, bounds.Y, bounds.X, bounds.Y, entity.Id, ++_seq);
+
+        return entity.Id;
+    }
+
+    /// <inheritdoc/>
+    public void DespawnRoom(Guid roomId, RoomDespawnPolicy policy)
+    {
+        var roomEntity = FindById(roomId)
+            ?? throw new InvalidOperationException($"Room entity {roomId} not found.");
+        if (!roomEntity.Has<RoomComponent>())
+            throw new InvalidOperationException($"Entity {roomId} does not have RoomComponent.");
+
+        var room    = roomEntity.Get<RoomComponent>();
+        var roomKey = room.Id;
+
+        if (policy == RoomDespawnPolicy.CascadeDelete)
+        {
+            // Delete all lights / apertures / anchor objects whose RoomId matches.
+            // NPC slots are NOT cascade-deleted (NPCs persist as a deliberate invariant).
+            DeleteByRoomKey<LightSourceComponent>(roomKey, c => c.RoomId);
+            DeleteByRoomKey<LightApertureComponent>(roomKey, c => c.RoomId);
+            DeleteByRoomKey<AnchorObjectComponent>(roomKey, c => c.RoomId);
+        }
+
+        _bus.Emit(StructuralChangeKind.EntityRemoved, roomId,
+            room.Bounds.X, room.Bounds.Y, room.Bounds.X, room.Bounds.Y, roomId, ++_seq);
+
+        _em.DestroyEntity(roomEntity);
+    }
+
+    /// <inheritdoc/>
+    public Guid CreateLightSource(string roomId, int tileX, int tileY,
+                                  LightKind kind, LightState state, int intensity, int colorTempK)
+    {
+        if (string.IsNullOrEmpty(roomId))
+            throw new InvalidOperationException("CreateLightSource: roomId is required.");
+        if (intensity < 0 || intensity > 100)
+            throw new InvalidOperationException(
+                $"CreateLightSource: intensity must be 0-100; got {intensity}.");
+        if (colorTempK < 1000 || colorTempK > 10000)
+            throw new InvalidOperationException(
+                $"CreateLightSource: colorTempK must be 1000-10000; got {colorTempK}.");
+
+        var entity = _em.CreateEntity();
+        entity.Add(new LightSourceTag());
+        entity.Add(new LightSourceComponent
+        {
+            Id                = $"authored-light-{entity.Id:N}".Substring(0, 25),
+            Kind              = kind,
+            State             = state,
+            Intensity         = intensity,
+            ColorTemperatureK = colorTempK,
+            TileX             = tileX,
+            TileY             = tileY,
+            RoomId            = roomId,
+        });
+        entity.Add(new PositionComponent { X = tileX, Y = 0f, Z = tileY });
+
+        return entity.Id;
+    }
+
+    /// <inheritdoc/>
+    public void TuneLightSource(Guid lightId, LightState state, int intensity, int colorTempK)
+    {
+        var entity = FindById(lightId)
+            ?? throw new InvalidOperationException($"Light entity {lightId} not found.");
+        if (!entity.Has<LightSourceComponent>())
+            throw new InvalidOperationException($"Entity {lightId} is not a light source.");
+        if (intensity < 0 || intensity > 100)
+            throw new InvalidOperationException(
+                $"TuneLightSource: intensity must be 0-100; got {intensity}.");
+        if (colorTempK < 1000 || colorTempK > 10000)
+            throw new InvalidOperationException(
+                $"TuneLightSource: colorTempK must be 1000-10000; got {colorTempK}.");
+
+        var current = entity.Get<LightSourceComponent>();
+        entity.Add(new LightSourceComponent
+        {
+            Id                = current.Id,
+            Kind              = current.Kind,
+            State             = state,
+            Intensity         = intensity,
+            ColorTemperatureK = colorTempK,
+            TileX             = current.TileX,
+            TileY             = current.TileY,
+            RoomId            = current.RoomId,
+        });
+    }
+
+    /// <inheritdoc/>
+    public Guid CreateLightAperture(string roomId, int tileX, int tileY,
+                                    ApertureFacing facing, double areaSqTiles)
+    {
+        if (string.IsNullOrEmpty(roomId))
+            throw new InvalidOperationException("CreateLightAperture: roomId is required.");
+        if (areaSqTiles < 0.5 || areaSqTiles > 64.0)
+            throw new InvalidOperationException(
+                $"CreateLightAperture: areaSqTiles must be 0.5-64.0; got {areaSqTiles}.");
+
+        var entity = _em.CreateEntity();
+        entity.Add(new LightApertureTag());
+        entity.Add(new LightApertureComponent
+        {
+            Id          = $"authored-aperture-{entity.Id:N}".Substring(0, 28),
+            TileX       = tileX,
+            TileY       = tileY,
+            RoomId      = roomId,
+            Facing      = facing,
+            AreaSqTiles = areaSqTiles,
+        });
+        entity.Add(new PositionComponent { X = tileX, Y = 0f, Z = tileY });
+
+        return entity.Id;
+    }
+
+    /// <inheritdoc/>
+    public void DespawnLight(Guid lightId)
+    {
+        var entity = FindById(lightId)
+            ?? throw new InvalidOperationException($"Light entity {lightId} not found.");
+
+        var isSource   = entity.Has<LightSourceComponent>();
+        var isAperture = entity.Has<LightApertureComponent>();
+        if (!isSource && !isAperture)
+            throw new InvalidOperationException(
+                $"Entity {lightId} is neither a light source nor an aperture.");
+
+        _em.DestroyEntity(entity);
+    }
+
+    // ── Author-mode helpers ──────────────────────────────────────────────────────
+
+    private void DeleteByRoomKey<T>(string roomKey, Func<T, string> getRoomId) where T : struct
+    {
+        var matches = _em.Query<T>()
+            .Where(e => string.Equals(getRoomId(e.Get<T>()), roomKey, StringComparison.Ordinal))
+            .ToList();
+        foreach (var match in matches)
+            _em.DestroyEntity(match);
+    }
+
+    private static string SynthesizeRoomName(RoomCategory c) => c switch
+    {
+        RoomCategory.Breakroom       => "Breakroom",
+        RoomCategory.Bathroom        => "Bathroom",
+        RoomCategory.CubicleGrid     => "Cubicle Area",
+        RoomCategory.Office          => "Office",
+        RoomCategory.ConferenceRoom  => "Conference Room",
+        RoomCategory.SupplyCloset    => "Supply Closet",
+        RoomCategory.ItCloset        => "IT Closet",
+        RoomCategory.Hallway         => "Hallway",
+        RoomCategory.Stairwell       => "Stairwell",
+        RoomCategory.Elevator        => "Elevator",
+        RoomCategory.ParkingLot      => "Parking Lot",
+        RoomCategory.SmokingArea     => "Smoking Area",
+        RoomCategory.LoadingDock     => "Loading Dock",
+        RoomCategory.ProductionFloor => "Production Floor",
+        RoomCategory.Lobby           => "Lobby",
+        RoomCategory.Outdoor         => "Outdoor Area",
+        _                            => "Room",
+    };
+
     private Entity? FindById(Guid id) =>
         _em.GetAllEntities().FirstOrDefault(e => e.Id == id);
 }
