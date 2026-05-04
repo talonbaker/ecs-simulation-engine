@@ -5,7 +5,7 @@
 > **DO NOT DISPATCH UNTIL WP-4.0.I AND WP-4.0.J ARE MERGED** — depends on the writer's NPC-slot round-trip discipline (I) and the author-mode palette UI (J).
 
 **Tier:** Sonnet
-**Depends on:** WP-4.0.J (author mode + extended palette — required, this packet adds a fourth palette category to it), WP-4.0.I (world-definition writer — required for save round-trip), WP-3.2.5 (per-archetype tuning JSONs — the source-of-truth for which archetypes exist), WP-3.0.4 (`IWorldMutationApi` — extended in this packet with NPC spawn/despawn).
+**Depends on:** WP-4.0.J (author mode + extended palette — required, this packet adds a fourth palette category to it), WP-4.0.I (world-definition writer — required for save round-trip), WP-4.0.M (cast name generator library — required for auto-naming; replaces the stub `CastNamePool` originally specified in this packet), WP-3.2.5 (per-archetype tuning JSONs — the source-of-truth for which archetypes exist), WP-3.0.4 (`IWorldMutationApi` — extended in this packet with NPC spawn/despawn).
 **Parallel-safe with:** WP-4.0.L (docs).
 **Timebox:** 120 minutes
 **Budget:** $0.55
@@ -110,14 +110,15 @@ Per-entry display: archetype id (`the-vent`, `the-newbie`, etc.), one-line descr
 4. Inline name field appears in the inspector popup; author types; commits on Enter or click-away. Default is auto-generated from name pool (filtered to avoid duplicates).
 5. Tool stays active for next placement (consistent with other author tools); Esc deactivates.
 
-### Auto-naming
+### Auto-naming (delegated to WP-4.0.M)
 
-`CastNamePool` reads `docs/c2-content/cast-names-options.json` at boot. When a new NPC needs an auto-name:
+`CastNamePool` is a thin wrapper around `CastNameGenerator` (WP-4.0.M). When a new NPC needs an auto-name:
 
-1. Enumerate names already taken by live NPCs.
-2. Pick a not-yet-taken name from the pool, preferring archetype-appropriate names if the JSON tags them (e.g., the cast names file may bucket names by archetype affinity — read `cast-names-options.json` for the actual structure).
-3. If all archetype-preferred names are taken, pick any not-yet-taken name.
-4. If pool is exhausted, fall back to `<archetypeId>-<n>` where n is the next available integer.
+1. Call `CastNameGenerator.Generate(gender)` — returns a `CastNameResult` with display name + tier + sub-fields.
+2. If the resulting `DisplayName` collides with an existing live NPC, reroll up to 5 times (each reroll is a fresh `Generate(...)` call with a new seed).
+3. If 5 rerolls all collide (vanishingly rare in practice — pool space is enormous due to fusion grammar), fall back to `<archetypeId>-<n>` where n is the next available integer.
+
+The returned `CastNameResult.Tier` is recorded on the NPC entity so it can be re-serialized into `npcSlots` (see WP-4.0.M's note on `npcSlots#generatedTier`); reload-time respawn picks up the same tier metadata for inspector / future hire-screen surfaces.
 
 ### `IWorldMutationApi` extension
 
@@ -214,7 +215,7 @@ NPC spawn is one entity-create + N component-add operations (well under 1ms each
 | code | `APIFramework/Mutation/IWorldMutationApi.cs` (modification) | Add CreateNpc / DespawnNpc / RenameNpc. |
 | code | `APIFramework/Mutation/WorldMutationApi.cs` (modification) | Implement; reuse CastGenerator's spawn helper. |
 | code | `APIFramework/Bootstrap/CastGenerator.cs` (modification) | Extract a `SpawnSingleNpc` helper that both boot loop and runtime spawn use. Pure refactor, no behavior change. |
-| code | `APIFramework/Bootstrap/CastNamePool.cs` (new) | Live-name tracking + auto-pick. |
+| code | `APIFramework/Bootstrap/CastNamePool.cs` (new) | Thin wrapper over `CastNameGenerator` (M); reroll-on-collision (≤5x) + numeric fallback. |
 | code | `APIFramework/Mutation/Undo/CreateNpcUndoable.cs`, `DespawnNpcUndoable.cs`, `RenameNpcUndoable.cs` (new, 3 files) | Undo entries per WP-4.0.G stack. |
 | data | `docs/c2-content/build/author-mode-palette.json` (modification) | Add npcArchetypes block. |
 | scene | `ECSUnity/Assets/_Sandbox/npc-authoring.unity` | Sandbox per Rule 4. |
