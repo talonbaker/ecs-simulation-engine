@@ -14,4 +14,9 @@ public struct NpcSlotComponent
     public string? ArchetypeHint { get; init; }
     /// <summary>Id of the <see cref="RoomComponent"/> the slot lives in, when known at authoring time.</summary>
     public string? RoomId        { get; init; }
+    /// <summary>
+    /// Optional name hint applied to the spawned NPC's <see cref="IdentityComponent"/>.
+    /// When present, takes precedence over the random pick from the name pool.
+    /// </summary>
+    public string? NameHint      { get; init; }
 }

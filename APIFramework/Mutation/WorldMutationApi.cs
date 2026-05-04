@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
+using APIFramework.Bootstrap;
 using APIFramework.Components;
+using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Spatial;
 
@@ -17,10 +19,32 @@ public sealed class WorldMutationApi : IWorldMutationApi
     private readonly StructuralChangeBus _bus;
     private long _seq;
 
+    // NPC-creation deps (WP-4.0.K) — null disables CreateNpc.
+    private readonly ArchetypeCatalog?    _archetypeCatalog;
+    private readonly CastGeneratorConfig? _castConfig;
+    private readonly SeededRandom?        _castRng;
+
     public WorldMutationApi(EntityManager em, StructuralChangeBus bus)
     {
         _em  = em;
         _bus = bus;
+    }
+
+    /// <summary>
+    /// Constructor with NPC-creation enabled. Pass the archetype catalog, cast-generator
+    /// config, and a seeded RNG for runtime NPC spawning via <see cref="CreateNpc"/>.
+    /// </summary>
+    public WorldMutationApi(
+        EntityManager       em,
+        StructuralChangeBus bus,
+        ArchetypeCatalog    archetypeCatalog,
+        CastGeneratorConfig castConfig,
+        SeededRandom        castRng)
+        : this(em, bus)
+    {
+        _archetypeCatalog = archetypeCatalog ?? throw new ArgumentNullException(nameof(archetypeCatalog));
+        _castConfig       = castConfig       ?? throw new ArgumentNullException(nameof(castConfig));
+        _castRng          = castRng          ?? throw new ArgumentNullException(nameof(castRng));
     }
 
     /// <inheritdoc/>
@@ -379,6 +403,63 @@ public sealed class WorldMutationApi : IWorldMutationApi
                 $"Entity {lightId} is neither a light source nor an aperture.");
 
         _em.DestroyEntity(entity);
+    }
+
+    // ── NPC authoring (WP-4.0.K) ─────────────────────────────────────────────────
+
+    /// <inheritdoc/>
+    public Guid CreateNpc(string roomId, int tileX, int tileY, string archetypeId, string name)
+    {
+        if (_archetypeCatalog is null || _castConfig is null || _castRng is null)
+            throw new InvalidOperationException(
+                "CreateNpc requires the WorldMutationApi to be constructed with " +
+                "ArchetypeCatalog, CastGeneratorConfig, and SeededRandom (use the 5-arg constructor).");
+        if (string.IsNullOrEmpty(archetypeId))
+            throw new InvalidOperationException("CreateNpc: archetypeId is required.");
+
+        var archetype = _archetypeCatalog.TryGet(archetypeId)
+            ?? throw new InvalidOperationException($"CreateNpc: unknown archetype '{archetypeId}'.");
+
+        // Synthesise a slot for CastGenerator.SpawnNpc to consume.
+        var slot = new NpcSlotComponent
+        {
+            X             = tileX,
+            Y             = tileY,
+            ArchetypeHint = archetypeId,
+            RoomId        = roomId,
+        };
+
+        var npc = CastGenerator.SpawnNpc(archetype, slot, _em, _castRng, _castConfig);
+
+        if (!string.IsNullOrWhiteSpace(name))
+            npc.Add(new IdentityComponent(name));
+
+        return npc.Id;
+    }
+
+    /// <inheritdoc/>
+    public void DespawnNpc(Guid npcId)
+    {
+        var entity = FindById(npcId)
+            ?? throw new InvalidOperationException($"NPC entity {npcId} not found.");
+
+        if (!entity.Has<NpcArchetypeComponent>())
+            throw new InvalidOperationException($"Entity {npcId} is not an NPC (no NpcArchetypeComponent).");
+
+        _em.DestroyEntity(entity);
+    }
+
+    /// <inheritdoc/>
+    public void RenameNpc(Guid npcId, string newName)
+    {
+        var entity = FindById(npcId)
+            ?? throw new InvalidOperationException($"NPC entity {npcId} not found.");
+
+        if (!entity.Has<IdentityComponent>())
+            throw new InvalidOperationException($"Entity {npcId} has no IdentityComponent to rename.");
+
+        var current = entity.Get<IdentityComponent>();
+        entity.Add(new IdentityComponent(newName, current.Value));
     }
 
     // ── Author-mode helpers ──────────────────────────────────────────────────────

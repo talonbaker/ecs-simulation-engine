@@ -139,6 +139,55 @@ public sealed class AuthorModeController : MonoBehaviour
         Api.DespawnLight(lightId);
     }
 
+    // ── NPC authoring (WP-4.0.K) ──────────────────────────────────────────────
+
+    /// <summary>
+    /// Spawns an NPC of the given archetype at the tile in the named room.
+    /// If <paramref name="name"/> is null, the auto-name pool generates one via WP-4.0.M.
+    /// Returns the new NPC entity's ID.
+    /// </summary>
+    public Guid SpawnNpc(string roomId, int tileX, int tileY, string archetypeId, string name = null)
+    {
+        EnsureActive();
+        if (string.IsNullOrWhiteSpace(name))
+            name = ResolveAutoName();
+        return Api.CreateNpc(roomId, tileX, tileY, archetypeId, name);
+    }
+
+    /// <summary>Despawns an authored NPC.</summary>
+    public void EraseNpc(Guid npcId)
+    {
+        EnsureActive();
+        Api.DespawnNpc(npcId);
+    }
+
+    /// <summary>Renames an NPC.</summary>
+    public void RenameNpc(Guid npcId, string newName)
+    {
+        EnsureActive();
+        Api.RenameNpc(npcId, newName);
+    }
+
+    /// <summary>
+    /// Returns the next auto-generated name from the cast-name pool (WP-4.0.M).
+    /// Lazy-loads the generator on first call.
+    /// </summary>
+    public string ResolveAutoName()
+    {
+        if (_namePool is null)
+        {
+            var data = APIFramework.Cast.CastNameDataLoader.LoadDefault();
+            if (data is null)
+                throw new InvalidOperationException(
+                    "ResolveAutoName: cast name-data.json not discoverable; use SpawnNpc with an explicit name.");
+            var gen = new APIFramework.Cast.CastNameGenerator(data);
+            _namePool = new APIFramework.Bootstrap.CastNamePool(_host.Engine, gen);
+        }
+        var result = _namePool.GenerateUniqueName();
+        return result.DisplayName;
+    }
+    private APIFramework.Bootstrap.CastNamePool _namePool;
+
     // ── Save / Load / Reload (uses WP-4.0.I writer + existing loader) ─────────
 
     /// <summary>
@@ -196,11 +245,21 @@ public sealed class AuthorModeController : MonoBehaviour
                         "AuthorModeController: EngineHost.Engine is null — engine not initialised yet.");
 
                 // Construct our own WorldMutationApi instance, matching the BuildModeController
-                // pattern (BuildModeController.TryInjectMutationApi). The engine has no service
-                // locator for the mutation API at v0.1; each consumer constructs its own.
-                _api = new WorldMutationApi(
-                    _host.Engine,
-                    new APIFramework.Systems.Spatial.StructuralChangeBus());
+                // pattern. We use the 5-arg constructor so CreateNpc (WP-4.0.K) is available;
+                // the cast deps are loaded from disk on first access (independent copy of the
+                // archetype catalog is cheap — same JSON data, no shared state with boot).
+                var bus      = new APIFramework.Systems.Spatial.StructuralChangeBus();
+                var catalog  = APIFramework.Bootstrap.ArchetypeCatalog.LoadDefault();
+                var castCfg  = new APIFramework.Config.CastGeneratorConfig();
+                var castRng  = new APIFramework.Core.SeededRandom(unchecked((int)DateTime.UtcNow.Ticks));
+
+                _api = catalog is not null
+                    ? new WorldMutationApi(_host.Engine, bus, catalog, castCfg, castRng)
+                    : new WorldMutationApi(_host.Engine, bus);
+
+                if (catalog is null)
+                    Debug.LogWarning(
+                        "AuthorModeController: archetype catalog not discoverable; SpawnNpc will throw.");
             }
             return _api;
         }

@@ -66,7 +66,13 @@ public static class CastGenerator
 
             var npc = SpawnNpc(archetype, slotComp, em, rng, config);
 
-            if (namePool is not null)
+            // Authored slots may carry a NameHint that overrides the pool pick (WP-4.0.K).
+            if (!string.IsNullOrWhiteSpace(slotComp.NameHint))
+            {
+                usedNames.Add(slotComp.NameHint!);
+                npc.Add(new IdentityComponent(slotComp.NameHint!));
+            }
+            else if (namePool is not null)
             {
                 var available = namePool.FirstNames
                     .Except(usedNames, StringComparer.Ordinal)
