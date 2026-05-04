@@ -141,6 +141,19 @@ When a deferred feature is ready to ship, it graduates here → into a `WP-NN.x-
 
 ---
 
+## Engine architecture
+
+### FF-017: Vertical multi-floor topology (stacked floors + stairwell pathfinding)
+
+- **What:** Literal vertical multi-floor — stacked physical floors with stairwells/elevators that pathfinding traverses, camera floor-switch verb, schema extension to mark floor-to-floor connections.
+- **Status:** **Reorganized away from Phase 4.2.0** on 2026-05-03 (see `docs/PHASE-4.2-REORGANIZATION-2026-05-03.md`). The "scenarios need multi-floor" framing was wrong (only fire materially needed it; affair / plague / PIP work single-floor) AND building multi-floor on top of an unverified Wave 4 foundation repeated the wave-1 mistake. Replaced with a zone system (WP-4.2.0–4.2.2 in the new sequence) that solves the same problems with better architectural fit AND directly serves the perf #1 priority.
+- **Why deferred (not killed):** Vertical multi-floor remains potentially useful for specific scenarios where vertical reading is the legible visualization (a server room one floor below the office that must be evacuated upstairs during a flood; a surveillance scenario where the player watches from above). It just shouldn't be the *foundation* — zones cover the 80% case at lower complexity.
+- **Gate:** (1) Zone system shipped + verified in playtest. (2) A specific scenario authored where vertical visualization is materially better than zone-based area separation. (3) Project has bandwidth for the schema bump + pathfinder rework.
+- **Home wave:** TBD — at earliest Phase 5; possibly never if zones fully serve.
+- **Source:** Original Phase 4 kickoff brief (multi-floor at 4.2.0); reorganized 2026-05-03 per Talon's review.
+
+---
+
 ## Authoring tools
 
 ### FF-016: In-game scene authoring loop

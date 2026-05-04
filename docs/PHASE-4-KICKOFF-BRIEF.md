@@ -132,15 +132,22 @@ The UX bible v0.2 work is paused (the v0.2 commitments captured in conversation 
 - **WP-4.1.1 — Ambient soundscape.** Diegetic-only first pass. Couples to camera proximity.
 - **WP-4.1.2 — Final art pipeline integration.** Replaces placeholder silhouettes + chibi sprites with hand-drawn final pixel art. Couples to 4.0.A.
 
-### Phase 4.2.x — Multi-floor + emergent gameplay deepening
+### Phase 4.2.x — Zone substrate + emergent gameplay deepening (REORGANIZED 2026-05-03)
 
-Multi-floor moved here from 4.0.x; the emergent scenarios that need it slot immediately after.
+Originally scoped as multi-floor topology; **reorganized 2026-05-03** per Talon's review (see `docs/PHASE-4.2-REORGANIZATION-2026-05-03.md`). The original "multi-floor unblocks the scenarios" framing was wrong (only fire materially needed multi-floor; affair / plague / PIP work single-floor) AND building multi-floor on top of an unverified Wave 4 foundation repeats the wave-1 mistake. Replaced with a **zone system** — separate physical areas modeled as peer scenes, NPCs in inactive zones running at coarsened simulation fidelity. Better architectural fit for an office sim, and directly serves the project's #1 priority — performance (3.3× capacity gain over today's 30-NPC ceiling without sacrificing visible-zone feel).
 
-- **WP-4.2.0 — Multi-floor topology** (was 4.0.1). Engine extends `RoomComponent` and `PathfindingService`. Camera floor-switch verb. Stairwells topology-traversable. Schema v0.5 → v0.6 bump.
-- **WP-4.2.1 — Plague week.**
-- **WP-4.2.2 — PIP arc.**
-- **WP-4.2.3 — Fire / disaster.** Test of multi-floor evacuation at scale.
-- **WP-4.2.4 — Affair detection mechanic.**
+**Wave 1 — Substrate (perf-critical):**
+- **WP-4.2.0 — Zone substrate.** Engine: `ZoneIdComponent`, `MultiWorldDefinitionLoader`, `ZoneRegistry`, `ZoneTransitionComponent` + bus. Pure additive; single-zone behavior unchanged. No schema bump (each world-def is one zone).
+- **WP-4.2.1 — Active zone + camera hook.** Engine + Unity glue. `ZoneRegistry.SwitchActiveZone` + `OnActiveZoneChanged` event; `ZoneAwareCameraController` retargets `CameraController` on switch. Dev-console `switch-zone <id>` command. Author-mode `SwitchToZone` method.
+- **WP-4.2.2 — Simulation level-of-detail.** Engine, perf-critical. `[ZoneLod(...)]` attribute + `ZoneSimulationLodScheduler` partition entities by active/inactive and gate per-system invocation. Bucket A coarsens (drives, schedule, idle movement); Bucket B always-full-fidelity (choking, rescue, life-state, narrative emit — fairness contract); Bucket C skips in inactive (pathfinding, animation, physics). Headline gate: 100 NPCs across 4 zones holds 60 FPS.
+
+**Wave 2 — Emergent scenarios (consume the substrate):**
+- **WP-4.2.3 — Plague week.** Contagion event over ~1 week; per-archetype susceptibility + recovery tuning; hand-washing chore. Zone-aware spread.
+- **WP-4.2.4 — PIP arc.** Performance-improvement-plan multi-day arc; redemption vs termination; uses `IWorldMutationApi.DespawnNpc` from K.
+- **WP-4.2.5 — Affair detection.** Witness-discovery mechanic; gossip propagation per archetype.
+- **WP-4.2.6 — Fire / disaster.** Cross-zone evacuation; the deliberate stress test for both zone substrate (4.2.0) and LoD (4.2.2). Spreading fire across active + inactive zones; sprinkler suppression.
+
+**Vertical multi-floor** (literal stacked floors with stairwell pathfinding) is **not killed** — it becomes FF-017 (deferred-with-rationale). Gate: zones shipped + a specific scenario whose readability requires vertical visualization.
 
 ### Phase 4.3.x — Player verb expansion (after UX bible v0.2 formally lands)
 
