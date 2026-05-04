@@ -141,6 +141,25 @@ When a deferred feature is ready to ship, it graduates here → into a `WP-NN.x-
 
 ---
 
+## Authoring tools
+
+### FF-016: In-game scene authoring loop
+
+- **What:** A live in-game level-design surface — author rooms, lights, windows, and NPCs without recompiling, save the result as a `world-definition.json` file, hot-reload to iterate. Built on the existing `WorldDefinitionLoader` + `IWorldMutationApi` substrate; round-trip via `WorldDefinitionWriter`. WARDEN-only (dev / mod-author surface; not exposed to retail players).
+- **Architectural sketch:**
+  - `WorldDefinitionWriter` (WP-4.0.I) serializes the live ECS world to the existing JSON format consumed by `WorldDefinitionLoader`. No schema bump in v0.1 (additive `placedProps` deferred to a future packet that resolves build-mode template ids).
+  - Author mode (WP-4.0.J) extends `IWorldMutationApi` with six new operations: `CreateRoom`, `DespawnRoom` (with `RoomDespawnPolicy` — OrphanContents | CascadeDelete), `CreateLightSource`, `TuneLightSource`, `CreateLightAperture`, `DespawnLight`. JSON palette catalog at `docs/c2-content/build/author-mode-palette.json` (9 room kinds, 9 light kinds, 4 aperture sizes — modder-extensible). Unity-side `AuthorModeController` (WARDEN-gated MonoBehaviour) toggles via `Ctrl+Shift+A` and exposes the engine API as Unity-side methods for Editor-wired UI.
+  - NPC authoring (WP-4.0.K) adds three more operations to `IWorldMutationApi`: `CreateNpc`, `DespawnNpc`, `RenameNpc`. `CreateNpc` reuses `CastGenerator.SpawnNpc` so authored NPCs are indistinguishable from boot-time NPCs (same archetype-correct drives / personality / inhibitions / silhouette). `CastNamePool` wraps `CastNameGenerator` (WP-4.0.M) with collision retry for auto-naming. Cross-cutting: `NpcSlotComponent` and the world-definition JSON gain a `nameHint` field so authored names round-trip through save/reload (a long-standing bug — the JSON had `nameHint` but the loader was silently dropping it).
+- **Relationship to undo/redo:** Reuses the existing build-mode v2 (WP-4.0.G) undo stack via `IUndoableMutation` adapters wherever new mutations are exposed through the user-facing palette UI. Single Ctrl+Z affordance covers gameplay-time prop placement *and* author-mode mutations. The engine API itself doesn't ship undo wrappers in v0.1 (the wrappers belong on the UI side, where intent + visual feedback live).
+- **Pilot approach:** Engine substrate landed in three sequential packets (M name generator → I writer → J author-mode mutations + Unity controller → K NPC mutations + name pool). Wave-4 ships the foundation; the user-facing palette UI (BuildPaletteUI tab extensions, RoomRectangleTool, LightSourceTool, LightApertureTool, EraserTool, NpcArchetypeSpawnTool with ghost-preview integration, save/load toolbar widget, sandbox scenes) is **deferred to Editor follow-up** because Unity tools need iterative visual feedback to land well. The engine substrate gives Editor work a concrete surface to wire UI buttons against without further engine changes.
+- **Deferred deliverable (Opus, post-Editor-verification):** A comprehensive `docs/AUTHORING-GUIDE.md` (3000-5000 words; full workflow / all tools / edge cases / troubleshooting / modder API quickstart with code samples / community-scene PR conventions). Authored by Opus directly after the Unity-side palette is wired and used in anger; Sonnet docs from spec are accurate but lack lived-in clarity.
+- **Gate:** None for the engine substrate (shipped wave 4 of Phase 4.0.x). Gate for Unity tools UI: Editor session to wire palette tabs + tools onto the existing BuildModeController / BuildPaletteUI infrastructure.
+- **Home wave:** Phase 4.0.x wave 4.
+- **Source:** Talon's 2026-05-03 framing ("I don't have a good way to get items into the world without a predefined scene… I need controls and means of level design and architecture"). Aligns with SRD §8.8 (incremental Mod API surfacing) — author mode is the canonical first-class modder surface.
+- **Shipped (engine substrate):** WP-4.0.M (cast name generator) — 2026-05-03; WP-4.0.I (world-def writer) — 2026-05-03; WP-4.0.J (author-mode mutations + AuthorModeController) — 2026-05-03; WP-4.0.K (NPC mutations + CastNamePool + NameHint round-trip fix) — 2026-05-03.
+
+---
+
 ## Maintenance notes
 
 - **Adding entries:** When a new deferred feature is identified in conversation or in a packet, append it here with the next FF-NNN id (zero-padded, monotonic).
