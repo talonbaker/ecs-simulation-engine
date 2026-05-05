@@ -264,7 +264,14 @@ public sealed class WorldMutationApi : IWorldMutationApi
             Category     = category,
             Floor        = floor,
             Bounds       = bounds,
-            Illumination = default,
+            // Sensible default indoor illumination (matches typical office overhead fluorescent).
+            // The schema requires colorTemperatureK ≥ 1000; using `default` here breaks save/reload
+            // (caught by AuthoringLoopEndToEndTests). Lighting systems can override at runtime.
+            Illumination = new RoomIllumination
+            {
+                AmbientLevel      = 50,
+                ColorTemperatureK = 4000,
+            },
         });
         entity.Add(new PositionComponent
         {
