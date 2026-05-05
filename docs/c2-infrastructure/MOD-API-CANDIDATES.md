@@ -174,11 +174,11 @@ These will land in the foundational polish wave (WP-4.0.A through WP-4.0.H). Eac
 ### MAC-017: Cast name data catalog (probabilistic six-tier name + title generator)
 
 - **What:** JSON catalog (`docs/c2-content/cast/name-data.json`) feeding the `CastNameGenerator` library. Six-tier rarity model — Common 55% / Uncommon 27% / Rare 12% / Epic 4% / Legendary 1.5% / Mythic 0.5% — producing first name + surname + optional title with per-tier structure (vanilla / fused / hyphenated / corp-titled / divine-rooted / "Executive VP Kratos, The Doom-Slayer"). Tier thresholds are JSON-tunable; modders can tilt rarity curves without code changes. A "fantasy office" mod replaces the catalog content (elves / dwarves / wizards) and the engine consumes them transparently. The tier-on-result also seeds the future "reroll for a better hire" loot-box mechanic — the deterministic seedable `Generate(Random)` overload is the seam.
-- **Where:** `docs/c2-content/cast/name-data.json`; `APIFramework/Cast/CastNameDataLoader.cs`; `APIFramework/Cast/CastNameGenerator.cs`; `APIFramework/Cast/CastNameTier.cs`; `APIFramework/Cast/CastNameResult.cs`.
-- **Why a candidate:** Names + titles are universal across mods. Pattern is consistent with MAC-001 / MAC-005 / MAC-013 / MAC-014 — data-driven, schema-validated. The companion `badgeFlair` and `departmentStamps` blocks are preserved in the catalog for the future badge-generation packet (see WP-4.0.M followups).
-- **Stability:** fresh (landed with WP-4.0.M, 2026-05-03; second consumer = WP-4.0.K NPC palette auto-naming when that packet lands).
-- **Source packet:** WP-4.0.M.
-- **Lineage:** ported from Talon's HTML/JS roster generator at `~/talonbaker.github.io/name-face-gen/` (`data.js` as source-of-truth).
+- **Where:** `docs/c2-content/cast/name-data.json`; `APIFramework/Cast/CastNameDataLoader.cs`; `APIFramework/Cast/CastNameGenerator.cs`; `APIFramework/Cast/CastNameTier.cs`; `APIFramework/Cast/CastNameResult.cs`; **`APIFramework/Cast/CastBadgeGenerator.cs`** + **`APIFramework/Cast/CastBadgeResult.cs`** (WP-4.0.M.1; consumes the `badgeFlair` + `departmentStamps` blocks of the catalog).
+- **Why a candidate:** Names + titles are universal across mods. Pattern is consistent with MAC-001 / MAC-005 / MAC-013 / MAC-014 — data-driven, schema-validated.
+- **Stability:** stabilizing (landed with WP-4.0.M, 2026-05-03; consumer #2 = `CastNamePool` (auto-naming for WP-4.0.K NPC palette); consumer #3 = `CastBadgeGenerator` (WP-4.0.M.1 — visual badge flair per tier; sets up the future hire-screen UI)).
+- **Source packets:** WP-4.0.M (name + title generator); WP-4.0.M.1 (badge generator port).
+- **Lineage:** ported from Talon's HTML/JS roster generator at `~/talonbaker.github.io/name-face-gen/` (`data.js` as source-of-truth — both `generateName()` and `generateBadge()` ported).
 
 ---
 
