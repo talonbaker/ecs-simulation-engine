@@ -17,7 +17,7 @@ namespace APIFramework.Systems.LifeState;
 ///   - The NPC has NOT previously been hit by this corpse's proximity-bereavement
 /// Then: apply ProximityBereavementStressGain to StressComponent.AcuteLevel (direct, one-shot).
 ///
-/// The hit is tracked via BereavementHistoryComponent.EncounteredCorpseIds (HashSet<Guid>),
+/// The hit is tracked via BereavementHistoryComponent.EncounteredCorpseIds (<c>HashSet&lt;Guid&gt;</c>),
 /// attached lazily on first encounter. Once recorded, the NPC is never hit again by the same
 /// corpse, regardless of how long they remain in the room or how often they re-enter.
 ///

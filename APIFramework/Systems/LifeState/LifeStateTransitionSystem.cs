@@ -61,6 +61,7 @@ public class LifeStateTransitionSystem : ISystem
     /// <param name="entityManager">Entity manager held for future use; queries flow through the manager passed to <see cref="Update"/>.</param>
     /// <param name="clock">Simulation clock; supplies LastTransitionTick and DeathTick stamps.</param>
     /// <param name="config">Simulation config; <see cref="SimConfig.LifeState"/>.DefaultIncapacitatedTicks seeds the countdown for new Incapacitated transitions.</param>
+    /// <param name="soundBus">Optional sound trigger bus; when supplied, life-state transitions emit corresponding sound triggers (e.g., death thuds, faint).</param>
     /// <exception cref="ArgumentNullException">Any dependency is null.</exception>
     public LifeStateTransitionSystem(
         NarrativeEventBus narrativeEventBus,

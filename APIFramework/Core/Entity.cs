@@ -166,7 +166,7 @@ public class Entity
     /// the bucket layout is identical across runs for the same entity creation
     /// sequence, making system iteration order reproducible.
     ///
-    /// CONTRACT NOTE: <see cref="Equals"/> uses reference equality (the correct
+    /// CONTRACT NOTE: <c>Equals</c> uses reference equality (the correct
     /// semantic: one C# object = one simulation entity). The contract
     ///   "a.Equals(b) ⟹ a.GetHashCode() == b.GetHashCode()"
     /// is satisfied because two references to the same object share the same

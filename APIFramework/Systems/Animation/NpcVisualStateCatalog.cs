@@ -122,22 +122,22 @@ public sealed class NpcVisualStateCatalog
     }
 
     /// <summary>Returns the state entry for <paramref name="stateId"/>, or null if not catalogued.</summary>
-    public StateVisualEntry GetState(string stateId) =>
+    public StateVisualEntry? GetState(string stateId) =>
         _byStateId.TryGetValue(stateId, out var e) ? e : null;
 
     /// <summary>
     /// Returns the state entry for the given <see cref="NpcAnimationState"/> enum value,
     /// or null if not catalogued.
     /// </summary>
-    public StateVisualEntry GetState(NpcAnimationState state) =>
+    public StateVisualEntry? GetState(NpcAnimationState state) =>
         GetState(state.ToString());
 
     /// <summary>Returns the cue entry for <paramref name="cueId"/>, or null if not catalogued.</summary>
-    public CueVisualEntry GetCue(string cueId) =>
+    public CueVisualEntry? GetCue(string cueId) =>
         _byCueId.TryGetValue(cueId, out var e) ? e : null;
 
     /// <summary>Returns the transition entry for a (from, to) pair, or null if not catalogued.</summary>
-    public TransitionVisualEntry GetTransition(NpcAnimationState from, NpcAnimationState to) =>
+    public TransitionVisualEntry? GetTransition(NpcAnimationState from, NpcAnimationState to) =>
         _byTransition.TryGetValue(
             (from.ToString().ToLowerInvariant(), to.ToString().ToLowerInvariant()),
             out var t) ? t : null;
@@ -191,7 +191,7 @@ public static class NpcVisualStateCatalogLoader
     /// <c>docs/c2-content/animation/visual-state-catalog.json</c>.
     /// Returns null if not found.
     /// </summary>
-    public static string FindDefaultPath()
+    public static string? FindDefaultPath()
     {
         var dir = AppDomain.CurrentDomain.BaseDirectory;
         for (int depth = 0; depth < 8; depth++)
@@ -302,41 +302,44 @@ public static class NpcVisualStateCatalogLoader
 
     // ── JSON DTOs ─────────────────────────────────────────────────────────────
 
+    // Default initialisers on string / array members suppress CS8618 nullable warnings.
+    // These DTOs are JSON deserialisation targets — System.Text.Json populates them after
+    // construction; defaults are placeholders for the brief uninitialised window.
     private sealed class CatalogDto
     {
-        public string        schemaVersion { get; set; }
-        public StateDtoRow[] states        { get; set; }
-        public CueDtoRow[]   cues          { get; set; }
-        public TransDtoRow[] transitions   { get; set; }
+        public string        schemaVersion { get; set; } = "";
+        public StateDtoRow[] states        { get; set; } = System.Array.Empty<StateDtoRow>();
+        public CueDtoRow[]   cues          { get; set; } = System.Array.Empty<CueDtoRow>();
+        public TransDtoRow[] transitions   { get; set; } = System.Array.Empty<TransDtoRow>();
     }
 
     private sealed class StateDtoRow
     {
-        public string   stateId        { get; set; }
+        public string   stateId        { get; set; } = "";
         public int      frameDurationMs { get; set; }
-        public string   accentColor    { get; set; }
-        public string[] cueAffinity    { get; set; }
-        public string   description    { get; set; }
+        public string   accentColor    { get; set; } = "";
+        public string[] cueAffinity    { get; set; } = System.Array.Empty<string>();
+        public string   description    { get; set; } = "";
     }
 
     private sealed class CueDtoRow
     {
-        public string  cueId             { get; set; }
-        public string  iconKind          { get; set; }
-        public string  spriteAsset       { get; set; }
-        public float[] anchorOffset      { get; set; }
+        public string  cueId             { get; set; } = "";
+        public string  iconKind          { get; set; } = "";
+        public string  spriteAsset       { get; set; } = "";
+        public float[] anchorOffset      { get; set; } = System.Array.Empty<float>();
         public float   fadeAltitudeStart { get; set; }
         public float   fadeAltitudeEnd   { get; set; }
         public float   minScaleMult      { get; set; }
-        public string  description       { get; set; }
+        public string  description       { get; set; } = "";
     }
 
     private sealed class TransDtoRow
     {
-        public string  from               { get; set; }
-        public string  to                 { get; set; }
-        public int[]   intermediateFrames { get; set; }
+        public string  from               { get; set; } = "";
+        public string  to                 { get; set; } = "";
+        public int[]   intermediateFrames { get; set; } = System.Array.Empty<int>();
         public int     totalDurationMs    { get; set; }
-        public string  description        { get; set; }
+        public string  description        { get; set; } = "";
     }
 }

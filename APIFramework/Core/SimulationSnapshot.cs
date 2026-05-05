@@ -12,7 +12,7 @@ namespace APIFramework.Core;
 /// WHY THIS EXISTS
 /// ───────────────
 /// Currently the Avalonia GUI reaches directly into SimulationBootstrapper fields:
-///   _sim.Clock.CircadianFactor, _sim.EntityManager.Query<T>(), _sim.Invariants, etc.
+///   _sim.Clock.CircadianFactor, _sim.EntityManager.Query&lt;T&gt;(), _sim.Invariants, etc.
 ///
 /// This couples every frontend to the internal class structure of the engine.
 /// When Unity, a web server, or a replay system needs the same data they would all

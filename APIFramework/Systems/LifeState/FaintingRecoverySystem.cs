@@ -22,7 +22,7 @@ namespace APIFramework.Systems.LifeState;
 ///      b. Calls <see cref="LifeStateTransitionSystem.RequestTransition"/> with
 ///         <see cref="global::APIFramework.Components.LifeState.Alive"/> and <see cref="CauseOfDeath.Unknown"/>.
 ///         The existing <c>case global::APIFramework.Components.LifeState.Alive</c> branch in
-///         <see cref="LifeStateTransitionSystem.ApplyRequest"/> handles this —
+///         <c>LifeStateTransitionSystem.ApplyRequest</c> handles this —
 ///         it was stubbed as the "rescue mechanic" in WP-3.0.0.
 ///
 /// PHASE ORDERING

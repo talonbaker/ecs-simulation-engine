@@ -5,7 +5,7 @@ namespace APIFramework.Core;
 ///
 /// DESIGN CONTRACT
 /// ───────────────
-/// Given the same <paramref name="seed"/> value, any sequence of calls to
+/// Given the same <c>seed</c> value, any sequence of calls to
 /// <see cref="NextFloat"/>, <see cref="NextDouble"/>, and <see cref="NextInt"/>
 /// produces the same sequence of results on every run. This is the foundation
 /// of the determinism guarantee required by WP-04 / Pillar A.

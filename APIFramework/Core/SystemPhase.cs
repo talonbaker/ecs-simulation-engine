@@ -33,7 +33,7 @@ namespace APIFramework.Core;
 /// ────────────────────────
 /// As of v0.7.x, systems within a phase still run sequentially in registration order.
 /// The phases exist for documentation and future parallelism — not current perf gains.
-/// The real-world performance win of v0.7.x is the Query<T>() index in EntityManager,
+/// The real-world performance win of v0.7.x is the <c>Query&lt;T&gt;()</c> index in EntityManager,
 /// which is orthogonal to phases.
 ///
 /// PHASE ORDERING (numeric value = execution order)
