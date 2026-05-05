@@ -57,6 +57,7 @@ public class ChokingDetectionSystem : ISystem
     /// <param name="clock">Simulation clock; supplies the current tick stamped onto markers and events.</param>
     /// <param name="cfg">Choking thresholds and tuning values (bolus size, distraction triggers, panic intensity, incapacitation tick budget).</param>
     /// <param name="em">Entity manager used for cross-entity lookups (bolus by id, witnesses).</param>
+    /// <param name="soundBus">Optional sound trigger bus; when supplied, choking + rescue events emit <c>Cough</c> / <c>Heimlich</c> sound triggers.</param>
     /// <exception cref="ArgumentNullException">Any dependency is null.</exception>
     public ChokingDetectionSystem(
         LifeStateTransitionSystem transition,

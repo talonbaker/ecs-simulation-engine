@@ -2,7 +2,7 @@ namespace APIFramework.Components;
 
 /// <summary>
 /// Marks a persistent physical spill entity spawned by <c>PhysicalManifestSpawner</c>.
-/// Paired with a <see cref="ChronicleEntry"/> via <see cref="ChronicleEntryId"/>.
+/// Paired with a <c>ChronicleEntry</c> via <see cref="ChronicleEntryId"/>.
 /// </summary>
 public struct StainComponent
 {

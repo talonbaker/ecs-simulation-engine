@@ -427,6 +427,7 @@ public class SimulationBootstrapper
         Invariants = new InvariantSystem(Clock, Chronicle);
 
         NarrativeBus      = new NarrativeEventBus();
+        SoundBus          = new SoundTriggerBus();
         ParticleBus       = new ParticleTriggerBus();
         PendingDialogQueue = new PendingDialogQueue();
 
@@ -976,8 +977,8 @@ public class SimulationBootstrapper
     /// <summary>
     /// Default number of humans spawned when no <c>humanCount</c> argument is
     /// supplied.  100 gives a realistic stress-test world; pass 1 to
-    /// <see cref="SimulationBootstrapper(IConfigProvider,int)"/> for isolated
-    /// single-entity tests.
+    /// the <c>SimulationBootstrapper(IConfigProvider, int)</c> constructor for
+    /// isolated single-entity tests.
     /// </summary>
     public const int DefaultHumanCount = 100;
 

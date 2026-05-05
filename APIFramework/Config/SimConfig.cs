@@ -1171,7 +1171,7 @@ public class NarrativeConfig
 // ── Cast generator ─────────────────────────────────────────────────────────────
 
 /// <summary>
-/// Tunables for <see cref="CastGenerator"/> — drive baselines per archetype tier
+/// Tunables for <c>CastGenerator</c> — drive baselines per archetype tier
 /// and counts of seeded relationships across the cast at boot.
 /// </summary>
 public class CastGeneratorConfig
@@ -1347,7 +1347,7 @@ public class StressConfig
 // ── Schedule system ───────────────────────────────────────────────────────────
 
 /// <summary>
-/// Tunables for <see cref="ScheduleSystem"/> + ActionSelectionSystem schedule integration —
+/// Tunables for <c>ScheduleSystem</c> + ActionSelectionSystem schedule integration —
 /// how heavily the active schedule block influences candidate weighting and when an
 /// Approach to a schedule anchor turns into a Linger.
 /// </summary>
@@ -1531,7 +1531,7 @@ public class LifeStateConfig
 }
 
 /// <summary>
-/// Tuning knobs for <see cref="ChokingDetectionSystem"/> — when in-transit boluses
+/// Tuning knobs for <c>ChokingDetectionSystem</c> — when in-transit boluses
 /// trigger a choke, how long the resulting incapacitation lasts, and the panic
 /// mood spike applied. Phase 3 addition.
 /// </summary>

@@ -15,7 +15,7 @@ public enum BreakageKind
 
 /// <summary>
 /// Marks a persistent broken-item entity spawned by <c>PhysicalManifestSpawner</c>.
-/// Paired with a <see cref="ChronicleEntry"/> via <see cref="ChronicleEntryId"/>.
+/// Paired with a <c>ChronicleEntry</c> via <see cref="ChronicleEntryId"/>.
 /// </summary>
 public struct BrokenItemComponent
 {

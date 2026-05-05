@@ -24,7 +24,7 @@ namespace APIFramework.Systems.Spatial;
 /// Reads <c>PositionComponent</c>, <c>ProximityComponent</c>, and the <see cref="EntityRoomMembership"/>
 /// snapshot. Writes nothing to the entity world — only publishes events on
 /// <see cref="ProximityEventBus"/>. Skips non-Alive observers.
-/// Note: registered in <see cref="APIFramework.Bootstrap.SystemPhase.Lighting"/> (not Spatial)
+/// Note: registered in <c>SystemPhase.Lighting</c> (not Spatial)
 /// in <see cref="APIFramework.Core.SimulationBootstrapper"/> so it fires after illumination
 /// is current and visibility checks are correct.
 /// </remarks>
