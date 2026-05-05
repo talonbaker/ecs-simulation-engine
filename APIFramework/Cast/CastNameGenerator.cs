@@ -31,6 +31,42 @@ public sealed class CastNameGenerator
     }
 
     /// <summary>
+    /// Direct accessor for the underlying catalog. Used by economy wrappers
+    /// (<c>HireRerollService</c>) that need to read the default tier thresholds before
+    /// applying perk-driven biases.
+    /// </summary>
+    public CastNameData Data => _data;
+
+    /// <summary>
+    /// Generate a name using a per-call override of the tier thresholds. Used by the
+    /// hire-reroll economy (WP-4.0.N) to apply player perk biases that tilt the rarity
+    /// curve without mutating the catalog. Other arguments behave identically to
+    /// <see cref="Generate(Random, System.Nullable{CastGender}, System.Nullable{CastNameTier})"/>.
+    /// </summary>
+    public CastNameResult GenerateWithThresholds(
+        Random              rng,
+        TierThresholdsDto   thresholds,
+        CastGender?         gender = null)
+    {
+        if (rng is null)        throw new ArgumentNullException(nameof(rng));
+        if (thresholds is null) throw new ArgumentNullException(nameof(thresholds));
+
+        var g     = gender ?? PickGender(rng);
+        var first = Internal.FusionBuilder.Pick(_data.FirstNames[GenderKey(g)], rng);
+        var tier  = Internal.TierRoller.Roll(rng.NextDouble(), thresholds);
+
+        return tier switch
+        {
+            CastNameTier.Mythic    => BuildMythic(g, first, rng),
+            CastNameTier.Legendary => BuildLegendary(g, first, rng),
+            CastNameTier.Epic      => BuildEpic(g, first, rng),
+            CastNameTier.Rare      => BuildRare(g, first, rng),
+            CastNameTier.Uncommon  => BuildUncommon(g, first, rng),
+            _                      => BuildCommon(g, first, rng),
+        };
+    }
+
+    /// <summary>
     /// Generates a name using the supplied <see cref="Random"/> instance — the canonical entry point.
     /// Tests pass a seeded RNG for determinism; future reroll wrappers pass the player's
     /// session RNG so reroll sequences share state.

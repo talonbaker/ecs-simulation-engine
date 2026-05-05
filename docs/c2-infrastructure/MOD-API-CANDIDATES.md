@@ -180,6 +180,14 @@ These will land in the foundational polish wave (WP-4.0.A through WP-4.0.H). Eac
 - **Source packets:** WP-4.0.M (name + title generator); WP-4.0.M.1 (badge generator port).
 - **Lineage:** ported from Talon's HTML/JS roster generator at `~/talonbaker.github.io/name-face-gen/` (`data.js` as source-of-truth — both `generateName()` and `generateBadge()` ported).
 
+### MAC-020: Hire reroll economy + perk extension surface
+
+- **What:** Token-spending wrapper around `CastNameGenerator` (MAC-017) for the loot-box hire mechanic. `HireRerollService.Begin(...)` opens a `HireSession`; each `TryReroll()` charges the wallet and advances the candidate; `Commit()` returns the final candidate (caller hands it to `IWorldMutationApi.CreateNpc`); `Cancel()` discards. **`HirePerk` is the abstract extension point** — modders define perks (e.g., "Manager's Connection: rare+ guaranteed every 3rd reroll") by subclassing `HirePerk` and implementing `Apply(TierThresholdsDto) → TierThresholdsDto`. Multiple perks compose via aggregate. Reference impl: `LuckyHirePerk(shift)` shifts every cumulative threshold down, expanding the rare+ buckets.
+- **Where:** `APIFramework/Hire/HireRerollService.cs`, `HireSession.cs`, `HireRerollWallet.cs`, `HireRerollConfig.cs`, `HireRerollEntry.cs`, `HirePerk.cs`. Adds `CastNameGenerator.GenerateWithThresholds(...)` overload + public `Data` accessor as the seam.
+- **Why a candidate:** The hire mechanic is the player's primary cast-management surface; modders shipping new perks / archetypes / hire-related content all touch this seam. Pattern: data-driven perk catalog (future content packet enumerates perks) + clean service abstraction.
+- **Stability:** fresh (lands with WP-4.0.N).
+- **Source packet:** WP-4.0.N.
+
 ---
 
 ## Maintenance notes
