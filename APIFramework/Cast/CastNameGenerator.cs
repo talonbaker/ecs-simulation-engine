@@ -68,6 +68,29 @@ public sealed class CastNameGenerator
     public CastNameResult Generate(CastGender? gender = null, CastNameTier? forcedTier = null)
         => Generate(new Random(), gender, forcedTier);
 
+    /// <summary>
+    /// Convenience: generate name + matching badge in one call. Uses the same RNG instance
+    /// for both, so the (Name, Badge) pair is reproducible from a single seed. Equivalent
+    /// to calling <see cref="Generate(Random, System.Nullable{CastGender}, System.Nullable{CastNameTier})"/>
+    /// then <c>new CastBadgeGenerator(_data).Generate(rng, name)</c>.
+    /// </summary>
+    public (CastNameResult Name, CastBadgeResult Badge) GenerateWithBadge(
+        Random        rng,
+        CastGender?   gender     = null,
+        CastNameTier? forcedTier = null)
+    {
+        if (rng is null) throw new ArgumentNullException(nameof(rng));
+        var name  = Generate(rng, gender, forcedTier);
+        var badge = new CastBadgeGenerator(_data).Generate(rng, name);
+        return (name, badge);
+    }
+
+    /// <summary>Convenience: same as the seedable <see cref="GenerateWithBadge(Random, System.Nullable{CastGender}, System.Nullable{CastNameTier})"/> with a fresh non-deterministic RNG.</summary>
+    public (CastNameResult Name, CastBadgeResult Badge) GenerateWithBadge(
+        CastGender?   gender     = null,
+        CastNameTier? forcedTier = null)
+        => GenerateWithBadge(new Random(), gender, forcedTier);
+
     // ── Per-tier builders (direct port of generateName branches) ─────────────────
 
     private CastNameResult BuildCommon(CastGender g, string first, Random rng)
