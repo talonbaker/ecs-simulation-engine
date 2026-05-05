@@ -19,7 +19,7 @@ namespace APIFramework.Tests.Systems.LifeState;
 /// </summary>
 public class BereavementByProximitySystemTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static BereavementConfig DefaultCfg() => new()
     {
@@ -100,7 +100,7 @@ public class BereavementByProximitySystemTests
         return (em, membership, sys, npc, corpse);
     }
 
-    // ── AT-01: Same room + relationship → AcuteLevel increased ───────────────
+    // -- AT-01: Same room + relationship → AcuteLevel increased ---------------
 
     [Fact]
     public void AT01_NpcInSameRoomAsCorpse_RelationshipAboveThreshold_AcuteLevelIncreased()
@@ -127,7 +127,7 @@ public class BereavementByProximitySystemTests
         Assert.Equal(expected, after);
     }
 
-    // ── AT-02: Second tick → no re-trigger ───────────────────────────────────
+    // -- AT-02: Second tick → no re-trigger -----------------------------------
 
     [Fact]
     public void AT02_SecondTick_SameRoom_NoReTriger_AcuteLevelUnchanged()
@@ -154,7 +154,7 @@ public class BereavementByProximitySystemTests
         Assert.Contains(corpse.Id, npc.Get<BereavementHistoryComponent>().EncounteredCorpseIds);
     }
 
-    // ── AT-03: Different room → no effect ────────────────────────────────────
+    // -- AT-03: Different room → no effect ------------------------------------
 
     [Fact]
     public void AT03_NpcInDifferentRoom_NoEffect()
@@ -168,7 +168,7 @@ public class BereavementByProximitySystemTests
         Assert.Equal(before, after);
     }
 
-    // ── AT-04: Relationship below threshold → no effect ──────────────────────
+    // -- AT-04: Relationship below threshold → no effect ----------------------
 
     [Fact]
     public void AT04_RelationshipBelowProximityThreshold_NoEffect()
@@ -183,7 +183,7 @@ public class BereavementByProximitySystemTests
         Assert.Equal(before, after);
     }
 
-    // ── AT-05: No relationship → no effect ───────────────────────────────────
+    // -- AT-05: No relationship → no effect -----------------------------------
 
     [Fact]
     public void AT05_NoRelationship_NoEffect()
@@ -197,7 +197,7 @@ public class BereavementByProximitySystemTests
         Assert.Equal(before, after);
     }
 
-    // ── AT-06: Deceased NPC in same room → not processed ─────────────────────
+    // -- AT-06: Deceased NPC in same room → not processed ---------------------
 
     [Fact]
     public void AT06_DeceasedNpcInSameRoom_NotProcessed()

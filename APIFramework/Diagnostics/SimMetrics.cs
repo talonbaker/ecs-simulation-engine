@@ -3,9 +3,9 @@ using APIFramework.Core;
 
 namespace APIFramework.Diagnostics;
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 //  Per-entity resource statistics accumulated over a simulation run
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 /// <summary>
 /// Streaming min/max/mean accumulator for a single named resource (e.g. Satiation, Energy).
@@ -44,9 +44,9 @@ public sealed class ResourceStats
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 //  Named lifecycle event — when something important first happened
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 /// <summary>
 /// A single named lifecycle event captured for an entity at a particular game time —
@@ -78,9 +78,9 @@ public sealed record LifecycleEvent(string EntityName, string EventName, double 
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 //  Per-entity metrics bundle
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 /// <summary>
 /// Per-entity diagnostics bundle: streaming resource stats, activity counters, and a
@@ -149,7 +149,7 @@ public sealed class EntityMetrics
             StomachFill.Record(s.Fill * 100f);
         }
 
-        // ── Lifecycle event detection ─────────────────────────────────────────
+        // -- Lifecycle event detection -----------------------------------------
 
         bool hungry   = entity.Has<HungerTag>();
         bool thirsty  = entity.Has<ThirstTag>();
@@ -183,9 +183,9 @@ public sealed class EntityMetrics
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 //  Top-level collector — wired into the CLI main loop
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 /// <summary>
 /// Top-level diagnostics collector wired into the CLI main loop. Maintains one

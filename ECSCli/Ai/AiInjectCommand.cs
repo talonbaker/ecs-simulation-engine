@@ -19,7 +19,7 @@ namespace ECSCli.Ai;
 /// to stdout and exits with the appropriate code.
 ///
 /// EXIT CODES
-/// ──────────
+/// ----------
 /// 0  all commands applied successfully.
 /// 3  one or more commands were rejected (fail-closed).
 /// 1  file not found, JSON parse error, or unexpected exception.
@@ -72,7 +72,7 @@ public static class AiInjectCommand
         return cmd;
     }
 
-    // ── Implementation ────────────────────────────────────────────────────────
+    // -- Implementation --------------------------------------------------------
 
     internal static int Run(FileInfo inFile)
     {

@@ -24,7 +24,7 @@ public struct StressComponent
     /// <summary>SimulationClock.DayNumber when <c>BurningOutTag</c> was last applied (0 = never). Drives the sticky cooldown.</summary>
     public int    BurnoutLastAppliedDay;     // DayNumber when BurningOutTag was last applied (0 = never)
 
-    // ── Bereavement counters (WP-3.0.2) ─────────────────────────────────────
+    // -- Bereavement counters (WP-3.0.2) -------------------------------------
     /// <summary>
     /// Set to 1 by <see cref="APIFramework.Systems.LifeState.BereavementSystem"/> when this NPC
     /// directly witnessed a death event (was the second participant in a death narrative candidate).

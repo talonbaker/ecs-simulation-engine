@@ -173,7 +173,7 @@ public class WorkloadSystem : ISystem
         }
     }
 
-    // ── Multiplier helpers ────────────────────────────────────────────────────
+    // -- Multiplier helpers ----------------------------------------------------
 
     private static double ComputePhysiologyMult(Entity npc)
     {
@@ -193,7 +193,7 @@ public class WorkloadSystem : ISystem
         return 1.0;
     }
 
-    // ── Entity lookup helpers ─────────────────────────────────────────────────
+    // -- Entity lookup helpers -------------------------------------------------
 
     private Entity? FindEntityByGuid(Guid guid)
     {
@@ -209,7 +209,7 @@ public class WorkloadSystem : ISystem
         return Guid.Empty;
     }
 
-    // ── Narrative emission ────────────────────────────────────────────────────
+    // -- Narrative emission ----------------------------------------------------
 
     private void EmitCandidate(NarrativeEventKind kind, int npcIntId, TaskComponent task)
     {

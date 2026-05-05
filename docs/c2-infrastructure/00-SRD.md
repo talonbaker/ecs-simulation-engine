@@ -208,44 +208,44 @@ The orchestrator takes a `--budget-usd <n>` flag. When running spend exceeds the
 ## 3. Topology reference
 
 ```
-                         ┌─────────────────────────┐
-                         │  Tier 1 — Opus (human-  │
-                         │  invoked, outside loop) │
-                         └────────────┬────────────┘
-                                      │ mission.md
+                         +-------------------------+
+                         |  Tier 1 — Opus (human-  |
+                         |  invoked, outside loop) |
+                         +------------+------------+
+                                      | mission.md
                                       ▼
-                         ┌─────────────────────────┐
-                         │  Warden.Orchestrator    │
-                         │  (C# .NET 8 console)    │
-                         │                         │
-                         │  - PromptCacheManager   │
-                         │  - BatchScheduler       │
-                         │  - ConcurrencyController│
-                         │  - CostLedger           │
-                         │  - FailClosedEscalator  │
-                         │  - ChainOfThoughtStore  │
-                         │  - ReportAggregator     │
-                         └───┬─────────────────┬───┘
-                             │                 │
-          5× parallel        │                 │       25× batched
-          ┌──────────────────┘                 └──────────────────┐
+                         +-------------------------+
+                         |  Warden.Orchestrator    |
+                         |  (C# .NET 8 console)    |
+                         |                         |
+                         |  - PromptCacheManager   |
+                         |  - BatchScheduler       |
+                         |  - ConcurrencyController|
+                         |  - CostLedger           |
+                         |  - FailClosedEscalator  |
+                         |  - ChainOfThoughtStore  |
+                         |  - ReportAggregator     |
+                         +---+-----------------+---+
+                             |                 |
+          5× parallel        |                 |       25× batched
+          +------------------+                 +------------------+
           ▼                                                       ▼
-  ┌──────────────────┐                                 ┌──────────────────┐
-  │ Tier 2 — Sonnet  │                                 │ Tier 3 — Haiku   │
-  │ (Engineer)       │                                 │ (Grunt / Tester) │
-  │                  │                                 │                  │
-  │ reads: SpecPacket│                                 │ reads: Scenario  │
-  │ edits: worktree  │                                 │ invokes: ECSCli  │
-  │ writes: Result   │                                 │ writes: Result   │
-  └────────┬─────────┘                                 └────────┬─────────┘
-           │                                                    │
-           │ diff + tests                                       │ pass/fail + metrics
+  +------------------+                                 +------------------+
+  | Tier 2 — Sonnet  |                                 | Tier 3 — Haiku   |
+  | (Engineer)       |                                 | (Grunt / Tester) |
+  |                  |                                 |                  |
+  | reads: SpecPacket|                                 | reads: Scenario  |
+  | edits: worktree  |                                 | invokes: ECSCli  |
+  | writes: Result   |                                 | writes: Result   |
+  +--------+---------+                                 +--------+---------+
+           |                                                    |
+           | diff + tests                                       | pass/fail + metrics
            ▼                                                    ▼
-        ┌──────────────────────────────────────────────────────────┐
-        │               ECSCli + APIFramework                       │
-        │          (the simulation, unchanged in Phase 0            │
-        │           except for new `ai` verbs)                      │
-        └──────────────────────────────────────────────────────────┘
+        +----------------------------------------------------------+
+        |               ECSCli + APIFramework                       |
+        |          (the simulation, unchanged in Phase 0            |
+        |           except for new `ai` verbs)                      |
+        +----------------------------------------------------------+
 ```
 
 Full diagram with data flows in `01-architecture-diagram.md`.
@@ -259,13 +259,13 @@ Full diagram with data flows in `01-architecture-diagram.md`.
 Every worker conforms to this state machine:
 
 ```
-   [running] ──success──► [done: emit result.outcome="ok"]
-       │
-       ├──ambiguity──► [done: outcome="blocked", reason="ambiguous-spec"]
-       ├──build fail─► [done: outcome="blocked", reason="build-failed"]
-       ├──test fail──► [done: outcome="failed", reason="tests-red"]
-       ├──tool error─► [done: outcome="blocked", reason="tool-error"]
-       └──exception──► [done: outcome="blocked", reason="exception"]
+   [running] --success--► [done: emit result.outcome="ok"]
+       |
+       +--ambiguity--► [done: outcome="blocked", reason="ambiguous-spec"]
+       +--build fail-► [done: outcome="blocked", reason="build-failed"]
+       +--test fail--► [done: outcome="failed", reason="tests-red"]
+       +--tool error-► [done: outcome="blocked", reason="tool-error"]
+       +--exception--► [done: outcome="blocked", reason="exception"]
 ```
 
 `blocked` and `failed` both halt downstream dispatch for that branch. Neither retries. Both carry enough context (logs, stderr, the exact failing assertion) that a human or a follow-up Opus brief can act on them without asking questions.

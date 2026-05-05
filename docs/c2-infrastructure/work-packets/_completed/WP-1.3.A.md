@@ -39,25 +39,25 @@ Landed all five movement-quality features committed in the aesthetic bible: grid
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | All new components instantiate; `PathComponent`, `FacingComponent`, `HandednessComponent`, `FacingSource`, `HandednessSide` covered in test setup and assertions across all test files. |
-| AT-02 | ✓ | `PathfindingServiceTests`: 4×4 clear grid from (0,0)→(3,3), path has exactly 6 steps (Manhattan). |
-| AT-03 | ✓ | Obstacle placed mid-path; returned path avoids it and still reaches goal. |
-| AT-04 | ✓ | Two seeds produce different paths on a wide-open 8×8 grid with many equal-cost routes. |
-| AT-05 | ✓ | Same seed produces identical path across two calls. |
-| AT-06 | ✓ | `StepAsideSystemTests`: two NPCs approaching head-on in a Hallway room each receive a perpendicular shift matching their handedness direction. |
-| AT-07 | ✓ | Same setup in a Breakroom-category room: no shift applied to either NPC. |
-| AT-08 | ✓ | `MovementSpeedModifierSystemTests`: NPC with `irritation = 100` gets multiplier `> 1.0`; `irritation = 0` leaves multiplier at `1.0`. |
-| AT-09 | ✓ | NPC with `energy = 0` gets multiplier `< 1.0`; NPC with `affection = 100` gets multiplier `< 1.0`. |
-| AT-10 | ✓ | Extreme drives (irritation=1000) clamped to `2.0`; extreme low energy clamped to `0.3`. |
-| AT-11 | ✓ | `IdleMovementSystemTests`: idle NPC position shifts each tick; shift magnitude bounded by `idleJitterTiles` config value. |
-| AT-12 | ✓ | NPC with an active `MovementTargetComponent` receives zero jitter. |
-| AT-13 | ✓ | `FacingSystemTests`: N/E/S/W velocity vectors map to 0°/90°/180°/270° ± 1°; source is `MovementVelocity`. |
-| AT-14 | ✓ | Conversation partner registered via `ProximityEventBus`: facing overrides to point at partner, source is `ConversationPartner`. Leaving range reverts to velocity. |
-| AT-15 | ✓ | `MovementDeterminismTests`: 5000 ticks, 6 NPCs, same seed → byte-identical trace string. Different seeds → different traces. |
-| AT-16 | ✓ | All 24 `Warden.Telemetry.Tests` pass. `TelemetryProjector` not modified. |
-| AT-17 | ✓ | All prior `APIFramework.Tests` stay green — physiology, social, spatial, lighting: no regressions. |
-| AT-18 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-19 | ✓ | `dotnet test ECSSimulation.sln` — 541 passed, 0 failed across all 6 test assemblies. |
+| AT-01 | OK | All new components instantiate; `PathComponent`, `FacingComponent`, `HandednessComponent`, `FacingSource`, `HandednessSide` covered in test setup and assertions across all test files. |
+| AT-02 | OK | `PathfindingServiceTests`: 4×4 clear grid from (0,0)→(3,3), path has exactly 6 steps (Manhattan). |
+| AT-03 | OK | Obstacle placed mid-path; returned path avoids it and still reaches goal. |
+| AT-04 | OK | Two seeds produce different paths on a wide-open 8×8 grid with many equal-cost routes. |
+| AT-05 | OK | Same seed produces identical path across two calls. |
+| AT-06 | OK | `StepAsideSystemTests`: two NPCs approaching head-on in a Hallway room each receive a perpendicular shift matching their handedness direction. |
+| AT-07 | OK | Same setup in a Breakroom-category room: no shift applied to either NPC. |
+| AT-08 | OK | `MovementSpeedModifierSystemTests`: NPC with `irritation = 100` gets multiplier `> 1.0`; `irritation = 0` leaves multiplier at `1.0`. |
+| AT-09 | OK | NPC with `energy = 0` gets multiplier `< 1.0`; NPC with `affection = 100` gets multiplier `< 1.0`. |
+| AT-10 | OK | Extreme drives (irritation=1000) clamped to `2.0`; extreme low energy clamped to `0.3`. |
+| AT-11 | OK | `IdleMovementSystemTests`: idle NPC position shifts each tick; shift magnitude bounded by `idleJitterTiles` config value. |
+| AT-12 | OK | NPC with an active `MovementTargetComponent` receives zero jitter. |
+| AT-13 | OK | `FacingSystemTests`: N/E/S/W velocity vectors map to 0°/90°/180°/270° ± 1°; source is `MovementVelocity`. |
+| AT-14 | OK | Conversation partner registered via `ProximityEventBus`: facing overrides to point at partner, source is `ConversationPartner`. Leaving range reverts to velocity. |
+| AT-15 | OK | `MovementDeterminismTests`: 5000 ticks, 6 NPCs, same seed → byte-identical trace string. Different seeds → different traces. |
+| AT-16 | OK | All 24 `Warden.Telemetry.Tests` pass. `TelemetryProjector` not modified. |
+| AT-17 | OK | All prior `APIFramework.Tests` stay green — physiology, social, spatial, lighting: no regressions. |
+| AT-18 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-19 | OK | `dotnet test ECSSimulation.sln` — 541 passed, 0 failed across all 6 test assemblies. |
 
 ---
 

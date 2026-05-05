@@ -11,20 +11,20 @@ namespace ECSVisualizer.ViewModels;
 /// </summary>
 public partial class WorldEntityViewModel : ObservableObject
 {
-    // ── Identity ──────────────────────────────────────────────────────────────
+    // -- Identity --------------------------------------------------------------
     [ObservableProperty] private string _entityId  = "";
     [ObservableProperty] private string _itemLabel = "";
 
-    // ── Rot state ─────────────────────────────────────────────────────────────
+    // -- Rot state -------------------------------------------------------------
     [ObservableProperty] private bool   _hasRot       = false;
     [ObservableProperty] private float  _rotLevel     = 0f;
     [ObservableProperty] private string _rotLabel     = "";
     [ObservableProperty] private bool   _isRotten     = false;   // RotTag present
 
-    // ── Nutritional summary ───────────────────────────────────────────────────
+    // -- Nutritional summary ---------------------------------------------------
     [ObservableProperty] private string _nutritionLabel = "";
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     /// <summary>
     /// Refreshes this view model from the supplied entity: chooses a
@@ -36,7 +36,7 @@ public partial class WorldEntityViewModel : ObservableObject
     {
         EntityId = entity.ShortId;
 
-        // ── Label: prefer food type, fall back to liquid type ─────────────────
+        // -- Label: prefer food type, fall back to liquid type -----------------
         if (entity.Has<BolusComponent>())
         {
             var bolus = entity.Get<BolusComponent>();
@@ -55,7 +55,7 @@ public partial class WorldEntityViewModel : ObservableObject
             NutritionLabel = "";
         }
 
-        // ── Rot ───────────────────────────────────────────────────────────────
+        // -- Rot ---------------------------------------------------------------
         HasRot   = entity.Has<RotComponent>();
         IsRotten = entity.Has<RotTag>();
         if (HasRot)

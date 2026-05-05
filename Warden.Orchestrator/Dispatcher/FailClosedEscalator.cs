@@ -52,7 +52,7 @@ public static class FailClosedEscalator
         return seen;
     }
 
-    // ── State machine (authoritative, from SRD §4.1) ──────────────────────────
+    // -- State machine (authoritative, from SRD §4.1) --------------------------
 
     private static EscalationVerdict ApplyStateMachine(
         OutcomeCode  outcome,

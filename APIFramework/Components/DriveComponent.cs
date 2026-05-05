@@ -54,7 +54,7 @@ public struct DriveComponent
     /// </summary>
     public float PeeUrgency;
 
-    // ── Dominant drive ───────────────────────────────────────────────────────
+    // -- Dominant drive -------------------------------------------------------
 
     /// <summary>
     /// The single drive with the highest urgency score this tick.

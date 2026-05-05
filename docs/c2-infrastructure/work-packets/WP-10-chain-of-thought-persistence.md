@@ -45,24 +45,24 @@ Persist every prompt, response, result, and ledger line to the `./runs/<runId>/`
 
 ```
 ./runs/<runId>/
-├── mission.md
-├── events.jsonl                         # state transitions
-├── cost-ledger.jsonl                    # from WP-08
-├── report.md                            # from WP-12
-├── report.json                          # from WP-12
-├── sonnet-<nn>/
-│   ├── spec.json
-│   ├── prompt.txt                       # assembled slabs 1–4, with boundary markers
-│   ├── response.raw.json                # exact Anthropic response body
-│   ├── result.json                      # validated SonnetResult
-│   ├── worktree/                        # isolated git worktree (touched by Sonnet only)
-│   └── haiku-batch.json                 # present iff result.scenarioBatch present
-│       └── haiku-<mm>/
-│           ├── scenario.json
-│           ├── prompt.txt
-│           ├── response.raw.json
-│           ├── result.json
-│           └── telemetry.jsonl          # from the ECSCli replay the Haiku invoked
++-- mission.md
++-- events.jsonl                         # state transitions
++-- cost-ledger.jsonl                    # from WP-08
++-- report.md                            # from WP-12
++-- report.json                          # from WP-12
++-- sonnet-<nn>/
+|   +-- spec.json
+|   +-- prompt.txt                       # assembled slabs 1–4, with boundary markers
+|   +-- response.raw.json                # exact Anthropic response body
+|   +-- result.json                      # validated SonnetResult
+|   +-- worktree/                        # isolated git worktree (touched by Sonnet only)
+|   +-- haiku-batch.json                 # present iff result.scenarioBatch present
+|       +-- haiku-<mm>/
+|           +-- scenario.json
+|           +-- prompt.txt
+|           +-- response.raw.json
+|           +-- result.json
+|           +-- telemetry.jsonl          # from the ECSCli replay the Haiku invoked
 ```
 
 ### Write-order invariant (for crash safety)

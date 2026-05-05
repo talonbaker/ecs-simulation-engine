@@ -100,7 +100,7 @@ public class EatingSystemVetoTests
         return eatCount;
     }
 
-    // ── AT-02 ─────────────────────────────────────────────────────────────────
+    // -- AT-02 -----------------------------------------------------------------
 
     [Fact]
     public void AT02_HungerMax_BodyImageEating90_Willpower80_DoesNotEatOver1000Ticks()
@@ -111,7 +111,7 @@ public class EatingSystemVetoTests
         Assert.Equal(0, eatCount);
     }
 
-    // ── AT-03 ─────────────────────────────────────────────────────────────────
+    // -- AT-03 -----------------------------------------------------------------
 
     [Fact]
     public void AT03_HungerMax_BodyImageEating90_Willpower5_EatsAtLeastOnceIn1000Ticks()
@@ -122,7 +122,7 @@ public class EatingSystemVetoTests
         Assert.True(eatCount > 0, $"Expected at least one eat event but got {eatCount}");
     }
 
-    // ── AT-06 ─────────────────────────────────────────────────────────────────
+    // -- AT-06 -----------------------------------------------------------------
 
     [Fact]
     public void AT06_HighStress90_BodyImageEating90_Willpower80_EatsAtLeastOnceIn1000Ticks()
@@ -134,7 +134,7 @@ public class EatingSystemVetoTests
         Assert.True(eatCount > 0, $"Expected at least one eat event but got {eatCount}");
     }
 
-    // ── AT-07 ─────────────────────────────────────────────────────────────────
+    // -- AT-07 -----------------------------------------------------------------
 
     [Fact]
     public void AT07_NoInhibitionsComponent_NeverVetoed_AlwaysEats()

@@ -8,18 +8,18 @@ namespace APIFramework.Core;
 /// Cell-based 2-D spatial index for O(cells touched + entities in cells) range queries.
 ///
 /// COORDINATE SYSTEM
-/// ──────────────────
+/// ------------------
 /// All positions are (int x, int y) in tile units. The 2-D plane corresponds to
 /// PositionComponent.(X, Z) converted to integer tile coordinates.
 ///
 /// CELL LAYOUT
-/// ────────────
+/// ------------
 /// The world is divided into a grid of square cells, each <see cref="_cellSize"/> tiles wide.
 /// Cells are indexed by a row-major key: key = cellY * cellCountX + cellX.
 /// Cells outside world bounds clamp to the nearest border cell.
 ///
 /// DETERMINISM
-/// ────────────
+/// ------------
 /// QueryRadius visits cells in row-major order (ascending cellY, then ascending cellX).
 /// Entities within a cell are maintained in insertion order (List&lt;Entity&gt;).
 /// QueryNearest sorts by (distanceSq, Entity.Id) — ties are broken by entity id ascending.
@@ -61,7 +61,7 @@ public sealed class GridSpatialIndex : ISpatialIndex
     public GridSpatialIndex(SpatialConfig cfg)
         : this(cfg.CellSizeTiles, cfg.WorldSize.Width, cfg.WorldSize.Height) { }
 
-    // ── Key helpers ───────────────────────────────────────────────────────────
+    // -- Key helpers -----------------------------------------------------------
 
     private int CellKey(int cellX, int cellY) => cellY * _cellCountX + cellX;
 
@@ -72,7 +72,7 @@ public sealed class GridSpatialIndex : ISpatialIndex
         return (cx, cy);
     }
 
-    // ── ISpatialIndex ─────────────────────────────────────────────────────────
+    // -- ISpatialIndex ---------------------------------------------------------
 
     /// <inheritdoc/>
     public void Register(Entity entity, int x, int y)
@@ -183,7 +183,7 @@ public sealed class GridSpatialIndex : ISpatialIndex
         return result;
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private List<Entity> GetOrCreateCell(int key)
     {

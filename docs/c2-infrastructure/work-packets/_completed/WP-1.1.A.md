@@ -47,21 +47,21 @@ Landed the spatial layer: rooms as first-class entities, a working cell-based sp
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `RoomComponentTests` verifies field-by-field round-trip: `RoomComponent → RoomDto → RoomComponent` produces equal values. Enum integer values verified identical. `BoundsRect.Contains` corner cases pass. |
-| AT-02 | ✓ | `GridSpatialIndexTests` covers cell-aligned, mid-cell, diagonal, and multi-cell radius queries. Zero false positives and zero false negatives confirmed. |
-| AT-03 | ✓ | `QueryNearest` with 50 random entities returns 5 closest sorted ascending by distance, ties broken by Entity.Id ascending. |
-| AT-04 | ✓ | `SpatialIndexSyncSystemTests`: newly-spawned entity registers within one tick; moved entity updates within one tick; destroyed entity unregisters synchronously via `EntityDestroyed` event. |
-| AT-05 | ✓ | `RoomMembershipSystemTests`: point-in-rect, smallest-area-wins for overlapping rooms, room entities skipped as occupants. |
-| AT-06 | ✓ | `RoomMembershipSystem` fires `RoomMembershipChanged` once on entry and once on room-to-room transition; fires no event when entity stays in same room. |
-| AT-07 | ✓ | Two NPCs approaching fire `EnteredConversationRange` exactly once at threshold. Subsequent ticks with no movement produce no additional events. |
-| AT-08 | ✓ | `LeftConversationRange` fires exactly once when NPCs cross back out of conversation range. |
-| AT-09 | ✓ | Event ordering verified: events sorted by `(Observer.Id, Target.Id)` ascending before fire. Tested with 3 NPCs all entering range simultaneously. |
-| AT-10 | ✓ | `SpatialDeterminismTests`: two runs with `seed=12345`, 8 NPCs, 5000 ticks, seeded movement produce byte-identical proximity event streams. Different seeds produce different streams. |
-| AT-11 | ✓ | All 24 `Warden.Telemetry.Tests` pass. Projector still emits `SchemaVersion = "0.1.0"`; spatial fields absent. `Warden.Telemetry` not modified. |
-| AT-12 | ✓ | All 50 `Warden.Contracts.Tests` pass. DTOs unchanged. `Warden.Contracts` not modified. |
-| AT-13 | ✓ | All prior `APIFramework.Tests` pass — no regression in physiology, social, or any earlier system. |
-| AT-14 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-15 | ✓ | `dotnet test ECSSimulation.sln` — 503 passed, 0 failed across all test projects. |
+| AT-01 | OK | `RoomComponentTests` verifies field-by-field round-trip: `RoomComponent → RoomDto → RoomComponent` produces equal values. Enum integer values verified identical. `BoundsRect.Contains` corner cases pass. |
+| AT-02 | OK | `GridSpatialIndexTests` covers cell-aligned, mid-cell, diagonal, and multi-cell radius queries. Zero false positives and zero false negatives confirmed. |
+| AT-03 | OK | `QueryNearest` with 50 random entities returns 5 closest sorted ascending by distance, ties broken by Entity.Id ascending. |
+| AT-04 | OK | `SpatialIndexSyncSystemTests`: newly-spawned entity registers within one tick; moved entity updates within one tick; destroyed entity unregisters synchronously via `EntityDestroyed` event. |
+| AT-05 | OK | `RoomMembershipSystemTests`: point-in-rect, smallest-area-wins for overlapping rooms, room entities skipped as occupants. |
+| AT-06 | OK | `RoomMembershipSystem` fires `RoomMembershipChanged` once on entry and once on room-to-room transition; fires no event when entity stays in same room. |
+| AT-07 | OK | Two NPCs approaching fire `EnteredConversationRange` exactly once at threshold. Subsequent ticks with no movement produce no additional events. |
+| AT-08 | OK | `LeftConversationRange` fires exactly once when NPCs cross back out of conversation range. |
+| AT-09 | OK | Event ordering verified: events sorted by `(Observer.Id, Target.Id)` ascending before fire. Tested with 3 NPCs all entering range simultaneously. |
+| AT-10 | OK | `SpatialDeterminismTests`: two runs with `seed=12345`, 8 NPCs, 5000 ticks, seeded movement produce byte-identical proximity event streams. Different seeds produce different streams. |
+| AT-11 | OK | All 24 `Warden.Telemetry.Tests` pass. Projector still emits `SchemaVersion = "0.1.0"`; spatial fields absent. `Warden.Telemetry` not modified. |
+| AT-12 | OK | All 50 `Warden.Contracts.Tests` pass. DTOs unchanged. `Warden.Contracts` not modified. |
+| AT-13 | OK | All prior `APIFramework.Tests` pass — no regression in physiology, social, or any earlier system. |
+| AT-14 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-15 | OK | `dotnet test ECSSimulation.sln` — 503 passed, 0 failed across all test projects. |
 
 ---
 

@@ -51,7 +51,7 @@ public class CastGeneratorNameAssignmentTests
         return CastGenerator.SpawnAll(catalog, em, rng, Cfg, pool);
     }
 
-    // ── AT-03: All 5 NPCs have distinct non-empty names from the pool ─────────
+    // -- AT-03: All 5 NPCs have distinct non-empty names from the pool ---------
 
     [Fact]
     public void AT03_FiveNpcs_AllHaveIdentityComponent()
@@ -91,7 +91,7 @@ public class CastGeneratorNameAssignmentTests
             Assert.Contains(name, pool.FirstNames, StringComparer.Ordinal));
     }
 
-    // ── AT-04: Same seed → same name assignments ──────────────────────────────
+    // -- AT-04: Same seed → same name assignments ------------------------------
 
     [Fact]
     public void AT04_SameSeed_ProducesSameNameAssignments()
@@ -106,7 +106,7 @@ public class CastGeneratorNameAssignmentTests
         Assert.Equal(names1, names2);
     }
 
-    // ── AT-05: Different seeds → different name assignments ───────────────────
+    // -- AT-05: Different seeds → different name assignments -------------------
 
     [Fact]
     public void AT05_TenDifferentSeeds_ProduceAtLeastTwoDifferentNameAssignments()

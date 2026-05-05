@@ -50,7 +50,7 @@ public class SpatialDeterminismTests
             "Different seeds should produce different event streams over 5000 ticks");
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     private static List<string> RunStream(int seed, int ticks, int npcCount)
     {

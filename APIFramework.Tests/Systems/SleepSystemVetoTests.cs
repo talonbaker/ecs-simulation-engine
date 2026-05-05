@@ -57,7 +57,7 @@ public class SleepSystemVetoTests
         return (em, npc);
     }
 
-    // ── AT-04 ─────────────────────────────────────────────────────────────────
+    // -- AT-04 -----------------------------------------------------------------
 
     [Fact]
     public void AT04_Exhausted_Vulnerability80_Willpower80_DoesNotSleepOver1000Ticks()

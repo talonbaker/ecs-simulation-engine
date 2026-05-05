@@ -27,7 +27,7 @@ namespace APIFramework.Core;
 /// APIFramework never knows a frontend exists.
 ///
 /// HOT-RELOAD
-/// ──────────
+/// ----------
 /// Call ApplyConfig(newCfg) at any time to push new tuning values into all live
 /// systems without restarting the simulation.
 ///
@@ -37,7 +37,7 @@ namespace APIFramework.Core;
 /// different starting conditions, restart the simulation.
 ///
 /// SYSTEM PIPELINE (phase → execution order within phase)
-/// ────────────────────────────────────────────────────────
+/// --------------------------------------------------------
 ///  PreUpdate   (0)  InvariantSystem           — catch/clamp impossible state values
 ///  PreUpdate   (0)  StructuralTaggingSystem   — one-shot: tag obstacles/walls/doors at boot
 ///  PreUpdate   (0)  ScheduleSpawnerSystem     — attach default routines to scheduleless NPCs
@@ -154,7 +154,7 @@ public class SimulationBootstrapper
     /// </summary>
     public SeededRandom Random { get; }
 
-    // ── Spatial services ──────────────────────────────────────────────────────
+    // -- Spatial services ------------------------------------------------------
 
     /// <summary>Cell-based spatial index. Singleton; shared by all spatial systems.</summary>
     public ISpatialIndex        SpatialIndex    { get; }
@@ -168,12 +168,12 @@ public class SimulationBootstrapper
     /// <summary>Runtime room-membership map. Queried by social and behavior systems.</summary>
     public EntityRoomMembership RoomMembership  { get; }
 
-    // ── Lighting services ─────────────────────────────────────────────────────
+    // -- Lighting services -----------------------------------------------------
 
     /// <summary>Singleton sun state. Updated by SunSystem each tick; read by aperture and accumulation systems.</summary>
     public SunStateService SunState { get; }
 
-    // ── Coupling services ─────────────────────────────────────────────────────
+    // -- Coupling services -----------------------------------------------------
 
     /// <summary>Lighting-to-drive coupling table loaded from SimConfig.lighting.driveCouplings.</summary>
     public LightingDriveCouplingTable DriveCouplingTable { get; }
@@ -181,22 +181,22 @@ public class SimulationBootstrapper
     /// <summary>Fractional drive accumulator shared by LightingToDriveCouplingSystem.</summary>
     public SocialDriveAccumulator DriveAccumulator { get; }
 
-    // ── Narrative services ────────────────────────────────────────────────────
+    // -- Narrative services ----------------------------------------------------
 
     /// <summary>Narrative event bus. Subscribe to receive candidates emitted each tick.</summary>
     public NarrativeEventBus NarrativeBus { get; }
 
-    // ── Chronicle services ────────────────────────────────────────────────────
+    // -- Chronicle services ----------------------------------------------------
 
     /// <summary>Global persistent narrative chronicle. Read by TelemetryProjector each tick.</summary>
     public ChronicleService Chronicle { get; }
 
-    // ── Pathfinding services ──────────────────────────────────────────────────
+    // -- Pathfinding services --------------------------------------------------
 
     /// <summary>LRU cache for pathfinding queries. Keyed by (from, to, seed, topologyVersion).</summary>
     public PathfindingCache PathfindingCacheService { get; }
 
-    // ── Dialog services ───────────────────────────────────────────────────────
+    // -- Dialog services -------------------------------------------------------
 
     /// <summary>
     /// Loaded phrase corpus. Null when the corpus file could not be located at boot.
@@ -545,7 +545,7 @@ public class SimulationBootstrapper
             SystemPhase.PreUpdate);
     }
 
-    // ── Human count ───────────────────────────────────────────────────────────
+    // -- Human count -----------------------------------------------------------
     /// <summary>
     /// Default number of humans spawned when no <c>humanCount</c> argument is
     /// supplied.  100 gives a realistic stress-test world; pass 1 to
@@ -562,13 +562,13 @@ public class SimulationBootstrapper
     /// <param name="humanCount">How many humans to lay out on the grid.</param>
     private void SpawnWorld(int humanCount)
     {
-        // ── Living entities ───────────────────────────────────────────────────
+        // -- Living entities ---------------------------------------------------
         // Spread humanCount humans on a uniform grid inside the 10×10 world.
         // humanCount = 1  → single Billy at centre (5, 5).
         // humanCount = 100 → 10×10 grid from (1,1) to (9,9).
         SpawnHumanGrid(humanCount);
 
-        // ── World objects — 10×10 unit apartment ─────────────────────────────
+        // -- World objects — 10×10 unit apartment -----------------------------
         //   Fridge  (2, 0, 2)  NW — kitchen
         //   Sink    (7, 0, 2)  NE — kitchen
         //   Bed     (2, 0, 8)  SW — bedroom
@@ -645,7 +645,7 @@ public class SimulationBootstrapper
         e.Add(default(TTag));
     }
 
-    // ── Snapshot ──────────────────────────────────────────────────────────────
+    // -- Snapshot --------------------------------------------------------------
 
     /// <summary>
     /// Captures the current engine state as an immutable SimulationSnapshot.
@@ -659,7 +659,7 @@ public class SimulationBootstrapper
     /// <returns>An immutable snapshot of the current simulation state.</returns>
     public SimulationSnapshot Capture() => SimulationSnapshot.Capture(this);
 
-    // ── Hot-reload ────────────────────────────────────────────────────────────
+    // -- Hot-reload ------------------------------------------------------------
 
     /// <summary>
     /// Pushes all tuning values from <paramref name="newCfg"/> into the live running
@@ -684,7 +684,7 @@ public class SimulationBootstrapper
     {
         var changes = new List<string>();
 
-        // ── System configs ────────────────────────────────────────────────────
+        // -- System configs ----------------------------------------------------
         MergeFlat(newCfg.Systems.BiologicalCondition, Config.Systems.BiologicalCondition, changes);
         MergeFlat(newCfg.Systems.Energy,              Config.Systems.Energy,              changes);
         MergeFlat(newCfg.Systems.Brain,               Config.Systems.Brain,               changes);
@@ -701,7 +701,7 @@ public class SimulationBootstrapper
         MergeFlat(newCfg.Chronicle,                   Config.Chronicle,                   changes);
         MergeFlat(newCfg.Chronicle.ThresholdRules,    Config.Chronicle.ThresholdRules,    changes);
 
-        // ── Entity starting configs (only affect future spawns) ───────────────
+        // -- Entity starting configs (only affect future spawns) ---------------
         MergeFlat(newCfg.Entities.Human.Metabolism,     Config.Entities.Human.Metabolism,     changes);
         MergeFlat(newCfg.Entities.Human.Stomach,       Config.Entities.Human.Stomach,       changes);
         MergeFlat(newCfg.Entities.Human.Energy,        Config.Entities.Human.Energy,        changes);

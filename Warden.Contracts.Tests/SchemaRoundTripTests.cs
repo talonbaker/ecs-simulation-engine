@@ -21,7 +21,7 @@ namespace Warden.Contracts.Tests;
 /// </summary>
 public class SchemaRoundTripTests
 {
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     private static string LoadSample(string filename)
     {
@@ -64,7 +64,7 @@ public class SchemaRoundTripTests
         Assert.Equal(json2, json3);
     }
 
-    // ── AT-01: round-trip tests ────────────────────────────────────────────────
+    // -- AT-01: round-trip tests ------------------------------------------------
 
     [Fact]
     public void WorldState_RoundTrips() =>
@@ -90,7 +90,7 @@ public class SchemaRoundTripTests
     public void AiCommandBatch_RoundTrips() =>
         AssertRoundTrip<AiCommandBatch>("ai-command-batch.sample.json", Schema.AiCommandBatch);
 
-    // ── AT-06: Wire vs Pretty content identity ─────────────────────────────────
+    // -- AT-06: Wire vs Pretty content identity ---------------------------------
 
     [Fact]
     public void JsonOptions_Wire_And_Pretty_Produce_Same_Content()
@@ -132,7 +132,7 @@ public class SchemaRoundTripTests
         Assert.Equal(wire, wire2);
     }
 
-    // ── v0.2 schema compatibility (AT-02) ─────────────────────────────────────
+    // -- v0.2 schema compatibility (AT-02) -------------------------------------
 
     /// <summary>
     /// AT-02 — The pre-existing v0.1 sample round-trips under the v0.2.1 schema.
@@ -143,7 +143,7 @@ public class SchemaRoundTripTests
     public void WorldState_V01SampleRoundTripsUnderV021Schema() =>
         AssertRoundTrip<WorldStateDto>("world-state.sample.json", Schema.WorldState);
 
-    // ── v0.2.1 schema round-trip tests ────────────────────────────────────────
+    // -- v0.2.1 schema round-trip tests ----------------------------------------
 
     /// <summary>
     /// AT-03 — The canonical v0.2.1 sample round-trips clean.
@@ -458,7 +458,7 @@ public class SchemaRoundTripTests
         Assert.Null(drivesDto!.GetProperty("Jealousy"));
     }
 
-    // ── v0.2.1 referential checker tests ──────────────────────────────────────
+    // -- v0.2.1 referential checker tests --------------------------------------
 
     /// <summary>
     /// A memory event with scope "global" is rejected by the referential
@@ -555,7 +555,7 @@ public class SchemaRoundTripTests
         Assert.Contains("duplicate-pair", result.Errors);
     }
 
-    // ── Existing negative tests (schema-level) ─────────────────────────────────
+    // -- Existing negative tests (schema-level) ---------------------------------
 
     /// <summary>
     /// A relationship with three patterns fails maxItems: 2.
@@ -639,7 +639,7 @@ public class SchemaRoundTripTests
         Assert.Contains(result.Errors, e => e.Contains("281") && e.Contains("maxLength 280"));
     }
 
-    // ── v0.3 round-trip tests ──────────────────────────────────────────────────
+    // -- v0.3 round-trip tests --------------------------------------------------
 
     /// <summary>
     /// AT-04 (v0.3) — The canonical v0.3 sample round-trips clean: schema validates,
@@ -960,7 +960,7 @@ public class SchemaRoundTripTests
         Assert.True(refResult.IsValid, string.Join("; ", refResult.Errors));
     }
 
-    // ── Builder helpers ────────────────────────────────────────────────────────
+    // -- Builder helpers --------------------------------------------------------
 
     private static EntityStateDto MakeMinimalEntity(string id, string shortId, string name) => new()
     {
@@ -1002,7 +1002,7 @@ public class SchemaRoundTripTests
         Chronicle      = chronicle
     };
 
-    // ── v0.4 round-trip tests ──────────────────────────────────────────────────
+    // -- v0.4 round-trip tests --------------------------------------------------
 
     /// <summary>
     /// AT-01 (v0.4) — The schema declares schemaVersion enum including "0.4.0"

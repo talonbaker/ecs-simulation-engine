@@ -38,7 +38,7 @@ public class ActionSelectionScheduleIntegrationTests
     private static GridSpatialIndex MakeSpatial() =>
         new(new SpatialConfig { CellSizeTiles = 4, WorldSize = new() { Width = 64, Height = 64 } });
 
-    // ── AT-06 ─────────────────────────────────────────────────────────────────
+    // -- AT-06 -----------------------------------------------------------------
 
     [Fact]
     public void AT06_QuietDrives_ScheduleWins_ProducesApproachToAnchor()
@@ -75,7 +75,7 @@ public class ActionSelectionScheduleIntegrationTests
         Assert.Equal(WillpowerSystem.EntityIntId(anchor), intent.TargetEntityId);
     }
 
-    // ── AT-07 ─────────────────────────────────────────────────────────────────
+    // -- AT-07 -----------------------------------------------------------------
 
     [Fact]
     public void AT07_ElevatedIrritation_DriveOverridesSchedule_ProducesDialogLashOut()
@@ -121,7 +121,7 @@ public class ActionSelectionScheduleIntegrationTests
         Assert.Equal(DialogContextValue.LashOut,         intent.Context);
     }
 
-    // ── AT-08 ─────────────────────────────────────────────────────────────────
+    // -- AT-08 -----------------------------------------------------------------
 
     [Fact]
     public void AT08_NpcAtAnchor_AtDesk_ProducesLinger()

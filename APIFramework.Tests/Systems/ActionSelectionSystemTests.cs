@@ -15,7 +15,7 @@ namespace APIFramework.Tests.Systems;
 /// </summary>
 public class ActionSelectionSystemTests
 {
-    // ── Scaffolding ───────────────────────────────────────────────────────────
+    // -- Scaffolding -----------------------------------------------------------
 
     private static ActionSelectionConfig DefaultCfg() => new()
     {
@@ -58,7 +58,7 @@ public class ActionSelectionSystemTests
         return e;
     }
 
-    // ── AT-01: Component round-trips ──────────────────────────────────────────
+    // -- AT-01: Component round-trips ------------------------------------------
 
     [Fact]
     public void AT01_IntendedActionComponent_InstantiatesAndRoundTrips()
@@ -108,7 +108,7 @@ public class ActionSelectionSystemTests
         _ = DialogContextValue.Apologise;
     }
 
-    // ── AT-02: Irritation → Dialog within 50 ticks ───────────────────────────
+    // -- AT-02: Irritation → Dialog within 50 ticks ---------------------------
 
     [Fact]
     public void AT02_HighIrritation_EmitsLashOutOrComplain_Within50Ticks()
@@ -148,7 +148,7 @@ public class ActionSelectionSystemTests
         Assert.True(emitted, "Expected LashOut or Complain dialog within 50 ticks");
     }
 
-    // ── AT-03: Low Vulnerability → Approach ──────────────────────────────────
+    // -- AT-03: Low Vulnerability → Approach ----------------------------------
 
     [Fact]
     public void AT03_HighAttraction_LowVulnerability_EmitsApproach()
@@ -181,7 +181,7 @@ public class ActionSelectionSystemTests
         Assert.Equal(IntendedActionKind.Approach, intent.Kind);
     }
 
-    // ── AT-06: All drives below threshold → Idle ─────────────────────────────
+    // -- AT-06: All drives below threshold → Idle -----------------------------
 
     [Fact]
     public void AT06_AllDrivesBelowThreshold_EmitsIdle()
@@ -233,7 +233,7 @@ public class ActionSelectionSystemTests
         Assert.False(npc.Has<IntendedActionComponent>());
     }
 
-    // ── Intent overwrite each tick ────────────────────────────────────────────
+    // -- Intent overwrite each tick --------------------------------------------
 
     [Fact]
     public void IntentIsOverwrittenEachTick()

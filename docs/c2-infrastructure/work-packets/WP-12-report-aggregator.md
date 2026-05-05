@@ -72,9 +72,9 @@ Turn the chain-of-thought directory into a single-page Markdown report a human c
 - Worktree: `./runs/20260423-142300-smoke/sonnet-01/worktree/`
 - Diff summary: 1 file modified, 3 lines added
 - Acceptance test results:
-    - AT-01 ✓ build green
-    - AT-02 ✓ comment present at expected line
-    - AT-03 ✓ no existing tests fail
+    - AT-01 OK build green
+    - AT-02 OK comment present at expected line
+    - AT-03 OK no existing tests fail
 
 ---
 

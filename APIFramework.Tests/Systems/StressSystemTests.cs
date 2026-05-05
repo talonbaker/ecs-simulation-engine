@@ -37,7 +37,7 @@ public class StressSystemTests
         return (em, npc, queue, bus, sys);
     }
 
-    // ── AT-03: Suppression events increase AcuteLevel ────────────────────────
+    // -- AT-03: Suppression events increase AcuteLevel ------------------------
 
     [Fact]
     public void SuppressionTick_IncreasesAcuteLevel()
@@ -98,7 +98,7 @@ public class StressSystemTests
         Assert.Equal(0, npc.Get<StressComponent>().AcuteLevel);
     }
 
-    // ── AT-04: Per-tick acute decay ───────────────────────────────────────────
+    // -- AT-04: Per-tick acute decay -------------------------------------------
 
     [Fact]
     public void AcuteDecay_After20Ticks_DropsBy1()
@@ -123,7 +123,7 @@ public class StressSystemTests
         Assert.Equal(0, npc.Get<StressComponent>().AcuteLevel);
     }
 
-    // ── AT-05: Per-day chronic update ─────────────────────────────────────────
+    // -- AT-05: Per-day chronic update -----------------------------------------
 
     [Fact]
     public void ChronicUpdate_OnDayAdvance_AppliesRollingMean()
@@ -221,7 +221,7 @@ public class StressSystemTests
         Assert.Equal(50.0, npc.Get<StressComponent>().ChronicLevel);
     }
 
-    // ── AT-06: Tag transitions ────────────────────────────────────────────────
+    // -- AT-06: Tag transitions ------------------------------------------------
 
     [Fact]
     public void StressedTag_AppliedAt_Threshold()
@@ -292,7 +292,7 @@ public class StressSystemTests
         Assert.False(npc.Has<StressedTag>()); // 59
     }
 
-    // ── Drive spike source ────────────────────────────────────────────────────
+    // -- Drive spike source ----------------------------------------------------
 
     [Fact]
     public void DriveSpike_IncreasesAcuteLevel()
@@ -312,7 +312,7 @@ public class StressSystemTests
         Assert.Equal(1, npc.Get<StressComponent>().DriveSpikeEventsToday);
     }
 
-    // ── Social conflict source ────────────────────────────────────────────────
+    // -- Social conflict source ------------------------------------------------
 
     [Fact]
     public void SocialConflict_IncreasesAcuteLevel()

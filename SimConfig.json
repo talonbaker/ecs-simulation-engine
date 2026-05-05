@@ -1,12 +1,12 @@
 {
-  // ── World clock ────────────────────────────────────────────────────────────
+  // -- World clock ------------------------------------------------------------
   // 1 real second = 120 game seconds = 2 game minutes.
   // The in-game time slider multiplies on top of this.
   "world": {
     "defaultTimeScale": 120.0
   },
 
-  // ── Entities ───────────────────────────────────────────────────────────────
+  // -- Entities ---------------------------------------------------------------
   "entities": {
     "human": {
       "metabolism": {
@@ -138,7 +138,7 @@
     }
   },
 
-  // ── Systems ────────────────────────────────────────────────────────────────
+  // -- Systems ----------------------------------------------------------------
   "systems": {
 
     "biologicalCondition": {
@@ -244,7 +244,7 @@
       }
     },
 
-    // ── Digestion ──────────────────────────────────────────────────────────────
+    // -- Digestion --------------------------------------------------------------
     // Converts real-biology nutrients (grams, ml, kcal) into gameplay 0-100
     // metrics. Tuned so the new system matches the pre-v0.7 flat values:
     //   banana 117 kcal × 0.3 = ~35 satiation
@@ -269,7 +269,7 @@
     },
 
     "mood": {
-      // ── Tag intensity thresholds (Plutchik three-tier model) ───────────────
+      // -- Tag intensity thresholds (Plutchik three-tier model) ---------------
       // Below lowThreshold  → no tag (emotion is negligible)
       // >= lowThreshold     → low-intensity tag  (serenity, boredom, annoyance…)
       // >= midThreshold     → primary tag         (joy, disgust, anger…)
@@ -278,12 +278,12 @@
       "midThreshold":  34.0,
       "highThreshold": 67.0,
 
-      // ── Decay rates (per game-second) ─────────────────────────────────────
+      // -- Decay rates (per game-second) -------------------------------------
       "positiveDecayRate": 0.005,   // joy, trust, anticipation fade slowly
       "negativeDecayRate": 0.003,   // fear, sadness, disgust, anger linger longer
       "surpriseDecayRate": 0.05,    // surprise is brief — fades fastest
 
-      // ── Gain rates (per game-second unless noted) ─────────────────────────
+      // -- Gain rates (per game-second unless noted) -------------------------
       // JOY: all needs comfortably met
       "joyGainRate":          0.010,
       "joyComfortThreshold":  60.0,   // satiation/hydration/energy all > 60% required
@@ -315,7 +315,7 @@
 
   },
 
-  // ── Movement quality ───────────────────────────────────────────────────────
+  // -- Movement quality -------------------------------------------------------
   "movement": {
     "stepAsideRadius": 3,
     "stepAsideShift": 0.4,
@@ -338,13 +338,13 @@
     }
   },
 
-  // ── Structural change system ───────────────────────────────────────────────
+  // -- Structural change system -----------------------------------------------
   "structuralChange": {
     "emitOnNpcMovement":     false,
     "emitOnRoomBoundsChange": true
   },
 
-  // ── Spatial engine ─────────────────────────────────────────────────────────
+  // -- Spatial engine ---------------------------------------------------------
   "spatial": {
     "cellSizeTiles": 4,
     "worldSize": { "width": 512, "height": 512 },
@@ -355,7 +355,7 @@
     }
   },
 
-  // ── Lighting engine ────────────────────────────────────────────────────────
+  // -- Lighting engine --------------------------------------------------------
   "lighting": {
     "dayPhaseBoundaries": {
       "earlyMorningStart": 0.20,
@@ -370,7 +370,7 @@
     "apertureRangeBase": 5,
     "sourceRangeBase":   3,
 
-    // ── Lighting → drive coupling table ─────────────────────────────────────
+    // -- Lighting → drive coupling table -------------------------------------
     // First-match-wins. Conditions are AND of all present clauses.
     // deltasPerTick are floating-point; fractional parts accumulate across ticks.
     // Over 60 ticks (1 sim-minute): irritation 0.08 → ~4 pts, suspicion 0.10 → ~6 pts.
@@ -443,7 +443,7 @@
     ]
   },
 
-  // ── Narrative telemetry channel ───────────────────────────────────────────
+  // -- Narrative telemetry channel -------------------------------------------
   "narrative": {
     // Drive delta (one tick to next) required to emit DriveSpike
     "driveSpikeThreshold":         15,
@@ -457,7 +457,7 @@
     "candidateDetailMaxLength":   280
   },
 
-  // ── Cast generator ─────────────────────────────────────────────────────────
+  // -- Cast generator ---------------------------------------------------------
   "castGenerator": {
     "elevatedDriveRange":          [55, 75],
     "depressedDriveRange":         [25, 45],
@@ -472,7 +472,7 @@
     "relationshipIntensityRange":  [30, 70]
   },
 
-  // ── Persistent chronicle ──────────────────────────────────────────────────
+  // -- Persistent chronicle --------------------------------------------------
   "chronicle": {
     // Maximum entries before oldest are dropped.
     "maxEntries": 4096,
@@ -492,7 +492,7 @@
     "brokenItemMagnitudeRange": [20, 100]
   },
 
-  // ── Social engine ──────────────────────────────────────────────────────────
+  // -- Social engine ----------------------------------------------------------
   "social": {
     "driveDecayPerTick": 0.15,
     "driveCircadianAmplitudes": {
@@ -520,7 +520,7 @@
     "relationshipIntensityDecayPerTick": 0.05
   },
 
-  // ── Dialog system ──────────────────────────────────────────────────────────
+  // -- Dialog system ----------------------------------------------------------
   "dialog": {
     // Fragment use count before calcification eligibility check
     "calcifyThreshold":           8,
@@ -552,7 +552,7 @@
     "dialogAttemptProbability":   0.05
   },
 
-  // ── Stress system ──────────────────────────────────────────────────────────
+  // -- Stress system ----------------------------------------------------------
   "stress": {
     // AcuteLevel gain per SuppressionTick event (before neuroticism scaling)
     "suppressionStressGain":          1.5,
@@ -578,7 +578,7 @@
     "neuroticismStressFactor":        0.2
   },
 
-  // ── Schedule layer ─────────────────────────────────────────────────────────
+  // -- Schedule layer ---------------------------------------------------------
   "schedule": {
     // Weight of schedule-driven Approach/Linger candidates vs drive-driven ones.
     "scheduleAnchorBaseWeight":     0.30,
@@ -586,7 +586,7 @@
     "scheduleLingerThresholdCells": 2.0
   },
 
-  // ── Memory system ─────────────────────────────────────────────────────────
+  // -- Memory system ---------------------------------------------------------
   "memory": {
     // Maximum entries per relationship pair before oldest is dropped
     "maxRelationshipMemoryCount": 32,
@@ -594,7 +594,7 @@
     "maxPersonalMemoryCount": 16
   },
 
-  // ── Workload system ───────────────────────────────────────────────────────
+  // -- Workload system -------------------------------------------------------
   "workload": {
     // Game-hour at which TaskGeneratorSystem fires each day (24h clock)
     "taskGenerationHourOfDay":        8.0,
@@ -623,7 +623,7 @@
     "overdueTaskStressGain":          1.0
   },
 
-  // ── Social mask system ─────────────────────────────────────────────────────
+  // -- Social mask system -----------------------------------------------------
   "socialMask": {
     // Maximum mask delta gained per tick at full drive + full exposure
     "maskGainPerTick":              0.5,
@@ -647,7 +647,7 @@
     "slipCooldownTicks":             1800
   },
 
-  // ── Physiology gate system ────────────────────────────────────────────────
+  // -- Physiology gate system ------------------------------------------------
   // PhysiologyGateSystem computes per-NPC veto sets: when an inhibition is strong
   // enough (accounting for willpower leakage and stress relaxation), it blocks the
   // matching physiology action for the tick.
@@ -663,7 +663,7 @@
     "stressMaxRelaxation":      0.7
   },
 
-  // ── Life state ─────────────────────────────────────────────────────────────
+  // -- Life state -------------------------------------------------------------
   // WP-3.0.0: death substrate. Downstream packets (3.0.1+) tune per-cause values.
   "lifeState": {
     // Ticks an Incapacitated NPC has before automatic Deceased transition (~3 game-minutes)
@@ -676,7 +676,7 @@
     "emitDeathInvariantOnTransition": true
   },
 
-  // ── Choking scenario (WP-3.0.1) ───────────────────────────────────────────
+  // -- Choking scenario (WP-3.0.1) -------------------------------------------
   // ChokingDetectionSystem runs at Cleanup phase before LifeStateTransitionSystem.
   // A tough bolus + a distracted NPC (low energy OR high stress OR high irritation)
   // triggers an incapacitation request with the per-cause tick budget below.
@@ -700,7 +700,7 @@
     "emitChokeStartedNarrative": true
   },
 
-  // ── Bereavement (WP-3.0.2) ────────────────────────────────────────────────
+  // -- Bereavement (WP-3.0.2) ------------------------------------------------
   // Two-tier bereavement cascade:
   //   Tier 1 (BereavementSystem)            — fires at death-event time; witnesses + colleagues.
   //   Tier 2 (BereavementByProximitySystem) — fires when an NPC enters a corpse's room.
@@ -721,11 +721,11 @@
     "proximityBereavementStressGain":      8.0
   },
 
-  // ── Corpse (WP-3.0.2) ─────────────────────────────────────────────────────
+  // -- Corpse (WP-3.0.2) -----------------------------------------------------
   // Reserved for future per-cause or per-archetype corpse tuning.
   "corpse": {},
 
-  // ── Fainting (WP-3.0.6) ───────────────────────────────────────────────────
+  // -- Fainting (WP-3.0.6) ---------------------------------------------------
   // An NPC whose Fear emotion (0–100) exceeds fearThreshold faints:
   // they enter Incapacitated for faintDurationTicks and then automatically
   // recover to Alive. Fainting is never fatal.
@@ -744,7 +744,7 @@
     "emitRegainedConsciousnessNarrative": true
   },
 
-  // ── Action selection ───────────────────────────────────────────────────────
+  // -- Action selection -------------------------------------------------------
   "actionSelection": {
     // Drive.Current must exceed this to enumerate candidates
     "driveCandidateThreshold":       60,
@@ -768,7 +768,7 @@
     "avoidStandoffDistance":         4
   },
 
-  // ── Life state system ──────────────────────────────────────────────────────
+  // -- Life state system ------------------------------------------------------
   "lifeState": {
     // Default number of ticks an NPC stays Incapacitated before transitioning to Deceased.
     // At 60 FPS / 20 game-ticks per second ≈ 9 seconds per game-tick, 180 ticks ≈ 3 game-minutes.

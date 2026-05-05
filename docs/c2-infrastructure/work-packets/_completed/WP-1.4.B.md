@@ -26,17 +26,17 @@ Closed the social-engine loop on the wire format. Three changes: (1) `TelemetryP
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `AT01_SchemaVersion_Is021` asserts `dto.SchemaVersion == "0.2.1"`. |
-| AT-02 | ✓ | `AT02_NpcWithFullSocialState_ProjectsAllFields` asserts all drives, willpower, personality traits, mood, vocab register, and inhibitions are populated with correct values. |
-| AT-03 | ✓ | `AT03_NonNpcEntity_SocialIsAbsent` asserts `Social == null` for entities without `NpcTag` (regular humans from `SpawnHuman`). |
-| AT-04 | ✓ | `AT04_RelationshipTagEntity_ProducesRelationshipEntry` asserts id, participantA, participantB (as UUID strings matching entity Guids), patterns, intensity, and empty historyEventIds. |
-| AT-05 | ✓ | `AT05_Relationships_SortedByIdAscending` asserts two relationship entries appear in ascending Guid-string order. |
-| AT-06 | ✓ | `AT06_NpcWithSocialState_ValidatesAgainstSchema` — full JSON validates clean against world-state.schema.json (NJsonSchema). |
-| AT-07 | ✓ | `AT07_SameInputsWithSocial_ProduceBytIdenticalJson` — two projections of the same snapshot produce byte-identical JSON. |
-| AT-08 | ✓ | All 31 `Warden.Telemetry.Tests` pass; all 510 tests across the solution pass. |
-| AT-09 | ✓ | `Warden.Contracts.Tests` — 50 passed, 0 failed. DTOs unchanged. |
-| AT-10 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-11 | ✓ | `dotnet test ECSSimulation.sln` — 510 passed, 0 failed across all 6 test projects. |
+| AT-01 | OK | `AT01_SchemaVersion_Is021` asserts `dto.SchemaVersion == "0.2.1"`. |
+| AT-02 | OK | `AT02_NpcWithFullSocialState_ProjectsAllFields` asserts all drives, willpower, personality traits, mood, vocab register, and inhibitions are populated with correct values. |
+| AT-03 | OK | `AT03_NonNpcEntity_SocialIsAbsent` asserts `Social == null` for entities without `NpcTag` (regular humans from `SpawnHuman`). |
+| AT-04 | OK | `AT04_RelationshipTagEntity_ProducesRelationshipEntry` asserts id, participantA, participantB (as UUID strings matching entity Guids), patterns, intensity, and empty historyEventIds. |
+| AT-05 | OK | `AT05_Relationships_SortedByIdAscending` asserts two relationship entries appear in ascending Guid-string order. |
+| AT-06 | OK | `AT06_NpcWithSocialState_ValidatesAgainstSchema` — full JSON validates clean against world-state.schema.json (NJsonSchema). |
+| AT-07 | OK | `AT07_SameInputsWithSocial_ProduceBytIdenticalJson` — two projections of the same snapshot produce byte-identical JSON. |
+| AT-08 | OK | All 31 `Warden.Telemetry.Tests` pass; all 510 tests across the solution pass. |
+| AT-09 | OK | `Warden.Contracts.Tests` — 50 passed, 0 failed. DTOs unchanged. |
+| AT-10 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-11 | OK | `dotnet test ECSSimulation.sln` — 510 passed, 0 failed across all 6 test projects. |
 
 ---
 

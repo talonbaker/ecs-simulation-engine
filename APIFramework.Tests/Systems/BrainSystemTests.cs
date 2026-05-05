@@ -16,13 +16,13 @@ namespace APIFramework.Tests.Systems;
 /// DrinkingSystem, SleepSystem) must check Dominant before acting.
 ///
 /// Testing strategy:
-///   • Test DriveComponent.Dominant logic in isolation — it's a pure readonly property.
-///   • Test BrainSystem.Update with a fresh SimulationClock (starts at 6 AM,
+///   - Test DriveComponent.Dominant logic in isolation — it's a pure readonly property.
+///   - Test BrainSystem.Update with a fresh SimulationClock (starts at 6 AM,
 ///     CircadianFactor = 0.10). This makes SleepUrgency predictable in tests.
 /// </summary>
 public class BrainSystemTests
 {
-    // ── Shared configuration ───────────────────────────────────────────────────
+    // -- Shared configuration ---------------------------------------------------
 
     private static readonly BrainSystemConfig Cfg = new()
     {
@@ -51,7 +51,7 @@ public class BrainSystemTests
         return (em, entity);
     }
 
-    // ── DriveComponent.Dominant ────────────────────────────────────────────────
+    // -- DriveComponent.Dominant ------------------------------------------------
 
     [Fact]
     public void Dominant_IsNone_WhenAllUrgenciesAtZero()
@@ -89,7 +89,7 @@ public class BrainSystemTests
         Assert.Equal(DesireType.None, drives.Dominant);
     }
 
-    // ── BrainSystem: base score calculation ────────────────────────────────────
+    // -- BrainSystem: base score calculation ------------------------------------
 
     [Fact]
     public void EatUrgency_ProportionalTo_Hunger()
@@ -135,7 +135,7 @@ public class BrainSystemTests
         Assert.Equal(0f, entity.Get<DriveComponent>().SleepUrgency);
     }
 
-    // ── Dominant drive selection ───────────────────────────────────────────────
+    // -- Dominant drive selection -----------------------------------------------
 
     [Fact]
     public void HungryEntity_DominantIsEat()
@@ -167,7 +167,7 @@ public class BrainSystemTests
         Assert.Equal(DesireType.None, entity.Get<DriveComponent>().Dominant);
     }
 
-    // ── MinUrgencyThreshold floor ──────────────────────────────────────────────
+    // -- MinUrgencyThreshold floor ----------------------------------------------
 
     [Fact]
     public void AllUrgencies_ZeroedOut_WhenBelowMinThreshold()
@@ -185,7 +185,7 @@ public class BrainSystemTests
         Assert.Equal(0f, drives.SleepUrgency);
     }
 
-    // ── Mood modifiers ─────────────────────────────────────────────────────────
+    // -- Mood modifiers ---------------------------------------------------------
 
     [Fact]
     public void BoredTag_IncreasesAllUrgencies()
@@ -238,7 +238,7 @@ public class BrainSystemTests
         Assert.Equal(0.50f, drives.EatUrgency, precision: 3);
     }
 
-    // ── Entity without DriveComponent ──────────────────────────────────────────
+    // -- Entity without DriveComponent ------------------------------------------
 
     [Fact]
     public void Entity_WithoutDriveComponent_GetsOneCreated()

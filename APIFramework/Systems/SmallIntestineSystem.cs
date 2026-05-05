@@ -8,13 +8,13 @@ namespace APIFramework.Systems;
 /// Drains chyme from the small intestine and hands residue off to the large intestine.
 ///
 /// PIPELINE POSITION
-/// ─────────────────
+/// -----------------
 ///   DigestionSystem (Transit/50) deposits chyme here via ResidueFraction.
 ///   SmallIntestineSystem (Elimination/55) drains it one tick later.
 ///   Output → LargeIntestineComponent (indigestible residue volume)
 ///
 /// DESIGN NOTE — nutrient absorption
-/// ──────────────────────────────────
+/// ----------------------------------
 /// DigestionSystem already converts stomach contents into Satiation / Hydration /
 /// NutrientStores. SmallIntestineSystem does NOT re-absorb nutrients; it is purely
 /// a volume-routing system that models the physical transit of indigestible matter.
@@ -22,7 +22,7 @@ namespace APIFramework.Systems;
 /// display purposes; it is decremented proportionally as volume drains.
 ///
 /// PER TICK
-/// ─────────
+/// ---------
 ///   processed = min(AbsorptionRate × deltaTime, ChymeVolumeMl)
 ///   ratio     = processed / ChymeVolumeMl
 ///   Chyme    -= Chyme × ratio   (proportional drain)

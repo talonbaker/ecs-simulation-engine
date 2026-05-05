@@ -1,4 +1,4 @@
-﻿# Mission Report — mission-smoke-01
+# Mission Report — mission-smoke-01
 
 **Run id:** wp12-smoke-test
 **Started:** 2026-04-25T03:21:26Z
@@ -25,7 +25,7 @@
 ### spec-smoke-01 — Add XML doc comment to EntityManager.Initialize
 
 - Acceptance test results:
-    - AT-01 ✓ — Mock: diff contains '/// <summary>Initializes the entity manager.</summary>'
+    - AT-01 OK — Mock: diff contains '/// <summary>Initializes the entity manager.</summary>'
 
 ---
 

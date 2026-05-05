@@ -26,7 +26,7 @@ public sealed class AnthropicClient : IAnthropicClient, IDisposable
 {
     private readonly HttpClient _http;
 
-    // ── Construction ─────────────────────────────────────────────────────────────
+    // -- Construction -------------------------------------------------------------
 
     /// <summary>
     /// Creates a new <see cref="AnthropicClient"/>.
@@ -46,7 +46,7 @@ public sealed class AnthropicClient : IAnthropicClient, IDisposable
         _http = Internal.HttpClientFactory.Create(apiKey, handler, baseUrl);
     }
 
-    // ── Messages API ─────────────────────────────────────────────────────────────
+    // -- Messages API -------------------------------------------------------------
 
     /// <summary>
     /// Calls <c>POST /v1/messages</c> and returns the model's response.
@@ -65,7 +65,7 @@ public sealed class AnthropicClient : IAnthropicClient, IDisposable
         return await DeserializeAsync<MessageResponse>(response, ct).ConfigureAwait(false);
     }
 
-    // ── Batch API ────────────────────────────────────────────────────────────────
+    // -- Batch API ----------------------------------------------------------------
 
     /// <summary>
     /// Calls <c>POST /v1/messages/batches</c> and returns the created batch handle.
@@ -155,12 +155,12 @@ public sealed class AnthropicClient : IAnthropicClient, IDisposable
         }
     }
 
-    // ── IDisposable ──────────────────────────────────────────────────────────────
+    // -- IDisposable --------------------------------------------------------------
 
     /// <inheritdoc/>
     public void Dispose() => _http.Dispose();
 
-    // ── Private helpers ──────────────────────────────────────────────────────────
+    // -- Private helpers ----------------------------------------------------------
 
     private static StringContent Serialize<T>(T value)
     {

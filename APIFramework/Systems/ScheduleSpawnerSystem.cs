@@ -61,7 +61,7 @@ public sealed class ScheduleSpawnerSystem : ISystem
         }
     }
 
-    // ── Loading ───────────────────────────────────────────────────────────────
+    // -- Loading ---------------------------------------------------------------
 
     internal static Dictionary<string, IReadOnlyList<ScheduleBlock>> LoadSchedules(string path)
     {
@@ -116,7 +116,7 @@ public sealed class ScheduleSpawnerSystem : ISystem
         return null;
     }
 
-    // ── DTOs ──────────────────────────────────────────────────────────────────
+    // -- DTOs ------------------------------------------------------------------
 
     private class ScheduleFileDto
     {

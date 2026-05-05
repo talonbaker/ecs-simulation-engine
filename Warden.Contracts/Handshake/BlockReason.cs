@@ -14,7 +14,7 @@ namespace Warden.Contracts.Handshake;
 [JsonConverter(typeof(JsonKebabCaseEnumConverter<BlockReason>))]
 public enum BlockReason
 {
-    // ── Sonnet ────────────────────────────────────────────────────────────────
+    // -- Sonnet ----------------------------------------------------------------
 
     /// <summary>The SpecPacket contains contradictory or missing requirements.</summary>
     AmbiguousSpec,
@@ -34,7 +34,7 @@ public enum BlockReason
     /// <summary>The worker exceeded its <c>timeboxMinutes</c> wall-clock limit.</summary>
     TimeboxExceeded,
 
-    // ── Haiku ─────────────────────────────────────────────────────────────────
+    // -- Haiku -----------------------------------------------------------------
 
     /// <summary>ECSCli returned a non-zero exit code.</summary>
     CliNonzero,
@@ -48,7 +48,7 @@ public enum BlockReason
     /// <summary>The simulation's InvariantSystem recorded a critical violation.</summary>
     InvariantViolated,
 
-    // ── Shared ────────────────────────────────────────────────────────────────
+    // -- Shared ----------------------------------------------------------------
 
     /// <summary>A tool call returned an error that the worker cannot recover from.</summary>
     ToolError,

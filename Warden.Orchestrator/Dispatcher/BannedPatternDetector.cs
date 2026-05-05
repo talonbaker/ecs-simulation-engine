@@ -26,7 +26,7 @@ public static class BannedPatternDetector
     private static readonly string[] _orchestratorTypeFragments =
         { "Dispatcher", "Orchestrator", "Escalator", "Aggregator", "Scheduler" };
 
-    // ── Public API ────────────────────────────────────────────────────────────
+    // -- Public API ------------------------------------------------------------
 
     /// <summary>Returns true if the diff contains ≥1 banned pattern.</summary>
     public static bool HasBannedPattern(string diff) => Scan(diff).Count > 0;
@@ -75,7 +75,7 @@ public static class BannedPatternDetector
         return detections;
     }
 
-    // ── Per-line checks ───────────────────────────────────────────────────────
+    // -- Per-line checks -------------------------------------------------------
 
     private static void CheckAddedLine(
         string file, string content, List<BannedDetection> detections)
@@ -202,7 +202,7 @@ public static class BannedPatternDetector
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static bool IsInAllowedHttpProject(string normalisedPath)
         => _allowedHttpProjects.Any(p =>
@@ -217,7 +217,7 @@ public static class BannedPatternDetector
         => path.Replace('\\', '/').Trim();
 }
 
-// ── Supporting types ──────────────────────────────────────────────────────────
+// -- Supporting types ----------------------------------------------------------
 
 /// <summary>
 /// Identifies which of the six banned patterns was matched.

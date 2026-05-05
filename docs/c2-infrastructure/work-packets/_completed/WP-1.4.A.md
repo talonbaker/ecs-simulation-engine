@@ -26,20 +26,20 @@ Landed the Phase-1 social engine. Four new ECS components (`SocialDrivesComponen
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | All components compile, instantiate, clamp, enforce max-counts and canonical ordering. |
-| AT-02 | ✓ | Loneliness drive from 90→50 baseline, 1000 ticks, no noise/circadian: ends at 50. |
-| AT-03 | ✓ | Circadian peak for Loneliness at phase 0.85: average delta positive at peak, negative at anti-peak (1000 seeds). |
-| AT-04 | ✓ | Neuroticism +2 produces higher variance than –2 across 5000 seeds. |
-| AT-05 | ✓ | SuppressionTick magnitude 5 reduces Current by 5, clamped at 0. |
-| AT-06 | ✓ | SleepingTag causes 1 RestTick per tick; Current rises by N × regenPerTick (clamped at 100). |
-| AT-07 | ✓ | Relationship Intensity decays 1 point/tick over 20 ticks (80→60). |
-| AT-08 | ✓ | Transition table loads via LoadFromFile, contains 13 entries (≥ 5); no transition fires in 1000 ticks. |
-| AT-09 | ✓ | RelationshipComponent(7, 3) canonicalizes to (3, 7); two relationships same canonical pair share same ids. |
-| AT-10 | ✓ | SocialDeterminismTests: two runs same seed → identical 5000-tick loneliness trajectory. |
-| AT-11 | ✓ | Warden.Telemetry.Tests: all 24 pass; projector still emits SchemaVersion = "0.1.0". |
-| AT-12 | ✓ | Warden.Contracts.Tests: all 38 pass; DTOs unchanged. |
-| AT-13 | ✓ | dotnet build ECSSimulation.sln — 0 warnings, 0 errors. |
-| AT-14 | ✓ | dotnet test ECSSimulation.sln — 450 passed, 0 failed across all 6 test projects. |
+| AT-01 | OK | All components compile, instantiate, clamp, enforce max-counts and canonical ordering. |
+| AT-02 | OK | Loneliness drive from 90→50 baseline, 1000 ticks, no noise/circadian: ends at 50. |
+| AT-03 | OK | Circadian peak for Loneliness at phase 0.85: average delta positive at peak, negative at anti-peak (1000 seeds). |
+| AT-04 | OK | Neuroticism +2 produces higher variance than –2 across 5000 seeds. |
+| AT-05 | OK | SuppressionTick magnitude 5 reduces Current by 5, clamped at 0. |
+| AT-06 | OK | SleepingTag causes 1 RestTick per tick; Current rises by N × regenPerTick (clamped at 100). |
+| AT-07 | OK | Relationship Intensity decays 1 point/tick over 20 ticks (80→60). |
+| AT-08 | OK | Transition table loads via LoadFromFile, contains 13 entries (≥ 5); no transition fires in 1000 ticks. |
+| AT-09 | OK | RelationshipComponent(7, 3) canonicalizes to (3, 7); two relationships same canonical pair share same ids. |
+| AT-10 | OK | SocialDeterminismTests: two runs same seed → identical 5000-tick loneliness trajectory. |
+| AT-11 | OK | Warden.Telemetry.Tests: all 24 pass; projector still emits SchemaVersion = "0.1.0". |
+| AT-12 | OK | Warden.Contracts.Tests: all 38 pass; DTOs unchanged. |
+| AT-13 | OK | dotnet build ECSSimulation.sln — 0 warnings, 0 errors. |
+| AT-14 | OK | dotnet test ECSSimulation.sln — 450 passed, 0 failed across all 6 test projects. |
 
 ---
 

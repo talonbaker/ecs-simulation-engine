@@ -12,29 +12,29 @@ namespace Warden.Contracts.SchemaValidation;
 /// Minimal Draft 2020-12 JSON Schema validator.
 ///
 /// SUPPORTED KEYWORDS (validated)
-/// ───────────────────────────────
+/// -------------------------------
 /// type, required, properties, additionalProperties, items, enum, const,
 /// minimum, maximum, minLength, maxLength, minItems, maxItems, maxProperties,
 /// pattern, oneOf, allOf, if, then, $ref, $defs
 ///
 /// IGNORED KEYWORDS (metadata, no validation effect)
-/// ───────────────────────────────────────────────────
+/// ---------------------------------------------------
 /// $schema, $id, title, description, format, default
 ///
 /// UNSUPPORTED KEYWORDS
-/// ─────────────────────
+/// ---------------------
 /// Any keyword not in the above two lists throws <see cref="NotSupportedException"/>
 /// when the schema is first loaded (AT-05 requirement — fail at load, not at call).
 ///
 /// EXTERNAL $ref
-/// ─────────────
+/// -------------
 /// References to external schema files (e.g. <c>./sonnet-to-haiku.schema.json</c>)
 /// are intentionally treated as "accept any value". The six embedded schemas are
 /// the only schemas this validator loads.
 /// </summary>
 public static class SchemaValidator
 {
-    // ── Keyword registry ───────────────────────────────────────────────────────
+    // -- Keyword registry -------------------------------------------------------
 
     private static readonly HashSet<string> _validatingKeywords = new(StringComparer.Ordinal)
     {
@@ -53,12 +53,12 @@ public static class SchemaValidator
     private static readonly HashSet<string> _allKnownKeywords =
         new(_validatingKeywords.Concat(_ignoredKeywords), StringComparer.Ordinal);
 
-    // ── Schema cache ───────────────────────────────────────────────────────────
+    // -- Schema cache -----------------------------------------------------------
 
     private static readonly Dictionary<Schema, JsonDocument> _cache = new();
     private static readonly object _cacheLock = new();
 
-    // ── Public API ─────────────────────────────────────────────────────────────
+    // -- Public API -------------------------------------------------------------
 
     /// <summary>
     /// Validates <paramref name="json"/> against the embedded schema identified
@@ -127,7 +127,7 @@ public static class SchemaValidator
         }
     }
 
-    // ── Schema loading + keyword scan ──────────────────────────────────────────
+    // -- Schema loading + keyword scan ------------------------------------------
 
     private static JsonDocument LoadSchema(Schema schema)
     {
@@ -230,7 +230,7 @@ public static class SchemaValidator
         }
     }
 
-    // ── Core validator ─────────────────────────────────────────────────────────
+    // -- Core validator ---------------------------------------------------------
 
     private static void ValidateElement(
         JsonElement value,
@@ -346,7 +346,7 @@ public static class SchemaValidator
         }
     }
 
-    // ── Keyword implementations ────────────────────────────────────────────────
+    // -- Keyword implementations ------------------------------------------------
 
     private static void CheckType(JsonElement value, JsonElement typeSchema, string path, List<string> errors)
     {
@@ -555,7 +555,7 @@ public static class SchemaValidator
             ValidateElement(value, thenSchema, rootSchema, path, errors);
     }
 
-    // ── $ref resolution ────────────────────────────────────────────────────────
+    // -- $ref resolution --------------------------------------------------------
 
     private static JsonElement ResolveLocalRef(string reference, JsonElement root)
     {
@@ -574,7 +574,7 @@ public static class SchemaValidator
         return current;
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     private static bool JsonElementsEqual(JsonElement a, JsonElement b)
     {

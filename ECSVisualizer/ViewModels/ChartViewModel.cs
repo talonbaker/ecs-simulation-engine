@@ -13,7 +13,7 @@ namespace ECSVisualizer.ViewModels;
 /// </summary>
 public sealed class ChartViewModel
 {
-    // ── Biological — per-entity (first living entity = "Billy") ──────────────
+    // -- Biological — per-entity (first living entity = "Billy") --------------
 
     /// <summary>Satiation 0–100 — how full the entity's stomach is. Drains as hunger builds.</summary>
     public ChartSeriesViewModel Satiation  { get; } = new("SATIATION",  "#30D158", 0, 100);
@@ -30,7 +30,7 @@ public sealed class ChartViewModel
     /// <summary>Body temperature in Celsius. Normal = 37°C. Fever > 37.5°C.</summary>
     public ChartSeriesViewModel BodyTemp   { get; } = new("BODY TEMP",  "#FF9F0A", 34, 41);
 
-    // ── Emotions (Plutchik) ───────────────────────────────────────────────────
+    // -- Emotions (Plutchik) ---------------------------------------------------
 
     /// <summary>Joy 0–100 — positive mood. Rises after eating, social interactions, rest.</summary>
     public ChartSeriesViewModel Joy        { get; } = new("JOY",        "#FFD60A", 0, 100);
@@ -41,7 +41,7 @@ public sealed class ChartViewModel
     /// <summary>Sadness 0–100 — low mood, withdrawn state.</summary>
     public ChartSeriesViewModel Sadness    { get; } = new("SADNESS",    "#0A84FF", 0, 100);
 
-    // ── Performance ───────────────────────────────────────────────────────────
+    // -- Performance -----------------------------------------------------------
 
     /// <summary>Real frames-per-second of the UI render loop (target 60).</summary>
     public ChartSeriesViewModel Fps        { get; } = new("REAL FPS",   "#00FF41", 0, 70,  capacity: 120);

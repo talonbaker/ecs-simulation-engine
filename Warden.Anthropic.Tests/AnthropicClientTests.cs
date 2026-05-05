@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Warden.Anthropic.Tests;
 
-// ── Stub HTTP handler ─────────────────────────────────────────────────────────
+// -- Stub HTTP handler ---------------------------------------------------------
 
 /// <summary>
 /// In-process HTTP message handler that intercepts requests and returns
@@ -27,7 +27,7 @@ internal sealed class StubHandler : HttpMessageHandler
         => Task.FromResult(_respond(request));
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 internal static class Helpers
 {
@@ -95,11 +95,11 @@ internal static class Helpers
         """;
 }
 
-// ── Test class ────────────────────────────────────────────────────────────────
+// -- Test class ----------------------------------------------------------------
 
 public sealed class AnthropicClientTests
 {
-    // ── AT-01: CreateMessageAsync produces the documented /v1/messages wire shape ──
+    // -- AT-01: CreateMessageAsync produces the documented /v1/messages wire shape --
 
     [Fact]
     public async Task AT01_CreateMessageAsync_ProducesCorrectWireShape()
@@ -150,7 +150,7 @@ public sealed class AnthropicClientTests
         Assert.Equal("claude-sonnet-4-6", modelProp.GetString());
     }
 
-    // ── AT-02: CacheControl serialises correctly on the blocks it's attached to ──
+    // -- AT-02: CacheControl serialises correctly on the blocks it's attached to --
 
     [Fact]
     public void AT02_CacheControl_Ephemeral_SerializesWithoutTtl()
@@ -204,7 +204,7 @@ public sealed class AnthropicClientTests
             "Second slab must NOT have cache_control (it was not marked).");
     }
 
-    // ── AT-03: CreateBatchAsync produces correct /v1/messages/batches body ────────
+    // -- AT-03: CreateBatchAsync produces correct /v1/messages/batches body --------
 
     [Fact]
     public async Task AT03_CreateBatchAsync_ProducesCorrectWireShape()
@@ -246,7 +246,7 @@ public sealed class AnthropicClientTests
         Assert.Equal(512,                 parms.GetProperty("max_tokens").GetInt32());
     }
 
-    // ── AT-04: StreamBatchResultsAsync parses JSONL via results_url ──────────────
+    // -- AT-04: StreamBatchResultsAsync parses JSONL via results_url --------------
 
     [Fact]
     public async Task AT04_StreamBatchResultsAsync_ParsesJsonl()
@@ -288,7 +288,7 @@ public sealed class AnthropicClientTests
         Assert.Equal("server_error", errored.Error.Type);
     }
 
-    // ── AT-05: 429 → IsRetryable=true; 400 → IsRetryable=false ──────────────────
+    // -- AT-05: 429 → IsRetryable=true; 400 → IsRetryable=false ------------------
 
     [Fact]
     public async Task AT05_Http429_ThrowsAnthropicApiException_IsRetryable()
@@ -350,7 +350,7 @@ public sealed class AnthropicClientTests
         Assert.True(ex.IsRetryable, "500 must be retryable.");
     }
 
-    // ── AT-06: AnthropicClient allocates exactly one HttpClient per instance ──────
+    // -- AT-06: AnthropicClient allocates exactly one HttpClient per instance ------
 
     [Fact]
     public void AT06_AnthropicClient_HasExactlyOneHttpClientField()
@@ -399,7 +399,7 @@ public sealed class AnthropicClientTests
         Assert.Equal(2, callCount);
     }
 
-    // ── AT-07: ModelId cannot be constructed with an arbitrary string externally ──
+    // -- AT-07: ModelId cannot be constructed with an arbitrary string externally --
 
     [Fact]
     public void AT07_ModelId_HasNoPublicParameterizedConstructors()
@@ -436,7 +436,7 @@ public sealed class AnthropicClientTests
         Assert.Equal("claude-opus-4-6", model.Name);
     }
 
-    // ── AT-08: CostRates.PricedAsOf ≥ 2026-04-01 ─────────────────────────────────
+    // -- AT-08: CostRates.PricedAsOf ≥ 2026-04-01 ---------------------------------
 
     [Fact]
     public void AT08_CostRates_PricedAsOf_IsRecentEnough()

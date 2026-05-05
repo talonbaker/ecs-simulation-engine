@@ -22,7 +22,7 @@ public sealed class PromptCacheManagerTests : IDisposable
         }
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     private string NewTempDir()
     {
@@ -58,7 +58,7 @@ public sealed class PromptCacheManagerTests : IDisposable
         return (source, manager);
     }
 
-    // ── AT-01 ──────────────────────────────────────────────────────────────────
+    // -- AT-01 ------------------------------------------------------------------
 
     /// <summary>
     /// BuildRequest output has cache_control on exactly slabs 1–3, never on slab 4.
@@ -97,7 +97,7 @@ public sealed class PromptCacheManagerTests : IDisposable
         Assert.Null(userBlock.CacheControl);
     }
 
-    // ── AT-02 ──────────────────────────────────────────────────────────────────
+    // -- AT-02 ------------------------------------------------------------------
 
     /// <summary>
     /// Passing a mission slab with Uncached disposition throws ArgumentException.
@@ -119,7 +119,7 @@ public sealed class PromptCacheManagerTests : IDisposable
         Assert.Contains("Uncached", ex.Message);
     }
 
-    // ── AT-03 ──────────────────────────────────────────────────────────────────
+    // -- AT-03 ------------------------------------------------------------------
 
     /// <summary>
     /// expectedTotalLatency = null → 5-minute TTL (no ttl field);
@@ -148,7 +148,7 @@ public sealed class PromptCacheManagerTests : IDisposable
         Assert.Equal("1h", block1h.CacheControl.Ttl);
     }
 
-    // ── AT-04 ──────────────────────────────────────────────────────────────────
+    // -- AT-04 ------------------------------------------------------------------
 
     /// <summary>
     /// Editing the engine fact sheet file on disk causes the next BuildRequest call
@@ -179,7 +179,7 @@ public sealed class PromptCacheManagerTests : IDisposable
         Assert.DoesNotContain("initial content", corpus2);
     }
 
-    // ── AT-05 ──────────────────────────────────────────────────────────────────
+    // -- AT-05 ------------------------------------------------------------------
 
     /// <summary>
     /// Two consecutive BuildRequest calls within the same TTL window produce
@@ -213,7 +213,7 @@ public sealed class PromptCacheManagerTests : IDisposable
         Assert.NotEqual(u1, u2);
     }
 
-    // ── AT-06 ──────────────────────────────────────────────────────────────────
+    // -- AT-06 ------------------------------------------------------------------
 
     /// <summary>
     /// userTurnBody = "" throws ArgumentException.
@@ -230,7 +230,7 @@ public sealed class PromptCacheManagerTests : IDisposable
         Assert.Throws<ArgumentException>(() => manager.BuildRequest(ModelId.SonnetV46, ""));
     }
 
-    // ── AT-07 ──────────────────────────────────────────────────────────────────
+    // -- AT-07 ------------------------------------------------------------------
 
     /// <summary>
     /// Slab 1 begins with a clearly labelled role frame and ends with the
@@ -257,7 +257,7 @@ public sealed class PromptCacheManagerTests : IDisposable
             "Role frame must end with the boundary marker \\n\\n---\\n\\n.");
     }
 
-    // ── AT-08 ──────────────────────────────────────────────────────────────────
+    // -- AT-08 ------------------------------------------------------------------
 
     /// <summary>
     /// Adding a new file entry to the manifest causes its content to appear in
@@ -303,7 +303,7 @@ public sealed class PromptCacheManagerTests : IDisposable
         Assert.Contains("\n\n---\n\n", between);
     }
 
-    // ── AT-09 ──────────────────────────────────────────────────────────────────
+    // -- AT-09 ------------------------------------------------------------------
 
     /// <summary>
     /// A manifest entry whose path does not exist on disk causes CachedPrefixSource

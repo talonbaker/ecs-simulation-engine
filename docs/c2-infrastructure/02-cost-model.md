@@ -36,7 +36,7 @@ Assume:
 5× Sonnet output  = 5 × 1,500   =   7,500 tokens × $15  /Mtok =  $0.113
 25× Haiku input   = 25 × 34,000 = 850,000 tokens × $1   /Mtok =  $0.850
 25× Haiku output  = 25 × 800    =  20,000 tokens × $5   /Mtok =  $0.100
-                                                              ────────
+                                                              --------
                                            Naïve mission cost: $1.551
 ```
 
@@ -53,7 +53,7 @@ The 30,000 shared tokens are cached once per 5-minute window.
 4× Sonnet cache read  = 4 × 30,000 × $0.30 /Mtok = $0.036
 5× Sonnet variable input  = 5 × 2,500 × $3 /Mtok = $0.0375
 5× Sonnet output          = 5 × 1,500 × $15 /Mtok = $0.1125
-                                                   ─────────
+                                                   ---------
                               Sonnet tier with cache: $0.2985
 ```
 
@@ -68,7 +68,7 @@ Batching cuts input and output in half. We assume caching does not apply to the 
 ```
 25× Haiku input   = 850,000 × $0.50 /Mtok = $0.425
 25× Haiku output  =  20,000 × $2.50 /Mtok = $0.050
-                                            ──────
+                                            ------
                      Haiku tier batched:   $0.475
 ```
 
@@ -81,7 +81,7 @@ Batching cuts input and output in half. We assume caching does not apply to the 
 ```
 Sonnet tier (cached):     $0.2985
 Haiku tier (batched):     $0.4750
-                         ────────
+                         --------
 Total optimised mission:  $0.7735
 ```
 

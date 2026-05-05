@@ -13,7 +13,7 @@ namespace APIFramework.Systems;
 /// <see cref="BlockedActionsComponent"/>.
 ///
 /// DESIGN
-/// ──────
+/// ------
 /// "Drives are necessary but not sufficient." A social inhibition can override a
 /// biological drive: Sally's hunger at 120% with <c>bodyImageEating: 90</c> does
 /// not eat. This system is the gate that makes that true.
@@ -39,13 +39,13 @@ namespace APIFramework.Systems;
 /// consumers check <c>entity.Has&lt;BlockedActionsComponent&gt;()</c>.
 ///
 /// PIPELINE POSITION
-/// ─────────────────
+/// -----------------
 /// Cognition (30) — after BrainSystem (which sets DriveComponent.Dominant) and
 /// after WillpowerSystem (which drains the queue). Physiology action systems run
 /// at Behavior (40) and therefore see the veto set written this tick.
 ///
 /// INHIBITION → PHYSIOLOGY MAPPING (v0.1)
-/// ────────────────────────────────────────
+/// ----------------------------------------
 ///   Eat      ← BodyImageEating
 ///   Sleep    ← Vulnerability   ("can't be the person who couldn't make the deadline")
 ///   Urinate  ← PublicEmotion   (holding it through a public-facing scenario)
@@ -145,7 +145,7 @@ public class PhysiologyGateSystem : ISystem
         }
     }
 
-    // ── Leakage helpers (internal for testability) ────────────────────────────
+    // -- Leakage helpers (internal for testability) ----------------------------
 
     /// <summary>
     /// Fraction [0, 1] by which the veto weakens as willpower falls below the

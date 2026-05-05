@@ -48,7 +48,7 @@ namespace Warden.Telemetry.Tests;
 /// </summary>
 public class TelemetryProjectorTests
 {
-    // ── Shared fixture helpers ────────────────────────────────────────────────
+    // -- Shared fixture helpers ------------------------------------------------
 
     private static SimulationBootstrapper MakeSim(int humanCount = 1)
         => new(new InMemoryConfigProvider(new SimConfig()), humanCount);
@@ -67,7 +67,7 @@ public class TelemetryProjectorTests
             snap, sim.EntityManager, FixedCapture, tick, seed, simVersion);
     }
 
-    // ── AT-01: SchemaVersion ─────────────────────────────────────────────────
+    // -- AT-01: SchemaVersion -------------------------------------------------
 
     [Fact]
     public void AT01_SchemaVersion_Is040()
@@ -76,7 +76,7 @@ public class TelemetryProjectorTests
         Assert.Equal("0.4.0", dto.SchemaVersion);
     }
 
-    // ── AT-02: NPC social projection ─────────────────────────────────────────
+    // -- AT-02: NPC social projection -----------------------------------------
 
     [Fact]
     public void AT02_NpcWithFullSocialState_ProjectsAllFields()
@@ -154,7 +154,7 @@ public class TelemetryProjectorTests
             i => i.Class == WcInhibitionClass.Vulnerability  && i.Strength == 40 && i.Awareness == WcInhibitionAwareness.Hidden);
     }
 
-    // ── AT-03: Non-NPC has social absent ─────────────────────────────────────
+    // -- AT-03: Non-NPC has social absent -------------------------------------
 
     [Fact]
     public void AT03_NonNpcEntity_SocialIsAbsent()
@@ -166,7 +166,7 @@ public class TelemetryProjectorTests
         Assert.All(dto.Entities, e => Assert.Null(e.Social));
     }
 
-    // ── AT-04: Relationship projection ───────────────────────────────────────
+    // -- AT-04: Relationship projection ---------------------------------------
 
     [Fact]
     public void AT04_RelationshipTagEntity_ProducesRelationshipEntry()
@@ -199,7 +199,7 @@ public class TelemetryProjectorTests
         Assert.Empty(rel.HistoryEventIds);
     }
 
-    // ── AT-05: Relationships sorted by Id ascending ───────────────────────────
+    // -- AT-05: Relationships sorted by Id ascending ---------------------------
 
     [Fact]
     public void AT05_Relationships_SortedByIdAscending()
@@ -225,7 +225,7 @@ public class TelemetryProjectorTests
         Assert.Equal(ids.OrderBy(x => x, StringComparer.Ordinal).ToList(), ids);
     }
 
-    // ── AT-06: Schema validation with social state ────────────────────────────
+    // -- AT-06: Schema validation with social state ----------------------------
 
     [Fact]
     public void AT06_NpcWithSocialState_ValidatesAgainstSchema()
@@ -261,7 +261,7 @@ public class TelemetryProjectorTests
             $"Schema validation failed: {string.Join("; ", result.Errors)}\n\nJSON:\n{json}");
     }
 
-    // ── AT-07: Determinism with social state ─────────────────────────────────
+    // -- AT-07: Determinism with social state ---------------------------------
 
     [Fact]
     public void AT07_SameInputsWithSocial_ProduceBytIdenticalJson()
@@ -281,7 +281,7 @@ public class TelemetryProjectorTests
         Assert.Equal(json1, json2);
     }
 
-    // ── AT-02: Rooms populated ────────────────────────────────────────────────
+    // -- AT-02: Rooms populated ------------------------------------------------
 
     [Fact]
     public void AT02_TwoRoomEntities_ProjectsRoomsArrayOfLength2()
@@ -318,7 +318,7 @@ public class TelemetryProjectorTests
         Assert.Equal(WcRoomCategory.Office, office.Category);
     }
 
-    // ── AT-03: Light sources populated ───────────────────────────────────────
+    // -- AT-03: Light sources populated ---------------------------------------
 
     [Fact]
     public void AT03_ThreeLightSourceEntities_ProjectsLightSourcesArrayOfLength3()
@@ -361,7 +361,7 @@ public class TelemetryProjectorTests
         Assert.Equal(WcLightState.Off, ls3.State);
     }
 
-    // ── AT-04: Light apertures populated ─────────────────────────────────────
+    // -- AT-04: Light apertures populated -------------------------------------
 
     [Fact]
     public void AT04_OneLightApertureEntity_ProjectsLightAperturesArrayOfLength1()
@@ -386,7 +386,7 @@ public class TelemetryProjectorTests
         Assert.Equal(3.5,                ap.AreaSqTiles, precision: 10);
     }
 
-    // ── AT-05: Noon sun state ─────────────────────────────────────────────────
+    // -- AT-05: Noon sun state -------------------------------------------------
 
     [Fact]
     public void AT05_NoonSunState_ProjectsCorrectAzimuthElevationDayPhase()
@@ -409,7 +409,7 @@ public class TelemetryProjectorTests
         Assert.Equal(WcDayPhase.Afternoon, dto.Clock.Sun.DayPhase);
     }
 
-    // ── AT-06: Midnight sun state ─────────────────────────────────────────────
+    // -- AT-06: Midnight sun state ---------------------------------------------
 
     [Fact]
     public void AT06_MidnightSunState_ProjectsNegativeElevationAndNightPhase()
@@ -431,7 +431,7 @@ public class TelemetryProjectorTests
         Assert.Equal(WcDayPhase.Night, dto.Clock.Sun.DayPhase);
     }
 
-    // ── AT-07: No rooms → rooms is null ──────────────────────────────────────
+    // -- AT-07: No rooms → rooms is null --------------------------------------
 
     [Fact]
     public void AT07_NoRoomEntities_RoomsIsNull()
@@ -443,7 +443,7 @@ public class TelemetryProjectorTests
         Assert.Null(dto.Rooms);
     }
 
-    // ── AT-08: Full spatial snapshot validates against v0.3 schema ────────────
+    // -- AT-08: Full spatial snapshot validates against v0.3 schema ------------
 
     [Fact]
     public void AT08_FullSpatialSnapshot_ValidatesAgainstSchema()
@@ -476,7 +476,7 @@ public class TelemetryProjectorTests
             $"Schema validation failed: {string.Join("; ", result.Errors)}\n\nJSON:\n{json}");
     }
 
-    // ── AT-09: Determinism with spatial state ─────────────────────────────────
+    // -- AT-09: Determinism with spatial state ---------------------------------
 
     [Fact]
     public void AT09_TwoProjectionsOfSameSnapshot_ProduceBytIdenticalJson()
@@ -503,7 +503,7 @@ public class TelemetryProjectorTests
         Assert.Equal(json1, json2);
     }
 
-    // ── AT-10: Sorted by id ascending ─────────────────────────────────────────
+    // -- AT-10: Sorted by id ascending -----------------------------------------
 
     [Fact]
     public void AT10_RoomsLightSourcesAndApertures_SortedByIdAscending()
@@ -543,7 +543,7 @@ public class TelemetryProjectorTests
         Assert.Equal(apIds.OrderBy(x => x, StringComparer.Ordinal).ToList(), apIds);
     }
 
-    // ── AT-11: Chronicle projection ───────────────────────────────────────────
+    // -- AT-11: Chronicle projection -------------------------------------------
 
     [Fact]
     public void AT11_ChronicleService_WithEntries_ProjectsToChronicleArray()
@@ -634,7 +634,7 @@ public class TelemetryProjectorTests
             $"Schema validation failed: {string.Join("; ", result.Errors)}\n\nJSON:\n{json}");
     }
 
-    // ── AT-12: Existing tests (unchanged below this line) ────────────────────
+    // -- AT-12: Existing tests (unchanged below this line) --------------------
 
     [Fact]
     public void AT01_FreshSim_ProjectValidatesAgainstSchema()

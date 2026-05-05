@@ -6,7 +6,7 @@ namespace Warden.Orchestrator.Tests.Dispatcher;
 
 public sealed class FailClosedEscalatorTests
 {
-    // ── AT-01: every enumerated outcome/reason combination has a handled branch ─
+    // -- AT-01: every enumerated outcome/reason combination has a handled branch -
 
     [Theory]
     [InlineData(OutcomeCode.Ok,      null,                              true,  OutcomeCode.Ok)]
@@ -32,7 +32,7 @@ public sealed class FailClosedEscalatorTests
         Assert.Equal(expectTerminal, verdict.TerminalOutcome);
     }
 
-    // ── AT-02: property test — ProceedDownstream=true only for ok/null ─────────
+    // -- AT-02: property test — ProceedDownstream=true only for ok/null ---------
 
     [Fact]
     public void AT02_PropertyTest_NoBranch_ReturnsProceedDownstream_WhenOutcomeIsNotOk()
@@ -71,7 +71,7 @@ public sealed class FailClosedEscalatorTests
         }
     }
 
-    // ── AT-03: blocked propagates even if a sibling succeeded ─────────────────
+    // -- AT-03: blocked propagates even if a sibling succeeded -----------------
 
     [Fact]
     public void AT03_MostSevere_Blocked_WinsOver_Ok_And_Failed()
@@ -101,7 +101,7 @@ public sealed class FailClosedEscalatorTests
         Assert.Equal(OutcomeCode.Blocked, FailClosedEscalator.MostSevere(codes));
     }
 
-    // ── AT-05: ok result overridden to blocked/tool-error when diff has banned pattern ─
+    // -- AT-05: ok result overridden to blocked/tool-error when diff has banned pattern -
 
     [Fact]
     public void AT05_OkResult_OverriddenToBlocked_WhenDiffHasBannedPattern()
@@ -131,7 +131,7 @@ public sealed class FailClosedEscalatorTests
         Assert.Equal(OutcomeCode.Ok, verdict.TerminalOutcome);
     }
 
-    // ── AT-06: HumanMessage is present and non-empty on every non-ok path ──────
+    // -- AT-06: HumanMessage is present and non-empty on every non-ok path ------
 
     [Theory]
     [InlineData(OutcomeCode.Failed,  null)]
@@ -171,7 +171,7 @@ public sealed class FailClosedEscalatorTests
         Assert.False(verdict.ProceedDownstream);
     }
 
-    // ── Extra: unhandled combination throws ───────────────────────────────────
+    // -- Extra: unhandled combination throws -----------------------------------
 
     [Fact]
     public void UnhandledCombination_Throws_InvalidOperationException()
@@ -181,7 +181,7 @@ public sealed class FailClosedEscalatorTests
         Assert.Throws<InvalidOperationException>(() => FailClosedEscalator.Evaluate(result));
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static SonnetResult MakeSonnetResult(
         OutcomeCode  outcome,

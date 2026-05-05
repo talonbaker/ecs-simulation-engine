@@ -75,7 +75,7 @@ public static class EntityTemplates
             Anticipation = mo.AnticipationStart
         });
 
-        // ── Digestive pipeline (small intestine → large intestine → colon) ────
+        // -- Digestive pipeline (small intestine → large intestine → colon) ----
         entity.Add(new SmallIntestineComponent
         {
             ChymeVolumeMl          = 0f,
@@ -468,7 +468,7 @@ public static class EntityTemplates
             Anticipation = mo.AnticipationStart
         });
 
-        // ── Digestive pipeline ────────────────────────────────────────────────
+        // -- Digestive pipeline ------------------------------------------------
         entity.Add(new SmallIntestineComponent
         {
             ChymeVolumeMl          = 0f,

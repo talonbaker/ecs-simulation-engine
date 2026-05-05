@@ -12,7 +12,7 @@ namespace APIFramework.Systems.LifeState;
 /// witnesses and colleague NPCs when a death event propagates.
 ///
 /// TWO PATHS
-/// ─────────
+/// ---------
 /// 1. Witness path (ev.ParticipantIds.Count >= 2):
 ///    The second participant is the witness. They receive:
 ///    - StressComponent.WitnessedDeathEventsToday += 1
@@ -82,7 +82,7 @@ public sealed class BereavementSystem : ISystem
         var deceased = FindEntityByIntId(deceasedIntId);
         if (deceased is null) return;
 
-        // ── 1. Witness path ───────────────────────────────────────────────────
+        // -- 1. Witness path ---------------------------------------------------
 
         if (ev.ParticipantIds.Count >= 2)
         {
@@ -107,7 +107,7 @@ public sealed class BereavementSystem : ISystem
             }
         }
 
-        // ── 2. Colleague path ─────────────────────────────────────────────────
+        // -- 2. Colleague path -------------------------------------------------
 
         // Iterate relationship entities to find colleagues of the deceased.
         // Sort by colleague EntityIntId for deterministic ordering.
@@ -170,7 +170,7 @@ public sealed class BereavementSystem : ISystem
     /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime) { /* event-driven; no per-tick work */ }
 
-    // ── Utility ───────────────────────────────────────────────────────────────
+    // -- Utility ---------------------------------------------------------------
 
     private static string? GetRoomIdFromCauseOfDeath(Entity entity)
     {

@@ -37,18 +37,18 @@ SimConfig is untouched — this packet has no SimConfig surface.
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | Empty `referenceFiles[]` → `Outcome(null, null, null)`. |
-| AT-02 | ✓ | Two valid files → block contains both BEGIN/END markers in input order. |
-| AT-03 | ✓ | Missing file → `Outcome(null, MissingReferenceFile, details)` naming the path. |
-| AT-04 | ✓ | Single file exceeding cap → `Outcome(null, ToolError, details)` naming the file. |
-| AT-05 | ✓ | Aggregate exceeding cap → `Outcome(null, ToolError, details)`. |
-| AT-06 | ✓ | `..` traversal → `Outcome(null, ToolError, details)`. |
-| AT-07 | ✓ | Synthetic spec with valid temp-file reference dispatches ok; captured user turn contains the inlined block. |
-| AT-08 | ✓ | Synthetic spec with missing reference file → `outcome=blocked, blockReason=MissingReferenceFile`; no ledger entry. |
-| AT-09 | ✓ | Smoke-mission (`referenceFiles: []`) produces structurally identical output; no inlined section. |
-| AT-10 | ✓ | `CastValidateMockRunTests.AT10_MockRun_CastValidate_ExitsZeroAndWritesLedger` exits 0 (was failing before — now passes because `repoRoot` is threaded through). |
-| AT-11 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-12 | ✓ | 767 tests pass excluding the pre-existing `AT01_MockRun_ExitsZeroAndWritesLedger` flake (unchanged from before this packet). |
+| AT-01 | OK | Empty `referenceFiles[]` → `Outcome(null, null, null)`. |
+| AT-02 | OK | Two valid files → block contains both BEGIN/END markers in input order. |
+| AT-03 | OK | Missing file → `Outcome(null, MissingReferenceFile, details)` naming the path. |
+| AT-04 | OK | Single file exceeding cap → `Outcome(null, ToolError, details)` naming the file. |
+| AT-05 | OK | Aggregate exceeding cap → `Outcome(null, ToolError, details)`. |
+| AT-06 | OK | `..` traversal → `Outcome(null, ToolError, details)`. |
+| AT-07 | OK | Synthetic spec with valid temp-file reference dispatches ok; captured user turn contains the inlined block. |
+| AT-08 | OK | Synthetic spec with missing reference file → `outcome=blocked, blockReason=MissingReferenceFile`; no ledger entry. |
+| AT-09 | OK | Smoke-mission (`referenceFiles: []`) produces structurally identical output; no inlined section. |
+| AT-10 | OK | `CastValidateMockRunTests.AT10_MockRun_CastValidate_ExitsZeroAndWritesLedger` exits 0 (was failing before — now passes because `repoRoot` is threaded through). |
+| AT-11 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-12 | OK | 767 tests pass excluding the pre-existing `AT01_MockRun_ExitsZeroAndWritesLedger` flake (unchanged from before this packet). |
 
 ---
 

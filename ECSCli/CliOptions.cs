@@ -26,7 +26,7 @@ public class CliOptions
     /// <summary>When true, print invariant violations immediately as they happen.</summary>
     public bool LiveViolations { get; init; } = true;
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     /// <summary>
     /// Parses a raw command-line argument vector into a populated

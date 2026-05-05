@@ -49,7 +49,7 @@ public class ProximityEventSystemTests
         return e;
     }
 
-    // ── AT-07: EnteredConversationRange fires exactly once ────────────────────
+    // -- AT-07: EnteredConversationRange fires exactly once --------------------
 
     [Fact]
     public void TwoNpcs_Approaching_EnteredConversationRange_FiresOnce()
@@ -92,7 +92,7 @@ public class ProximityEventSystemTests
         Assert.Equal(countAfterFirst, entered.Count);
     }
 
-    // ── AT-08: LeftConversationRange fires exactly once ───────────────────────
+    // -- AT-08: LeftConversationRange fires exactly once -----------------------
 
     [Fact]
     public void TwoNpcs_Receding_LeftConversationRange_FiresOnce()
@@ -117,7 +117,7 @@ public class ProximityEventSystemTests
         Assert.Equal(2, left.Count);
     }
 
-    // ── AT-09: entity-id-ascending order ─────────────────────────────────────
+    // -- AT-09: entity-id-ascending order -------------------------------------
 
     [Fact]
     public void Events_FiredInEntityIdAscendingOrder()
@@ -146,7 +146,7 @@ public class ProximityEventSystemTests
         }
     }
 
-    // ── Multiple NPC scenario ─────────────────────────────────────────────────
+    // -- Multiple NPC scenario -------------------------------------------------
 
     [Fact]
     public void MultipleNpcs_ClusteredThenScattered_CorrectEventCounts()

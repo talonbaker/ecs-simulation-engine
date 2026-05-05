@@ -19,7 +19,7 @@ namespace APIFramework.Tests.Bootstrap;
 /// </summary>
 public class WorldDefinitionLoaderTests
 {
-    // ── AT-03: entity counts ──────────────────────────────────────────────────
+    // -- AT-03: entity counts --------------------------------------------------
 
     [Fact]
     public void LoadFromFile_StarterJson_ProducesMinimumEntityCounts()
@@ -56,7 +56,7 @@ public class WorldDefinitionLoaderTests
         Assert.True(slots     >= 5, $"EM: expected ≥5 NPC-slot entities, got {slots}");
     }
 
-    // ── AT-04: RoomComponent fields match JSON ────────────────────────────────
+    // -- AT-04: RoomComponent fields match JSON --------------------------------
 
     [Fact]
     public void LoadFromFile_BreakroomEntity_HasCorrectRoomComponentFields()
@@ -100,7 +100,7 @@ public class WorldDefinitionLoaderTests
         Assert.Equal(BuildingFloor.Top, conf.Floor);
     }
 
-    // ── AT-05: NamedAnchorComponent populated correctly ───────────────────────
+    // -- AT-05: NamedAnchorComponent populated correctly -----------------------
 
     [Fact]
     public void LoadFromFile_BreakroomEntity_HasNamedAnchorComponent_WithCorrectTag()
@@ -161,7 +161,7 @@ public class WorldDefinitionLoaderTests
             "first-floor-cubicle-grid-west should not have a NamedAnchorComponent.");
     }
 
-    // ── AT-06: malformed files throw WorldDefinitionInvalidException ─────────
+    // -- AT-06: malformed files throw WorldDefinitionInvalidException ---------
 
     [Fact]
     public void LoadFromFile_MissingSchemaVersion_ThrowsWithErrorDetail()
@@ -207,7 +207,7 @@ public class WorldDefinitionLoaderTests
         Assert.Contains(ex.ValidationErrors, e => e.Contains("seed") || e.Contains("minimum"));
     }
 
-    // ── AT-08: determinism ────────────────────────────────────────────────────
+    // -- AT-08: determinism ----------------------------------------------------
 
     [Fact]
     public void LoadFromFile_TwoRunsSameSeed_ProduceIdenticalRoomComponents()
@@ -258,7 +258,7 @@ public class WorldDefinitionLoaderTests
         Assert.Equal(19990101, result.SeedUsed); // seed from the starter JSON
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static TempJsonFile TempFile(string content) => new(content);
 
@@ -276,7 +276,7 @@ public class WorldDefinitionLoaderTests
         }
     }
 
-    // ── Starter JSON (mirrors office-starter.json) ────────────────────────────
+    // -- Starter JSON (mirrors office-starter.json) ----------------------------
 
     private static readonly string StarterJson = LoadStarterJson();
 

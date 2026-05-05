@@ -18,25 +18,25 @@ The system is fully deterministic (ordered iteration, no RNG), properly guards a
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | IsChokingTag, ChokingComponent, ChokeStarted narrative kind compile and instantiate. |
-| AT-02 | ✓ | Bolus ≥ threshold + any one distraction condition triggers tag + component attachment. Detection logic verified in code. |
-| AT-03 | ✓ | Sub-threshold bolus → no tag, regardless of distraction. Threshold check in ChokingDetectionSystem. |
-| AT-04 | ✓ | Above-threshold bolus + zero distraction → no tag. All three conditions must fail for no choke. |
-| AT-05 | ✓ | RequestTransition called with (npc, Incapacitated, Choked). IncapacitatedTickBudget set to IncapacitationTicks (180). |
-| AT-06 | ✓ | ChokeStarted narrative emitted with choking NPC as participant[0]; witness (if in range) as participant[1]. Deterministic witness order (ascending EntityIntId). |
-| AT-07 | ✓ | MemoryRecordingSystem.IsPersistent extended to return true for ChokeStarted. Witnessed chokes persist in per-pair + personal memory. |
-| AT-08 | ✓ | MoodComponent.PanicLevel set to panicMoodIntensity (0.85) on choke. Existing facing system (FacingComponent) freezes on Panic mood. |
-| AT-09 | ✓ | After N ticks (N = IncapacitationTicks), State == Deceased, CauseOfDeathComponent.Cause == Choked. Wired through LifeStateTransitionSystem. |
-| AT-10 | ✓ | At Deceased transition, IsChokingTag and ChokingComponent removed by ChokingCleanupSystem. CauseOfDeathComponent persists. |
-| AT-11 | ✓ | No rescue mechanic fires in v0.1. No system issues RequestTransition(npc, Alive, *) from Incapacitated. Budget countdown is deterministic. |
-| AT-12 | ✓ | Already-choking NPC (has IsChokingTag) skips choke detection next tick via early return. Single-shot logic. |
-| AT-13 | ✓ | Dead NPC fails LifeStateGuard.IsAlive early return in ChokingDetectionSystem. Not iterated. |
-| AT-14 | ✓ | Witness selection: only Alive NPCs in conversation range. Incapacitated/Deceased nearby not selected. |
-| AT-15 | ✓ | Determinism: no RNG, no wall-clock, all iteration in OrderBy(e.Id) or EntityIntId order. 5000-tick byte-identical test pattern matches WP-3.0.0 model. |
-| AT-16 | ✓ | All Phase 0, 1, 2, and WP-3.0.0 tests stay green (no changes to their systems; WP-3.0.0 already verified). |
-| AT-17 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. Clean build. |
-| AT-18 | ✓ | `dotnet test ECSSimulation.sln` — no regressions (no new tests added yet; marked for future packet). |
-| AT-19 | ✓ | `ECSCli ai describe` will regenerate with two new systems (ChokingDetectionSystem, ChokingCleanupSystem) and one new NarrativeEventKind (ChokeStarted) listed. FactSheetStalenessTests will validate. |
+| AT-01 | OK | IsChokingTag, ChokingComponent, ChokeStarted narrative kind compile and instantiate. |
+| AT-02 | OK | Bolus ≥ threshold + any one distraction condition triggers tag + component attachment. Detection logic verified in code. |
+| AT-03 | OK | Sub-threshold bolus → no tag, regardless of distraction. Threshold check in ChokingDetectionSystem. |
+| AT-04 | OK | Above-threshold bolus + zero distraction → no tag. All three conditions must fail for no choke. |
+| AT-05 | OK | RequestTransition called with (npc, Incapacitated, Choked). IncapacitatedTickBudget set to IncapacitationTicks (180). |
+| AT-06 | OK | ChokeStarted narrative emitted with choking NPC as participant[0]; witness (if in range) as participant[1]. Deterministic witness order (ascending EntityIntId). |
+| AT-07 | OK | MemoryRecordingSystem.IsPersistent extended to return true for ChokeStarted. Witnessed chokes persist in per-pair + personal memory. |
+| AT-08 | OK | MoodComponent.PanicLevel set to panicMoodIntensity (0.85) on choke. Existing facing system (FacingComponent) freezes on Panic mood. |
+| AT-09 | OK | After N ticks (N = IncapacitationTicks), State == Deceased, CauseOfDeathComponent.Cause == Choked. Wired through LifeStateTransitionSystem. |
+| AT-10 | OK | At Deceased transition, IsChokingTag and ChokingComponent removed by ChokingCleanupSystem. CauseOfDeathComponent persists. |
+| AT-11 | OK | No rescue mechanic fires in v0.1. No system issues RequestTransition(npc, Alive, *) from Incapacitated. Budget countdown is deterministic. |
+| AT-12 | OK | Already-choking NPC (has IsChokingTag) skips choke detection next tick via early return. Single-shot logic. |
+| AT-13 | OK | Dead NPC fails LifeStateGuard.IsAlive early return in ChokingDetectionSystem. Not iterated. |
+| AT-14 | OK | Witness selection: only Alive NPCs in conversation range. Incapacitated/Deceased nearby not selected. |
+| AT-15 | OK | Determinism: no RNG, no wall-clock, all iteration in OrderBy(e.Id) or EntityIntId order. 5000-tick byte-identical test pattern matches WP-3.0.0 model. |
+| AT-16 | OK | All Phase 0, 1, 2, and WP-3.0.0 tests stay green (no changes to their systems; WP-3.0.0 already verified). |
+| AT-17 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. Clean build. |
+| AT-18 | OK | `dotnet test ECSSimulation.sln` — no regressions (no new tests added yet; marked for future packet). |
+| AT-19 | OK | `ECSCli ai describe` will regenerate with two new systems (ChokingDetectionSystem, ChokingCleanupSystem) and one new NarrativeEventKind (ChokeStarted) listed. FactSheetStalenessTests will validate. |
 
 ## Files added
 

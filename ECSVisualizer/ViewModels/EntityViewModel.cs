@@ -11,38 +11,38 @@ namespace ECSVisualizer.ViewModels;
 /// </summary>
 public partial class EntityViewModel : ObservableObject
 {
-    // ── Identity ─────────────────────────────────────────────────────────────
+    // -- Identity -------------------------------------------------------------
     [ObservableProperty] private string _entityId = "";
     [ObservableProperty] private string _name     = "";
 
-    // ── Active Tags ───────────────────────────────────────────────────────────
+    // -- Active Tags -----------------------------------------------------------
     [ObservableProperty] private string _activeTags    = "";
     [ObservableProperty] private bool   _hasActiveTags = false;
 
-    // ── Metabolism — Resources ────────────────────────────────────────────────
+    // -- Metabolism — Resources ------------------------------------------------
     [ObservableProperty] private bool   _hasMetabolism    = false;
     [ObservableProperty] private float  _satiation        = 100f;
     [ObservableProperty] private float  _hydration        = 100f;
     [ObservableProperty] private string _satiationLabel   = "100%";
     [ObservableProperty] private string _hydrationLabel   = "100%";
 
-    // ── Metabolism — Body Temperature ────────────────────────────────────────
+    // -- Metabolism — Body Temperature ----------------------------------------
     [ObservableProperty] private float  _bodyTemp      = 37.0f;
     [ObservableProperty] private string _bodyTempLabel = "37.0°C";
     // Tier 0=hypothermia(<35), 1=normal(35–37.5), 2=fever(37.6–39), 3=hyperthermia(>39)
     [ObservableProperty] private int    _bodyTempTier  = 1;
 
-    // ── Metabolism — Sensations ───────────────────────────────────────────────
+    // -- Metabolism — Sensations -----------------------------------------------
     [ObservableProperty] private string _hungerLabel  = "Not hungry";
     [ObservableProperty] private string _thirstLabel  = "Not thirsty";
 
-    // ── Stomach ───────────────────────────────────────────────────────────────
+    // -- Stomach ---------------------------------------------------------------
     [ObservableProperty] private bool   _hasStomach      = false;
     [ObservableProperty] private float  _stomachFill     = 0f;
     [ObservableProperty] private string _stomachLabel    = "";
     [ObservableProperty] private string _digestionLabel  = "";
 
-    // ── Body Nutrient Stores (v0.7.0+) ────────────────────────────────────────
+    // -- Body Nutrient Stores (v0.7.0+) ----------------------------------------
     // Cumulative real-biology stores extracted by DigestionSystem.
     [ObservableProperty] private bool   _hasNutrients     = false;
     [ObservableProperty] private float  _nutrientCalories = 0f;
@@ -52,7 +52,7 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private string _nutrientVitaminsLabel = "";
     [ObservableProperty] private string _nutrientMineralsLabel = "";
 
-    // ── Energy / Sleep ────────────────────────────────────────────────────────
+    // -- Energy / Sleep --------------------------------------------------------
     [ObservableProperty] private bool   _hasEnergy        = false;
     [ObservableProperty] private float  _energy           = 100f;
     [ObservableProperty] private float  _sleepiness       = 0f;
@@ -61,12 +61,12 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private string _sleepStateLabel  = "Awake";
     [ObservableProperty] private bool   _isSleeping       = false;
 
-    // ── Brain / Priority Queue ────────────────────────────────────────────────
+    // -- Brain / Priority Queue ------------------------------------------------
     [ObservableProperty] private bool   _hasDrives       = false;
     [ObservableProperty] private string _dominantDesire  = "NONE";
     [ObservableProperty] private string _driveScores     = "";
 
-    // ── Mood / Plutchik Emotions ──────────────────────────────────────────────
+    // -- Mood / Plutchik Emotions ----------------------------------------------
     [ObservableProperty] private bool   _hasMood          = false;
     [ObservableProperty] private float  _moodJoy          = 0f;
     [ObservableProperty] private float  _moodTrust        = 0f;
@@ -80,7 +80,7 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private string _activeEmotionTags = "";
     [ObservableProperty] private bool   _hasActiveEmotions = false;
 
-    // ── GI Pipeline (v0.7.3+) ─────────────────────────────────────────────────
+    // -- GI Pipeline (v0.7.3+) -------------------------------------------------
     // Fill values are 0–100 for ProgressBar binding.
     [ObservableProperty] private bool   _hasGiPipeline    = false;
     [ObservableProperty] private float  _siFill           = 0f;
@@ -94,7 +94,7 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private bool   _colonIsUrge     = false;
     [ObservableProperty] private bool   _colonIsCritical = false;
 
-    // ── Bladder (v0.7.4+) ─────────────────────────────────────────────────────
+    // -- Bladder (v0.7.4+) -----------------------------------------------------
     // Fill is 0–100 for ProgressBar binding.
     [ObservableProperty] private bool   _hasBladder        = false;
     [ObservableProperty] private float  _bladderFill       = 0f;
@@ -103,12 +103,12 @@ public partial class EntityViewModel : ObservableObject
     [ObservableProperty] private bool   _bladderIsUrge     = false;
     [ObservableProperty] private bool   _bladderIsCritical = false;
 
-    // ── Esophagus Transit ─────────────────────────────────────────────────────
+    // -- Esophagus Transit -----------------------------------------------------
     [ObservableProperty] private bool   _isInTransit     = false;
     [ObservableProperty] private float  _transitProgress = 0f;
     [ObservableProperty] private string _transitLabel    = "";
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     /// <summary>
     /// Pulls the latest component values off <paramref name="entity"/> and

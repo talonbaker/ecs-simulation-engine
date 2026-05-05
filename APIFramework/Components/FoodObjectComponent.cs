@@ -9,7 +9,7 @@ namespace APIFramework.Components;
 /// approximate the food's total NutrientProfile.
 ///
 /// FORWARD COMPAT
-/// ──────────────
+/// --------------
 /// When the world has a fridge/counter entity, InteractionSystem will fetch a
 /// FoodObjectComponent from that source and add it to the entity's hand. The
 /// FoodObjectComponent then drains one bite at a time until empty.

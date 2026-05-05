@@ -62,7 +62,7 @@ public class BladderSystemVetoTests
         return (em, npc);
     }
 
-    // ── AT-05 ─────────────────────────────────────────────────────────────────
+    // -- AT-05 -----------------------------------------------------------------
 
     [Fact]
     public void AT05_BladderCritical_PublicEmotion90_Willpower70_DoesNotUrinateOver500Ticks()

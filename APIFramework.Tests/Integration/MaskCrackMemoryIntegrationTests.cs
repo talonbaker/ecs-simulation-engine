@@ -35,7 +35,7 @@ public class MaskCrackMemoryIntegrationTests
         return (em, membership, memorySys, crackSys);
     }
 
-    // ── Solo crack → PersonalMemoryComponent ─────────────────────────────────
+    // -- Solo crack → PersonalMemoryComponent ---------------------------------
 
     [Fact]
     public void AT09_SoloCrack_NoObservers_WritesPersonalMemory()
@@ -75,7 +75,7 @@ public class MaskCrackMemoryIntegrationTests
             "MaskSlip memory entry must carry Persistent=true (IsPersistent patch from WP-2.3.A)");
     }
 
-    // ── Pair crack → RelationshipMemoryComponent ──────────────────────────────
+    // -- Pair crack → RelationshipMemoryComponent ------------------------------
 
     [Fact]
     public void AT09_PairCrack_OneObserver_WritesRelationshipMemory()

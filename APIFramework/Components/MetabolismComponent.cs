@@ -14,7 +14,7 @@ namespace APIFramework.Components;
 /// </summary>
 public struct MetabolismComponent
 {
-    // ── Physiological Resources (0 = depleted, 100 = fully stocked) ─────────
+    // -- Physiological Resources (0 = depleted, 100 = fully stocked) ---------
     // These are the gameplay-facing fullness metrics. Systems drain them;
     // digestion refills them.
 
@@ -27,7 +27,7 @@ public struct MetabolismComponent
     /// <summary>Reserved for future use — affects movement/logic speed.</summary>
     public float Energy;             // Affects movement and logic speed (future use)
 
-    // ── Nutrient Stores (v0.7.0+) ────────────────────────────────────────────
+    // -- Nutrient Stores (v0.7.0+) --------------------------------------------
     /// <summary>
     /// Cumulative nutrients absorbed by the body, minus what metabolism burns.
     /// Macros measured in grams, water in ml, vitamins/minerals in mg.
@@ -36,14 +36,14 @@ public struct MetabolismComponent
     /// </summary>
     public NutrientProfile NutrientStores;
 
-    // ── Drain Rates (per second at TimeScale 1.0) ────────────────────────────
+    // -- Drain Rates (per second at TimeScale 1.0) ----------------------------
 
     /// <summary>How fast <see cref="Satiation"/> depletes per game-second at TimeScale 1.0.</summary>
     public float SatiationDrainRate;          // How fast Satiation depletes (Billy gets hungry)
     /// <summary>How fast <see cref="Hydration"/> depletes per game-second at TimeScale 1.0.</summary>
     public float HydrationDrainRate;          // How fast Hydration depletes (Billy gets thirsty)
 
-    // ── Sleep modifier ────────────────────────────────────────────────────────
+    // -- Sleep modifier --------------------------------------------------------
     // Metabolism slows significantly during sleep — breathing/sweat are minimal at rest.
     // MetabolismSystem multiplies both drain rates by this value when SleepingTag is present.
     // 0.10 = 10% of awake rate, so an 8-hour sleep only costs ~10% hydration/satiation.
@@ -54,7 +54,7 @@ public struct MetabolismComponent
     /// </summary>
     public float SleepMetabolismMultiplier;   // 0.0 (no drain) to 1.0 (full awake drain)
 
-    // ── Derived Sensations (computed — never set directly) ───────────────────
+    // -- Derived Sensations (computed — never set directly) -------------------
     // These are what Billy perceives, not the actual physiological state.
     // Future: lag effects, stress modifiers, medications, and mood can adjust these.
 

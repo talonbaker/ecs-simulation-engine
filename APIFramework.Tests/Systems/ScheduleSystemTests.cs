@@ -14,7 +14,7 @@ namespace APIFramework.Tests.Systems;
 /// </summary>
 public class ScheduleSystemTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static (EntityManager em, SimulationClock clock, ScheduleSystem sys) Setup()
     {
@@ -52,7 +52,7 @@ public class ScheduleSystemTests
         clock.Tick(delta);
     }
 
-    // ── AT-02: Block resolver ─────────────────────────────────────────────────
+    // -- AT-02: Block resolver -------------------------------------------------
 
     [Fact]
     public void AT02_FourBlockSchedule_CorrectIndexAtEachBoundary()
@@ -116,7 +116,7 @@ public class ScheduleSystemTests
         Assert.Equal(Guid.Empty, comp.AnchorEntityId);
     }
 
-    // ── AT-03: End-of-day wrap ─────────────────────────────────────────────────
+    // -- AT-03: End-of-day wrap -------------------------------------------------
 
     [Fact]
     public void AT03_WrapAroundBlock_ActiveAfterStartHour()
@@ -178,7 +178,7 @@ public class ScheduleSystemTests
         Assert.Equal(0, npc.Get<CurrentScheduleBlockComponent>().ActiveBlockIndex);
     }
 
-    // ── IsBlockActive unit tests ──────────────────────────────────────────────
+    // -- IsBlockActive unit tests ----------------------------------------------
 
     [Theory]
     [InlineData(22.0f, 6.0f, 23.0f, true)]
@@ -193,7 +193,7 @@ public class ScheduleSystemTests
         Assert.Equal(expected, ScheduleSystem.IsBlockActive(start, end, hour));
     }
 
-    // ── Anchor resolution ─────────────────────────────────────────────────────
+    // -- Anchor resolution -----------------------------------------------------
 
     [Fact]
     public void AT02_AnchorEntityResolved_WhenPresent()

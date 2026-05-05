@@ -64,7 +64,7 @@ public sealed record ScenarioAssertionDto
     public double?      WithinGameSeconds   { get; init; }
 }
 
-// ── Enums ─────────────────────────────────────────────────────────────────────
+// -- Enums ---------------------------------------------------------------------
 
 /// <summary>Assertion evaluation timing. Serialises as kebab-case string.</summary>
 [JsonConverter(typeof(JsonKebabCaseEnumConverter<AssertionKind>))]

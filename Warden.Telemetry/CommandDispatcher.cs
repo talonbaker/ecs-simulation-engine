@@ -13,25 +13,25 @@ namespace Warden.Telemetry;
 /// <see cref="SimulationBootstrapper"/> simulation.
 ///
 /// SAFETY CONTRACT
-/// ───────────────
-/// • The entire batch is validated BEFORE any mutation occurs.
+/// ---------------
+/// - The entire batch is validated BEFORE any mutation occurs.
 ///   If any command fails validation, the batch is rejected atomically:
 ///   <c>Applied == 0</c>, <c>Rejected == batch.Commands.Count</c>.
-/// • Individual handlers take defensive copies of struct components so a
+/// - Individual handlers take defensive copies of struct components so a
 ///   partially-applied handler cannot leave ECS index state inconsistent.
-/// • <c>set-config-value</c> mutates <c>SimConfig</c> via direct property
+/// - <c>set-config-value</c> mutates <c>SimConfig</c> via direct property
 ///   assignment on the live config objects (same objects that systems reference),
 ///   matching the semantics of <see cref="SimulationBootstrapper.ApplyConfig"/>.
 ///
 /// FORCE-DOMINANT LIMITATION
-/// ─────────────────────────
+/// -------------------------
 /// <c>force-dominant</c> writes urgency values to <c>DriveComponent</c> for the
 /// current tick only. <c>BrainSystem</c> overwrites them on the next tick.
 /// Persistent forced-drive support requires an engine-side override slot (future WP).
 /// </summary>
 public sealed class CommandDispatcher
 {
-    // ── Public API ────────────────────────────────────────────────────────────
+    // -- Public API ------------------------------------------------------------
 
     /// <summary>
     /// Validates then applies <paramref name="batch"/> to <paramref name="sim"/>.
@@ -43,7 +43,7 @@ public sealed class CommandDispatcher
         if (batch.Commands.Count == 0)
             return new DispatchResult(0, 0, Array.Empty<string>());
 
-        // ── Phase 1 — validate everything before mutating anything ────────────
+        // -- Phase 1 — validate everything before mutating anything ------------
         var errors = new List<string>();
         foreach (var cmd in batch.Commands)
             errors.AddRange(Validate(sim, cmd));
@@ -51,7 +51,7 @@ public sealed class CommandDispatcher
         if (errors.Count > 0)
             return new DispatchResult(0, batch.Commands.Count, errors);
 
-        // ── Phase 2 — apply (every command passed validation) ─────────────────
+        // -- Phase 2 — apply (every command passed validation) -----------------
         int applied = 0;
         foreach (var cmd in batch.Commands)
         {
@@ -62,7 +62,7 @@ public sealed class CommandDispatcher
         return new DispatchResult(applied, 0, Array.Empty<string>());
     }
 
-    // ── Validation ────────────────────────────────────────────────────────────
+    // -- Validation ------------------------------------------------------------
 
     private static IReadOnlyList<string> Validate(SimulationBootstrapper sim, AiCommand cmd)
     {
@@ -187,7 +187,7 @@ public sealed class CommandDispatcher
         return errs;
     }
 
-    // ── Dispatch (runs only after full validation passes) ─────────────────────
+    // -- Dispatch (runs only after full validation passes) ---------------------
 
     private static void Dispatch(SimulationBootstrapper sim, AiCommand cmd)
     {
@@ -202,7 +202,7 @@ public sealed class CommandDispatcher
         }
     }
 
-    // ── Handlers ──────────────────────────────────────────────────────────────
+    // -- Handlers --------------------------------------------------------------
 
     private static void HandleSpawnFood(EntityManager em, SpawnFoodCommand cmd)
     {
@@ -309,7 +309,7 @@ public sealed class CommandDispatcher
         Console.WriteLine($"[Config] set-config-value '{cmd.Path}' applied.");
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static Entity? FindEntity(EntityManager em, Guid id)
     {

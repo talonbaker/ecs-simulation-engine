@@ -27,9 +27,9 @@
 - Worktree: `./runs/20260423-142300-smoke/sonnet-01/worktree/`
 - Diff summary: 1 files modified, 3 lines added
 - Acceptance test results:
-    - AT-01 ✓
-    - AT-02 ✓
-    - AT-03 ✓
+    - AT-01 OK
+    - AT-02 OK
+    - AT-03 OK
 
 ---
 

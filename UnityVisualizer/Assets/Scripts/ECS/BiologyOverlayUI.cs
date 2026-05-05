@@ -8,7 +8,7 @@ using APIFramework.Core;
 /// LEFT half; this overlay fills the right half with one entity's biology data.
 ///
 /// LAYOUT
-/// ──────
+/// ------
 ///  Header    — entity name + index counter + Tab key hint
 ///  Drive     — dominant drive + movement destination
 ///  GI Column — fill bar + label for each organ (esophagus → bladder)
@@ -17,7 +17,7 @@ using APIFramework.Core;
 ///  Footer    — violation count
 ///
 /// ENTITY CYCLING
-/// ──────────────
+/// --------------
 /// Press Tab to step forward through the living entity list.
 /// Press Shift+Tab to step backward.
 /// Works in both single-Billy and 100-human stress-test mode.
@@ -29,10 +29,10 @@ using APIFramework.Core;
 [DefaultExecutionOrder(100)]   // run after SimulationManager.Update()
 public class BiologyOverlayUI : MonoBehaviour
 {
-    // ── Entity index (which human is displayed) ───────────────────────────────
+    // -- Entity index (which human is displayed) -------------------------------
     private int _entityIndex = 0;   // wraps around [0, LivingEntities.Count)
 
-    // ── Cached 1x1 textures (each a solid colour) ────────────────────────────
+    // -- Cached 1x1 textures (each a solid colour) ----------------------------
     private Texture2D _texBg;           // dark warm-black panel
     private Texture2D _texBarBg;        // very dark bar background
     private Texture2D _texDivider;      // subtle divider line
@@ -50,7 +50,7 @@ public class BiologyOverlayUI : MonoBehaviour
     private Texture2D _texMoving;
     private Texture2D _texFridge;
 
-    // ── GUI Styles ────────────────────────────────────────────────────────────
+    // -- GUI Styles ------------------------------------------------------------
     private GUIStyle _header;
     private GUIStyle _subHeader;
     private GUIStyle _label;
@@ -60,7 +60,7 @@ public class BiologyOverlayUI : MonoBehaviour
 
     private bool _stylesBuilt = false;
 
-    // ── Colours (matching EcsColors where possible) ──────────────────────────
+    // -- Colours (matching EcsColors where possible) --------------------------
     private static readonly Color ColBg        = new Color(0.10f, 0.09f, 0.07f, 0.97f);
     private static readonly Color ColBarBg     = new Color(0.06f, 0.05f, 0.04f, 1.00f);
     private static readonly Color ColDivider   = new Color(0.30f, 0.25f, 0.15f, 1.00f);
@@ -70,7 +70,7 @@ public class BiologyOverlayUI : MonoBehaviour
     private static readonly Color ColCritical  = new Color(1.00f, 0.20f, 0.10f, 1.00f);
     private static readonly Color ColMoving    = new Color(0.35f, 0.75f, 1.00f, 1.00f);
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     void Awake()
     {
@@ -124,7 +124,7 @@ public class BiologyOverlayUI : MonoBehaviour
 
         int y = pad;
 
-        // ── Header ────────────────────────────────────────────────────────────
+        // -- Header ------------------------------------------------------------
         // Left: panel title.  Right: entity counter + Tab hint.
         string counterLabel = total > 1
             ? $"[TAB]  {_entityIndex + 1} / {total}"
@@ -156,7 +156,7 @@ public class BiologyOverlayUI : MonoBehaviour
 
         DrawDivider(px, y, pw); y += 10;
 
-        // ── GI Tract ──────────────────────────────────────────────────────────
+        // -- GI Tract ----------------------------------------------------------
         GUI.Label(new Rect(px + pad, y, iw, 18), "GI TRACT", _subHeader);
         y += 20;
 
@@ -182,7 +182,7 @@ public class BiologyOverlayUI : MonoBehaviour
         y += barH + 10;
         DrawDivider(px, y, pw); y += 10;
 
-        // ── Vitals ────────────────────────────────────────────────────────────
+        // -- Vitals ------------------------------------------------------------
         GUI.Label(new Rect(px + pad, y, iw, 18), "VITALS", _subHeader);
         y += 20;
 
@@ -197,7 +197,7 @@ public class BiologyOverlayUI : MonoBehaviour
         y += barH + 10;
         DrawDivider(px, y, pw); y += 10;
 
-        // ── Status ────────────────────────────────────────────────────────────
+        // -- Status ------------------------------------------------------------
         GUI.Label(new Rect(px + pad, y, iw, 18), "STATUS", _subHeader);
         y += 22;
 
@@ -227,7 +227,7 @@ public class BiologyOverlayUI : MonoBehaviour
         }
     }
 
-    // ── Drawing helpers ───────────────────────────────────────────────────────
+    // -- Drawing helpers -------------------------------------------------------
 
     private void DrawDivider(int x, int y, int w)
         => GUI.DrawTexture(new Rect(x, y, w, 1), _texDivider);
@@ -280,7 +280,7 @@ public class BiologyOverlayUI : MonoBehaviour
         GUI.Label(new Rect(px + 20, Screen.height / 2 - 10, 300, 30), "WAITING FOR SIMULATION...", _label);
     }
 
-    // ── Texture / style construction ──────────────────────────────────────────
+    // -- Texture / style construction ------------------------------------------
 
     private void BuildTextures()
     {

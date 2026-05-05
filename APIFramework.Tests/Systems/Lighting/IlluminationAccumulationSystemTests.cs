@@ -63,7 +63,7 @@ public class IlluminationAccumulationSystemTests
             roomId: roomId, facing: facing, areaSqTiles: area);
     }
 
-    // ── AT-09: Empty room ─────────────────────────────────────────────────────
+    // -- AT-09: Empty room -----------------------------------------------------
 
     [Fact]
     public void EmptyRoom_AmbientLevel_IsZero()
@@ -79,7 +79,7 @@ public class IlluminationAccumulationSystemTests
         Assert.Equal(0, illum.AmbientLevel);
     }
 
-    // ── AT-10: On source at center ────────────────────────────────────────────
+    // -- AT-10: On source at center --------------------------------------------
 
     [Fact]
     public void RoomWithOnSource_AtCenter_AmbientLevelNear80()
@@ -139,7 +139,7 @@ public class IlluminationAccumulationSystemTests
         Assert.True(sawOff, "Flickering source never produced ambient == 0 in 500 ticks");
     }
 
-    // ── AT-11: DominantSourceId ───────────────────────────────────────────────
+    // -- AT-11: DominantSourceId -----------------------------------------------
 
     [Fact]
     public void MultiSourceRoom_DominantSourceId_IsHighestContributor()
@@ -159,7 +159,7 @@ public class IlluminationAccumulationSystemTests
         Assert.Equal("bright-src", illum.DominantSourceId);
     }
 
-    // ── AT-12: Color temperature is intensity-weighted ─────────────────────────
+    // -- AT-12: Color temperature is intensity-weighted -------------------------
 
     [Fact]
     public void MultiSourceRoom_ColorTemperature_IsIntensityWeighted()
@@ -181,7 +181,7 @@ public class IlluminationAccumulationSystemTests
         Assert.InRange(illum.ColorTemperatureK, expected - 50, expected + 50);
     }
 
-    // ── Aperture contribution ─────────────────────────────────────────────────
+    // -- Aperture contribution -------------------------------------------------
 
     [Fact]
     public void RoomWithSouthApertureAndNoonSun_AmbientElevated()
@@ -221,7 +221,7 @@ public class IlluminationAccumulationSystemTests
         Assert.Equal(0, illum.AmbientLevel);
     }
 
-    // ── Source outside range has zero contribution ────────────────────────────
+    // -- Source outside range has zero contribution ----------------------------
 
     [Fact]
     public void SourceFarFromRoomCenter_ZeroContribution()

@@ -140,7 +140,7 @@ public sealed class ReportAggregator
             Encoding.UTF8);
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────────
+    // -- Private helpers -----------------------------------------------------------
 
     private sealed record EventLine(DateTimeOffset Timestamp, string Kind, string Raw);
     private sealed record HaikuData(ScenarioDto? Scenario, HaikuResult Result);

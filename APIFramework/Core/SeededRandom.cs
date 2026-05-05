@@ -4,14 +4,14 @@ namespace APIFramework.Core;
 /// Deterministic RNG source for simulation systems.
 ///
 /// DESIGN CONTRACT
-/// ───────────────
+/// ---------------
 /// Given the same <paramref name="seed"/> value, any sequence of calls to
 /// <see cref="NextFloat"/>, <see cref="NextDouble"/>, and <see cref="NextInt"/>
 /// produces the same sequence of results on every run. This is the foundation
 /// of the determinism guarantee required by WP-04 / Pillar A.
 ///
 /// USAGE
-/// ─────
+/// -----
 /// <code>
 ///   var rng = new SeededRandom(42);
 ///   float x = rng.NextFloat();          // [0.0, 1.0)
@@ -19,7 +19,7 @@ namespace APIFramework.Core;
 /// </code>
 ///
 /// THREAD SAFETY
-/// ─────────────
+/// -------------
 /// Not thread-safe. All ECS systems run on the same thread (sequential phase
 /// execution), so no locking is required. Do not share an instance across threads.
 /// </summary>

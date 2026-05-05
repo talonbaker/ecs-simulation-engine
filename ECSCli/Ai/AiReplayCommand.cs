@@ -18,18 +18,18 @@ namespace ECSCli.Ai;
 /// <c>capturedAt</c>.
 ///
 /// DETERMINISM CONTRACT
-/// ────────────────────
-/// • Seed is passed to <see cref="SimulationBootstrapper"/> which wires it
+/// --------------------
+/// - Seed is passed to <see cref="SimulationBootstrapper"/> which wires it
 ///   into <see cref="SeededRandom"/> and all systems that consume randomness.
-/// • Entity IDs are counter-based (not random Guids), so the same creation
+/// - Entity IDs are counter-based (not random Guids), so the same creation
 ///   order always produces the same IDs.
-/// • <c>capturedAt</c> is derived from simulation game time so it too is
+/// - <c>capturedAt</c> is derived from simulation game time so it too is
 ///   deterministic (no wall-clock dependency), making full runs byte-identical.
-/// • <c>HashSet&lt;Entity&gt;</c> query buckets use <c>Entity.GetHashCode()</c>
+/// - <c>HashSet&lt;Entity&gt;</c> query buckets use <c>Entity.GetHashCode()</c>
 ///   based on Id, so system iteration order is stable across runs.
 ///
 /// EXIT CODES
-/// ──────────
+/// ----------
 /// 0  success — JSONL written.
 /// 1  unexpected error.
 /// </summary>
@@ -104,7 +104,7 @@ public static class AiReplayCommand
         return cmd;
     }
 
-    // ── Implementation ────────────────────────────────────────────────────────
+    // -- Implementation --------------------------------------------------------
 
     internal static void Run(int seed, FileInfo? commandsFile, double duration, FileInfo outFile, string? worldDefinitionPath = null)
     {

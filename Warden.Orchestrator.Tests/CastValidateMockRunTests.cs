@@ -70,7 +70,7 @@ public sealed class CastValidateMockRunTests : IDisposable
         Assert.Equal(0, exitCode);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static (string missionFile, string specsGlob) LocateCastValidateMission(string repoRoot)
     {

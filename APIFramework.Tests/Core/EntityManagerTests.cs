@@ -7,25 +7,25 @@ namespace APIFramework.Tests.Core;
 /// Unit tests for EntityManager — the O(1) component index and entity lifecycle.
 ///
 /// Key behaviors under test:
-///   • CreateEntity wires the onChange callback automatically (no manual wiring)
-///   • Query&lt;T&gt;() returns entities that have T and only those entities
-///   • Adding then removing a component updates the query index correctly
-///   • DestroyEntity removes the entity from Entities AND all query buckets
-///   • ComponentTypeCount reflects the number of distinct component types seen
-///   • Query&lt;T&gt;() returns an empty enumerable (not null) when no bucket exists
+///   - CreateEntity wires the onChange callback automatically (no manual wiring)
+///   - Query&lt;T&gt;() returns entities that have T and only those entities
+///   - Adding then removing a component updates the query index correctly
+///   - DestroyEntity removes the entity from Entities AND all query buckets
+///   - ComponentTypeCount reflects the number of distinct component types seen
+///   - Query&lt;T&gt;() returns an empty enumerable (not null) when no bucket exists
 ///
 /// None of these tests import APIFramework.Components — they use private test
 /// structs so this file compiles independently of the component library.
 /// </summary>
 public class EntityManagerTests
 {
-    // ── Tiny private structs for test use only ────────────────────────────────
+    // -- Tiny private structs for test use only --------------------------------
 
     private struct Alpha { public int Value; }
     private struct Beta  { public float Score; }
     private struct Gamma { public bool Flag; }
 
-    // ── CreateEntity ──────────────────────────────────────────────────────────
+    // -- CreateEntity ----------------------------------------------------------
 
     [Fact]
     public void CreateEntity_AppearsIn_Entities()
@@ -61,7 +61,7 @@ public class EntityManagerTests
         Assert.Contains(c, em.Entities);
     }
 
-    // ── Query<T>() ────────────────────────────────────────────────────────────
+    // -- Query<T>() ------------------------------------------------------------
 
     [Fact]
     public void Query_ReturnsEmpty_BeforeAnyComponentAdded()
@@ -171,7 +171,7 @@ public class EntityManagerTests
         Assert.Single(em.Query<Alpha>());
     }
 
-    // ── DestroyEntity ─────────────────────────────────────────────────────────
+    // -- DestroyEntity ---------------------------------------------------------
 
     [Fact]
     public void DestroyEntity_RemovesFrom_Entities()
@@ -216,7 +216,7 @@ public class EntityManagerTests
         Assert.Contains(keep, results);
     }
 
-    // ── ComponentTypeCount ────────────────────────────────────────────────────
+    // -- ComponentTypeCount ----------------------------------------------------
 
     [Fact]
     public void ComponentTypeCount_StartsAtZero()
@@ -267,7 +267,7 @@ public class EntityManagerTests
         Assert.True(em.ComponentTypeCount >= 0);
     }
 
-    // ── GetAllEntities ────────────────────────────────────────────────────────
+    // -- GetAllEntities --------------------------------------------------------
 
     [Fact]
     public void GetAllEntities_MatchesEntitiesList()

@@ -4,24 +4,24 @@ namespace APIFramework.Components;
 /// The small intestine — primary site of detailed nutrient absorption.
 ///
 /// PIPELINE POSITION
-/// ─────────────────
+/// -----------------
 ///   Stomach → SmallIntestine → LargeIntestine → ColonComponent
 ///
 /// WHAT HAPPENS HERE
-/// ─────────────────
+/// -----------------
 /// When the stomach digests content it transfers a residue fraction into this
 /// component (done by DigestionSystem when ResidueFraction > 0 and this component
 /// is present on the entity). That residue is "chyme" — a semi-liquid mixture of
 /// partially-digested food, water, and micronutrients.
 ///
 /// SmallIntestineSystem processes the chyme over time:
-///   • Absorbs micronutrients (vitamins, minerals) into MetabolismComponent.NutrientStores
-///   • Drains ChymeVolumeMl at AbsorptionRate per game-second
-///   • When content empties, transfers the indigestible residue (fiber + unabsorbed
+///   - Absorbs micronutrients (vitamins, minerals) into MetabolismComponent.NutrientStores
+///   - Drains ChymeVolumeMl at AbsorptionRate per game-second
+///   - When content empties, transfers the indigestible residue (fiber + unabsorbed
 ///     water) into LargeIntestineComponent
 ///
 /// CAPACITY
-/// ─────────
+/// ---------
 /// Functional chyme capacity ~250 ml. This is the processed volume per meal cycle;
 /// a well-fed entity will regularly see this at 30–80% fill between meals.
 /// </summary>
@@ -53,7 +53,7 @@ public struct SmallIntestineComponent
     /// </summary>
     public float ResidueToLargeFraction;
 
-    // ── Derived ───────────────────────────────────────────────────────────────
+    // -- Derived ---------------------------------------------------------------
 
     /// <summary>Normalised fill 0.0 – 1.0 against <see cref="MaxVolumeMl"/>.</summary>
     public readonly float Fill    => ChymeVolumeMl / MaxVolumeMl;

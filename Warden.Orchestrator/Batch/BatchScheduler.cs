@@ -191,7 +191,7 @@ public sealed class BatchScheduler
         return finalResults.AsReadOnly();
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────────
+    // -- Private helpers -----------------------------------------------------------
 
     /// <summary>
     /// Encodes a composite Anthropic <c>custom_id</c> from the ScenarioBatch id and scenario id.

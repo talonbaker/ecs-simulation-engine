@@ -41,7 +41,7 @@ public class LightSourceStateSystemTests
         return e;
     }
 
-    // ── AT-04: Flickering ─────────────────────────────────────────────────────
+    // -- AT-04: Flickering -----------------------------------------------------
 
     [Fact]
     public void FlickeringSource_ProducesBothOnAndOffTicks_Over1000Samples()
@@ -81,7 +81,7 @@ public class LightSourceStateSystemTests
         Assert.Equal(80, src.Get<LightSourceComponent>().Intensity);
     }
 
-    // ── AT-05: Dying ─────────────────────────────────────────────────────────
+    // -- AT-05: Dying ---------------------------------------------------------
 
     [Fact]
     public void DyingSource_IntensityDecaysTowardZero_OverManyTicks()
@@ -131,7 +131,7 @@ public class LightSourceStateSystemTests
         Assert.Equal(storedIntensity, (int)effectiveIntens);
     }
 
-    // ── AT-06: On and Off are stable ─────────────────────────────────────────
+    // -- AT-06: On and Off are stable -----------------------------------------
 
     [Fact]
     public void OnSource_DoesNotTransition_Over1000Ticks()

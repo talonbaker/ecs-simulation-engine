@@ -16,9 +16,9 @@ public static class CliRenderer
     private const int BarWidth  = 14;
     private const int LineWidth = 66;
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
     //  LIVE SNAPSHOT
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
 
     /// <summary>
     /// Prints a live state snapshot for the current tick: tick number, in-game
@@ -35,7 +35,7 @@ public static class CliRenderer
         double simSpeed    = wallSeconds > 0.001 ? sim.Clock.TotalTime / wallSeconds : 0;
         string dayNight    = sim.Clock.IsDaytime ? "day" : "night";
 
-        string line = new('─', LineWidth);
+        string line = new('-', LineWidth);
         Console.WriteLine();
         Console.WriteLine(line);
         Console.WriteLine($"  {SimVersion.Full}");
@@ -75,9 +75,9 @@ public static class CliRenderer
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
     //  END-OF-RUN REPORT
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
 
     /// <summary>
     /// Prints a full end-of-run balancing report: invariant violation summary,
@@ -97,8 +97,8 @@ public static class CliRenderer
         double gameHours = gameSec / 3600.0;
         int    dayCount  = sim.Clock.DayNumber - 1; // days completed
 
-        string line  = new('═', LineWidth);
-        string dash  = new('─', LineWidth);
+        string line  = new('=', LineWidth);
+        string dash  = new('-', LineWidth);
         var    violations = sim.Invariants.Violations;
 
         Console.WriteLine();
@@ -110,7 +110,7 @@ public static class CliRenderer
         Console.WriteLine($"  Ticks      : {tick:N0}");
         Console.WriteLine(line);
 
-        // ── Invariant summary ────────────────────────────────────────────────
+        // -- Invariant summary ------------------------------------------------
         Console.WriteLine();
         if (violations.Count == 0)
         {
@@ -136,7 +136,7 @@ public static class CliRenderer
             }
         }
 
-        // ── Performance diagnostics (v0.7.2 — O(1) component index) ─────────────
+        // -- Performance diagnostics (v0.7.2 — O(1) component index) -------------
         Console.WriteLine();
         Console.WriteLine(dash);
         Console.WriteLine("  PERFORMANCE  —  v0.7.2 Query Index");
@@ -168,7 +168,7 @@ public static class CliRenderer
         Console.WriteLine($"    Scans avoided : ~{scansAvoided:N0} entity checks eliminated");
         Console.WriteLine($"                    ({sim.Engine.Registrations.Count} systems × {tick:N0} ticks × {totalEntities} entities)");
 
-        // ── Per-entity stats ─────────────────────────────────────────────────
+        // -- Per-entity stats -------------------------------------------------
         foreach (var em in metrics.EntityStats)
         {
             Console.WriteLine();
@@ -201,7 +201,7 @@ public static class CliRenderer
             PrintResourceLine("Sleepiness ", em.Sleepiness);
             PrintResourceLine("Stomach %  ", em.StomachFill);
 
-            // ── Balancing hints ───────────────────────────────────────────────
+            // -- Balancing hints -----------------------------------------------
             Console.WriteLine();
             Console.WriteLine("  BALANCING HINTS");
             PrintHints(em, gameHours);
@@ -213,7 +213,7 @@ public static class CliRenderer
         Console.WriteLine(line);
     }
 
-    // ── Balancing hint engine ─────────────────────────────────────────────────
+    // -- Balancing hint engine -------------------------------------------------
 
     private static void PrintHints(EntityMetrics em, double gameHours)
     {
@@ -261,7 +261,7 @@ public static class CliRenderer
         Console.WriteLine($"    {msg}");
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static void PrintEntity(Entity entity, SimulationClock clock)
     {
@@ -298,7 +298,7 @@ public static class CliRenderer
         if (entity.Has<MoodComponent>())
         {
             var mood = entity.Get<MoodComponent>();
-            Console.WriteLine($"    ── Emotions ──────────────────────────────────────");
+            Console.WriteLine($"    -- Emotions --------------------------------------");
             Console.WriteLine($"    Joy          {Bar(mood.Joy,          100f)}  {mood.Joy,5:F1}");
             Console.WriteLine($"    Trust        {Bar(mood.Trust,        100f)}  {mood.Trust,5:F1}");
             Console.WriteLine($"    Anticipation {Bar(mood.Anticipation, 100f)}  {mood.Anticipation,5:F1}");
@@ -317,7 +317,7 @@ public static class CliRenderer
                 Console.WriteLine($"    Mood tags  {string.Join("  ·  ", emotionTags)}");
         }
 
-        // ── GI pipeline (v0.7.3+) ────────────────────────────────────────────
+        // -- GI pipeline (v0.7.3+) --------------------------------------------
         bool hasGi = entity.Has<SmallIntestineComponent>()
                   && entity.Has<LargeIntestineComponent>()
                   && entity.Has<ColonComponent>();
@@ -327,13 +327,13 @@ public static class CliRenderer
             var li    = entity.Get<LargeIntestineComponent>();
             var colon = entity.Get<ColonComponent>();
             string colonStatus = colon.IsCritical ? " CRITICAL" : colon.HasUrge ? " URGE" : "";
-            Console.WriteLine($"    ── GI Pipeline ───────────────────────────────────");
+            Console.WriteLine($"    -- GI Pipeline -----------------------------------");
             Console.WriteLine($"    S.Int      {Bar(si.Fill,    1f)}  {si.Fill    * 100,5:F1}%  ({si.ChymeVolumeMl:F1}/{SmallIntestineComponent.MaxVolumeMl:F0} ml)");
             Console.WriteLine($"    L.Int      {Bar(li.Fill,    1f)}  {li.Fill    * 100,5:F1}%  ({li.ContentVolumeMl:F1}/{LargeIntestineComponent.MaxVolumeMl:F0} ml)");
             Console.WriteLine($"    Colon      {Bar(colon.Fill, 1f)}  {colon.Fill * 100,5:F1}%  ({colon.StoolVolumeMl:F1}/{colon.CapacityMl:F0} ml){colonStatus}");
         }
 
-        // ── Bladder (v0.7.4+) ─────────────────────────────────────────────────
+        // -- Bladder (v0.7.4+) -------------------------------------------------
         if (entity.Has<BladderComponent>())
         {
             var bladder = entity.Get<BladderComponent>();
@@ -349,13 +349,13 @@ public static class CliRenderer
             Console.WriteLine($"               queued  {q.Calories,6:F0} kcal  water {q.Water,5:F1}ml  carbs {q.Carbohydrates,4:F1}g  prot {q.Proteins,4:F1}g  fat {q.Fats,4:F1}g");
         }
 
-        // ── Body nutrient stores (v0.7.0+) ────────────────────────────────────
+        // -- Body nutrient stores (v0.7.0+) ------------------------------------
         // Cumulative macros/water/vitamins absorbed by the body. Future organ-
         // systems will subtract from this (daily burn, elimination).
         var store = meta.NutrientStores;
         if (!store.IsEmpty)
         {
-            Console.WriteLine($"    ── Nutrient Stores ───────────────────────────────");
+            Console.WriteLine($"    -- Nutrient Stores -------------------------------");
             Console.WriteLine($"    Calories     {store.Calories,7:F0} kcal");
             Console.WriteLine($"    Macros       carbs {store.Carbohydrates,5:F1}g  prot {store.Proteins,5:F1}g  fat {store.Fats,5:F1}g  fiber {store.Fiber,5:F1}g");
             Console.WriteLine($"    Water        {store.Water,7:F0} ml");

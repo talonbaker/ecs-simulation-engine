@@ -22,7 +22,7 @@ namespace APIFramework.Tests.Systems.LifeState;
 /// </summary>
 public class FaintingIntegrationTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static FaintingConfig DefaultCfg() => new()
     {
@@ -80,7 +80,7 @@ public class FaintingIntegrationTests
         clock.Advance(1);
     }
 
-    // ── AT-16: Full faint → recovery → cleanup cycle ──────────────────────────
+    // -- AT-16: Full faint → recovery → cleanup cycle --------------------------
 
     [Fact]
     public void AT16_FullCycle_FaintThenRecoverThenTagsRemoved()
@@ -92,7 +92,7 @@ public class FaintingIntegrationTests
         npc.Add(new LifeStateComponent { State = LifeState.Alive });
         npc.Add(new MoodComponent { Fear = 95f });
 
-        // ── Tick 0: detect faint ──────────────────────────────────────────────
+        // -- Tick 0: detect faint ----------------------------------------------
         long tick0 = clock.CurrentTick;
         Tick(em, clock, detection, recovery, transitions, cleanup);
 
@@ -101,14 +101,14 @@ public class FaintingIntegrationTests
 
         long recoveryTick = tick0 + DefaultCfg().FaintDurationTicks;
 
-        // ── Ticks 1–19: still unconscious ────────────────────────────────────
+        // -- Ticks 1–19: still unconscious ------------------------------------
         while (clock.CurrentTick < recoveryTick)
         {
             Tick(em, clock, detection, recovery, transitions, cleanup);
             Assert.Equal(LifeState.Incapacitated, npc.Get<LifeStateComponent>().State);
         }
 
-        // ── Tick 20 (RecoveryTick): recover ──────────────────────────────────
+        // -- Tick 20 (RecoveryTick): recover ----------------------------------
         Tick(em, clock, detection, recovery, transitions, cleanup);
 
         Assert.Equal(LifeState.Alive,  npc.Get<LifeStateComponent>().State);
@@ -116,7 +116,7 @@ public class FaintingIntegrationTests
         Assert.False(npc.Has<FaintingComponent>(), "FaintingComponent should be removed after recovery");
     }
 
-    // ── AT-17: Fear unchanged by fainting systems ─────────────────────────────
+    // -- AT-17: Fear unchanged by fainting systems -----------------------------
 
     [Fact]
     public void AT17_Fear_NotClearedByFaintingSystems_AfterRecovery()
@@ -144,7 +144,7 @@ public class FaintingIntegrationTests
         Assert.Equal(95f, npc.Get<MoodComponent>().Fear);
     }
 
-    // ── AT-18: Two NPCs faint simultaneously — deterministic order ────────────
+    // -- AT-18: Two NPCs faint simultaneously — deterministic order ------------
 
     [Fact]
     public void AT18_TwoNpcsFaintSameTick_BothProcessed_DeterministicOrder()
@@ -175,7 +175,7 @@ public class FaintingIntegrationTests
         Assert.Equal(rt1, rt2);
     }
 
-    // ── AT-19: Fainted NPC does NOT get CorpseTag ─────────────────────────────
+    // -- AT-19: Fainted NPC does NOT get CorpseTag -----------------------------
 
     [Fact]
     public void AT19_FaintedNpc_DoesNotReceiveCorpseTag()

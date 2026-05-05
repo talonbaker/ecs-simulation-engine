@@ -35,18 +35,18 @@ This is a **headless ECS simulation engine** that models the full biology of a l
 at configurable time-scale, with three completely independent frontends reading from it:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     APIFramework.dll                        │
-│                  (netstandard2.1 class library)             │
-│                                                             │
-│   EntityManager  →  SimulationEngine  →  SimulationClock   │
-│        ↑                   ↑                                │
-│   20 Systems across 8 Phases                               │
-│        ↑                                                    │
-│   SimulationBootstrapper  (composition root)               │
-│        ↓                                                    │
-│   SimulationSnapshot  (immutable per-frame data contract)  │
-└─────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+|                     APIFramework.dll                        |
+|                  (netstandard2.1 class library)             |
+|                                                             |
+|   EntityManager  →  SimulationEngine  →  SimulationClock   |
+|        ↑                   ↑                                |
+|   20 Systems across 8 Phases                               |
+|        ↑                                                    |
+|   SimulationBootstrapper  (composition root)               |
+|        ↓                                                    |
+|   SimulationSnapshot  (immutable per-frame data contract)  |
++-------------------------------------------------------------+
          ↓                   ↓                    ↓
    CLI Renderer        Avalonia GUI         Unity 6 Visualizer
    (terminal)        (real-time charts)   (3D + HUD overlay)
@@ -76,12 +76,12 @@ The result: systems are **pure functions over data**.
 
 ```
 Entity (Guid: abc123)
-  ├── MetabolismComponent  { Satiation: 72.4, Hydration: 81.0 }
-  ├── EnergyComponent      { Energy: 88.0, IsSleeping: false }
-  ├── StomachComponent     { CurrentVolumeMl: 150, DigestionRate: 0.017 }
-  ├── DriveComponent       { Dominant: Eat, EatUrgency: 65.3 }
-  ├── PositionComponent    { X: 4.2, Y: 0, Z: 6.1 }
-  └── MoodComponent        { Joy: 12.0, Anticipation: 38.0, ... }
+  +-- MetabolismComponent  { Satiation: 72.4, Hydration: 81.0 }
+  +-- EnergyComponent      { Energy: 88.0, IsSleeping: false }
+  +-- StomachComponent     { CurrentVolumeMl: 150, DigestionRate: 0.017 }
+  +-- DriveComponent       { Dominant: Eat, EatUrgency: 65.3 }
+  +-- PositionComponent    { X: 4.2, Y: 0, Z: 6.1 }
+  +-- MoodComponent        { Joy: 12.0, Anticipation: 38.0, ... }
 ```
 
 `MetabolismSystem` asks EntityManager: *"give me every entity with a MetabolismComponent"*.
@@ -267,27 +267,27 @@ independent (they don't share write targets). Phases run in ascending numeric or
 
 ```
 Phase 0   PreUpdate     InvariantSystem
-             │  (clamp impossible values — safety net for all downstream)
+             |  (clamp impossible values — safety net for all downstream)
              ▼
 Phase 10  Physiology    MetabolismSystem   EnergySystem   BladderFillSystem
-             │  (raw biological drain/restore — produces the numbers)
+             |  (raw biological drain/restore — produces the numbers)
              ▼
 Phase 20  Condition     BiologicalConditionSystem
-             │  (reads numbers, writes condition TAGS — observation only)
+             |  (reads numbers, writes condition TAGS — observation only)
              ▼
 Phase 30  Cognition     MoodSystem   BrainSystem
-             │  (reads tags+numbers, writes emotion state + dominant drive)
+             |  (reads tags+numbers, writes emotion state + dominant drive)
              ▼
 Phase 40  Behavior      FeedingSystem  DrinkingSystem  SleepSystem
-             │          DefecationSystem  UrinationSystem
-             │  (reads dominant drive, triggers actions)
+             |          DefecationSystem  UrinationSystem
+             |  (reads dominant drive, triggers actions)
              ▼
 Phase 50  Transit       InteractionSystem  EsophagusSystem  DigestionSystem
-             │  (moves content through upper GI: esophagus → stomach)
+             |  (moves content through upper GI: esophagus → stomach)
              ▼
 Phase 55  Elimination   SmallIntestineSystem  LargeIntestineSystem
-             │          ColonSystem  BladderSystem
-             │  (lower GI pipeline: intestines → colon/bladder → tags)
+             |          ColonSystem  BladderSystem
+             |  (lower GI pipeline: intestines → colon/bladder → tags)
              ▼
 Phase 60  World         RotSystem   MovementSystem
              (environmental: age food, move entities)
@@ -669,10 +669,10 @@ Three completely independent frontends share one engine. None knows the others e
 
 ```
 SimulationBootstrapper
-    └── sim.Capture() → SimulationSnapshot
-             ├── CLI renderer (Console.Write, ANSI colours)
-             ├── Avalonia GUI (MVVM, scrolling charts, real-time panels)
-             └── Unity Visualizer (3D world + HUD overlay)
+    +-- sim.Capture() → SimulationSnapshot
+             +-- CLI renderer (Console.Write, ANSI colours)
+             +-- Avalonia GUI (MVVM, scrolling charts, real-time panels)
+             +-- Unity Visualizer (3D world + HUD overlay)
 ```
 
 ### CLI (`ECSEngine.CLI`)
@@ -730,24 +730,24 @@ private static void Boot()
 SimulationManager.Update() → Snapshot
         ↓
 WorldSceneBuilder.Update()
-        ├── SyncWorldObjects()    — fridge, sink, bed, toilet cubes
-        └── SyncEntities()
-                └── EntityCubeView.UpdateFromSnapshot()
-                        ├── Set cube colour (EcsColors.ForEntity)
-                        ├── Lerp position toward entity.PosX/Z
-                        ├── Update floating TextMesh label
-                        └── OrganCluster.UpdateFromSnapshot()
-                                ├── Fill bars per organ (shell + fill cube, Y-scaled)
-                                ├── Motion bolus cubes (ping-pong sliding dot)
-                                ├── Esophagus transit boluses (per TransitItemSnapshot)
-                                └── Discharge cubes (falling drop on big fill drop)
+        +-- SyncWorldObjects()    — fridge, sink, bed, toilet cubes
+        +-- SyncEntities()
+                +-- EntityCubeView.UpdateFromSnapshot()
+                        +-- Set cube colour (EcsColors.ForEntity)
+                        +-- Lerp position toward entity.PosX/Z
+                        +-- Update floating TextMesh label
+                        +-- OrganCluster.UpdateFromSnapshot()
+                                +-- Fill bars per organ (shell + fill cube, Y-scaled)
+                                +-- Motion bolus cubes (ping-pong sliding dot)
+                                +-- Esophagus transit boluses (per TransitItemSnapshot)
+                                +-- Discharge cubes (falling drop on big fill drop)
         ↓
 BiologyOverlayUI.OnGUI()
-        ├── Background panel (right half)
-        ├── Header: name, drive, move destination
-        ├── GI tract bars: esophagus → stomach → SI → LI → colon → bladder
-        ├── Vitals bars: satiation, hydration, energy, sleepiness
-        └── Status: fridge stock, clock, urgency scores
+        +-- Background panel (right half)
+        +-- Header: name, drive, move destination
+        +-- GI tract bars: esophagus → stomach → SI → LI → colon → bladder
+        +-- Vitals bars: satiation, hydration, energy, sleepiness
+        +-- Status: fridge stock, clock, urgency scores
 ```
 
 ### Key Design Decisions in the Visualizer
@@ -838,10 +838,10 @@ chunks. Here it is just a `struct` field — straightforward.
 ### The Learning Path from Here to DOTS
 
 Understanding this engine deeply prepares you for DOTS:
-1. You understand why entity identity is separated from data (✓)
-2. You understand why systems are stateless functions over queries (✓)
-3. You understand phase ordering and data dependency graphs (✓)
-4. You understand the performance motivation for contiguous memory layouts (✓)
+1. You understand why entity identity is separated from data (OK)
+2. You understand why systems are stateless functions over queries (OK)
+3. You understand phase ordering and data dependency graphs (OK)
+4. You understand the performance motivation for contiguous memory layouts (OK)
 5. DOTS adds: Burst → vectorized jobs, chunks → cache efficiency, multiple worlds → isolation
 
 ---

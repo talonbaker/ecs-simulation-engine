@@ -138,7 +138,7 @@ public sealed class PathfindingService
         return Array.Empty<(int, int)>();
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static float Heuristic(int x, int y, int tx, int ty) =>
         Math.Abs(x - tx) + Math.Abs(y - ty);
@@ -226,7 +226,7 @@ public sealed class PathfindingService
         tx >= rect.X - 1 && tx <= rect.X + rect.Width  &&
         ty >= rect.Y - 1 && ty <= rect.Y + rect.Height;
 
-    // ── Binary min-heap (netstandard2.1 compatible) ───────────────────────────
+    // -- Binary min-heap (netstandard2.1 compatible) ---------------------------
 
     private sealed class MinHeap
     {

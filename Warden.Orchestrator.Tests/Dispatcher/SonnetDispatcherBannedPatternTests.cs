@@ -34,7 +34,7 @@ public sealed class SonnetDispatcherBannedPatternTests : IDisposable
         try { Directory.Delete(_tempDir, recursive: true); } catch { /* best effort */ }
     }
 
-    // ── AT-01: ok + clean diff → result unchanged ─────────────────────────────
+    // -- AT-01: ok + clean diff → result unchanged -----------------------------
 
     [Fact]
     public async Task AT01_OkResult_CleanDiff_ReturnedUnchanged()
@@ -46,7 +46,7 @@ public sealed class SonnetDispatcherBannedPatternTests : IDisposable
         Assert.Null(result.BlockReason);
     }
 
-    // ── AT-02: ok + banned diff → overridden to blocked/tool-error ────────────
+    // -- AT-02: ok + banned diff → overridden to blocked/tool-error ------------
 
     [Fact]
     public async Task AT02_OkResult_BannedDiff_OverriddenToBlocked()
@@ -60,7 +60,7 @@ public sealed class SonnetDispatcherBannedPatternTests : IDisposable
         Assert.Contains("banned pattern", result.BlockDetails, StringComparison.OrdinalIgnoreCase);
     }
 
-    // ── AT-03: already non-ok result is never escalated ───────────────────────
+    // -- AT-03: already non-ok result is never escalated -----------------------
 
     [Fact]
     public async Task AT03_BlockedResult_BannedDiff_NotEscalated()
@@ -81,7 +81,7 @@ public sealed class SonnetDispatcherBannedPatternTests : IDisposable
         Assert.Equal(OutcomeCode.Failed, result.Outcome);
     }
 
-    // ── AT-04: GitWorktreeDiffSource with non-existent path → null + Info log ─
+    // -- AT-04: GitWorktreeDiffSource with non-existent path → null + Info log -
 
     [Fact]
     public async Task AT04_GitWorktreeDiffSource_NonExistentPath_ReturnsNullAndLogsInformation()
@@ -96,7 +96,7 @@ public sealed class SonnetDispatcherBannedPatternTests : IDisposable
         Assert.Contains(logger.Entries, e => e.Level == LogLevel.Information);
     }
 
-    // ── AT-05: GitWorktreeDiffSource timeout → null + Warning log ─────────────
+    // -- AT-05: GitWorktreeDiffSource timeout → null + Warning log -------------
 
     [Fact]
     public async Task AT05_GitWorktreeDiffSource_Timeout_ReturnsNullAndLogsWarning()
@@ -113,7 +113,7 @@ public sealed class SonnetDispatcherBannedPatternTests : IDisposable
         Assert.Contains(logger.Entries, e => e.Level == LogLevel.Warning);
     }
 
-    // ── AT-06: NullWorktreeDiffSource(null) skips banned-pattern check ─────────
+    // -- AT-06: NullWorktreeDiffSource(null) skips banned-pattern check ---------
 
     [Fact]
     public async Task AT06_NullDiffSource_SkipsBannedPatternCheck()
@@ -125,7 +125,7 @@ public sealed class SonnetDispatcherBannedPatternTests : IDisposable
         Assert.Equal(OutcomeCode.Ok, result.Outcome);
     }
 
-    // ── AT-07: ledger entry written before banned-pattern override ─────────────
+    // -- AT-07: ledger entry written before banned-pattern override -------------
 
     [Fact]
     public async Task AT07_LedgerWrittenBeforeBannedPatternOverride()
@@ -148,14 +148,14 @@ public sealed class SonnetDispatcherBannedPatternTests : IDisposable
         Assert.True(entries.Count > 0, "Ledger must contain at least one entry.");
     }
 
-    // ── AT-08: existing RunCommandEndToEndTests still pass ────────────────────
+    // -- AT-08: existing RunCommandEndToEndTests still pass --------------------
     //
     // Verified by the test runner — this class does not re-run those tests.
     // The RunCommandEndToEndTests.AT01_MockRun_ExitsZeroAndWritesLedger test
     // exercises the full RunCommand path (which now wires NullWorktreeDiffSource
     // for --mock-anthropic).  That test passing is AT-08.
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private async Task<SonnetResult> RunDispatcher(SonnetResult mockResult, IWorktreeDiffSource diffSource)
     {
@@ -257,7 +257,7 @@ public sealed class SonnetDispatcherBannedPatternTests : IDisposable
             ?? throw new InvalidOperationException("Could not locate repo root (ECSSimulation.sln not found).");
     }
 
-    // ── Inner types ───────────────────────────────────────────────────────────
+    // -- Inner types -----------------------------------------------------------
 
     private sealed class StubAnthropicClient : IAnthropicClient
     {

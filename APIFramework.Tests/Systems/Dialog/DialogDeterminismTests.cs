@@ -82,7 +82,7 @@ public class DialogDeterminismTests
         return selected;
     }
 
-    // ── AT-12: Two runs with the same seed produce identical output ───────────
+    // -- AT-12: Two runs with the same seed produce identical output -----------
 
     [Fact]
     public void AT12_SameSeed_ProducesIdenticalFragmentSelectionSequence()
@@ -93,7 +93,7 @@ public class DialogDeterminismTests
         Assert.Equal(run1, run2);
     }
 
-    // ── AT-12b: Different seeds produce different sequences ───────────────────
+    // -- AT-12b: Different seeds produce different sequences -------------------
 
     [Fact]
     public void AT12b_DifferentSeeds_ProduceDifferentSequences()

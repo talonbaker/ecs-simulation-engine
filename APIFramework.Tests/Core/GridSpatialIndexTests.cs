@@ -15,7 +15,7 @@ public class GridSpatialIndexTests
     // Creates a dummy entity without connecting it to an EntityManager
     private static Entity MakeEntity() => new Entity();
 
-    // ── Register / Unregister / Update ────────────────────────────────────────
+    // -- Register / Unregister / Update ----------------------------------------
 
     [Fact]
     public void Register_ThenQueryRadius_FindsEntity()
@@ -64,7 +64,7 @@ public class GridSpatialIndexTests
         Assert.Single(result);
     }
 
-    // ── AT-02: QueryRadius accuracy ───────────────────────────────────────────
+    // -- AT-02: QueryRadius accuracy -------------------------------------------
 
     [Fact]
     public void QueryRadius_ExactBoundaryIncluded()
@@ -134,7 +134,7 @@ public class GridSpatialIndexTests
         Assert.DoesNotContain(e, idx.QueryRadius(0, 0, 4));
     }
 
-    // ── AT-03: QueryNearest ───────────────────────────────────────────────────
+    // -- AT-03: QueryNearest ---------------------------------------------------
 
     [Fact]
     public void QueryNearest_Returns5Closest_OutOf50()
@@ -206,7 +206,7 @@ public class GridSpatialIndexTests
         Assert.Equal(e2, result[1]);
     }
 
-    // ── Determinism ───────────────────────────────────────────────────────────
+    // -- Determinism -----------------------------------------------------------
 
     [Fact]
     public void QueryRadius_InsertionOrderDeterministic()

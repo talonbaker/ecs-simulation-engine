@@ -8,11 +8,11 @@ namespace APIFramework.Systems;
 /// Water reabsorption and stool formation in the large intestine.
 ///
 /// PIPELINE POSITION
-/// ─────────────────
+/// -----------------
 ///   SmallIntestineSystem → LargeIntestineSystem → ColonComponent
 ///
 /// WHAT HAPPENS HERE
-/// ─────────────────
+/// -----------------
 ///   1. Water reabsorption: a small amount of water is recovered from LI content
 ///      and added to MetabolismComponent.Hydration each tick. This is the secondary
 ///      hydration source — slower and smaller than drinking, but meaningful over time.
@@ -23,7 +23,7 @@ namespace APIFramework.Systems;
 ///      The remainder (1 - StoolFraction) is water and gas that dissipates silently.
 ///
 /// PER TICK
-/// ─────────
+/// ---------
 ///   waterGain       = WaterReabsorptionRate × deltaTime  → meta.Hydration
 ///   processed       = min(MobilityRate × deltaTime, ContentVolumeMl)
 ///   ContentVolumeMl -= processed
@@ -51,7 +51,7 @@ public class LargeIntestineSystem : ISystem
 
             var li = entity.Get<LargeIntestineComponent>();
 
-            // ── 1. Water reabsorption ─────────────────────────────────────────
+            // -- 1. Water reabsorption -----------------------------------------
             // Only absorb when content is present; a fully empty LI has nothing to squeeze.
             if (!li.IsEmpty && entity.Has<MetabolismComponent>())
             {
@@ -60,7 +60,7 @@ public class LargeIntestineSystem : ISystem
                 entity.Add(meta);
             }
 
-            // ── 2. Content mobility → stool formation ────────────────────────
+            // -- 2. Content mobility → stool formation ------------------------
             if (li.IsEmpty)
             {
                 entity.Add(li);

@@ -7,17 +7,17 @@ namespace APIFramework.Core;
 /// from any specific loading strategy.
 ///
 /// WHY THIS MATTERS
-/// ────────────────
+/// ----------------
 /// SimulationBootstrapper originally hardcoded SimConfig.Load(path), which:
-///   • Ties the engine to the filesystem — unit tests must have a real file on disk
-///   • Prevents Unity from injecting a ScriptableObject-backed config
-///   • Makes CLI tools hardcode a search-up-directory strategy
+///   - Ties the engine to the filesystem — unit tests must have a real file on disk
+///   - Prevents Unity from injecting a ScriptableObject-backed config
+///   - Makes CLI tools hardcode a search-up-directory strategy
 ///
 /// With IConfigProvider the bootstrapper's only job is wiring the simulation;
 /// HOW config is obtained is now a separate concern injected at construction time.
 ///
 /// Built-in implementations
-/// ────────────────────────
+/// ------------------------
 ///   FileConfigProvider        — reads SimConfig.json from disk (production default)
 ///   InMemoryConfigProvider    — wraps an already-constructed SimConfig (tests + Unity)
 ///

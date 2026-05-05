@@ -51,7 +51,7 @@ public class BrainSystem : ISystem
                 ? entity.Get<DriveComponent>()
                 : new DriveComponent();
 
-            // ── Base drive scores ─────────────────────────────────────────────
+            // -- Base drive scores ---------------------------------------------
             drives.EatUrgency   = (meta.Hunger / 100f) * _cfg.EatMaxScore;
             drives.DrinkUrgency = (meta.Thirst / 100f) * _cfg.DrinkMaxScore;
 
@@ -91,7 +91,7 @@ public class BrainSystem : ISystem
                 drives.PeeUrgency = 0f;
             }
 
-            // ── Mood modifiers ────────────────────────────────────────────────
+            // -- Mood modifiers ------------------------------------------------
 
             // Boredom: idle state makes even small drives feel more pressing
             if (entity.Has<BoredTag>())
@@ -124,7 +124,7 @@ public class BrainSystem : ISystem
                 if (!bladderOverride) drives.PeeUrgency      *= _cfg.SadnessUrgencyMult;
             }
 
-            // ── Minimum urgency floor → idle state ────────────────────────────
+            // -- Minimum urgency floor → idle state ----------------------------
             float maxUrgency = MathF.Max(drives.EatUrgency,
                                MathF.Max(drives.DrinkUrgency,
                                MathF.Max(drives.SleepUrgency,

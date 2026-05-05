@@ -21,7 +21,7 @@ namespace APIFramework.Components;
 /// </summary>
 public struct EnergyComponent
 {
-    // ── State ─────────────────────────────────────────────────────────────────
+    // -- State -----------------------------------------------------------------
 
     /// <summary>Physical energy reserve (0–100).  100 = fully rested.</summary>
     public float Energy;
@@ -32,7 +32,7 @@ public struct EnergyComponent
     /// <summary>True while the entity is in the sleep state managed by SleepSystem.</summary>
     public bool IsSleeping;
 
-    // ── Rates (game-seconds) ──────────────────────────────────────────────────
+    // -- Rates (game-seconds) --------------------------------------------------
 
     /// <summary>Energy lost per game-second while awake.</summary>
     public float EnergyDrainRate;
@@ -46,7 +46,7 @@ public struct EnergyComponent
     /// <summary>Sleepiness lost per game-second while sleeping.</summary>
     public float SleepinessDrainRate;
 
-    // ── Derived ───────────────────────────────────────────────────────────────
+    // -- Derived ---------------------------------------------------------------
 
     /// <summary>Inverse of Energy — how fatigued the entity is (0 = alert, 100 = exhausted).</summary>
     public readonly float Tiredness => 100f - Energy;

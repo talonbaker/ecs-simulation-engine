@@ -27,7 +27,7 @@ public readonly record struct ModelId
     /// <inheritdoc/>
     public override string ToString() => Name ?? string.Empty;
 
-    // ── JSON converter ───────────────────────────────────────────────────────────
+    // -- JSON converter -----------------------------------------------------------
     // Nested private class: CAN access the enclosing type's private constructor.
     // Wire format: a plain JSON string, e.g. "claude-sonnet-4-6".
 

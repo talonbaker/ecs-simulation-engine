@@ -15,7 +15,7 @@ public class LoaderIntegrationTests
 {
     private const float DeltaTime = 1f / 60f;
 
-    // ── AT-09: world-definition boot path ticks cleanly ──────────────────────
+    // -- AT-09: world-definition boot path ticks cleanly ----------------------
 
     [Fact]
     public void Bootstrapper_WithWorldDefinition_TicksWithoutErrorFor100Ticks()
@@ -57,7 +57,7 @@ public class LoaderIntegrationTests
             $"Unexpected invariant violations after 100 ticks with world-definition: {sim.Invariants.Violations.Count}");
     }
 
-    // ── AT-10: default path still works without world-definition ─────────────
+    // -- AT-10: default path still works without world-definition -------------
 
     [Fact]
     public void Bootstrapper_WithoutWorldDefinition_BootsNormally()
@@ -93,7 +93,7 @@ public class LoaderIntegrationTests
         Assert.Equal(19990101, lr.SeedUsed);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static readonly string StarterJsonPath = FindStarterJson();
 

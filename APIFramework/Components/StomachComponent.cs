@@ -5,7 +5,7 @@ namespace APIFramework.Components;
 /// dissolving into nutrients that DigestionSystem then releases into the body.
 ///
 /// PIPELINE POSITION IN THE DIGESTIVE TRACT
-/// ─────────────────────────────────────────
+/// -----------------------------------------
 ///   Esophagus  →  Stomach  →  (future) SmallIntestine  →  LargeIntestine  →  Rectum
 ///
 /// In v0.7.0 the stomach is still the final absorption stage: DigestionSystem
@@ -13,7 +13,7 @@ namespace APIFramework.Components;
 /// with derived updates to Satiation and Hydration. Intestines land in v0.7.1+.
 ///
 /// CAPACITY
-/// ─────────
+/// ---------
 /// Average adult male comfortable stomach capacity: ~1000 ml. IsFull at 1.0 fill.
 /// TODO: per-entity stomach size (species, conditions) via a MaxVolumeMl field.
 /// </summary>

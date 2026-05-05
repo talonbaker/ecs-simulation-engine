@@ -26,21 +26,21 @@ Landed the narrative telemetry channel. Three new types: `NarrativeEventKind` (f
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | DriveSpike emitted with correct before/after/delta for delta ≥ 15. |
-| AT-02 | ✓ | No candidate for delta < threshold. |
-| AT-03 | ✓ | WillpowerCollapse emitted for drop ≥ 10. |
-| AT-04 | ✓ | WillpowerLow fires on first crossing below 20; suppressed on subsequent low ticks. |
-| AT-05 | ✓ | WillpowerLow re-fires after willpower recovers above threshold and drops again. |
-| AT-06 | ✓ | ConversationStarted emitted on EnteredConversationRange event. |
-| AT-07 | ✓ | LeftRoomAbruptly emitted within 3-tick window of DriveSpike; no emit outside window. |
-| AT-08 | ✓ | Two simultaneous spikes: lower entity-id candidate fires first. |
-| AT-09 | ✓ | 5000 ticks × 2 runs same seed=42: byte-identical JSON-serialised candidate streams. |
-| AT-10 | ✓ | RunCore writes valid JSONL; each line has tick/kind/participantIds/detail fields. |
-| AT-11 | ✓ | RunCore with low thresholds + suppression injection produces DriveSpike, WillpowerLow, ConversationStarted in 600 game-seconds. |
-| AT-12 | ✓ | Warden.Telemetry.Tests: all pass — projector unchanged. |
-| AT-13 | ✓ | All existing APIFramework.Tests stay green. |
-| AT-14 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-15 | ✓ | `dotnet test ECSSimulation.sln` — 121 passed, 0 failed. |
+| AT-01 | OK | DriveSpike emitted with correct before/after/delta for delta ≥ 15. |
+| AT-02 | OK | No candidate for delta < threshold. |
+| AT-03 | OK | WillpowerCollapse emitted for drop ≥ 10. |
+| AT-04 | OK | WillpowerLow fires on first crossing below 20; suppressed on subsequent low ticks. |
+| AT-05 | OK | WillpowerLow re-fires after willpower recovers above threshold and drops again. |
+| AT-06 | OK | ConversationStarted emitted on EnteredConversationRange event. |
+| AT-07 | OK | LeftRoomAbruptly emitted within 3-tick window of DriveSpike; no emit outside window. |
+| AT-08 | OK | Two simultaneous spikes: lower entity-id candidate fires first. |
+| AT-09 | OK | 5000 ticks × 2 runs same seed=42: byte-identical JSON-serialised candidate streams. |
+| AT-10 | OK | RunCore writes valid JSONL; each line has tick/kind/participantIds/detail fields. |
+| AT-11 | OK | RunCore with low thresholds + suppression injection produces DriveSpike, WillpowerLow, ConversationStarted in 600 game-seconds. |
+| AT-12 | OK | Warden.Telemetry.Tests: all pass — projector unchanged. |
+| AT-13 | OK | All existing APIFramework.Tests stay green. |
+| AT-14 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-15 | OK | `dotnet test ECSSimulation.sln` — 121 passed, 0 failed. |
 
 ---
 

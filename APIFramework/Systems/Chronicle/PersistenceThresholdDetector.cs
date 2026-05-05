@@ -113,7 +113,7 @@ public sealed class PersistenceThresholdDetector : ISystem
         _buffered.Clear();
     }
 
-    // ── Evaluation ────────────────────────────────────────────────────────────
+    // -- Evaluation ------------------------------------------------------------
 
     private ChronicleEntry? EvaluateCandidate(
         NarrativeEventCandidate                         candidate,
@@ -125,7 +125,7 @@ public sealed class PersistenceThresholdDetector : ISystem
         if (candidate.Kind == NarrativeEventKind.WillpowerLow)
             return null;
 
-        // ── Relationship-changing rule ─────────────────────────────────────────
+        // -- Relationship-changing rule -----------------------------------------
         if (candidate.Kind is NarrativeEventKind.WillpowerCollapse
                            or NarrativeEventKind.LeftRoomAbruptly
                            or NarrativeEventKind.ConversationStarted)
@@ -134,7 +134,7 @@ public sealed class PersistenceThresholdDetector : ISystem
                 return MakeEntry(candidate, ChronicleEventKind.PublicArgument, null);
         }
 
-        // ── DriveSpike rules ──────────────────────────────────────────────────
+        // -- DriveSpike rules --------------------------------------------------
         if (candidate.Kind == NarrativeEventKind.DriveSpike)
         {
             var (driveName, currentValue, _) = ParseDriveSpike(candidate.Detail);
@@ -184,7 +184,7 @@ public sealed class PersistenceThresholdDetector : ISystem
         return null;
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private bool HasRelationshipImpact(
         IReadOnlyList<int>          participantIds,
@@ -309,7 +309,7 @@ public sealed class PersistenceThresholdDetector : ISystem
         return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
     }
 
-    // ── Chronicle-entry construction ──────────────────────────────────────────
+    // -- Chronicle-entry construction ------------------------------------------
 
     private string NewEntryId()
     {

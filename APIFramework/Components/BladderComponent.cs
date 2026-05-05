@@ -4,13 +4,13 @@ namespace APIFramework.Components;
 /// The urinary bladder — holds urine until the entity voids.
 ///
 /// PIPELINE POSITION
-/// ─────────────────
+/// -----------------
 ///   BladderFillSystem (Physiology/10) fills the bladder each tick.
 ///   BladderSystem     (Elimination/55) applies/removes urge tags.
 ///   UrinationSystem   (Behavior/40)   empties the bladder when Pee is dominant.
 ///
 /// FILL MODEL
-/// ──────────
+/// ----------
 /// The bladder fills at a constant FillRate (ml per game-second). This is a
 /// deliberate simplification — kidneys are omitted since their only visible
 /// effect would be filtering toxins, which requires an intoxication system
@@ -18,7 +18,7 @@ namespace APIFramework.Components;
 /// without invisible kidney plumbing.
 ///
 /// CAPACITY
-/// ─────────
+/// ---------
 /// Functional human bladder ≈ 400–600 ml; this component uses a game-scale
 /// capacity (default 100 ml) so urgency is reached within a normal game-day.
 /// UrgeThresholdMl = 70% fill → comfortable first awareness.
@@ -44,7 +44,7 @@ public struct BladderComponent
     /// <summary>Volume at which BladderCriticalTag is applied (entity must pee immediately).</summary>
     public float CapacityMl;
 
-    // ── Derived ───────────────────────────────────────────────────────────────
+    // -- Derived ---------------------------------------------------------------
 
     /// <summary>Normalised fill 0.0 (empty) – 1.0 (at <see cref="CapacityMl"/>).</summary>
     public readonly float Fill       => CapacityMl > 0f ? VolumeML / CapacityMl : 0f;

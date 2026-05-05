@@ -26,7 +26,7 @@ public sealed class ChainOfThoughtStoreTests : IDisposable
 
     private string Runs => Path.Combine(_tempDir, "runs");
 
-    // ── AT-01 ─────────────────────────────────────────────────────────────────────
+    // -- AT-01 ---------------------------------------------------------------------
 
     /// <summary>
     /// AT-01: A successful mock run produces every file listed in the SRD layout.
@@ -66,7 +66,7 @@ public sealed class ChainOfThoughtStoreTests : IDisposable
             "result.json must exist");
     }
 
-    // ── AT-05 ─────────────────────────────────────────────────────────────────────
+    // -- AT-05 ---------------------------------------------------------------------
 
     /// <summary>
     /// AT-05: Event lines are strictly append-only.
@@ -114,7 +114,7 @@ public sealed class ChainOfThoughtStoreTests : IDisposable
         Assert.Equal(events.Length, lines.Length);
     }
 
-    // ── AT-06 ─────────────────────────────────────────────────────────────────────
+    // -- AT-06 ---------------------------------------------------------------------
 
     /// <summary>
     /// AT-06: Run ID collision is rejected — InitRun throws when the run root already exists.
@@ -147,7 +147,7 @@ public sealed class ChainOfThoughtStoreTests : IDisposable
         Assert.Throws<InvalidOperationException>(() => store2.InitRun(runId));
     }
 
-    // ── Write-order invariant verification ────────────────────────────────────────
+    // -- Write-order invariant verification ----------------------------------------
 
     [Fact]
     public async Task WriteOrderInvariant_PromptBeforeResponse_ResponseBeforeResult()

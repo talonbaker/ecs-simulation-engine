@@ -49,7 +49,7 @@ public sealed record SpecAcceptanceTest
     public string?          Notes        { get; init; }
 }
 
-// ── Enums ─────────────────────────────────────────────────────────────────────
+// -- Enums ---------------------------------------------------------------------
 
 /// <summary>Deliverable kind. Serialises as camelCase lowercase string.</summary>
 public enum DeliverableKind { Code, Test, Doc, Schema, Config }

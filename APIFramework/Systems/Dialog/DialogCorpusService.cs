@@ -58,7 +58,7 @@ public sealed class DialogCorpusService
             ? list
             : Array.Empty<PhraseFragment>();
 
-    // ── Static factory helpers ────────────────────────────────────────────────
+    // -- Static factory helpers ------------------------------------------------
 
     /// <summary>Loads the corpus from a file path.</summary>
     /// <param name="path">Absolute or CWD-relative path to the corpus JSON file.</param>
@@ -86,7 +86,7 @@ public sealed class DialogCorpusService
         return null;
     }
 
-    // ── DTOs (internal — only used for deserialization) ───────────────────────
+    // -- DTOs (internal — only used for deserialization) -----------------------
 
     private sealed class CorpusDto
     {
@@ -95,7 +95,7 @@ public sealed class DialogCorpusService
     }
 }
 
-// ── Public data model ─────────────────────────────────────────────────────────
+// -- Public data model ---------------------------------------------------------
 
 /// <summary>
 /// A single hand-authored phrase fragment from the corpus.

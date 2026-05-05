@@ -1,6 +1,6 @@
 namespace Warden.Contracts.Telemetry;
 
-// ── Sun position on the clock (spatial pillar v0.3) ──────────────────────────
+// -- Sun position on the clock (spatial pillar v0.3) --------------------------
 
 public sealed record SunStateDto
 {
@@ -9,7 +9,7 @@ public sealed record SunStateDto
     public DayPhase DayPhase     { get; init; }
 }
 
-// ── TilePoint (shared by LightSourceDto and LightApertureDto) ─────────────────
+// -- TilePoint (shared by LightSourceDto and LightApertureDto) -----------------
 
 public sealed record TilePointDto
 {
@@ -17,7 +17,7 @@ public sealed record TilePointDto
     public int Y { get; init; }
 }
 
-// ── Enum ──────────────────────────────────────────────────────────────────────
+// -- Enum ----------------------------------------------------------------------
 
 /// <summary>Six-phase day cycle. Serialises as camelCase string.</summary>
 public enum DayPhase

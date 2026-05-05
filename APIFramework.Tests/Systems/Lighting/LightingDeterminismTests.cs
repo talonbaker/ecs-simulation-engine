@@ -50,7 +50,7 @@ public class LightingDeterminismTests
             "Different seeds should produce different illumination trajectories");
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     /// <summary>
     /// Runs the lighting pipeline for <paramref name="ticks"/> ticks and records

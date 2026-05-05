@@ -19,7 +19,7 @@ namespace Warden.Anthropic;
 [JsonDerivedType(typeof(ToolResultBlock), "tool_result")]
 public abstract record ContentBlock;
 
-// ── Concrete block types ────────────────────────────────────────────────────────
+// -- Concrete block types --------------------------------------------------------
 
 /// <summary>A plain text content block.</summary>
 /// <param name="Text">The text content.</param>

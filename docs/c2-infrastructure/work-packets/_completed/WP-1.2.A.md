@@ -38,23 +38,23 @@ Landed the lighting layer on top of the WP-1.1.A spatial engine. Four systems li
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `LightSourceComponentTests` and `LightApertureComponentTests` verify field-by-field round-trip and enum integer alignment with Warden.Contracts DTOs. |
-| AT-02 | ✓ | `SunSystem_AtDayFraction055_ProducesAfternoonPhase` — dayFraction=0.55 → `DayPhase.Afternoon`. |
-| AT-03 | ✓ | `SunSystem_BetweenSunriseAndSunset_ElevationIsPositive` and `AtNight_ElevationIsNegative` pass for boundary-bracketing values. |
-| AT-04 | ✓ | `FlickeringSource_ProducesBothOnAndOffTicks_Over1000Samples` — both on and off ticks observed; on-rate in [50%, 90%]. |
-| AT-05 | ✓ | `DyingSource_IntensityDecaysTowardZero` and `TransitionsToOff_WhenIntensityReachesZero` both pass. |
-| AT-06 | ✓ | `OnSource_DoesNotTransition` and `OffSource_DoesNotTransition` over 1000 ticks. |
-| AT-07 | ✓ | `SouthFacingAperture_AdmitsBeam_AtNoon` — azimuth=180°, elevation=90° → positive beam. |
-| AT-08 | ✓ | `AnyAperture_NoBeam_WhenElevationAtOrBelowHorizon` covers all five facing values. |
-| AT-09 | ✓ | `EmptyRoom_AmbientLevel_IsZero`. |
-| AT-10 | ✓ | `RoomWithOnSource_AtCenter_AmbientLevelNear80` — source at room center, intensity 80 → AmbientLevel in [70, 100]. |
-| AT-11 | ✓ | `MultiSourceRoom_DominantSourceId_IsHighestContributor` — bright source at center wins over dim source at corner. |
-| AT-12 | ✓ | `MultiSourceRoom_ColorTemperature_IsIntensityWeighted` — two sources (80 × 4000K, 40 × 6000K) → weighted avg ≈ 4666K. |
-| AT-13 | ✓ | `LightingPipeline_TwoRunsSameSeed_ProduceIdenticalIlluminationTrajectories` over 5000 ticks with flickering + dying sources. |
-| AT-14 | ✓ | All 24 `Warden.Telemetry.Tests` pass. `TelemetryProjector` still emits `SchemaVersion = "0.1.0"`; `Warden.Telemetry` not modified. |
-| AT-15 | ✓ | All prior `APIFramework.Tests`, spatial, social, physiology tests still green. |
-| AT-16 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-17 | ✓ | `dotnet test ECSSimulation.sln` — 567 passed, 0 failed (up from 503; +64 new tests). |
+| AT-01 | OK | `LightSourceComponentTests` and `LightApertureComponentTests` verify field-by-field round-trip and enum integer alignment with Warden.Contracts DTOs. |
+| AT-02 | OK | `SunSystem_AtDayFraction055_ProducesAfternoonPhase` — dayFraction=0.55 → `DayPhase.Afternoon`. |
+| AT-03 | OK | `SunSystem_BetweenSunriseAndSunset_ElevationIsPositive` and `AtNight_ElevationIsNegative` pass for boundary-bracketing values. |
+| AT-04 | OK | `FlickeringSource_ProducesBothOnAndOffTicks_Over1000Samples` — both on and off ticks observed; on-rate in [50%, 90%]. |
+| AT-05 | OK | `DyingSource_IntensityDecaysTowardZero` and `TransitionsToOff_WhenIntensityReachesZero` both pass. |
+| AT-06 | OK | `OnSource_DoesNotTransition` and `OffSource_DoesNotTransition` over 1000 ticks. |
+| AT-07 | OK | `SouthFacingAperture_AdmitsBeam_AtNoon` — azimuth=180°, elevation=90° → positive beam. |
+| AT-08 | OK | `AnyAperture_NoBeam_WhenElevationAtOrBelowHorizon` covers all five facing values. |
+| AT-09 | OK | `EmptyRoom_AmbientLevel_IsZero`. |
+| AT-10 | OK | `RoomWithOnSource_AtCenter_AmbientLevelNear80` — source at room center, intensity 80 → AmbientLevel in [70, 100]. |
+| AT-11 | OK | `MultiSourceRoom_DominantSourceId_IsHighestContributor` — bright source at center wins over dim source at corner. |
+| AT-12 | OK | `MultiSourceRoom_ColorTemperature_IsIntensityWeighted` — two sources (80 × 4000K, 40 × 6000K) → weighted avg ≈ 4666K. |
+| AT-13 | OK | `LightingPipeline_TwoRunsSameSeed_ProduceIdenticalIlluminationTrajectories` over 5000 ticks with flickering + dying sources. |
+| AT-14 | OK | All 24 `Warden.Telemetry.Tests` pass. `TelemetryProjector` still emits `SchemaVersion = "0.1.0"`; `Warden.Telemetry` not modified. |
+| AT-15 | OK | All prior `APIFramework.Tests`, spatial, social, physiology tests still green. |
+| AT-16 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-17 | OK | `dotnet test ECSSimulation.sln` — 567 passed, 0 failed (up from 503; +64 new tests). |
 
 ---
 

@@ -1,11 +1,11 @@
-﻿namespace APIFramework.Core;
+namespace APIFramework.Core;
 
 /// <summary>
 /// Drives the simulation: advances the clock, then runs all registered systems
 /// grouped by SystemPhase in ascending numeric order.
 ///
 /// PHASE EXECUTION MODEL (v0.7.2)
-/// ────────────────────────────────
+/// --------------------------------
 /// Systems within the same phase are still executed sequentially in registration
 /// order. The phase boundary is the synchronization primitive — it makes the
 /// dependency structure explicit and is the prerequisite for future parallelism.
@@ -15,7 +15,7 @@
 /// SystemRegistration record are already compatible with that model.
 ///
 /// BACKWARD COMPATIBILITY
-/// ───────────────────────
+/// -----------------------
 /// AddSystem(ISystem) still works — it assigns SystemPhase.Physiology by default
 /// so old registrations continue to run. Prefer the explicit overload:
 ///   AddSystem(system, SystemPhase.Transit)
@@ -47,7 +47,7 @@ public class SimulationEngine
         Clock         = clock;
     }
 
-    // ── Registration ──────────────────────────────────────────────────────────
+    // -- Registration ----------------------------------------------------------
 
     /// <summary>Registers a system at an explicit phase.</summary>
     public void AddSystem(ISystem system, SystemPhase phase)
@@ -64,7 +64,7 @@ public class SimulationEngine
     public void AddSystem(ISystem system)
         => AddSystem(system, SystemPhase.Physiology);
 
-    // ── Tick ─────────────────────────────────────────────────────────────────
+    // -- Tick -----------------------------------------------------------------
 
     /// <summary>
     /// Advances the simulation by one tick: ticks <see cref="Clock"/> with the given

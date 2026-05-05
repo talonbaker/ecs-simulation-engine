@@ -10,11 +10,11 @@ namespace APIFramework.Systems.Lighting;
 /// Phase: Lighting (7) — computes per-aperture beam contributions each tick.
 ///
 /// For each aperture with LightApertureTag:
-///   • If sun elevation ≤ 0 → no beam.
-///   • Otherwise, check if sun azimuth falls within ±90° of the aperture's facing direction.
+///   - If sun elevation ≤ 0 → no beam.
+///   - Otherwise, check if sun azimuth falls within ±90° of the aperture's facing direction.
 ///     Ceiling apertures accept any azimuth when elevation > 30°.
-///   • Within the accepted range, beam intensity = sin(elevation) × cos(off-axis angle) × AreaSqTiles × 10.
-///   • Beam color temperature interpolates 4000K (dawn) → 5500K (noon) → 3000K (dusk).
+///   - Within the accepted range, beam intensity = sin(elevation) × cos(off-axis angle) × AreaSqTiles × 10.
+///   - Beam color temperature interpolates 4000K (dawn) → 5500K (noon) → 3000K (dusk).
 ///
 /// Results stored in an internal cache; IlluminationAccumulationSystem reads them via GetBeamState.
 /// </summary>

@@ -20,13 +20,13 @@ The `IOException: file in use` flake documented in PHASE-1-HANDOFF §4.1 no long
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✗ | `ArgumentException: An item with the same key has already been added. Key: sc-01` in `BatchScheduler.RunAsync:80`. Not a CostLedger issue. See blocking-reason section. |
-| AT-02 | ✗ | Same `ArgumentException` propagated into AT01b body. |
-| AT-03 | ✓ | `AT_CL_01_ParallelAppends_AllPersistedAndParseable` — 100 parallel `AppendAsync` calls produced exactly 100 valid `LedgerEntry` lines. |
-| AT-04 | ✓ | `AT_CL_02_Cancellation_DuringWait_PropagatesToCallerAndLeavesLedgerUsable` — pre-cancelled token throws `OperationCanceledException`; subsequent append succeeds; semaphore left at count=1. |
-| AT-05 | ✓ | 124 non-flaky Orchestrator tests pass (the 2 new ones + 122 existing). Zero regressions. |
-| AT-06 | ✗ | Full suite fails: AT01 + AT01b (2 failures in Warden.Orchestrator.Tests; all other assemblies pass). |
-| AT-07 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-01 | FAIL | `ArgumentException: An item with the same key has already been added. Key: sc-01` in `BatchScheduler.RunAsync:80`. Not a CostLedger issue. See blocking-reason section. |
+| AT-02 | FAIL | Same `ArgumentException` propagated into AT01b body. |
+| AT-03 | OK | `AT_CL_01_ParallelAppends_AllPersistedAndParseable` — 100 parallel `AppendAsync` calls produced exactly 100 valid `LedgerEntry` lines. |
+| AT-04 | OK | `AT_CL_02_Cancellation_DuringWait_PropagatesToCallerAndLeavesLedgerUsable` — pre-cancelled token throws `OperationCanceledException`; subsequent append succeeds; semaphore left at count=1. |
+| AT-05 | OK | 124 non-flaky Orchestrator tests pass (the 2 new ones + 122 existing). Zero regressions. |
+| AT-06 | FAIL | Full suite fails: AT01 + AT01b (2 failures in Warden.Orchestrator.Tests; all other assemblies pass). |
+| AT-07 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
 
 ## Files added
 

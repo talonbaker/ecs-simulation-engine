@@ -9,7 +9,7 @@ namespace APIFramework.Systems;
 /// Manages Billy's emotional state each tick using Plutchik's eight primary emotions.
 ///
 /// PIPELINE POSITION
-/// ──────────────────
+/// ------------------
 /// Position 5 — after BiologicalConditionSystem sets vital tags, before BrainSystem
 /// scores drives.  This means:
 ///   - Biological tags (HungerTag, IrritableTag, etc.) are current this tick.
@@ -19,7 +19,7 @@ namespace APIFramework.Systems;
 ///     SadTag for urgency suppression).
 ///
 /// INPUT WIRING
-/// ─────────────
+/// -------------
 ///   JOY          ← all of satiation, hydration, energy above comfortable thresholds
 ///   TRUST        ← (stub) no inputs yet — no environmental stability model
 ///   FEAR         ← (stub) no inputs yet — no threat entities
@@ -31,7 +31,7 @@ namespace APIFramework.Systems;
 ///   ANTICIPATION ← hunger or thirst above a low threshold but drive not yet dominant
 ///
 /// OUTPUT EFFECTS (read by other systems)
-/// ───────────────────────────────────────
+/// ---------------------------------------
 ///   BoredTag     → BrainSystem adds a flat urgency bonus to all drives
 ///   SadTag       → BrainSystem suppresses all drive urgency scores
 ///   GriefTag     → BrainSystem heavily suppresses all drive urgency scores
@@ -67,7 +67,7 @@ public class MoodSystem : ISystem
             if (!LifeStateGuard.IsAlive(entity)) continue;  // WP-3.0.0: skip non-Alive NPCs
             var mood = entity.Get<MoodComponent>();
 
-            // ── Decay all emotions toward zero ────────────────────────────────
+            // -- Decay all emotions toward zero --------------------------------
             mood.Joy          = Decay(mood.Joy,          _cfg.PositiveDecayRate, deltaTime);
             mood.Trust        = Decay(mood.Trust,        _cfg.PositiveDecayRate, deltaTime);
             mood.Anticipation = Decay(mood.Anticipation, _cfg.PositiveDecayRate, deltaTime);
@@ -77,7 +77,7 @@ public class MoodSystem : ISystem
             mood.Anger        = Decay(mood.Anger,        _cfg.NegativeDecayRate, deltaTime);
             mood.Surprise     = Decay(mood.Surprise,     _cfg.SurpriseDecayRate, deltaTime);
 
-            // ── JOY: needs comfortably met ────────────────────────────────────
+            // -- JOY: needs comfortably met ------------------------------------
             if (entity.Has<MetabolismComponent>() && entity.Has<EnergyComponent>())
             {
                 var meta   = entity.Get<MetabolismComponent>();
@@ -92,15 +92,15 @@ public class MoodSystem : ISystem
                     mood.Joy = MathF.Min(100f, mood.Joy + _cfg.JoyGainRate * deltaTime);
             }
 
-            // ── ANGER: irritability unresolved ────────────────────────────────
+            // -- ANGER: irritability unresolved --------------------------------
             if (entity.Has<IrritableTag>())
                 mood.Anger = MathF.Min(100f, mood.Anger + _cfg.AngerGainRate * deltaTime);
 
-            // ── SADNESS: sustained hunger or thirst ───────────────────────────
+            // -- SADNESS: sustained hunger or thirst ---------------------------
             if (entity.Has<HungerTag>() || entity.Has<ThirstTag>())
                 mood.Sadness = MathF.Min(100f, mood.Sadness + _cfg.SadnessGainRate * deltaTime);
 
-            // ── DISGUST (BOREDOM): idle state sustained ───────────────────────
+            // -- DISGUST (BOREDOM): idle state sustained -----------------------
             // Read last tick's DriveComponent — if nothing was dominant, accumulate boredom.
             if (entity.Has<DriveComponent>())
             {
@@ -108,7 +108,7 @@ public class MoodSystem : ISystem
                     mood.Disgust = MathF.Min(100f, mood.Disgust + _cfg.BoredGainRate * deltaTime);
             }
 
-            // ── DISGUST: rotten food consumed (spike) ─────────────────────────
+            // -- DISGUST: rotten food consumed (spike) -------------------------
             if (entity.Has<ConsumedRottenFoodTag>())
             {
                 mood.Disgust = MathF.Min(100f, mood.Disgust + _cfg.RottenFoodDisgustSpike);
@@ -116,7 +116,7 @@ public class MoodSystem : ISystem
                 entity.Remove<ConsumedRottenFoodTag>(); // consume the signal
             }
 
-            // ── ANTICIPATION: drive building but not yet critical ─────────────
+            // -- ANTICIPATION: drive building but not yet critical -------------
             if (entity.Has<MetabolismComponent>())
             {
                 var meta = entity.Get<MetabolismComponent>();
@@ -129,15 +129,15 @@ public class MoodSystem : ISystem
                     mood.Anticipation = MathF.Min(100f, mood.Anticipation + _cfg.AnticipationGainRate * deltaTime);
             }
 
-            // ── Write back ────────────────────────────────────────────────────
+            // -- Write back ----------------------------------------------------
             entity.Add(mood);
 
-            // ── Apply intensity tags ──────────────────────────────────────────
+            // -- Apply intensity tags ------------------------------------------
             ApplyEmotionTags(entity, mood);
         }
     }
 
-    // ── Tag application ───────────────────────────────────────────────────────
+    // -- Tag application -------------------------------------------------------
 
     private void ApplyEmotionTags(Entity entity, MoodComponent mood)
     {
@@ -165,7 +165,7 @@ public class MoodSystem : ISystem
         else if (value >= _cfg.LowThreshold)  entity.Add(new TLow());
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static float Decay(float value, float rate, float deltaTime) =>
         MathF.Max(0f, value - rate * deltaTime);

@@ -28,7 +28,7 @@ public sealed class ReportAggregatorTests : IDisposable
         catch { /* best effort */ }
     }
 
-    // ── AT-01: Structure matches template headings and table columns ───────────────
+    // -- AT-01: Structure matches template headings and table columns ---------------
 
     [Fact]
     public void AT01_Render_ProducesAllRequiredSectionsAndTableColumns()
@@ -58,7 +58,7 @@ public sealed class ReportAggregatorTests : IDisposable
         Assert.Contains("| Tier | Calls | Input tok | Cached read tok | Output tok | Spend |", md);
     }
 
-    // ── AT-02: Cost totals equal ledger sum ───────────────────────────────────────
+    // -- AT-02: Cost totals equal ledger sum ---------------------------------------
 
     [Fact]
     public void AT02_CostSummaryTotals_EqualLedgerSum_WithinOneCent()
@@ -74,7 +74,7 @@ public sealed class ReportAggregatorTests : IDisposable
             $"Ledger tier totals {ledgerTotal:F6} differ from TotalSpendUsd {rep.TotalSpendUsd:F6} by {diff:F6}");
     }
 
-    // ── AT-03: Failed outcome — Notes cites failing AT ────────────────────────────
+    // -- AT-03: Failed outcome — Notes cites failing AT ----------------------------
 
     [Fact]
     public void AT03_FailedOutcome_NotesCitesFailingAcceptanceTest()
@@ -109,7 +109,7 @@ public sealed class ReportAggregatorTests : IDisposable
         Assert.Contains("AT-02", md);
     }
 
-    // ── AT-04: Blocked mid-run produces partial report ────────────────────────────
+    // -- AT-04: Blocked mid-run produces partial report ----------------------------
 
     [Fact]
     public void AT04_BlockedMidRun_PartialReport_WithEarlyTerminationBanner()
@@ -142,7 +142,7 @@ public sealed class ReportAggregatorTests : IDisposable
         Assert.Contains("Run terminated early", md);
     }
 
-    // ── AT-05: report.json round-trips to the same Report ─────────────────────────
+    // -- AT-05: report.json round-trips to the same Report -------------------------
 
     [Fact]
     public void AT05_ReportJson_RoundTrips_ToSameModel()
@@ -167,7 +167,7 @@ public sealed class ReportAggregatorTests : IDisposable
         Assert.Equal(rep.Events.Count,    restored.Events.Count);
     }
 
-    // ── AT-06: Emit adds less than 200ms wall-clock time ─────────────────────────
+    // -- AT-06: Emit adds less than 200ms wall-clock time -------------------------
 
     [Fact]
     public void AT06_Emit_CompletesInUnder200ms()
@@ -189,7 +189,7 @@ public sealed class ReportAggregatorTests : IDisposable
         Assert.True(File.Exists(Path.Combine(outDir, "report.json")));
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────────
+    // -- Helpers -------------------------------------------------------------------
 
     private void WriteSmokeMissionFixture(string runId)
     {
@@ -338,7 +338,7 @@ public sealed class ReportAggregatorTests : IDisposable
         File.AppendAllText(path, JsonSerializer.Serialize(entry) + "\n");
     }
 
-    // ── Model factories ───────────────────────────────────────────────────────────
+    // -- Model factories -----------------------------------------------------------
 
     private static OpusSpecPacket MakeSpec(string specId, string missionId)
         => new()

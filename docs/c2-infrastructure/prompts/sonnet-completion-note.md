@@ -25,9 +25,9 @@ What you did, in plain prose. Not a list of files; the diff is its own record. M
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓/✗ |  |
-| AT-02 | ✓/✗ |  |
-| AT-03 | ✓/✗ |  |
+| AT-01 | OK/FAIL |  |
+| AT-02 | OK/FAIL |  |
+| AT-03 | OK/FAIL |  |
 | ... |  |  |
 
 Every AT in the packet must appear here. If an AT is `n/a` for any reason, mark it `n/a` and explain in Notes.

@@ -10,9 +10,9 @@ namespace APIFramework.Core;
 /// simulation engine.
 ///
 /// WHY THIS EXISTS
-/// ───────────────
+/// ---------------
 /// Currently the Avalonia GUI reaches directly into SimulationBootstrapper fields:
-///   _sim.Clock.CircadianFactor, _sim.EntityManager.Query<T>(), _sim.Invariants, etc.
+///   _sim.Clock.CircadianFactor, _sim.EntityManager.Query&lt;T&gt;(), _sim.Invariants, etc.
 ///
 /// This couples every frontend to the internal class structure of the engine.
 /// When Unity, a web server, or a replay system needs the same data they would all
@@ -20,27 +20,29 @@ namespace APIFramework.Core;
 /// engine's internals change.
 ///
 /// SimulationSnapshot breaks that coupling:
-///   • The engine PRODUCES a snapshot once per frame (cheap — one allocation)
-///   • Frontends READ only from the snapshot (no engine internals visible)
-///   • The snapshot type can evolve independently of both engine and frontend
+///   - The engine PRODUCES a snapshot once per frame (cheap — one allocation)
+///   - Frontends READ only from the snapshot (no engine internals visible)
+///   - The snapshot type can evolve independently of both engine and frontend
 ///
 /// IMMUTABILITY
-/// ────────────
+/// ------------
 /// All collections are read-only; all value types are copies. The snapshot is a
 /// point-in-time view — it cannot be used to mutate the simulation.
 ///
 /// USAGE
-/// ─────
+/// -----
 ///   // In the game loop (UI thread, Unity Update(), CLI loop, etc.):
 ///   var snap = sim.Capture();
 ///   // render snap.Clock.TimeDisplay, snap.Entities, snap.ViolationCount, etc.
 /// </summary>
 public sealed class SimulationSnapshot
 {
-    // ── Clock ─────────────────────────────────────────────────────────────────
+    // -- Clock -----------------------------------------------------------------
+
+    /// <summary>Game-clock view: time of day, day number, daytime flag, circadian factor, time scale.</summary>
     public ClockSnapshot        Clock          { get; init; } = default!;
 
-    // ── Entity summaries ─────────────────────────────────────────────────────
+    // -- Entity summaries -----------------------------------------------------
     /// <summary>All living entities (those with MetabolismComponent).</summary>
     public IReadOnlyList<EntitySnapshot>      LivingEntities  { get; init; } = Array.Empty<EntitySnapshot>();
 
@@ -53,23 +55,25 @@ public sealed class SimulationSnapshot
     /// <summary>Fixed world objects (fridge, sink, toilet, bed) and their positions.</summary>
     public IReadOnlyList<WorldObjectSnapshot> WorldObjects    { get; init; } = Array.Empty<WorldObjectSnapshot>();
 
-    // ── Invariant health ─────────────────────────────────────────────────────
+    // -- Invariant health -----------------------------------------------------
     /// <summary>Total invariant violations recorded since simulation start.</summary>
     public int ViolationCount { get; init; }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     /// <summary>
     /// Captures the current engine state into a new snapshot.
     /// Call once per frame from the main simulation loop, then hand the snapshot
     /// to every frontend system that needs to render or log it.
     /// </summary>
+    /// <param name="sim">The bootstrapper whose live state is captured.</param>
+    /// <returns>An immutable snapshot of the simulation at the moment of capture.</returns>
     public static SimulationSnapshot Capture(SimulationBootstrapper sim)
     {
         var clock = sim.Clock;
         var em    = sim.EntityManager;
 
-        // ── Clock ─────────────────────────────────────────────────────────────
+        // -- Clock -------------------------------------------------------------
         var clockSnap = new ClockSnapshot(
             TimeDisplay:     clock.GameTimeDisplay,
             DayNumber:       clock.DayNumber,
@@ -78,7 +82,7 @@ public sealed class SimulationSnapshot
             TimeScale:       clock.TimeScale
         );
 
-        // ── Living entities ───────────────────────────────────────────────────
+        // -- Living entities ---------------------------------------------------
         var living = new List<EntitySnapshot>();
         foreach (var e in em.Query<MetabolismComponent>())
         {
@@ -116,7 +120,7 @@ public sealed class SimulationSnapshot
                 BladderFill:        bladder.Fill,
                 BladderHasUrge:     bladder.HasUrge,
                 BladderIsCritical:  bladder.IsCritical,
-                // ── Spatial (v0.8+) ───────────────────────────────────────────
+                // -- Spatial (v0.8+) -------------------------------------------
                 PosX:        pos.X,
                 PosY:        pos.Y,
                 PosZ:        pos.Z,
@@ -126,7 +130,7 @@ public sealed class SimulationSnapshot
             ));
         }
 
-        // ── Transit items ─────────────────────────────────────────────────────
+        // -- Transit items -----------------------------------------------------
         var transit = new List<TransitItemSnapshot>();
         foreach (var e in em.Query<EsophagusTransitComponent>())
         {
@@ -145,7 +149,7 @@ public sealed class SimulationSnapshot
             ));
         }
 
-        // ── World items ───────────────────────────────────────────────────────
+        // -- World items -------------------------------------------------------
         var transitIds = new HashSet<Guid>(
             em.Query<EsophagusTransitComponent>().Select(e => e.Id));
 
@@ -168,7 +172,7 @@ public sealed class SimulationSnapshot
             ));
         }
 
-        // ── World objects (fridge, sink, toilet, bed) ────────────────────────
+        // -- World objects (fridge, sink, toilet, bed) ------------------------
         var worldObjects = new List<WorldObjectSnapshot>();
         foreach (var e in em.GetAllEntities()
                              .Where(e => e.Has<FridgeComponent>()  ||
@@ -208,9 +212,18 @@ public sealed class SimulationSnapshot
     }
 }
 
-// ── Nested snapshot records ───────────────────────────────────────────────────
+// -- Nested snapshot records ---------------------------------------------------
 // Records because they are pure data bags with value semantics — no behaviour.
 
+/// <summary>
+/// Per-frame view of <see cref="SimulationClock"/>. Only the values frontends actually need;
+/// no live <c>TotalTime</c> seconds (which would couple frontends to the underlying double).
+/// </summary>
+/// <param name="TimeDisplay">Pre-formatted game time, e.g. <c>"6:05 AM"</c>.</param>
+/// <param name="DayNumber">1-based count of full game days since the simulation started.</param>
+/// <param name="IsDaytime">True when the sun is up (between dawn and dusk).</param>
+/// <param name="CircadianFactor">Multiplier currently applied to the sleep drive (see <see cref="SimulationClock.CircadianFactor"/>).</param>
+/// <param name="TimeScale">Active time-scale multiplier; 120 means 1 real second equals 2 game minutes.</param>
 public sealed record ClockSnapshot(
     string TimeDisplay,
     int    DayNumber,
@@ -219,6 +232,11 @@ public sealed record ClockSnapshot(
     float  TimeScale
 );
 
+/// <summary>
+/// Per-frame view of one living entity. Captures the values an HUD or telemetry
+/// projector needs without exposing the underlying components. Built once per tick
+/// by <see cref="SimulationSnapshot.Capture"/> from <see cref="EntityManager.Query{T}"/>.
+/// </summary>
 public sealed record EntitySnapshot(
     Guid        Id,
     string      ShortId,
@@ -233,20 +251,20 @@ public sealed record EntitySnapshot(
     float       EatUrgency,
     float       DrinkUrgency,
     float       SleepUrgency,
-    // ── Elimination drives (v0.7.3+) ───────────────────────────────────────
+    // -- Elimination drives (v0.7.3+) ---------------------------------------
     float       DefecateUrgency,
     float       PeeUrgency,
-    // ── GI pipeline fills ──────────────────────────────────────────────────
+    // -- GI pipeline fills --------------------------------------------------
     float       SiFill,             // SmallIntestine fill 0–1
     float       LiFill,             // LargeIntestine fill 0–1
     float       ColonFill,          // Colon fill 0–1 (relative to CapacityMl)
     bool        ColonHasUrge,
     bool        ColonIsCritical,
-    // ── Bladder (v0.7.4+) ─────────────────────────────────────────────────
+    // -- Bladder (v0.7.4+) -------------------------------------------------
     float       BladderFill,        // 0–1 relative to CapacityMl
     bool        BladderHasUrge,
     bool        BladderIsCritical,
-    // ── Spatial (v0.8+) ───────────────────────────────────────────────────
+    // -- Spatial (v0.8+) ---------------------------------------------------
     float       PosX,
     float       PosY,
     float       PosZ,
@@ -255,6 +273,13 @@ public sealed record EntitySnapshot(
     string      MoveTarget          // label of current destination ("Fridge", "Bed", etc.)
 );
 
+/// <summary>
+/// One item currently moving through the esophagus pipeline.
+/// </summary>
+/// <param name="Id">Stable id of the transit entity.</param>
+/// <param name="TargetEntityId">Id of the entity the item is travelling toward (e.g. the eater).</param>
+/// <param name="ContentLabel">Display label — food name for boluses, liquid type for drinks.</param>
+/// <param name="Progress">Transit progress as a fraction in <c>[0, 1]</c>.</param>
 public sealed record TransitItemSnapshot(
     Guid   Id,
     Guid   TargetEntityId,
@@ -262,6 +287,13 @@ public sealed record TransitItemSnapshot(
     float  Progress
 );
 
+/// <summary>
+/// A bolus or liquid sitting freely in the world (not in transit, not held).
+/// </summary>
+/// <param name="Id">Stable id of the item entity.</param>
+/// <param name="Label">Display label, e.g. <c>"Banana"</c> or <c>"Water"</c>.</param>
+/// <param name="RotLevel">Current rot level in <c>[0, 1]</c>; 0 if no <c>RotComponent</c>.</param>
+/// <param name="IsRotten">True once <c>RotTag</c> has been applied (rot threshold crossed).</param>
 public sealed record WorldItemSnapshot(
     Guid   Id,
     string Label,
@@ -269,6 +301,9 @@ public sealed record WorldItemSnapshot(
     bool   IsRotten
 );
 
+/// <summary>
+/// A fixed world object — fridge, sink, toilet, or bed — with its position and stock.
+/// </summary>
 public sealed record WorldObjectSnapshot(
     Guid   Id,
     string Name,

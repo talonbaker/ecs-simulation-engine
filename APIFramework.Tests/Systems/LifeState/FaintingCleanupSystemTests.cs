@@ -12,7 +12,7 @@ namespace APIFramework.Tests.Systems.LifeState;
 /// </summary>
 public class FaintingCleanupSystemTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static Entity BuildFaintingNpc(EntityManager em, LifeState state)
     {
@@ -23,7 +23,7 @@ public class FaintingCleanupSystemTests
         return npc;
     }
 
-    // ── AT-13: Alive NPC → IsFaintingTag removed ──────────────────────────────
+    // -- AT-13: Alive NPC → IsFaintingTag removed ------------------------------
 
     [Fact]
     public void AT13_AliveNpc_WithIsFaintingTag_TagIsRemoved()
@@ -36,7 +36,7 @@ public class FaintingCleanupSystemTests
         Assert.False(npc.Has<IsFaintingTag>());
     }
 
-    // ── AT-14: Alive NPC → both tag and component removed ────────────────────
+    // -- AT-14: Alive NPC → both tag and component removed --------------------
 
     [Fact]
     public void AT14_AliveNpc_WithFaintingComponent_ComponentAlsoRemoved()
@@ -51,7 +51,7 @@ public class FaintingCleanupSystemTests
         Assert.False(npc.Has<FaintingComponent>());
     }
 
-    // ── AT-15: Incapacitated NPC → tag preserved (still unconscious) ─────────
+    // -- AT-15: Incapacitated NPC → tag preserved (still unconscious) ---------
 
     [Fact]
     public void AT15_IncapacitatedNpc_IsFaintingTag_NotRemoved()

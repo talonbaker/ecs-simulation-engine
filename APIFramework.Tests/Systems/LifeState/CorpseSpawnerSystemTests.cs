@@ -17,7 +17,7 @@ namespace APIFramework.Tests.Systems.LifeState;
 /// </summary>
 public class CorpseSpawnerSystemTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static int EntityIntId(Entity e)
     {
@@ -45,7 +45,7 @@ public class CorpseSpawnerSystemTests
             RoomId:         null,
             Detail:         "test death");
 
-    // ── AT-01: CorpseTag attached ─────────────────────────────────────────────
+    // -- AT-01: CorpseTag attached ---------------------------------------------
 
     [Fact]
     public void AT01_DeathEvent_AttachesCorpseTag()
@@ -58,7 +58,7 @@ public class CorpseSpawnerSystemTests
         Assert.True(deceased.Has<CorpseTag>());
     }
 
-    // ── AT-02: CorpseComponent attached with correct metadata ─────────────────
+    // -- AT-02: CorpseComponent attached with correct metadata -----------------
 
     [Fact]
     public void AT02_DeathEvent_AttachesCorpseComponent_WithCorrectEntityId()
@@ -74,7 +74,7 @@ public class CorpseSpawnerSystemTests
         Assert.Equal(42L, c.DeathTick);
     }
 
-    // ── AT-03: Idempotent — re-emitting same event changes nothing ────────────
+    // -- AT-03: Idempotent — re-emitting same event changes nothing ------------
 
     [Fact]
     public void AT03_ReEmitDeathEvent_IsIdempotent_NoSecondAttach()
@@ -93,7 +93,7 @@ public class CorpseSpawnerSystemTests
         Assert.False(deceased.Get<CorpseComponent>().HasBeenMoved);
     }
 
-    // ── AT-04: Non-death events are ignored ───────────────────────────────────
+    // -- AT-04: Non-death events are ignored -----------------------------------
 
     [Fact]
     public void AT04_NonDeathEvent_DoesNotAttachCorpseTag()
@@ -111,7 +111,7 @@ public class CorpseSpawnerSystemTests
         Assert.False(deceased.Has<CorpseTag>());
     }
 
-    // ── AT-05: CauseOfDeathComponent.LocationRoomId mirrored ─────────────────
+    // -- AT-05: CauseOfDeathComponent.LocationRoomId mirrored -----------------
 
     [Fact]
     public void AT05_CauseOfDeathComponent_LocationRoomId_MirroredToCorpseComponent()

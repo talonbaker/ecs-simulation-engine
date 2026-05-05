@@ -9,13 +9,13 @@ namespace APIFramework.Tests.Integration;
 /// end-to-end system pipeline produces sane output.
 ///
 /// WHAT THESE TESTS ARE (AND AREN'T)
-/// ───────────────────────────────────
+/// -----------------------------------
 /// These are NOT exhaustive property tests. They are the "does it not explode
 /// over a full day" check — the safety net that would have caught the
 /// zero-nutrition starvation bug (v0.7.2) before it ever reached a real run.
 ///
 /// SINGLE-HUMAN SCOPE
-/// ───────────────────
+/// -------------------
 /// Every test in this file spins up exactly ONE human entity. The intent is to
 /// validate each biological pipeline (metabolism, digestion, energy, mood, etc.)
 /// in isolation, free from resource-contention noise that arises when 100 agents
@@ -23,13 +23,13 @@ namespace APIFramework.Tests.Integration;
 /// tests will live in a separate file once that feature set is built out.
 ///
 /// TIMING
-/// ───────
+/// -------
 /// One game day = 86 400 game-seconds.
 /// With TimeScale 120 and a 1-second real-time tick, 720 ticks = 1 game day.
 /// At the engine's ~276 000 ticks/sec throughput this takes less than 3ms.
 ///
 /// INVARIANT VIOLATIONS
-/// ─────────────────────
+/// ---------------------
 /// The InvariantSystem clamps impossible values and records them. A small number
 /// of violations is expected from floating-point drift as the stomach empties
 /// toward zero. Sustained violations (same property every tick) indicate a
@@ -37,7 +37,7 @@ namespace APIFramework.Tests.Integration;
 /// </summary>
 public class SmokeTests
 {
-    // ── Constants ──────────────────────────────────────────────────────────────
+    // -- Constants --------------------------------------------------------------
 
     /// <summary>
     /// Real-time seconds per tick. With TimeScale=120, each tick advances the
@@ -49,7 +49,7 @@ public class SmokeTests
     /// <remarks>86 400 game-seconds / 120 (TimeScale) = 720 real ticks.</remarks>
     private const int TicksPerDay = 720;
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     /// <summary>
     /// Spins up a fresh single-human simulation and runs it for exactly one
@@ -69,7 +69,7 @@ public class SmokeTests
         return sim;
     }
 
-    // ── Core pipeline health ───────────────────────────────────────────────────
+    // -- Core pipeline health ---------------------------------------------------
 
     [Fact]
     public void FullDayRun_CompletesWithoutException()
@@ -123,7 +123,7 @@ public class SmokeTests
         Assert.InRange(energy.Sleepiness, 0f, 100f);
     }
 
-    // ── Nutrition pipeline contract ────────────────────────────────────────────
+    // -- Nutrition pipeline contract --------------------------------------------
 
     /// <summary>
     /// THE KEY REGRESSION TEST.
@@ -180,7 +180,7 @@ public class SmokeTests
             "This is the zero-nutrition stall from v0.7.2. Check IncludeFields = true.");
     }
 
-    // ── Invariant system ───────────────────────────────────────────────────────
+    // -- Invariant system -------------------------------------------------------
 
     [Fact]
     public void FullDayRun_InvariantViolations_AreFew()
@@ -226,7 +226,7 @@ public class SmokeTests
             "FeedingSystem or DigestionSystem is not providing sustenance.");
     }
 
-    // ── Multi-day stability ────────────────────────────────────────────────────
+    // -- Multi-day stability ----------------------------------------------------
 
     [Fact]
     public void ThreeDayRun_CompletesWithoutException()

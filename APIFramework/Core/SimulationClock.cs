@@ -4,18 +4,18 @@ namespace APIFramework.Core;
 /// Central time authority for the simulation.
 ///
 /// GAME TIME vs REAL TIME
-/// ─────────────────────
+/// ---------------------
 /// TimeScale (default 120) means 1 real second = 120 game seconds = 2 game minutes.
 /// Systems receive a pre-scaled deltaTime so they always think in game-seconds.
 ///
 /// DAY/NIGHT
-/// ─────────
+/// ---------
 /// The game world starts at 6:00 AM on Day 1.  GameTimeOfDay wraps every 24 h.
 /// CircadianFactor amplifies or suppresses the sleep drive by time of day.
 /// </summary>
 public class SimulationClock
 {
-    // ── Timing ────────────────────────────────────────────────────────────────
+    // -- Timing ----------------------------------------------------------------
 
     /// <summary>Current TimeScale. 120 = 2 game-minutes per real second (default).</summary>
     public float TimeScale = 120f;
@@ -23,7 +23,7 @@ public class SimulationClock
     /// <summary>Total accumulated game-seconds since the simulation started.</summary>
     public double TotalTime { get; private set; }
 
-    // ── Day / Night constants ─────────────────────────────────────────────────
+    // -- Day / Night constants -------------------------------------------------
 
     /// <summary>Number of game-seconds in a full 24-hour day (24 × 3600 = 86 400).</summary>
     public const float SecondsPerDay  = 86_400f;   // 24 × 3600
@@ -43,7 +43,7 @@ public class SimulationClock
     // World clock starts at 6:00 AM = 21 600 game-seconds into the day
     private const float StartOffsetSeconds = DawnHour * 3600f;
 
-    // ── Game-time accessors ───────────────────────────────────────────────────
+    // -- Game-time accessors ---------------------------------------------------
 
     /// <summary>Seconds since midnight in the current game day (0–86 399).</summary>
     public float GameTimeOfDay => (float)((TotalTime + StartOffsetSeconds) % SecondsPerDay);
@@ -84,7 +84,7 @@ public class SimulationClock
     /// </summary>
     public string DayTimeDisplay => $"Day {DayNumber}  ·  {GameTimeDisplay}";
 
-    // ── Circadian factor ──────────────────────────────────────────────────────
+    // -- Circadian factor ------------------------------------------------------
 
     /// <summary>
     /// Multiplier applied to SleepUrgency in BrainSystem based on time of day.
@@ -117,7 +117,7 @@ public class SimulationClock
         }
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────────
+    // -- Internal --------------------------------------------------------------
 
     /// <summary>
     /// Advance game time by one real-time delta. Called by SimulationEngine each tick.

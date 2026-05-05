@@ -89,7 +89,7 @@ public class RelationshipLifecycleSystem : ISystem
         }
     }
 
-    // ── Factory ───────────────────────────────────────────────────────────────
+    // -- Factory ---------------------------------------------------------------
 
     /// <summary>
     /// Loads the transition table from <paramref name="tablePath"/>.

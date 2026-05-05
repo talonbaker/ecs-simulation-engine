@@ -5,7 +5,7 @@ namespace APIFramework.Core;
 /// Query&lt;T&gt;() is O(1) instead of the previous O(E) full scan.
 ///
 /// HOW THE INDEX WORKS
-/// ────────────────────
+/// --------------------
 /// Each entity is created with an onChange callback that fires when a component
 /// type is added to or removed from that entity. EntityManager listens to those
 /// callbacks and keeps _componentIndex updated:
@@ -15,7 +15,7 @@ namespace APIFramework.Core;
 /// Query&lt;T&gt;() then returns the pre-built bucket — no scanning, no LINQ.
 ///
 /// THREAD SAFETY
-/// ─────────────
+/// -------------
 /// Not thread-safe. All entity mutations must happen on the simulation thread.
 /// When parallel system execution is added in v0.8+, systems within a phase
 /// will be allowed to READ concurrently but must WRITE via a command queue
@@ -26,7 +26,7 @@ public class EntityManager
     private readonly List<Entity>                       _entities        = new();
     private readonly Dictionary<Type, HashSet<Entity>> _componentIndex  = new();
 
-    // ── Deterministic entity ID counter ──────────────────────────────────────
+    // -- Deterministic entity ID counter --------------------------------------
     //
     // Using a sequential counter instead of Guid.NewGuid() makes every entity
     // ID reproducible across runs: given the same bootstrapper code path, the
@@ -59,7 +59,7 @@ public class EntityManager
     /// </summary>
     public int ComponentTypeCount => _componentIndex.Count;
 
-    // ── Entity lifecycle ──────────────────────────────────────────────────────
+    // -- Entity lifecycle ------------------------------------------------------
 
     /// <summary>
     /// Creates a new entity with a deterministic, counter-based ID.
@@ -111,7 +111,7 @@ public class EntityManager
         _entities.Remove(entity);
     }
 
-    // ── Query API ─────────────────────────────────────────────────────────────
+    // -- Query API -------------------------------------------------------------
 
     /// <summary>
     /// Returns all entities that currently have component T.
@@ -128,7 +128,7 @@ public class EntityManager
     /// <summary>Returns every entity managed by this EntityManager.</summary>
     public IEnumerable<Entity> GetAllEntities() => _entities;
 
-    // ── Index maintenance ─────────────────────────────────────────────────────
+    // -- Index maintenance -----------------------------------------------------
 
     private void OnComponentChanged(Entity entity, Type componentType, bool added)
     {

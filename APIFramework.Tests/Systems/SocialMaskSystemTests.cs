@@ -50,7 +50,7 @@ public class SocialMaskSystemTests
         return npc;
     }
 
-    // ── AT-02: elevated drive + high exposure → mask grows ────────────────────
+    // -- AT-02: elevated drive + high exposure → mask grows --------------------
 
     [Fact]
     public void AT02_ElevatedDrive_HighExposure_IrritationMaskGrows()
@@ -80,7 +80,7 @@ public class SocialMaskSystemTests
         Assert.Equal(before, npc.Get<SocialMaskComponent>().IrritationMask);
     }
 
-    // ── AT-03: low exposure → mask decays ─────────────────────────────────────
+    // -- AT-03: low exposure → mask decays -------------------------------------
 
     [Fact]
     public void AT03_LowExposure_Alone_DarkRoom_MaskDecays()
@@ -114,7 +114,7 @@ public class SocialMaskSystemTests
         Assert.Equal(10, npc.Get<SocialMaskComponent>().IrritationMask);
     }
 
-    // ── AT-04: personality bias scales growth ─────────────────────────────────
+    // -- AT-04: personality bias scales growth ---------------------------------
 
     [Fact]
     public void AT04_HighConscientiousness_BuildsMaskFasterThanLow()

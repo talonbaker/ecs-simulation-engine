@@ -51,7 +51,7 @@ public sealed class PhysicalManifestSpawner
         return EntityIntId(entity);
     }
 
-    // ── ID helpers ─────────────────────────────────────────────────────────────
+    // -- ID helpers -------------------------------------------------------------
 
     /// <summary>Extracts the lower 32 bits of the entity's deterministic counter-Guid.</summary>
     public static int EntityIntId(Entity entity)

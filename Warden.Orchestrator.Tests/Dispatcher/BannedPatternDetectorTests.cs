@@ -9,7 +9,7 @@ namespace Warden.Orchestrator.Tests.Dispatcher;
 /// </summary>
 public sealed class BannedPatternDetectorTests
 {
-    // ── Pattern 1: using System.Net.Http outside Warden.Anthropic / Warden.Orchestrator ──
+    // -- Pattern 1: using System.Net.Http outside Warden.Anthropic / Warden.Orchestrator --
 
     [Fact]
     public void P1_Positive_HttpNamespace_InAPIFramework_IsDetected()
@@ -44,7 +44,7 @@ public sealed class BannedPatternDetectorTests
         AssertNotDetected(detections, BannedPatternKind.HttpNamespaceOutsideWarden);
     }
 
-    // ── Pattern 2: new AnthropicClient/HttpClient/WebSocketClient outside allowed projects ──
+    // -- Pattern 2: new AnthropicClient/HttpClient/WebSocketClient outside allowed projects --
 
     [Fact]
     public void P2_Positive_NewHttpClient_InWardenContracts_IsDetected()
@@ -92,7 +92,7 @@ public sealed class BannedPatternDetectorTests
         AssertNotDetected(detections, BannedPatternKind.ClientConstructionOutsideWarden);
     }
 
-    // ── Pattern 3: Process.Start that is not ECSCli ───────────────────────────
+    // -- Pattern 3: Process.Start that is not ECSCli ---------------------------
 
     [Fact]
     public void P3_Positive_ProcessStart_WithCmdExe_IsDetected()
@@ -130,7 +130,7 @@ public sealed class BannedPatternDetectorTests
         AssertNotDetected(detections, BannedPatternKind.UnauthorizedProcessStart);
     }
 
-    // ── Pattern 4: ANTHROPIC_API_KEY in Warden.* code outside Program.cs ──────
+    // -- Pattern 4: ANTHROPIC_API_KEY in Warden.* code outside Program.cs ------
 
     [Fact]
     public void P4_Positive_ApiKey_InWardenContracts_IsDetected()
@@ -170,7 +170,7 @@ public sealed class BannedPatternDetectorTests
         AssertNotDetected(detections, BannedPatternKind.ApiKeyInWardenCode);
     }
 
-    // ── Pattern 5: new dependency in forbidden csproj files ──────────────────
+    // -- Pattern 5: new dependency in forbidden csproj files ------------------
 
     [Fact]
     public void P5_Positive_PackageRef_InAPIFrameworkCsproj_IsDetected()
@@ -218,7 +218,7 @@ public sealed class BannedPatternDetectorTests
         AssertNotDetected(detections, BannedPatternKind.ForbiddenCsprojDependency);
     }
 
-    // ── Pattern 6: Task.Run calling back into orchestrator types ─────────────
+    // -- Pattern 6: Task.Run calling back into orchestrator types -------------
 
     [Fact]
     public void P6_Positive_TaskRun_WithDispatcher_IsDetected()
@@ -265,7 +265,7 @@ public sealed class BannedPatternDetectorTests
         AssertNotDetected(detections, BannedPatternKind.TaskRunCallsOrchestrator);
     }
 
-    // ── HasBannedPattern surface ──────────────────────────────────────────────
+    // -- HasBannedPattern surface ----------------------------------------------
 
     [Fact]
     public void HasBannedPattern_ReturnsFalse_ForCleanDiff()
@@ -305,7 +305,7 @@ public sealed class BannedPatternDetectorTests
         Assert.Empty(detections);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static void AssertDetected(
         IReadOnlyList<BannedDetection> detections,

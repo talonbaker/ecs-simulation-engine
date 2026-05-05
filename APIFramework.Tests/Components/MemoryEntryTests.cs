@@ -13,7 +13,7 @@ namespace APIFramework.Tests.Components;
 /// </summary>
 public class MemoryEntryTests
 {
-    // ── Id determinism ────────────────────────────────────────────────────────
+    // -- Id determinism --------------------------------------------------------
 
     [Fact]
     public void BuildId_SameInputs_ProducesSameId()
@@ -50,7 +50,7 @@ public class MemoryEntryTests
         Assert.StartsWith("mem-", id);
     }
 
-    // ── Construction ──────────────────────────────────────────────────────────
+    // -- Construction ----------------------------------------------------------
 
     [Fact]
     public void MemoryEntry_Construct_FieldsAccessible()
@@ -74,7 +74,7 @@ public class MemoryEntryTests
         Assert.False(entry.Persistent);
     }
 
-    // ── JSON round-trip ───────────────────────────────────────────────────────
+    // -- JSON round-trip -------------------------------------------------------
 
     [Fact]
     public void MemoryEntry_JsonRoundTrip_FieldsPreserved()

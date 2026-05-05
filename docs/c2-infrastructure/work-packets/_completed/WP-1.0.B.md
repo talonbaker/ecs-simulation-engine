@@ -31,22 +31,22 @@ Landed v0.3.0 on `world-state.schema.json` — the first move on the spatial axi
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
 
-| AT-01 | ✓ | `schemaVersion` enum `["0.1.0", "0.2.1", "0.3.0"]`; all new surfaces optional with `maxItems` and `min`/`max` on every numeric field. Verified by build (0 warnings) and schema inspection. |
-| AT-02 | ✓ | `WorldState_V01SampleRoundTripsUnderV03Schema` and existing `WorldState_V01SampleRoundTripsUnderV021Schema` both pass. |
-| AT-03 | ✓ | `WorldState_V021SampleRoundTripsUnderV03Schema` passes. |
-| AT-04 | ✓ | `WorldState_V03SampleRoundTrips` passes full round-trip. |
-| AT-05 | ✓ | `WorldState_V03_LightSourceMissingRoom_RejectedByReferentialChecker` passes with exact reason `"light-source-room-missing"`. |
-| AT-06 | ✓ | `WorldState_V03_ApertureMissingRoom_RejectedByReferentialChecker` passes with exact reason `"aperture-room-missing"`. |
-| AT-07 | ✓ | `WorldState_V03_DominantSourceMissing_RejectedByReferentialChecker` passes with exact reason `"dominant-source-missing"`. |
-| AT-08 | ✓ | `WorldState_V03_DuplicateRoomId_RejectedByReferentialChecker` passes with exact reason `"duplicate-room-id"`. |
-| AT-09 | ✓ | `WorldState_V03_BoundsRectWidthZero_FailsMinimum` passes — width=0 rejected by `minimum: 1`. |
-| AT-10 | ✓ | `WorldState_V03_SunElevationDegTooHigh_FailsMaximum` passes — elevationDeg=91 rejected by `maximum: 90`. |
-| AT-11 | ✓ | `WorldState_V03_AbsentSun_ValidatesClean` passes — no `clock.sun` is valid. |
-| AT-12 | ✓ | `WorldState_V03_LightSourceInvalidState_FailsEnum` passes — `"burned-out"` rejected by enum. |
-| AT-13 | ✓ | `WorldState_V03_OverlappingRoomBounds_ValidatesClean` passes — overlapping bounds pass both schema and referential checker. |
-| AT-14 | ✓ | All 24 `Warden.Telemetry.Tests` pass. Projector still emits `SchemaVersion = "0.1.0"`; new arrays absent from output. |
-| AT-15 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-16 | ✓ | `dotnet test ECSSimulation.sln` — 400 passed, 0 failed across all test projects. |
+| AT-01 | OK | `schemaVersion` enum `["0.1.0", "0.2.1", "0.3.0"]`; all new surfaces optional with `maxItems` and `min`/`max` on every numeric field. Verified by build (0 warnings) and schema inspection. |
+| AT-02 | OK | `WorldState_V01SampleRoundTripsUnderV03Schema` and existing `WorldState_V01SampleRoundTripsUnderV021Schema` both pass. |
+| AT-03 | OK | `WorldState_V021SampleRoundTripsUnderV03Schema` passes. |
+| AT-04 | OK | `WorldState_V03SampleRoundTrips` passes full round-trip. |
+| AT-05 | OK | `WorldState_V03_LightSourceMissingRoom_RejectedByReferentialChecker` passes with exact reason `"light-source-room-missing"`. |
+| AT-06 | OK | `WorldState_V03_ApertureMissingRoom_RejectedByReferentialChecker` passes with exact reason `"aperture-room-missing"`. |
+| AT-07 | OK | `WorldState_V03_DominantSourceMissing_RejectedByReferentialChecker` passes with exact reason `"dominant-source-missing"`. |
+| AT-08 | OK | `WorldState_V03_DuplicateRoomId_RejectedByReferentialChecker` passes with exact reason `"duplicate-room-id"`. |
+| AT-09 | OK | `WorldState_V03_BoundsRectWidthZero_FailsMinimum` passes — width=0 rejected by `minimum: 1`. |
+| AT-10 | OK | `WorldState_V03_SunElevationDegTooHigh_FailsMaximum` passes — elevationDeg=91 rejected by `maximum: 90`. |
+| AT-11 | OK | `WorldState_V03_AbsentSun_ValidatesClean` passes — no `clock.sun` is valid. |
+| AT-12 | OK | `WorldState_V03_LightSourceInvalidState_FailsEnum` passes — `"burned-out"` rejected by enum. |
+| AT-13 | OK | `WorldState_V03_OverlappingRoomBounds_ValidatesClean` passes — overlapping bounds pass both schema and referential checker. |
+| AT-14 | OK | All 24 `Warden.Telemetry.Tests` pass. Projector still emits `SchemaVersion = "0.1.0"`; new arrays absent from output. |
+| AT-15 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-16 | OK | `dotnet test ECSSimulation.sln` — 400 passed, 0 failed across all test projects. |
 
 ## Files added
 

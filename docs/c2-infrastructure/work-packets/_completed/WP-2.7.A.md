@@ -22,16 +22,16 @@ Final name count: 50 names. Bible exemplars Donna, Greg, Frank confirmed present
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `NamePoolLoaderTests` — loads cleanly, 50 entries ≥ 30, all unique, all non-empty |
-| AT-02 | ✓ | `NamePoolBibleExemplarsTests` — Donna, Greg, Frank all present |
-| AT-03 | ✓ | `CastGeneratorNameAssignmentTests` — 5 NPCs, all have `IdentityComponent`, names distinct, from pool |
-| AT-04 | ✓ | `CastGeneratorNameAssignmentTests.AT04_SameSeed_ProducesSameNameAssignments` |
-| AT-05 | ✓ | `CastGeneratorNameAssignmentTests.AT05_TenDifferentSeeds_ProduceAtLeastTwoDifferentNameAssignments` |
-| AT-06 | ✓ | `CastGeneratorNameExhaustionTests` — `InvalidOperationException` thrown, "exhausted" in message, "name-pool.json" in message |
-| AT-07 | ✓ | `IdentityProjectionTests` — `SpawnHuman(name: "Donna")` projects to `EntityStateDto.Name == "Donna"` |
-| AT-08 | ✓ | `dotnet test ECSSimulation.sln` — 935 tests, 0 failures |
-| AT-09 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings |
-| AT-10 | ✓ | All tests green (see AT-08) |
+| AT-01 | OK | `NamePoolLoaderTests` — loads cleanly, 50 entries ≥ 30, all unique, all non-empty |
+| AT-02 | OK | `NamePoolBibleExemplarsTests` — Donna, Greg, Frank all present |
+| AT-03 | OK | `CastGeneratorNameAssignmentTests` — 5 NPCs, all have `IdentityComponent`, names distinct, from pool |
+| AT-04 | OK | `CastGeneratorNameAssignmentTests.AT04_SameSeed_ProducesSameNameAssignments` |
+| AT-05 | OK | `CastGeneratorNameAssignmentTests.AT05_TenDifferentSeeds_ProduceAtLeastTwoDifferentNameAssignments` |
+| AT-06 | OK | `CastGeneratorNameExhaustionTests` — `InvalidOperationException` thrown, "exhausted" in message, "name-pool.json" in message |
+| AT-07 | OK | `IdentityProjectionTests` — `SpawnHuman(name: "Donna")` projects to `EntityStateDto.Name == "Donna"` |
+| AT-08 | OK | `dotnet test ECSSimulation.sln` — 935 tests, 0 failures |
+| AT-09 | OK | `dotnet build ECSSimulation.sln` — 0 warnings |
+| AT-10 | OK | All tests green (see AT-08) |
 
 ## Files added
 

@@ -63,7 +63,7 @@ public class MaskCrackSystemTests
         return list;
     }
 
-    // ── AT-05: crack fires above threshold ────────────────────────────────────
+    // -- AT-05: crack fires above threshold ------------------------------------
 
     [Fact]
     public void AT05_CrackPressureAboveThreshold_EmitsMaskSlipCandidate()
@@ -100,7 +100,7 @@ public class MaskCrackSystemTests
         Assert.Empty(candidates);
     }
 
-    // ── AT-06: cooldown blocks re-crack ───────────────────────────────────────
+    // -- AT-06: cooldown blocks re-crack ---------------------------------------
 
     [Fact]
     public void AT06_Cooldown_BlocksRecrack_WithinCooldownWindow()
@@ -132,7 +132,7 @@ public class MaskCrackSystemTests
         Assert.Single(candidates);
     }
 
-    // ── AT-07: dominant drive reset after crack ───────────────────────────────
+    // -- AT-07: dominant drive reset after crack -------------------------------
 
     [Fact]
     public void AT07_IrritationDominant_IsReset_OthersUnchanged()

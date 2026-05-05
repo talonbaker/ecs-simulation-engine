@@ -43,7 +43,7 @@ public class ActionSelectionToMovementTests
         return new PathfindingTriggerSystem(new PathfindingService(em, worldWidth: 64, worldHeight: 64, new MovementConfig(), cache, bus));
     }
 
-    // ── AT-09a: Approach ─────────────────────────────────────────────────────────
+    // -- AT-09a: Approach ---------------------------------------------------------
 
     [Fact]
     public void AT09_Approach_WritesMovementTarget_AndPathfindingTrigger_ProducesPath()
@@ -102,7 +102,7 @@ public class ActionSelectionToMovementTests
         Assert.Equal(5, last.Y);
     }
 
-    // ── AT-09b: Avoid ────────────────────────────────────────────────────────────
+    // -- AT-09b: Avoid ------------------------------------------------------------
 
     [Fact]
     public void AT09_Avoid_WritesFleeTarget_AndPathfindingTrigger_ProducesPathAway()
@@ -169,7 +169,7 @@ public class ActionSelectionToMovementTests
             $"Expected final waypoint X ({last.X}) to be west of NPC start X (5).");
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────────
+    // -- Helpers ------------------------------------------------------------------
 
     private static Entity? FindByGuid(EntityManager em, Guid id)
     {

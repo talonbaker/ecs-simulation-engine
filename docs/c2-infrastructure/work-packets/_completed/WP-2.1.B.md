@@ -30,17 +30,17 @@ Key judgement calls:
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `BlockedActionsComponent` and `BlockedActionClass` compile, instantiate, `Contains` round-trips. |
-| AT-02 | ✓ | Hunger max, `bodyImageEating: 90`, willpower 80 → 0 eats over 1000 ticks. |
-| AT-03 | ✓ | Same NPC with willpower 5 → eats at least once in 1000 ticks (gate breaks). |
-| AT-04 | ✓ | Exhausted NPC, `vulnerability: 80`, willpower 80 → does not fall asleep over 1000 ticks. |
-| AT-05 | ✓ | Bladder critical, `publicEmotion: 90`, willpower 70 → no urination over 500 ticks. |
-| AT-06 | ✓ | `bodyImageEating: 90`, willpower 80, `AcuteLevel: 90` → eats (stress relaxation breaks gate). |
-| AT-07 | ✓ | NPC without `InhibitionsComponent` → never vetoed; FeedingSystem behaves as before. |
-| AT-08 | ✓ | 5000-tick run with fixed inputs → byte-identical `BlockedActionsComponent` state across two runs. |
-| AT-09 | ✓ | All WP-1.x and Wave 1/Wave 2 ATs stay green (795 APIFramework tests passed). |
-| AT-10 | ✓ | `dotnet build ECSSimulation.sln` → 0 warnings. |
-| AT-11 | ✓ | `dotnet test ECSSimulation.sln` → all green (795 APIFramework + 19 ECSCli + 66 Warden.Contracts + 17 Warden.Anthropic + 51 Warden.Telemetry + 136 Warden.Orchestrator). |
+| AT-01 | OK | `BlockedActionsComponent` and `BlockedActionClass` compile, instantiate, `Contains` round-trips. |
+| AT-02 | OK | Hunger max, `bodyImageEating: 90`, willpower 80 → 0 eats over 1000 ticks. |
+| AT-03 | OK | Same NPC with willpower 5 → eats at least once in 1000 ticks (gate breaks). |
+| AT-04 | OK | Exhausted NPC, `vulnerability: 80`, willpower 80 → does not fall asleep over 1000 ticks. |
+| AT-05 | OK | Bladder critical, `publicEmotion: 90`, willpower 70 → no urination over 500 ticks. |
+| AT-06 | OK | `bodyImageEating: 90`, willpower 80, `AcuteLevel: 90` → eats (stress relaxation breaks gate). |
+| AT-07 | OK | NPC without `InhibitionsComponent` → never vetoed; FeedingSystem behaves as before. |
+| AT-08 | OK | 5000-tick run with fixed inputs → byte-identical `BlockedActionsComponent` state across two runs. |
+| AT-09 | OK | All WP-1.x and Wave 1/Wave 2 ATs stay green (795 APIFramework tests passed). |
+| AT-10 | OK | `dotnet build ECSSimulation.sln` → 0 warnings. |
+| AT-11 | OK | `dotnet test ECSSimulation.sln` → all green (795 APIFramework + 19 ECSCli + 66 Warden.Contracts + 17 Warden.Anthropic + 51 Warden.Telemetry + 136 Warden.Orchestrator). |
 
 ---
 

@@ -10,7 +10,7 @@ namespace APIFramework.Systems;
 /// Moves entities toward their current navigation target.
 ///
 /// THREE MOVEMENT MODES
-/// ────────────────────
+/// --------------------
 /// 1. Path-following: entity has a PathComponent with cached A* waypoints.
 ///    Advances along waypoints one at a time; removes PathComponent once the
 ///    final waypoint is reached, then falls through to directed / wander mode.
@@ -21,12 +21,12 @@ namespace APIFramework.Systems;
 /// 3. Wander: no active target or path. Picks a random XZ destination and drifts.
 ///
 /// SPEED
-/// ─────
+/// -----
 /// Effective speed = Speed × SpeedModifier × deltaTime.
 /// SpeedModifier defaults 1.0; written each tick by MovementSpeedModifierSystem.
 ///
 /// VELOCITY RECORDING
-/// ──────────────────
+/// ------------------
 /// LastVelocityX/Z on MovementComponent receive the actual XZ displacement this
 /// tick. FacingSystem reads them to derive facing direction.
 /// </summary>
@@ -89,7 +89,7 @@ public class MovementSystem : ISystem
             float targetZ = 0f;
             bool  directed = false;
 
-            // ── Mode 1: Path-following ─────────────────────────────────────────
+            // -- Mode 1: Path-following -----------------------------------------
             bool followingPath = false;
             if (entity.Has<PathComponent>())
             {
@@ -122,7 +122,7 @@ public class MovementSystem : ISystem
                 }
             }
 
-            // ── Mode 2: Directed toward target entity ──────────────────────────
+            // -- Mode 2: Directed toward target entity --------------------------
             if (!followingPath)
             {
                 if (entity.Has<MovementTargetComponent>())
@@ -142,12 +142,12 @@ public class MovementSystem : ISystem
                 }
                 else
                 {
-                    // ── Mode 3: Wander ─────────────────────────────────────────
+                    // -- Mode 3: Wander -----------------------------------------
                     (targetX, targetZ) = GetOrPickWander(entity.Id);
                 }
             }
 
-            // ── Steer toward resolved destination ─────────────────────────────
+            // -- Steer toward resolved destination -----------------------------
             float dx   = targetX - pos.X;
             float dz   = targetZ - pos.Z;
             float dist = MathF.Sqrt(dx * dx + dz * dz);

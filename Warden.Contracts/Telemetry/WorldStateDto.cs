@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Warden.Contracts.Telemetry;
 
-// ── Root ─────────────────────────────────────────────────────────────────────
+// -- Root ---------------------------------------------------------------------
 
 /// <summary>
 /// Versioned, AI-consumable projection of <c>SimulationSnapshot</c>.
@@ -40,7 +40,7 @@ public sealed record WorldStateDto
     public IReadOnlyList<ChronicleEntryDto>? Chronicle     { get; init; }
 }
 
-// ── Clock ─────────────────────────────────────────────────────────────────────
+// -- Clock ---------------------------------------------------------------------
 
 public sealed record ClockStateDto
 {
@@ -54,7 +54,7 @@ public sealed record ClockStateDto
     public SunStateDto? Sun            { get; init; }
 }
 
-// ── Entity ────────────────────────────────────────────────────────────────────
+// -- Entity --------------------------------------------------------------------
 
 public sealed record EntityStateDto
 {
@@ -108,7 +108,7 @@ public sealed record PhysiologyStateDto
     public float? BladderFill { get; init; }
 }
 
-// ── World items ───────────────────────────────────────────────────────────────
+// -- World items ---------------------------------------------------------------
 
 public sealed record WorldItemDto
 {
@@ -141,7 +141,7 @@ public sealed record TransitItemDto
     public float  Progress       { get; init; }
 }
 
-// ── Invariants ────────────────────────────────────────────────────────────────
+// -- Invariants ----------------------------------------------------------------
 
 public sealed record InvariantDigestDto
 {
@@ -156,7 +156,7 @@ public sealed record InvariantEventDto
     public string Message { get; init; } = string.Empty;
 }
 
-// ── Enums ─────────────────────────────────────────────────────────────────────
+// -- Enums ---------------------------------------------------------------------
 
 /// <summary>Entity species. Serialises as camelCase lowercase string.</summary>
 public enum SpeciesType { Human, Cat, Unknown }

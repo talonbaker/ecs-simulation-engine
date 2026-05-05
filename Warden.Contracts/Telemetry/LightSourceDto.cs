@@ -1,6 +1,6 @@
 namespace Warden.Contracts.Telemetry;
 
-// ── Light source (spatial pillar v0.3) ───────────────────────────────────────
+// -- Light source (spatial pillar v0.3) ---------------------------------------
 
 public sealed record LightSourceDto
 {
@@ -13,7 +13,7 @@ public sealed record LightSourceDto
     public string       RoomId           { get; init; } = string.Empty;
 }
 
-// ── Enums ─────────────────────────────────────────────────────────────────────
+// -- Enums ---------------------------------------------------------------------
 
 /// <summary>Interior light-source type. Serialises as camelCase string.</summary>
 public enum LightKind

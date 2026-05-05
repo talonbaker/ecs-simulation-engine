@@ -17,7 +17,7 @@ public class CastGeneratorIntegrationTests
 
     private static readonly string StarterJsonPath = FindStarterJson();
 
-    // ── AT-09: full integration boot + 100 ticks ─────────────────────────────
+    // -- AT-09: full integration boot + 100 ticks -----------------------------
 
     [Fact]
     public void Bootstrapper_WithWorldDefinition_SpawnsNpcsAndRelationships()
@@ -93,7 +93,7 @@ public class CastGeneratorIntegrationTests
         Assert.Null(ex);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static string FindStarterJson()
     {

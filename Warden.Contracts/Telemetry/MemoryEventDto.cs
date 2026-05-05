@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Warden.Contracts.Telemetry;
 
-// ── Memory event (pair-scoped at v0.2) ────────────────────────────────────────
+// -- Memory event (pair-scoped at v0.2) ----------------------------------------
 
 public sealed record MemoryEventDto
 {
@@ -17,7 +17,7 @@ public sealed record MemoryEventDto
     public string?               RelationshipId { get; init; }
 }
 
-// ── Enum ──────────────────────────────────────────────────────────────────────
+// -- Enum ----------------------------------------------------------------------
 
 /// <summary>
 /// Memory event scope. <c>Global</c> is reserved for v0.3.

@@ -98,7 +98,7 @@ public struct RotTag { }
 public struct ConsumedRottenFoodTag { }
 #endregion
 
-// ═════════════════════════════════════════════════════════════════════════════
+// =============================================================================
 //  EMOTION TAGS  —  Plutchik's Wheel of Emotions
 //
 //  Each of the 8 primary emotions has three intensity levels applied by MoodSystem.
@@ -109,7 +109,7 @@ public struct ConsumedRottenFoodTag { }
 //  without knowing the exact intensity value.
 //
 //  Future systems that will drive each emotion are noted below.
-// ═════════════════════════════════════════════════════════════════════════════
+// =============================================================================
 
 #region Joy  (needs met, comfort, social warmth)
 // Future inputs: full satiation + hydration + energy, positive social events

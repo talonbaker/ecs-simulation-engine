@@ -78,19 +78,19 @@ Confirm Anthropic balance ≥ $5 before executing.
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `CastGeneratorTests.Catalog_LoadsAndContainsAllTenArchetypes` passes; all 10 archetype IDs present. `Catalog_ValidatesClean` passes; schema round-trip clean. |
-| AT-02 | ✓ | `SpawnNpc_TheVent_BelongingBaselineInElevatedRange` asserts `Belonging.Baseline` ∈ [55, 75]. Drive tests for depressed (the-hermit trust ∈ [25, 45]) and neutral ranges also pass. |
-| AT-03 | ✓ | `SpawnNpc_SameSeed_ProducesIdenticalNpcComponents` compares all drive, personality, willpower, and inhibition fields across two independent calls with seed 42. |
-| AT-04 | ✓ | `SpawnNpc_NpcHasNpcTag_NoSlotTag` verifies `NpcTag` present and `NpcSlotTag` absent post-spawn. |
-| AT-05 | ✓ | `SpawnNpc_InhibitionsMatchArchetypeStarterSet` checks inhibition count equals archetype starter inhibition count, classes match, strengths are within declared ranges. |
-| AT-06 | ✓ | `SeedRelationships_ProducesCorrectPatternCounts` counts all 8 pattern types from `RelationshipComponent.Patterns` and asserts against `CastGeneratorConfig` defaults. |
-| AT-07 | ✓ | `SpawnNpc_TheAffair_SeetsActiveAffairRelationship` verifies at least one `ActiveAffair` relationship entity exists after spawning the full cast. |
-| AT-08 | ✓ | `SpawnNpc_TheCrush_SeedsSecretCrushRelationship` verifies at least one `SecretCrush` relationship entity exists after spawning the full cast. |
-| AT-09 | ✓ | `CastGeneratorIntegrationTests.FullBootstrap_SpawnsNpcsAndRelationships` and `FullBootstrap_Runs100TicksWithoutError` pass; ≥5 NPCs, ≥5 relationships, 100 ticks clean. |
-| AT-10 | ✓ | `CastValidateMockRunTests.AT10_MockRun_CastValidate_ExitsZeroAndWritesLedger` exits 0, `report.md` and `report.json` present. Dry-run variant also passes. |
-| AT-11 | ✓* | 703 tests passing across all projects. See footnote. |
-| AT-12 | ✓ | `dotnet build ECSSimulation.sln` — 0 errors, 0 warnings. |
-| AT-13 | ✓* | `dotnet test ECSSimulation.sln` — all new tests pass; 1 pre-existing failure. See footnote. |
+| AT-01 | OK | `CastGeneratorTests.Catalog_LoadsAndContainsAllTenArchetypes` passes; all 10 archetype IDs present. `Catalog_ValidatesClean` passes; schema round-trip clean. |
+| AT-02 | OK | `SpawnNpc_TheVent_BelongingBaselineInElevatedRange` asserts `Belonging.Baseline` ∈ [55, 75]. Drive tests for depressed (the-hermit trust ∈ [25, 45]) and neutral ranges also pass. |
+| AT-03 | OK | `SpawnNpc_SameSeed_ProducesIdenticalNpcComponents` compares all drive, personality, willpower, and inhibition fields across two independent calls with seed 42. |
+| AT-04 | OK | `SpawnNpc_NpcHasNpcTag_NoSlotTag` verifies `NpcTag` present and `NpcSlotTag` absent post-spawn. |
+| AT-05 | OK | `SpawnNpc_InhibitionsMatchArchetypeStarterSet` checks inhibition count equals archetype starter inhibition count, classes match, strengths are within declared ranges. |
+| AT-06 | OK | `SeedRelationships_ProducesCorrectPatternCounts` counts all 8 pattern types from `RelationshipComponent.Patterns` and asserts against `CastGeneratorConfig` defaults. |
+| AT-07 | OK | `SpawnNpc_TheAffair_SeetsActiveAffairRelationship` verifies at least one `ActiveAffair` relationship entity exists after spawning the full cast. |
+| AT-08 | OK | `SpawnNpc_TheCrush_SeedsSecretCrushRelationship` verifies at least one `SecretCrush` relationship entity exists after spawning the full cast. |
+| AT-09 | OK | `CastGeneratorIntegrationTests.FullBootstrap_SpawnsNpcsAndRelationships` and `FullBootstrap_Runs100TicksWithoutError` pass; ≥5 NPCs, ≥5 relationships, 100 ticks clean. |
+| AT-10 | OK | `CastValidateMockRunTests.AT10_MockRun_CastValidate_ExitsZeroAndWritesLedger` exits 0, `report.md` and `report.json` present. Dry-run variant also passes. |
+| AT-11 | OK* | 703 tests passing across all projects. See footnote. |
+| AT-12 | OK | `dotnet build ECSSimulation.sln` — 0 errors, 0 warnings. |
+| AT-13 | OK* | `dotnet test ECSSimulation.sln` — all new tests pass; 1 pre-existing failure. See footnote. |
 
 \* `Warden.Orchestrator.Tests.RunCommandEndToEndTests.AT01_MockRun_ExitsZeroAndWritesLedger` fails with a file-locking error on `cost-ledger.jsonl`. Confirmed pre-existing via `git stash` regression test — failure reproduces identically on the clean main-branch state. Root cause appears to be `Warden.Orchestrator.Persistence.CostLedger` holding a `FileStream` open with `FileShare.Read` for its lifetime while `Infrastructure.CostLedger.AppendAsync` also opens the same file. Not introduced by WP-1.8.A.
 

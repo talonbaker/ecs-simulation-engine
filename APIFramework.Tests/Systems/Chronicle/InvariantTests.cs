@@ -20,7 +20,7 @@ public class InvariantTests
 {
     private static SimulationClock MakeClock() => new();
 
-    // ── AT-07a: StainTag entity with missing chronicle entry → violation ──
+    // -- AT-07a: StainTag entity with missing chronicle entry → violation --
 
     [Fact]
     public void StainTag_MissingChronicleEntry_ProducesViolation()
@@ -42,7 +42,7 @@ public class InvariantTests
             v => v.Component == "StainComponent" && v.Property == "ChronicleEntryId");
     }
 
-    // ── AT-07b: BrokenItemTag entity with missing chronicle entry → violation
+    // -- AT-07b: BrokenItemTag entity with missing chronicle entry → violation
 
     [Fact]
     public void BrokenItemTag_MissingChronicleEntry_ProducesViolation()
@@ -63,7 +63,7 @@ public class InvariantTests
             v => v.Component == "BrokenItemComponent" && v.Property == "ChronicleEntryId");
     }
 
-    // ── AT-08: Chronicle entry with missing physicalManifestEntityId → violation
+    // -- AT-08: Chronicle entry with missing physicalManifestEntityId → violation
 
     [Fact]
     public void ChronicleEntry_MissingPhysicalManifestEntity_ProducesViolation()
@@ -91,7 +91,7 @@ public class InvariantTests
             v => v.Component == "ChronicleService" && v.Property == "PhysicalManifestEntityId");
     }
 
-    // ── Well-wired: valid chronicle + stain → no violation ───────────────
+    // -- Well-wired: valid chronicle + stain → no violation ---------------
 
     [Fact]
     public void WellWired_StainAndChronicleEntry_NoViolation()
@@ -132,7 +132,7 @@ public class InvariantTests
         Assert.Empty(chronicleViolations);
     }
 
-    // ── No chronicle service → chronicle checks skipped (no crash) ────────
+    // -- No chronicle service → chronicle checks skipped (no crash) --------
 
     [Fact]
     public void NoChronicleService_ChronicleChecksSkipped()

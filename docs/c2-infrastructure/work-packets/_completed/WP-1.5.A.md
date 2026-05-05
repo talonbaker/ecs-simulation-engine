@@ -32,22 +32,22 @@ Landed `LightingToDriveCouplingSystem` — the per-tick system that translates a
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `AT01_EmptyWorld_RunsWithoutError` — system handles empty world (no NPCs, no rooms). |
-| AT-02 | ✓ | `AT02_FlickeringSource_InHallway_IrritationIncrements4OrMoreOver60Ticks` — irritation ≥ 4, loneliness ≥ 1 after 60 ticks at 0.08/tick. |
-| AT-03 | ✓ | `AT03_WarmDeskLamp_InOffice_ProducesBelongingAndAffectionDelta` — belonging ≥ 1, affection ≥ 1 after 30 ticks. |
-| AT-04 | ✓ | `AT04_DimHallway_Evening_ProducesSuspicionAndIrritationDelta` — suspicion ≥ 2, irritation ≥ 1 after 25 ticks. |
-| AT-05 | ✓ | `AT05_SunBeamPresent_ProducesBelongingIncreaseAndLonelinessDecrease` — loneliness < 30, belonging ≥ 1 after 40 ticks with south-facing aperture at noon. |
-| AT-06 | ✓ | `AT06_PitchDarkRoom_ProducesBelongingDecayAndLonelinessRise` — belonging < 30, loneliness ≥ 2 after 40 ticks at ambient=2. |
-| AT-07 | ✓ | `AT07_NpcWithNoRoom_ReceivesNoDelta` — all drives remain 0 after 100 ticks with no room membership. |
-| AT-08 | ✓ | `AT08_FirstMatchWins_OnlyFirstMatchingEntryApplies` — irritation += 5 (entry 0), loneliness unchanged (entry 1 not applied). |
-| AT-09 | ✓ | `AT09_SubOneDelta_AccumulatesAndProducesIntegerIncrementsAtExpectedRate` — 0.25/tick × 100 ticks = exactly 25 integer increments. |
-| AT-10 | ✓ | `AT10_DriveCurrentClampsAt100_WithSustainedPositiveDeltas` — drive stays at 100 after 20 ticks of +10/tick. |
-| AT-11 | ✓ | `AT11_DriveCurrentClampsAt0_WithSustainedNegativeDeltas` — drive stays at 0 after 20 ticks of -10/tick from 50. |
-| AT-12 | ✓ | `CouplingDeterminismTests.TwoRunsSameSeed_ProduceIdenticalDriveTrajectories_Over5000Ticks` — two 5000-tick runs with varied lighting produce byte-identical trajectories. |
-| AT-13 | ✓ | All 399 `APIFramework.Tests` pass (567 total with prior wave). |
-| AT-14 | ✓ | `Warden.Telemetry.Tests` (31 passed), `Warden.Contracts.Tests` (50 passed). |
-| AT-15 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-16 | ✓ | `dotnet test ECSSimulation.sln` — 636 passed across all test projects, 0 failed. |
+| AT-01 | OK | `AT01_EmptyWorld_RunsWithoutError` — system handles empty world (no NPCs, no rooms). |
+| AT-02 | OK | `AT02_FlickeringSource_InHallway_IrritationIncrements4OrMoreOver60Ticks` — irritation ≥ 4, loneliness ≥ 1 after 60 ticks at 0.08/tick. |
+| AT-03 | OK | `AT03_WarmDeskLamp_InOffice_ProducesBelongingAndAffectionDelta` — belonging ≥ 1, affection ≥ 1 after 30 ticks. |
+| AT-04 | OK | `AT04_DimHallway_Evening_ProducesSuspicionAndIrritationDelta` — suspicion ≥ 2, irritation ≥ 1 after 25 ticks. |
+| AT-05 | OK | `AT05_SunBeamPresent_ProducesBelongingIncreaseAndLonelinessDecrease` — loneliness < 30, belonging ≥ 1 after 40 ticks with south-facing aperture at noon. |
+| AT-06 | OK | `AT06_PitchDarkRoom_ProducesBelongingDecayAndLonelinessRise` — belonging < 30, loneliness ≥ 2 after 40 ticks at ambient=2. |
+| AT-07 | OK | `AT07_NpcWithNoRoom_ReceivesNoDelta` — all drives remain 0 after 100 ticks with no room membership. |
+| AT-08 | OK | `AT08_FirstMatchWins_OnlyFirstMatchingEntryApplies` — irritation += 5 (entry 0), loneliness unchanged (entry 1 not applied). |
+| AT-09 | OK | `AT09_SubOneDelta_AccumulatesAndProducesIntegerIncrementsAtExpectedRate` — 0.25/tick × 100 ticks = exactly 25 integer increments. |
+| AT-10 | OK | `AT10_DriveCurrentClampsAt100_WithSustainedPositiveDeltas` — drive stays at 100 after 20 ticks of +10/tick. |
+| AT-11 | OK | `AT11_DriveCurrentClampsAt0_WithSustainedNegativeDeltas` — drive stays at 0 after 20 ticks of -10/tick from 50. |
+| AT-12 | OK | `CouplingDeterminismTests.TwoRunsSameSeed_ProduceIdenticalDriveTrajectories_Over5000Ticks` — two 5000-tick runs with varied lighting produce byte-identical trajectories. |
+| AT-13 | OK | All 399 `APIFramework.Tests` pass (567 total with prior wave). |
+| AT-14 | OK | `Warden.Telemetry.Tests` (31 passed), `Warden.Contracts.Tests` (50 passed). |
+| AT-15 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-16 | OK | `dotnet test ECSSimulation.sln` — 636 passed across all test projects, 0 failed. |
 
 ---
 

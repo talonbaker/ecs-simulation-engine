@@ -182,10 +182,10 @@ All have been resolved. One was fixed during this session:
   The method was defined but never called (code used `EntityIntId(Entity entity)` everywhere).  
   Removed. No other callers existed. Build warning would have been IDE0051.
 
-- **[VERIFIED OK] `entity.Remove<T>()`** — exists in `Entity.cs` line 64. Used by `ChokingCleanupSystem`. ✓  
-- **[VERIFIED OK] `RelationshipComponent.ParticipantA/B` canonical ordering** — guaranteed by constructor (`Math.Min`/`Math.Max`). `BereavementByProximitySystem.FindRelationshipIntensity` applies same normalization. ✓  
-- **[VERIFIED OK] `BereavementHistoryComponent` struct + `HashSet<Guid>`** — HashSet is a reference type; struct copies share the same heap object. `.Add()` mutates in-place before `.npc.Add(history)` writes the struct back. Correct across multiple corpses per tick. ✓  
-- **[VERIFIED OK] Re-entrant narrative bus** — `BereavementSystem` emits `BereavementImpact` from within its own `OnDeathEvent` handler. Safe: `BereavementImpact` is not a death kind, so the early-return fires immediately on the recursive call. ✓
+- **[VERIFIED OK] `entity.Remove<T>()`** — exists in `Entity.cs` line 64. Used by `ChokingCleanupSystem`. OK  
+- **[VERIFIED OK] `RelationshipComponent.ParticipantA/B` canonical ordering** — guaranteed by constructor (`Math.Min`/`Math.Max`). `BereavementByProximitySystem.FindRelationshipIntensity` applies same normalization. OK  
+- **[VERIFIED OK] `BereavementHistoryComponent` struct + `HashSet<Guid>`** — HashSet is a reference type; struct copies share the same heap object. `.Add()` mutates in-place before `.npc.Add(history)` writes the struct back. Correct across multiple corpses per tick. OK  
+- **[VERIFIED OK] Re-entrant narrative bus** — `BereavementSystem` emits `BereavementImpact` from within its own `OnDeathEvent` handler. Safe: `BereavementImpact` is not a death kind, so the early-return fires immediately on the recursive call. OK
 
 ---
 

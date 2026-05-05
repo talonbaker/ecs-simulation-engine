@@ -8,7 +8,7 @@ namespace APIFramework.Systems;
 /// Ages all food entities that carry a RotComponent, accumulating rot over game time.
 ///
 /// HOW IT WORKS
-/// ────────────
+/// ------------
 /// Each tick, AgeSeconds advances by deltaTime.  Once AgeSeconds ≥ RotStartAge,
 /// RotLevel begins climbing at RotRate per game-second.  When RotLevel crosses
 /// rotTagThreshold, RotTag is applied to the food entity.
@@ -18,13 +18,13 @@ namespace APIFramework.Systems;
 ///   - MoodSystem converts this into a Disgust spike next tick
 ///
 /// PIPELINE POSITION
-/// ──────────────────
+/// ------------------
 /// Position 13 — runs after all digestion is complete.  Food entities age during
 /// every tick regardless of whether they are being eaten, in transit, or just
 /// sitting in the world waiting to be consumed.
 ///
 /// PLANNED
-/// ────────
+/// --------
 /// Once a spatial/proximity system exists, RotTag on nearby food entities will
 /// also be read by MoodSystem to build Disgust even before consumption (smelling
 /// something rotten raises boredom-adjacent aversion without direct contact).

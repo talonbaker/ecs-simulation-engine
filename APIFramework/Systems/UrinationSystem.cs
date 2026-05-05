@@ -8,15 +8,15 @@ namespace APIFramework.Systems;
 /// Empties the bladder when Pee is the dominant drive.
 ///
 /// PIPELINE POSITION
-/// ─────────────────
+/// -----------------
 ///   Phase: Behavior (40) — alongside FeedingSystem, DrinkingSystem, SleepSystem,
 ///   DefecationSystem. All action systems are gated on DriveComponent.Dominant.
 ///
 /// CONTRACT
-/// ─────────
+/// ---------
 /// When Dominant == Pee:
-///   • Sets BladderComponent.VolumeML to 0.
-///   • BladderSystem (next Elimination tick) will clear UrinationUrgeTag and
+///   - Sets BladderComponent.VolumeML to 0.
+///   - BladderSystem (next Elimination tick) will clear UrinationUrgeTag and
 ///     BladderCriticalTag automatically when it sees the empty volume.
 ///
 /// Backwards-compatible: entities without BladderComponent are silently skipped.

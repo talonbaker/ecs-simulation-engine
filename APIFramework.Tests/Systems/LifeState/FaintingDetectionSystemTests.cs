@@ -23,7 +23,7 @@ namespace APIFramework.Tests.Systems.LifeState;
 /// </summary>
 public class FaintingDetectionSystemTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static FaintingConfig DefaultCfg() => new()
     {
@@ -85,7 +85,7 @@ public class FaintingDetectionSystemTests
         return list;
     }
 
-    // ── AT-01: Fear >= threshold → IsFaintingTag ──────────────────────────────
+    // -- AT-01: Fear >= threshold → IsFaintingTag ------------------------------
 
     [Fact]
     public void AT01_FearAboveThreshold_AliveNpc_AttachesIsFaintingTag()
@@ -96,7 +96,7 @@ public class FaintingDetectionSystemTests
         Assert.True(npc.Has<IsFaintingTag>());
     }
 
-    // ── AT-02: FaintingComponent.RecoveryTick is correct ─────────────────────
+    // -- AT-02: FaintingComponent.RecoveryTick is correct ---------------------
 
     [Fact]
     public void AT02_FaintingComponent_RecoveryTick_EqualsStartPlusDuration()
@@ -111,7 +111,7 @@ public class FaintingDetectionSystemTests
         Assert.Equal(startTick + DefaultCfg().FaintDurationTicks, fc.RecoveryTick);
     }
 
-    // ── AT-03: Fear below threshold → no faint ───────────────────────────────
+    // -- AT-03: Fear below threshold → no faint -------------------------------
 
     [Fact]
     public void AT03_FearBelowThreshold_NoFaint()
@@ -132,7 +132,7 @@ public class FaintingDetectionSystemTests
         Assert.True(npc.Has<IsFaintingTag>());
     }
 
-    // ── AT-04: Already fainting → idempotent ─────────────────────────────────
+    // -- AT-04: Already fainting → idempotent ---------------------------------
 
     [Fact]
     public void AT04_AlreadyFainting_Idempotent_FaintingComponentNotOverwritten()
@@ -147,7 +147,7 @@ public class FaintingDetectionSystemTests
         Assert.Equal(originalRecoveryTick, npc.Get<FaintingComponent>().RecoveryTick);
     }
 
-    // ── AT-05: Deceased NPC → not triggered ──────────────────────────────────
+    // -- AT-05: Deceased NPC → not triggered ----------------------------------
 
     [Fact]
     public void AT05_DeceasedNpc_Fear100_NoFaint()
@@ -158,7 +158,7 @@ public class FaintingDetectionSystemTests
         Assert.False(npc.Has<IsFaintingTag>());
     }
 
-    // ── AT-06: Incapacitated NPC → not triggered ──────────────────────────────
+    // -- AT-06: Incapacitated NPC → not triggered ------------------------------
 
     [Fact]
     public void AT06_IncapacitatedNpc_Fear100_NoFaint()
@@ -169,7 +169,7 @@ public class FaintingDetectionSystemTests
         Assert.False(npc.Has<IsFaintingTag>());
     }
 
-    // ── AT-07: Fainted narrative emitted ─────────────────────────────────────
+    // -- AT-07: Fainted narrative emitted -------------------------------------
 
     [Fact]
     public void AT07_EmitNarrativeTrue_FaintedCandidateEmitted()
@@ -184,7 +184,7 @@ public class FaintingDetectionSystemTests
         Assert.Contains(candidates, c => c.Kind == NarrativeEventKind.Fainted);
     }
 
-    // ── AT-08: No narrative when flag is off ─────────────────────────────────
+    // -- AT-08: No narrative when flag is off ---------------------------------
 
     [Fact]
     public void AT08_EmitNarrativeFalse_NoFaintedCandidate()
@@ -199,7 +199,7 @@ public class FaintingDetectionSystemTests
         Assert.DoesNotContain(candidates, c => c.Kind == NarrativeEventKind.Fainted);
     }
 
-    // ── AT-09: NPC becomes Incapacitated after drain ─────────────────────────
+    // -- AT-09: NPC becomes Incapacitated after drain -------------------------
 
     [Fact]
     public void AT09_AfterTransitionsDrain_NpcIsIncapacitated()

@@ -15,7 +15,7 @@ namespace APIFramework.Tests.Systems;
 /// </summary>
 public class ApproachAvoidanceInversionTests
 {
-    // ── Scaffolding ───────────────────────────────────────────────────────────
+    // -- Scaffolding -----------------------------------------------------------
 
     private static ActionSelectionConfig DefaultCfg() => new()
     {
@@ -80,7 +80,7 @@ public class ApproachAvoidanceInversionTests
             : IntendedActionKind.Idle;
     }
 
-    // ── Ladder: low / mid / high vulnerability → Approach → Approach → Avoid ─
+    // -- Ladder: low / mid / high vulnerability → Approach → Approach → Avoid -
 
     [Fact]
     public void Ladder_LowVulnerability_Approach()
@@ -112,7 +112,7 @@ public class ApproachAvoidanceInversionTests
         Assert.Equal(IntendedActionKind.Avoid, kind);
     }
 
-    // ── AT-04: Explicit Avoid test ────────────────────────────────────────────
+    // -- AT-04: Explicit Avoid test --------------------------------------------
 
     [Fact]
     public void AT04_HighVulnerability_MidWillpower_Avoid()
@@ -121,7 +121,7 @@ public class ApproachAvoidanceInversionTests
         Assert.Equal(IntendedActionKind.Avoid, kind);
     }
 
-    // ── AT-05: Very low willpower breaks the gate back to Approach ────────────
+    // -- AT-05: Very low willpower breaks the gate back to Approach ------------
 
     [Fact]
     public void AT05_HighVulnerability_VeryLowWillpower_GateBreaks_Approach()
@@ -134,7 +134,7 @@ public class ApproachAvoidanceInversionTests
         Assert.Equal(IntendedActionKind.Approach, kind);
     }
 
-    // ── Avoid produces MovementTargetComponent pointing away ─────────────────
+    // -- Avoid produces MovementTargetComponent pointing away -----------------
 
     [Fact]
     public void Avoid_WritesMovementTargetAway_FromThreat()

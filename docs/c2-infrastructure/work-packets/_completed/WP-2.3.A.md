@@ -32,20 +32,20 @@ The design notes listed `RelationshipShift`, `ProlongedConflict`, `SharedSecret`
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | MemoryEntryTests: construction, id determinism, JSON round-trip. |
-| AT-02 | ✓ | MemoryRecordingSystemTests: system subscribed and receives candidates. |
-| AT-03 | ✓ | MemoryRecordingSystemTests: pair candidate → relationship entity, canonical order. |
-| AT-04 | ✓ | MemoryRecordingSystemTests: auto-creates relationship entity at Intensity=50. |
-| AT-05 | ✓ | MemoryRecordingSystemTests: solo candidate → PersonalMemoryComponent. |
-| AT-06 | ✓ | MemoryRecordingSystemTests: 3+ participants → fan-out to all personal logs. |
-| AT-07 | ✓ | MemoryRecordingSystemBufferTests: capacity-32 overflow keeps 32 most recent; capacity-16 personal overflow verified. |
-| AT-08 | ✓ | MemoryRecordingSystemPersistenceTests: all 5 NarrativeEventKind values mapped and verified. |
-| AT-09 | ✓ | MemoryProjectionTests: historyEventIds contains only persistent IDs; ephemeral absent. |
-| AT-10 | ✓ | MemoryProjectionTests: MemoryEvents count matches engine-side; dedup by ID verified. |
-| AT-11 | ✓ | MemoryDeterminismTests: 5000-tick run, seed 42 × 2: byte-identical memory state. |
-| AT-12 | ✓ | Full suite (821 tests): 0 failures; narrative bus and chronicle continue to operate. |
-| AT-13 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-14 | ✓ | `dotnet test --filter "FullyQualifiedName!~RunCommandEndToEndTests.AT01"` — 821 passed. |
+| AT-01 | OK | MemoryEntryTests: construction, id determinism, JSON round-trip. |
+| AT-02 | OK | MemoryRecordingSystemTests: system subscribed and receives candidates. |
+| AT-03 | OK | MemoryRecordingSystemTests: pair candidate → relationship entity, canonical order. |
+| AT-04 | OK | MemoryRecordingSystemTests: auto-creates relationship entity at Intensity=50. |
+| AT-05 | OK | MemoryRecordingSystemTests: solo candidate → PersonalMemoryComponent. |
+| AT-06 | OK | MemoryRecordingSystemTests: 3+ participants → fan-out to all personal logs. |
+| AT-07 | OK | MemoryRecordingSystemBufferTests: capacity-32 overflow keeps 32 most recent; capacity-16 personal overflow verified. |
+| AT-08 | OK | MemoryRecordingSystemPersistenceTests: all 5 NarrativeEventKind values mapped and verified. |
+| AT-09 | OK | MemoryProjectionTests: historyEventIds contains only persistent IDs; ephemeral absent. |
+| AT-10 | OK | MemoryProjectionTests: MemoryEvents count matches engine-side; dedup by ID verified. |
+| AT-11 | OK | MemoryDeterminismTests: 5000-tick run, seed 42 × 2: byte-identical memory state. |
+| AT-12 | OK | Full suite (821 tests): 0 failures; narrative bus and chronicle continue to operate. |
+| AT-13 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-14 | OK | `dotnet test --filter "FullyQualifiedName!~RunCommandEndToEndTests.AT01"` — 821 passed. |
 
 ---
 
@@ -69,7 +69,7 @@ Warden.Telemetry.Tests/MemoryProjectionTests.cs
 ## Files modified
 
 ```
-APIFramework/Config/SimConfig.cs           ��� Added MemoryConfig class; added Memory property to SimConfig root.
+APIFramework/Config/SimConfig.cs           — Added MemoryConfig class; added Memory property to SimConfig root.
 APIFramework/Core/SimulationBootstrapper.cs — Registered MemoryRecordingSystem at SystemPhase.Narrative.
 SimConfig.json                             — Added "memory" section with maxRelationshipMemoryCount=32, maxPersonalMemoryCount=16.
 Warden.Telemetry/TelemetryProjector.cs     — Added using for NarrativeEventKind; ProjectRelationships populates HistoryEventIds; added ProjectMemoryEvents, ToMemoryEventDto, NarrativeKindToString; Project method wires MemoryEvents.

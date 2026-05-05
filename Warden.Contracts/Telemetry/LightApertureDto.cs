@@ -1,6 +1,6 @@
 namespace Warden.Contracts.Telemetry;
 
-// ── Light aperture / window (spatial pillar v0.3) ────────────────────────────
+// -- Light aperture / window (spatial pillar v0.3) ----------------------------
 
 public sealed record LightApertureDto
 {
@@ -11,7 +11,7 @@ public sealed record LightApertureDto
     public double         AreaSqTiles { get; init; }
 }
 
-// ── Enum ──────────────────────────────────────────────────────────────────────
+// -- Enum ----------------------------------------------------------------------
 
 /// <summary>Cardinal direction a window faces. Serialises as camelCase string.</summary>
 public enum ApertureFacing

@@ -15,7 +15,7 @@ namespace APIFramework.Tests.Systems.Coupling;
 /// </summary>
 public class LightingToDriveCouplingSystemTests
 {
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     private static LightingDriveCouplingTable DefaultTable() =>
         new(new List<LightingCouplingEntry>
@@ -108,7 +108,7 @@ public class LightingToDriveCouplingSystemTests
             sunSvc);
     }
 
-    // ── AT-01 ─────────────────────────────────────────────────────────────────
+    // -- AT-01 -----------------------------------------------------------------
 
     [Fact]
     public void AT01_EmptyWorld_RunsWithoutError()
@@ -119,7 +119,7 @@ public class LightingToDriveCouplingSystemTests
         Assert.Null(ex);
     }
 
-    // ── AT-02 ─────────────────────────────────────────────────────────────────
+    // -- AT-02 -----------------------------------------------------------------
 
     [Fact]
     public void AT02_FlickeringSource_InHallway_IrritationIncrements4OrMoreOver60Ticks()
@@ -154,7 +154,7 @@ public class LightingToDriveCouplingSystemTests
             $"Expected loneliness ≥ 1 after 60 ticks of 0.02/tick, got {drives.Loneliness.Current}");
     }
 
-    // ── AT-03 ─────────────────────────────────────────────────────────────────
+    // -- AT-03 -----------------------------------------------------------------
 
     [Fact]
     public void AT03_WarmDeskLamp_InOffice_ProducesBelongingAndAffectionDelta()
@@ -188,7 +188,7 @@ public class LightingToDriveCouplingSystemTests
             $"Expected affection ≥ 1 after 30 ticks of 0.04/tick, got {drives.Affection.Current}");
     }
 
-    // ── AT-04 ─────────────────────────────────────────────────────────────────
+    // -- AT-04 -----------------------------------------------------------------
 
     [Fact]
     public void AT04_DimHallway_Evening_ProducesSuspicionAndIrritationDelta()
@@ -219,7 +219,7 @@ public class LightingToDriveCouplingSystemTests
             $"Expected irritation ≥ 1 after 25 ticks, got {drives.Irritation.Current}");
     }
 
-    // ── AT-05 ─────────────────────────────────────────────────────────────────
+    // -- AT-05 -----------------------------------------------------------------
 
     [Fact]
     public void AT05_SunBeamPresent_ProducesBelongingIncreaseAndLonelinessDecrease()
@@ -269,7 +269,7 @@ public class LightingToDriveCouplingSystemTests
             $"Expected belonging ≥ 1 after 40 ticks of 0.03/tick, got {drives.Belonging.Current}");
     }
 
-    // ── AT-06 ─────────────────────────────────────────────────────────────────
+    // -- AT-06 -----------------------------------------------------------------
 
     [Fact]
     public void AT06_PitchDarkRoom_ProducesBelongingDecayAndLonelinessRise()
@@ -298,7 +298,7 @@ public class LightingToDriveCouplingSystemTests
             $"Expected loneliness ≥ 2 after 40 ticks of 0.06/tick, got {drives.Loneliness.Current}");
     }
 
-    // ── AT-07 ─────────────────────────────────────────────────────────────────
+    // -- AT-07 -----------------------------------------------------------------
 
     [Fact]
     public void AT07_NpcWithNoRoom_ReceivesNoDelta()
@@ -322,7 +322,7 @@ public class LightingToDriveCouplingSystemTests
         Assert.Equal(0, drives.Suspicion.Current);
     }
 
-    // ── AT-08 ─────────────────────────────────────────────────────────────────
+    // -- AT-08 -----------------------------------------------------------------
 
     [Fact]
     public void AT08_FirstMatchWins_OnlyFirstMatchingEntryApplies()
@@ -359,7 +359,7 @@ public class LightingToDriveCouplingSystemTests
         Assert.Equal(0, drives.Loneliness.Current); // second entry must NOT have applied
     }
 
-    // ── AT-09 ─────────────────────────────────────────────────────────────────
+    // -- AT-09 -----------------------------------------------------------------
 
     [Fact]
     public void AT09_SubOneDelta_AccumulatesAndProducesIntegerIncrementsAtExpectedRate()
@@ -391,7 +391,7 @@ public class LightingToDriveCouplingSystemTests
         Assert.Equal(25, npc.Get<SocialDrivesComponent>().Irritation.Current);
     }
 
-    // ── AT-10 ─────────────────────────────────────────────────────────────────
+    // -- AT-10 -----------------------------------------------------------------
 
     [Fact]
     public void AT10_DriveCurrentClampsAt100_WithSustainedPositiveDeltas()
@@ -418,7 +418,7 @@ public class LightingToDriveCouplingSystemTests
         Assert.Equal(100, npc.Get<SocialDrivesComponent>().Irritation.Current);
     }
 
-    // ── AT-11 ─────────────────────────────────────────────────────────────────
+    // -- AT-11 -----------------------------------------------------------------
 
     [Fact]
     public void AT11_DriveCurrentClampsAt0_WithSustainedNegativeDeltas()

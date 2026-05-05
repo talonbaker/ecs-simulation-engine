@@ -19,7 +19,7 @@ namespace APIFramework.Systems;
 ///   3. Records an InvariantViolation for later inspection / reporting.
 ///
 /// INTERPRETING VIOLATIONS
-/// ───────────────────────
+/// -----------------------
 ///   Single violation, once only  → transient floating-point rounding, usually fine
 ///   Same violation every tick    → a system is producing bad values continuously
 ///   Resource stuck at 0 for ages → entity in terminal state; feedback loop broken
@@ -110,7 +110,7 @@ public class InvariantSystem : ISystem
             CheckChronicleIntegrity(em, gameTime);
     }
 
-    // ── Per-component checks ─────────────────────────────────────────────────
+    // -- Per-component checks -------------------------------------------------
 
     private void CheckLifeStateComponent(Entity entity, string name, double t)
     {
@@ -351,7 +351,7 @@ public class InvariantSystem : ISystem
         if (dirty) entity.Add(tr);
     }
 
-    // ── Chronicle integrity ───────────────────────────────────────────────────
+    // -- Chronicle integrity ---------------------------------------------------
 
     private void CheckChronicleIntegrity(EntityManager em, double gameTime)
     {
@@ -440,7 +440,7 @@ public class InvariantSystem : ISystem
         return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
     }
 
-    // ── Guard primitive ───────────────────────────────────────────────────────
+    // -- Guard primitive -------------------------------------------------------
 
     /// <summary>
     /// Returns (clampedValue, violated).

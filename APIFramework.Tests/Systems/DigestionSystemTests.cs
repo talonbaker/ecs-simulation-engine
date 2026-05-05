@@ -10,9 +10,9 @@ namespace APIFramework.Tests.Systems;
 /// Unit tests for DigestionSystem — the pipeline contract between the stomach
 /// and the body's nutrient stores.
 ///
-/// ──────────────────────────────────────────────────────────────────────────
+/// --------------------------------------------------------------------------
 /// WHY THIS TEST FILE IS THE MOST IMPORTANT ONE
-/// ──────────────────────────────────────────────────────────────────────────
+/// --------------------------------------------------------------------------
 /// The v0.7.2 post-release investigation found a bug where the simulation ran
 /// for hours with no feeding events because StomachComponent filled with volume
 /// but zero nutrients. DigestionSystem's contract is:
@@ -29,11 +29,11 @@ namespace APIFramework.Tests.Systems;
 ///
 /// These tests pin every step of that contract so any future refactor that
 /// breaks the pipeline fails loudly here before it reaches a sim run.
-/// ──────────────────────────────────────────────────────────────────────────
+/// --------------------------------------------------------------------------
 /// </summary>
 public class DigestionSystemTests
 {
-    // ── Standard config ────────────────────────────────────────────────────────
+    // -- Standard config --------------------------------------------------------
 
     private static readonly DigestionSystemConfig Cfg = new()
     {
@@ -43,7 +43,7 @@ public class DigestionSystemTests
 
     private static DigestionSystem Sys => new(Cfg);
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     /// <summary>
     /// Creates an entity with a stomach and optional metabolism component.
@@ -80,7 +80,7 @@ public class DigestionSystemTests
         return (em, entity);
     }
 
-    // ── Step 1: Volume drainage ────────────────────────────────────────────────
+    // -- Step 1: Volume drainage ------------------------------------------------
 
     [Fact]
     public void Volume_ReducedBy_DigestionRate_Times_DeltaTime()
@@ -116,7 +116,7 @@ public class DigestionSystemTests
         Assert.Equal(50f, entity.Get<MetabolismComponent>().Satiation);
     }
 
-    // ── Step 2–3: Proportional nutrient release ────────────────────────────────
+    // -- Step 2–3: Proportional nutrient release --------------------------------
 
     [Fact]
     public void Nutrients_Released_ProportionalTo_VolumeDigested()
@@ -172,7 +172,7 @@ public class DigestionSystemTests
         Assert.Equal(360f, q.Potassium,     precision: 2);
     }
 
-    // ── Step 7: Satiation gain ─────────────────────────────────────────────────
+    // -- Step 7: Satiation gain -------------------------------------------------
 
     [Fact]
     public void Satiation_Increases_By_ReleasedCalories_Times_Factor()
@@ -213,7 +213,7 @@ public class DigestionSystemTests
         Assert.Equal(50f, entity.Get<MetabolismComponent>().Satiation);
     }
 
-    // ── Step 8: Hydration gain ─────────────────────────────────────────────────
+    // -- Step 8: Hydration gain -------------------------------------------------
 
     [Fact]
     public void Hydration_Increases_By_ReleasedWater_Times_Factor()
@@ -253,7 +253,7 @@ public class DigestionSystemTests
         Assert.Equal(40f, entity.Get<MetabolismComponent>().Hydration);
     }
 
-    // ── Step 6: NutrientStores accumulation ────────────────────────────────────
+    // -- Step 6: NutrientStores accumulation ------------------------------------
 
     [Fact]
     public void NutrientStores_AccumulatesReleasedNutrients()
@@ -286,7 +286,7 @@ public class DigestionSystemTests
             $"Expected ~19g accumulated carbs after 2 ticks, got {stored:F2}g");
     }
 
-    // ── Regression: the exact bug found in v0.7.2 testing ─────────────────────
+    // -- Regression: the exact bug found in v0.7.2 testing ---------------------
 
     [Fact]
     public void ZeroNutrients_StomachEmpties_ButNoSatiationOrHydration()
@@ -343,7 +343,7 @@ public class DigestionSystemTests
         Assert.Equal(100f, meta.Hydration);
     }
 
-    // ── No MetabolismComponent: stomach drains but no metabolism update ─────────
+    // -- No MetabolismComponent: stomach drains but no metabolism update ---------
 
     [Fact]
     public void StomachDrains_EvenWithout_MetabolismComponent()

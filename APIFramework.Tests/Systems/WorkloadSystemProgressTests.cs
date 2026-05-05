@@ -39,7 +39,7 @@ public class WorkloadSystemProgressTests
         return (em, npc, task, sys);
     }
 
-    // ── AT-03: Progress advancement ───────────────────────────────────────────
+    // -- AT-03: Progress advancement -------------------------------------------
 
     [Fact]
     public void WorkIntent_AdvancesTaskProgress()
@@ -86,7 +86,7 @@ public class WorkloadSystemProgressTests
         Assert.Equal(0.10f, task.Get<TaskComponent>().Progress, precision: 5);
     }
 
-    // ── AT-04: Physiology modulation ──────────────────────────────────────────
+    // -- AT-04: Physiology modulation ------------------------------------------
 
     [Fact]
     public void WellRested_ProgressesFaster_ThanTiredHungry()

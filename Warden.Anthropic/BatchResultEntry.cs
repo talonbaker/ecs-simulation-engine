@@ -14,7 +14,7 @@ public sealed record BatchResultEntry(
     [property: JsonPropertyName("custom_id")] string          CustomId,
     BatchEntryResult                                           Result);
 
-// ── Polymorphic result union ───────────────────────────────────────────────────
+// -- Polymorphic result union ---------------------------------------------------
 
 /// <summary>
 /// Discriminated union over the four possible per-entry outcomes.

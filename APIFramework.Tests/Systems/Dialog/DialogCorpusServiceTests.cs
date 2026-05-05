@@ -10,7 +10,7 @@ namespace APIFramework.Tests.Systems.Dialog;
 /// </summary>
 public class DialogCorpusServiceTests
 {
-    // ── Minimal valid corpus ──────────────────────────────────────────────────
+    // -- Minimal valid corpus --------------------------------------------------
 
     private const string MinimalCorpus = """
         {
@@ -35,7 +35,7 @@ public class DialogCorpusServiceTests
         }
         """;
 
-    // ── AT-01: Schema validator accepts a well-formed corpus ──────────────────
+    // -- AT-01: Schema validator accepts a well-formed corpus ------------------
 
     [Fact]
     public void AT01_WellFormedCorpus_LoadsSuccessfully()
@@ -45,7 +45,7 @@ public class DialogCorpusServiceTests
         Assert.Equal("casual-greeting-1", svc.AllFragments[0].Id);
     }
 
-    // ── AT-01b: Invalid corpus is rejected ────────────────────────────────────
+    // -- AT-01b: Invalid corpus is rejected ------------------------------------
 
     [Fact]
     public void AT01b_InvalidSchemaVersion_Throws()
@@ -54,7 +54,7 @@ public class DialogCorpusServiceTests
             () => new DialogCorpusService(InvalidCorpus));
     }
 
-    // ── AT-01c: QueryByRegisterAndContext returns correct fragments ────────────
+    // -- AT-01c: QueryByRegisterAndContext returns correct fragments ------------
 
     [Fact]
     public void AT01c_QueryByRegisterAndContext_ReturnsMatch()
@@ -73,7 +73,7 @@ public class DialogCorpusServiceTests
         Assert.Empty(result);
     }
 
-    // ── AT-02: Starter corpus has >= 180 fragments ────────────────────────────
+    // -- AT-02: Starter corpus has >= 180 fragments ----------------------------
 
     [Fact]
     public void AT02_StarterCorpus_HasAtLeast180Fragments()
@@ -92,7 +92,7 @@ public class DialogCorpusServiceTests
             $"Expected >= 180 fragments, got {svc.AllFragments.Count}.");
     }
 
-    // ── AT-03: Starter corpus covers every register × 8 priority contexts ─────
+    // -- AT-03: Starter corpus covers every register × 8 priority contexts -----
 
     [Fact]
     public void AT03_StarterCorpus_CoversAllRegisterPriorityContextCombos()
@@ -121,7 +121,7 @@ public class DialogCorpusServiceTests
         }
     }
 
-    // ── AT-04: casual × lashOut has >= 3 fragments ───────────────────────────
+    // -- AT-04: casual × lashOut has >= 3 fragments ---------------------------
 
     [Fact]
     public void AT04_StarterCorpus_CasualLashOut_HasAtLeast3Fragments()

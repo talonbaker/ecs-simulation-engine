@@ -18,7 +18,7 @@ namespace APIFramework.Tests.Systems.LifeState;
 /// </summary>
 public class FaintingRecoverySystemTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static FaintingConfig DefaultCfg() => new()
     {
@@ -82,7 +82,7 @@ public class FaintingRecoverySystemTests
         return list;
     }
 
-    // ── AT-10: Recovery due → NPC becomes Alive ───────────────────────────────
+    // -- AT-10: Recovery due → NPC becomes Alive -------------------------------
 
     [Fact]
     public void AT10_RecoveryTickReached_NpcBecomesAlive()
@@ -107,7 +107,7 @@ public class FaintingRecoverySystemTests
         Assert.Equal(LifeState.Alive, npc.Get<LifeStateComponent>().State);
     }
 
-    // ── AT-11: Recovery not yet due → NPC stays Incapacitated ────────────────
+    // -- AT-11: Recovery not yet due → NPC stays Incapacitated ----------------
 
     [Fact]
     public void AT11_RecoveryTickInFuture_NpcRemainsIncapacitated()
@@ -120,7 +120,7 @@ public class FaintingRecoverySystemTests
         Assert.Equal(LifeState.Incapacitated, npc.Get<LifeStateComponent>().State);
     }
 
-    // ── AT-12: RegainedConsciousness narrative emitted ────────────────────────
+    // -- AT-12: RegainedConsciousness narrative emitted ------------------------
 
     [Fact]
     public void AT12_EmitNarrativeTrue_RegainedConsciousnessCandidateEmitted()

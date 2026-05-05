@@ -20,7 +20,7 @@ namespace APIFramework.Tests.Systems.Chronicle;
 /// </summary>
 public class PersistenceThresholdDetectorTests
 {
-    // ── Shared setup ─────────────────────────────────────────────────────────
+    // -- Shared setup ---------------------------------------------------------
 
     private static ChronicleConfig DefaultCfg() => new()
     {
@@ -62,7 +62,7 @@ public class PersistenceThresholdDetectorTests
         return e;
     }
 
-    // ── AT-01: WillpowerLow never persists ────────────────────────────────
+    // -- AT-01: WillpowerLow never persists --------------------------------
 
     [Fact]
     public void WillpowerLow_NeverPersists()
@@ -80,7 +80,7 @@ public class PersistenceThresholdDetectorTests
         Assert.Empty(chronicle.All);
     }
 
-    // ── AT-04: Relationship-impact candidate persists ─────────────────────
+    // -- AT-04: Relationship-impact candidate persists ---------------------
 
     [Fact]
     public void RelationshipImpact_AboveThreshold_Persists()
@@ -111,7 +111,7 @@ public class PersistenceThresholdDetectorTests
         Assert.True(chronicle.All[0].Persistent);
     }
 
-    // ── AT-05: Minor relationship delta doesn't persist ───────────────────
+    // -- AT-05: Minor relationship delta doesn't persist -------------------
 
     [Fact]
     public void RelationshipImpact_BelowThreshold_DoesNotPersist()
@@ -140,7 +140,7 @@ public class PersistenceThresholdDetectorTests
         Assert.Empty(chronicle.All);
     }
 
-    // ── AT-05 (no-rel): WillpowerCollapse with no relationship → no entry ─
+    // -- AT-05 (no-rel): WillpowerCollapse with no relationship → no entry -
 
     [Fact]
     public void WillpowerCollapse_NoRelationship_DoesNotPersist()
@@ -159,7 +159,7 @@ public class PersistenceThresholdDetectorTests
         Assert.Empty(chronicle.All);
     }
 
-    // ── AT-06: High irritation + nearby item → Stain + chronicle entry ────
+    // -- AT-06: High irritation + nearby item → Stain + chronicle entry ----
 
     [Fact]
     public void HighIrritationSpike_NearbyItem_SpawnsStainAndChronicleEntry()
@@ -190,7 +190,7 @@ public class PersistenceThresholdDetectorTests
         Assert.Contains(em.GetAllEntities(), e => e.Has<StainTag>());
     }
 
-    // ── AT-06 (no-item): No nearby item → no Stain, no entry ─────────────
+    // -- AT-06 (no-item): No nearby item → no Stain, no entry -------------
 
     [Fact]
     public void HighIrritationSpike_NoNearbyItem_NoEntry()
@@ -213,7 +213,7 @@ public class PersistenceThresholdDetectorTests
         Assert.Empty(chronicle.All);
     }
 
-    // ── Drive-return-to-baseline → discard ───────────────────────────────
+    // -- Drive-return-to-baseline → discard -------------------------------
 
     [Fact]
     public void DriveReturnedToBaseline_Discards()
@@ -235,7 +235,7 @@ public class PersistenceThresholdDetectorTests
         Assert.Empty(chronicle.All);
     }
 
-    // ── Talk-about: ≥ N distinct NPCs → PublicArgument ───────────────────
+    // -- Talk-about: ≥ N distinct NPCs → PublicArgument -------------------
 
     [Fact]
     public void TalkAbout_DistinctNpcs_AtOrAboveThreshold_Persists()
@@ -267,7 +267,7 @@ public class PersistenceThresholdDetectorTests
         Assert.All(chronicle.All, e => Assert.Equal(ChronicleEventKind.PublicArgument, e.Kind));
     }
 
-    // ── AT-09: Ring buffer drops oldest on overflow ───────────────────────
+    // -- AT-09: Ring buffer drops oldest on overflow -----------------------
 
     [Fact]
     public void ChronicleService_RingBuffer_DropsOldestOnOverflow()
@@ -316,7 +316,7 @@ public class PersistenceThresholdDetectorTests
         Assert.True(sm.All.Count <= 3, $"Expected ≤3 entries but got {sm.All.Count}");
     }
 
-    // ── AT-10: Determinism — same seed → same chronicle entry IDs ─────────
+    // -- AT-10: Determinism — same seed → same chronicle entry IDs ---------
 
     [Fact]
     public void Determinism_SameSeed_ProducesSameEntryId()
@@ -352,7 +352,7 @@ public class PersistenceThresholdDetectorTests
         Assert.Equal(id1, id2);
     }
 
-    // ── AT-10 variant: different seed → different entry IDs ──────────────
+    // -- AT-10 variant: different seed → different entry IDs --------------
 
     [Fact]
     public void Determinism_DifferentSeed_ProducesDifferentEntryId()

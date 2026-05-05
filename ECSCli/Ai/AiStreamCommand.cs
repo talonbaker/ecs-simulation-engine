@@ -19,7 +19,7 @@ namespace ECSCli.Ai;
 /// Output is always compact JSON (no pretty-printing) — one object per line.
 ///
 /// EXIT CODES
-/// ──────────
+/// ----------
 /// 0  success — stream complete.
 /// 1  unexpected error.
 /// </summary>
@@ -85,7 +85,7 @@ public static class AiStreamCommand
         return cmd;
     }
 
-    // ── Implementation ────────────────────────────────────────────────────────
+    // -- Implementation --------------------------------------------------------
 
     internal static void Run(FileInfo outFile, double interval, double? duration, string? worldDefinitionPath = null)
     {

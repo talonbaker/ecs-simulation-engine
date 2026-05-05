@@ -30,7 +30,7 @@ public class TaskGeneratorSystemTests
         return npc;
     }
 
-    // ── Generation timing ─────────────────────────────────────────────────────
+    // -- Generation timing -----------------------------------------------------
 
     [Fact]
     public void BeforeGenerationHour_NoTasksCreated()
@@ -100,7 +100,7 @@ public class TaskGeneratorSystemTests
         Assert.Equal(10, em.Query<TaskTag>().Count());
     }
 
-    // ── Round-robin assignment ────────────────────────────────────────────────
+    // -- Round-robin assignment ------------------------------------------------
 
     [Fact]
     public void RoundRobin_RespectsCapacity_ExcessTasksUnassigned()
@@ -153,7 +153,7 @@ public class TaskGeneratorSystemTests
         Assert.All(tasks, t => Assert.Equal(Guid.Empty, t.Get<TaskComponent>().AssignedNpcId));
     }
 
-    // ── Determinism ───────────────────────────────────────────────────────────
+    // -- Determinism -----------------------------------------------------------
 
     [Fact]
     public void SameSeed_SameTaskProperties()

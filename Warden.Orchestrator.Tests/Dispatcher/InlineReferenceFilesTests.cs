@@ -24,7 +24,7 @@ public sealed class InlineReferenceFilesTests : IDisposable
         try { Directory.Delete(_repoRoot, recursive: true); } catch { /* best effort */ }
     }
 
-    // ── AT-01: empty referenceFiles → (null, null, null) ─────────────────────
+    // -- AT-01: empty referenceFiles → (null, null, null) ---------------------
 
     [Fact]
     public void AT01_EmptyPaths_ReturnsNoOpOutcome()
@@ -36,7 +36,7 @@ public sealed class InlineReferenceFilesTests : IDisposable
         Assert.Null(result.Details);
     }
 
-    // ── AT-02: two valid files → both BEGIN/END markers present ──────────────
+    // -- AT-02: two valid files → both BEGIN/END markers present --------------
 
     [Fact]
     public void AT02_TwoValidFiles_BlockContainsBothInOrder()
@@ -67,7 +67,7 @@ public sealed class InlineReferenceFilesTests : IDisposable
         Assert.Contains("## Spec packet", block);
     }
 
-    // ── AT-03: missing file → MissingReferenceFile, details names path ────────
+    // -- AT-03: missing file → MissingReferenceFile, details names path --------
 
     [Fact]
     public void AT03_MissingFile_ReturnsMissingReferenceFile()
@@ -82,7 +82,7 @@ public sealed class InlineReferenceFilesTests : IDisposable
         Assert.Contains(missingPath, result.Details);
     }
 
-    // ── AT-04: single file > cap → ToolError, details name the file ──────────
+    // -- AT-04: single file > cap → ToolError, details name the file ----------
 
     [Fact]
     public void AT04_SingleFileExceedsCap_ReturnsToolError()
@@ -99,7 +99,7 @@ public sealed class InlineReferenceFilesTests : IDisposable
         Assert.Contains(rel, result.Details);
     }
 
-    // ── AT-05: aggregate > cap → ToolError ────────────────────────────────────
+    // -- AT-05: aggregate > cap → ToolError ------------------------------------
 
     [Fact]
     public void AT05_AggregateExceedsCap_ReturnsToolError()
@@ -119,7 +119,7 @@ public sealed class InlineReferenceFilesTests : IDisposable
         Assert.Contains("200KB", result.Details, StringComparison.OrdinalIgnoreCase);
     }
 
-    // ── AT-06: path with ".." traversal → ToolError ──────────────────────────
+    // -- AT-06: path with ".." traversal → ToolError --------------------------
 
     [Fact]
     public void AT06_PathTraversal_ReturnsToolError()
@@ -134,7 +134,7 @@ public sealed class InlineReferenceFilesTests : IDisposable
         Assert.NotNull(result.Details);
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
+    // -- Helpers --------------------------------------------------------------
 
     /// <summary>
     /// Writes <paramref name="content"/> to <c>_repoRoot/<paramref name="relPath"/></c>

@@ -35,7 +35,7 @@ public class ActionSelectionWorkOverridingScheduleTests
     private static GridSpatialIndex MakeSpatial() =>
         new(new SpatialConfig { CellSizeTiles = 4, WorldSize = new() { Width = 64, Height = 64 } });
 
-    // ── AT-09a: Drive overrides Work ──────────────────────────────────────────
+    // -- AT-09a: Drive overrides Work ------------------------------------------
 
     [Fact]
     public void HighIrritationWithCoworker_OverridesWork_ProducesDialogLashOut()
@@ -87,7 +87,7 @@ public class ActionSelectionWorkOverridingScheduleTests
         Assert.Equal(DialogContextValue.LashOut, intent.Context);
     }
 
-    // ── AT-09b: Work overrides Idle ───────────────────────────────────────────
+    // -- AT-09b: Work overrides Idle -------------------------------------------
 
     [Fact]
     public void ActiveTask_AtDesk_QuietDrives_WorkBeatsIdle()

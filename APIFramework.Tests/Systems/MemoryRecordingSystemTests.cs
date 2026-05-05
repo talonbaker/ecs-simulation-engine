@@ -44,7 +44,7 @@ public class MemoryRecordingSystemTests
         return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
     }
 
-    // ── AT-02: subscription is active ────────────────────────────────────────
+    // -- AT-02: subscription is active ----------------------------------------
 
     [Fact]
     public void AT02_SystemReceivesCandidatesViaBus()
@@ -64,7 +64,7 @@ public class MemoryRecordingSystemTests
         Assert.True(npc.Has<PersonalMemoryComponent>());
     }
 
-    // ── AT-03: pair → relationship entity, canonical order ───────────────────
+    // -- AT-03: pair → relationship entity, canonical order -------------------
 
     [Fact]
     public void AT03_PairCandidate_AppendsToRelationshipEntity_CanonicalOrder()
@@ -97,7 +97,7 @@ public class MemoryRecordingSystemTests
         Assert.Equal(Math.Max(idA, idB), recent[0].ParticipantIds[1]);
     }
 
-    // ── AT-04: auto-create relationship ──────────────────────────────────────
+    // -- AT-04: auto-create relationship --------------------------------------
 
     [Fact]
     public void AT04_PairCandidate_NoExistingRelationship_AutoCreates_Intensity50()
@@ -133,7 +133,7 @@ public class MemoryRecordingSystemTests
         Assert.True(relsAfter[0].Has<RelationshipMemoryComponent>());
     }
 
-    // ── AT-05: solo → personal ────────────────────────────────────────────────
+    // -- AT-05: solo → personal ------------------------------------------------
 
     [Fact]
     public void AT05_SoloCandidate_AppendsToPersonalMemory()
@@ -156,7 +156,7 @@ public class MemoryRecordingSystemTests
         Assert.Equal("breakroom", recent[0].RoomId);
     }
 
-    // ── AT-06: 3+ → fan-out to all personal logs ─────────────────────────────
+    // -- AT-06: 3+ → fan-out to all personal logs -----------------------------
 
     [Fact]
     public void AT06_ThreePlusParticipants_FanOutToAllPersonalLogs()
@@ -189,7 +189,7 @@ public class MemoryRecordingSystemTests
         Assert.Empty(em.Query<RelationshipTag>());
     }
 
-    // ── Zero-participant: defensive guard ─────────────────────────────────────
+    // -- Zero-participant: defensive guard -------------------------------------
 
     [Fact]
     public void ZeroParticipants_NoEntityModified()

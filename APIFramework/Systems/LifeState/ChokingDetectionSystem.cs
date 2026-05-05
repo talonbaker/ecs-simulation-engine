@@ -107,7 +107,7 @@ public class ChokingDetectionSystem : ISystem
 
             if (!distracted) continue;
 
-            // ── CHOKE FIRES ──────────────────────────────────────────────────────────
+            // -- CHOKE FIRES ----------------------------------------------------------
 
             // 1. Attach choking markers
             npc.Add(new IsChokingTag());

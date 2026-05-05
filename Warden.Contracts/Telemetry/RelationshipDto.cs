@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Warden.Contracts.Telemetry;
 
-// ── Relationship (per-pair entity) ────────────────────────────────────────────
+// -- Relationship (per-pair entity) --------------------------------------------
 
 public sealed record RelationshipDto
 {
@@ -15,7 +15,7 @@ public sealed record RelationshipDto
     public IReadOnlyList<string>             HistoryEventIds { get; init; } = Array.Empty<string>();
 }
 
-// ── Enum ──────────────────────────────────────────────────────────────────────
+// -- Enum ----------------------------------------------------------------------
 
 /// <summary>
 /// Relationship pattern from the cast-bible pattern library.

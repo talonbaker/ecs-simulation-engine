@@ -18,7 +18,7 @@ public static class CostRates
     /// </summary>
     public static readonly DateOnly PricedAsOf = new(2026, 4, 24);
 
-    // ── Per-model rate tables (USD / million tokens) ─────────────────────────────
+    // -- Per-model rate tables (USD / million tokens) -----------------------------
 
     /// <summary>Rates for <see cref="ModelId.OpusV46"/>.</summary>
     public static readonly ModelRates Opus = new(

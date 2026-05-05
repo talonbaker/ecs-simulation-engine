@@ -13,14 +13,14 @@ namespace APIFramework.Systems.LifeState;
 /// and fires the incapacitation pipeline for a temporary, non-fatal faint.
 ///
 /// DETECTION CONTRACT
-/// ──────────────────
+/// ------------------
 /// All three conditions must hold simultaneously:
 ///   1. The NPC is <see cref="LifeState.Alive"/> (not already incapacitated or dead).
 ///   2. The NPC does not already have <see cref="IsFaintingTag"/> (idempotent guard).
 ///   3. <see cref="MoodComponent.Fear"/> &gt;= <see cref="FaintingConfig.FearThreshold"/>.
 ///
 /// ON FAINT DETECTION
-/// ──────────────────
+/// ------------------
 ///   1. <see cref="IsFaintingTag"/> is attached.
 ///   2. <see cref="FaintingComponent"/> is attached with <c>FaintStartTick</c> and
 ///      <c>RecoveryTick = currentTick + FaintDurationTicks</c>.
@@ -35,13 +35,13 @@ namespace APIFramework.Systems.LifeState;
 ///      <see cref="FaintingRecoverySystem"/> queues recovery.
 ///
 /// FAINTING IS NEVER FATAL
-/// ───────────────────────
+/// -----------------------
 /// The <c>CauseOfDeath.Unknown</c> cause and the +1 budget guarantee that the NPC
 /// will always recover via <see cref="FaintingRecoverySystem"/> before
 /// <see cref="LifeStateTransitionSystem"/> could auto-promote them to Deceased.
 ///
 /// PHASE ORDERING
-/// ──────────────
+/// --------------
 /// Cleanup phase, registered BEFORE <see cref="LifeStateTransitionSystem"/> so the
 /// incapacitation request is drained and applied in the same tick the faint is detected.
 /// <see cref="FaintingCleanupSystem"/> runs AFTER <see cref="LifeStateTransitionSystem"/>
@@ -108,7 +108,7 @@ public sealed class FaintingDetectionSystem : ISystem
             if (!npc.Has<MoodComponent>()) continue;
             if (npc.Get<MoodComponent>().Fear < _cfg.FearThreshold) continue;
 
-            // ── Faint triggered ──────────────────────────────────────────────
+            // -- Faint triggered ----------------------------------------------
 
             long startTick    = _clock.CurrentTick;
             long recoveryTick = startTick + _cfg.FaintDurationTicks;
@@ -152,7 +152,7 @@ public sealed class FaintingDetectionSystem : ISystem
         }
     }
 
-    // ── Witness selection ─────────────────────────────────────────────────────
+    // -- Witness selection -----------------------------------------------------
 
     private int? FindClosestWitnessIntId(EntityManager em, Entity fainting)
     {
@@ -187,7 +187,7 @@ public sealed class FaintingDetectionSystem : ISystem
         return bestIntId;
     }
 
-    // ── Utility ───────────────────────────────────────────────────────────────
+    // -- Utility ---------------------------------------------------------------
 
     private string? GetRoomId(Entity entity)
     {

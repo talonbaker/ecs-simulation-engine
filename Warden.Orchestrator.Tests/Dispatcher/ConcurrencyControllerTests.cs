@@ -5,7 +5,7 @@ namespace Warden.Orchestrator.Tests.Dispatcher;
 
 public sealed class ConcurrencyControllerTests
 {
-    // ── AT-02 ─────────────────────────────────────────────────────────────────────
+    // -- AT-02 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT02_MaxInFlight_Never_Exceeds_5_For_10_Concurrent_Specs()
@@ -82,7 +82,7 @@ public sealed class ConcurrencyControllerTests
             $"Expected OperationCanceledException; got {ex?.GetType().Name ?? "null"}.");
     }
 
-    // ── AT-03 ─────────────────────────────────────────────────────────────────────
+    // -- AT-03 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT03_RetryPolicy_Retries_429_Up_To_3_Times_Then_Raises()

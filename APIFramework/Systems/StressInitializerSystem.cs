@@ -8,7 +8,7 @@ using APIFramework.Core;
 
 namespace APIFramework.Systems;
 
-// ── Deserialization DTOs ──────────────────────────────────────────────────────
+// -- Deserialization DTOs ------------------------------------------------------
 
 /// <summary>Top-level deserialization shape for archetype-stress-baselines.json.</summary>
 internal sealed class StressBaselinesDto
@@ -26,7 +26,7 @@ internal sealed class StressBaselineEntryDto
     public double ChronicLevel { get; set; } = 0;
 }
 
-// ── System ────────────────────────────────────────────────────────────────────
+// -- System --------------------------------------------------------------------
 
 /// <summary>
 /// PreUpdate phase. Attaches <see cref="StressComponent"/> to every NPC that has
@@ -76,7 +76,7 @@ public class StressInitializerSystem : ISystem
         }
     }
 
-    // ── Static helpers ────────────────────────────────────────────────────────
+    // -- Static helpers --------------------------------------------------------
 
     /// <summary>
     /// Loads the archetype stress baselines dictionary from the given JSON path,

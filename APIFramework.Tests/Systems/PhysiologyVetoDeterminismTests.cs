@@ -96,7 +96,7 @@ public class PhysiologyVetoDeterminismTests
         return snapshots;
     }
 
-    // ── AT-08 ─────────────────────────────────────────────────────────────────
+    // -- AT-08 -----------------------------------------------------------------
 
     [Fact]
     public void AT08_TwoRunsProduceBitIdenticalState()

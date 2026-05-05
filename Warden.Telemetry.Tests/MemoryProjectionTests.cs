@@ -36,7 +36,7 @@ public class MemoryProjectionTests
         return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
     }
 
-    // ── AT-09: historyEventIds contains only persistent memories ─────────────
+    // -- AT-09: historyEventIds contains only persistent memories -------------
 
     [Fact]
     public void AT09_HistoryEventIds_ContainsOnlyPersistentIds()
@@ -89,7 +89,7 @@ public class MemoryProjectionTests
         Assert.DoesNotContain(relDto.HistoryEventIds, id => id.Contains("DriveSpike"));
     }
 
-    // ── AT-10: memoryEvents contains all memories; engine count == dto count ──
+    // -- AT-10: memoryEvents contains all memories; engine count == dto count --
 
     [Fact]
     public void AT10_MemoryEvents_ContainsAllMemories_CountMatchesEngineSide()
@@ -175,7 +175,7 @@ public class MemoryProjectionTests
         Assert.Equal(ids.Count, ids.Distinct().Count());
     }
 
-    // ── No memories → MemoryEvents is null ───────────────────────────────────
+    // -- No memories → MemoryEvents is null -----------------------------------
 
     [Fact]
     public void NoMemories_MemoryEventsIsNull()

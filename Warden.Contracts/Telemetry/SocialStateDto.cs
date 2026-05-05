@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Warden.Contracts.Telemetry;
 
-// ── Social state (per-entity self-state) ──────────────────────────────────────
+// -- Social state (per-entity self-state) --------------------------------------
 
 public sealed record SocialStateDto
 {
@@ -51,7 +51,7 @@ public sealed record PersonalityTraitDto
     public int              Value     { get; init; }
 }
 
-// ── Enums ─────────────────────────────────────────────────────────────────────
+// -- Enums ---------------------------------------------------------------------
 
 /// <summary>Vocabulary register. Serialises as camelCase string.</summary>
 public enum VocabularyRegister { Formal, Casual, Crass, Clipped, Academic, Folksy }

@@ -32,7 +32,7 @@ public class CastGeneratorTests
     private static NpcSlotComponent Slot(int x = 5, int z = 5, string? hint = null)
         => new NpcSlotComponent { X = x, Y = z, ArchetypeHint = hint };
 
-    // ── AT-01: catalog loads all ten archetypes ───────────────────────────────
+    // -- AT-01: catalog loads all ten archetypes -------------------------------
 
     [Fact]
     public void LoadDefault_ReturnsAllTenArchetypes()
@@ -58,7 +58,7 @@ public class CastGeneratorTests
         Assert.NotNull(catalog.TryGet(id));
     }
 
-    // ── AT-02: the-vent elevated drive baseline ───────────────────────────────
+    // -- AT-02: the-vent elevated drive baseline -------------------------------
 
     [Fact]
     public void SpawnNpc_TheVent_BelongingBaseline_IsInElevatedRange()
@@ -102,7 +102,7 @@ public class CastGeneratorTests
         Assert.InRange(drives.Trust.Baseline, Cfg.DepressedDriveRange[0], Cfg.DepressedDriveRange[1]);
     }
 
-    // ── AT-03: determinism ────────────────────────────────────────────────────
+    // -- AT-03: determinism ----------------------------------------------------
 
     [Fact]
     public void SpawnNpc_SameSeed_ProducesByteIdenticalDrives()
@@ -136,7 +136,7 @@ public class CastGeneratorTests
         Assert.Equal(npc1.Get<WillpowerComponent>().Baseline, npc2.Get<WillpowerComponent>().Baseline);
     }
 
-    // ── AT-04: NpcTag present, NpcSlotTag absent ──────────────────────────────
+    // -- AT-04: NpcTag present, NpcSlotTag absent ------------------------------
 
     [Fact]
     public void SpawnNpc_ResultEntity_HasNpcTag()
@@ -183,7 +183,7 @@ public class CastGeneratorTests
         Assert.True(npc.Has<NpcDealComponent>());
     }
 
-    // ── AT-05: inhibitions match archetype starter set ────────────────────────
+    // -- AT-05: inhibitions match archetype starter set ------------------------
 
     [Fact]
     public void SpawnNpc_TheAffair_HasTwoInhibitions()
@@ -230,7 +230,7 @@ public class CastGeneratorTests
         Assert.InRange(infidelity.Strength, 10, 30);
     }
 
-    // ── AT-06: SeedRelationships pattern counts ───────────────────────────────
+    // -- AT-06: SeedRelationships pattern counts -------------------------------
 
     [Fact]
     public void SeedRelationships_TenPlainNpcs_ProducesExpectedPatternCounts()
@@ -272,7 +272,7 @@ public class CastGeneratorTests
         Assert.Empty(rels);
     }
 
-    // ── AT-07: the-affair seeds activeAffair ─────────────────────────────────
+    // -- AT-07: the-affair seeds activeAffair ---------------------------------
 
     [Fact]
     public void SeedRelationships_TheAffairNpc_SeedsActiveAffairRelationship()
@@ -297,7 +297,7 @@ public class CastGeneratorTests
         Assert.True(hasAffair, "Expected at least one ActiveAffair relationship from the-affair archetype.");
     }
 
-    // ── AT-08: the-crush seeds secretCrush ───────────────────────────────────
+    // -- AT-08: the-crush seeds secretCrush -----------------------------------
 
     [Fact]
     public void SeedRelationships_TheCrushNpc_SeedsSecretCrushRelationship()
@@ -322,7 +322,7 @@ public class CastGeneratorTests
         Assert.True(hasCrush, "Expected at least one SecretCrush relationship from the-crush archetype.");
     }
 
-    // ── AT-11: SpawnAll → unique entity ids ──────────────────────────────────
+    // -- AT-11: SpawnAll → unique entity ids ----------------------------------
 
     [Fact]
     public void SpawnAll_AllSpawnedNpcs_HaveUniqueEntityIds()

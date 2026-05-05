@@ -20,7 +20,7 @@ namespace ECSVisualizer.Controls;
 /// </summary>
 public sealed class ScrollingChart : Control
 {
-    // ── Series StyledProperty (binds from AXAML with compiled bindings) ───────
+    // -- Series StyledProperty (binds from AXAML with compiled bindings) -------
 
     /// <summary>
     /// Avalonia styled property backing <see cref="Series"/>. Compiled bindings
@@ -40,7 +40,7 @@ public sealed class ScrollingChart : Control
         set => SetValue(SeriesProperty, value);
     }
 
-    // ── Static brushes / pens shared across all instances ────────────────────
+    // -- Static brushes / pens shared across all instances --------------------
 
     private static readonly IBrush BgBrush    = new SolidColorBrush(Color.Parse("#080808"));
     private static readonly Pen    GridPen    = new(new SolidColorBrush(Color.Parse("#1A1A1A")), 0.5);
@@ -51,7 +51,7 @@ public sealed class ScrollingChart : Control
     private const double LabelFontSize = 13;
     private const double ValueFontSize = 11;
 
-    // ── Per-instance caches ───────────────────────────────────────────────────
+    // -- Per-instance caches ---------------------------------------------------
 
     private Pen?   _linePen;
     private string _linePenColorHex = "";
@@ -61,7 +61,7 @@ public sealed class ScrollingChart : Control
     // Point scratch buffer for the StreamGeometry
     private Point[]  _pts  = Array.Empty<Point>();
 
-    // ── React to Series changes ───────────────────────────────────────────────
+    // -- React to Series changes -----------------------------------------------
 
     /// <summary>
     /// Handles property changes on this control. When <see cref="SeriesProperty"/>
@@ -89,7 +89,7 @@ public sealed class ScrollingChart : Control
 
     private void OnRefresh() => InvalidateVisual();
 
-    // ── Rendering ─────────────────────────────────────────────────────────────
+    // -- Rendering -------------------------------------------------------------
 
     /// <summary>
     /// Draws one frame of the chart: dark background, three horizontal grid
@@ -105,10 +105,10 @@ public sealed class ScrollingChart : Control
 
         var bgRect = new Rect(0, 0, w, h);
 
-        // ── Background ────────────────────────────────────────────────────────
+        // -- Background --------------------------------------------------------
         ctx.FillRectangle(BgBrush, bgRect);
 
-        // ── Grid lines at 25 / 50 / 75 % ─────────────────────────────────────
+        // -- Grid lines at 25 / 50 / 75 % -------------------------------------
         double q = h / 4.0;
         ctx.DrawLine(GridPen, new Point(0, q),     new Point(w, q));
         ctx.DrawLine(GridPen, new Point(0, q * 2), new Point(w, q * 2));
@@ -116,7 +116,7 @@ public sealed class ScrollingChart : Control
 
         var series = Series;
 
-        // ── No data ───────────────────────────────────────────────────────────
+        // -- No data -----------------------------------------------------------
         if (series == null)
         {
             DrawText(ctx, "NO DATA", LabelColor, new Point(5, 4), LabelFontSize);
@@ -129,14 +129,14 @@ public sealed class ScrollingChart : Control
         int n = series.Count;
         if (n < 2) return;
 
-        // ── Ensure scratch buffers are large enough ───────────────────────────
+        // -- Ensure scratch buffers are large enough ---------------------------
         if (_vals.Length < n) _vals = new double[n];
         if (_pts.Length  < n) _pts  = new Point[n];
 
-        // ── Copy ordered data into double[] ───────────────────────────────────
+        // -- Copy ordered data into double[] -----------------------------------
         series.CopyOrderedTo(_vals, n);
 
-        // ── Map values → pixel coordinates ───────────────────────────────────
+        // -- Map values → pixel coordinates -----------------------------------
         double range = series.Max - series.Min;
         if (range < 0.001) range = 1;
 
@@ -148,7 +148,7 @@ public sealed class ScrollingChart : Control
             _pts[i]     = new Point(x, y);
         }
 
-        // ── Draw StreamGeometry line ──────────────────────────────────────────
+        // -- Draw StreamGeometry line ------------------------------------------
         var geo = new StreamGeometry();
         using (var sgc = geo.Open())
         {
@@ -160,7 +160,7 @@ public sealed class ScrollingChart : Control
         ctx.DrawGeometry(null, GetLinePen(series.ColorHex), geo);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private void DrawText(DrawingContext ctx, string text, IBrush brush, Point origin, double fontSize)
     {

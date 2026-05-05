@@ -15,7 +15,7 @@ namespace APIFramework.Tests.Systems.Narrative;
 /// </summary>
 public class NarrativeEventDetectorTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static NarrativeConfig DefaultCfg() => new()
     {
@@ -62,7 +62,7 @@ public class NarrativeEventDetectorTests
         return list;
     }
 
-    // ── AT-01: DriveSpike emitted when drive changes >= threshold ─────────────
+    // -- AT-01: DriveSpike emitted when drive changes >= threshold -------------
 
     [Fact]
     public void DriveSpike_AboveThreshold_EmitsCandidate()
@@ -93,7 +93,7 @@ public class NarrativeEventDetectorTests
         Assert.Contains("+20", c.Detail);  // delta
     }
 
-    // ── AT-02: No candidate when drive changes < threshold ────────────────────
+    // -- AT-02: No candidate when drive changes < threshold --------------------
 
     [Fact]
     public void DriveSpike_BelowThreshold_NoCandidate()
@@ -114,7 +114,7 @@ public class NarrativeEventDetectorTests
         Assert.Empty(candidates);
     }
 
-    // ── AT-03: WillpowerCollapse when willpower drops >= threshold ────────────
+    // -- AT-03: WillpowerCollapse when willpower drops >= threshold ------------
 
     [Fact]
     public void WillpowerCollapse_DropAboveThreshold_EmitsCandidate()
@@ -136,7 +136,7 @@ public class NarrativeEventDetectorTests
         Assert.Contains("12", c.Detail);
     }
 
-    // ── AT-04: WillpowerLow fires on first crossing; not on subsequent ticks ──
+    // -- AT-04: WillpowerLow fires on first crossing; not on subsequent ticks --
 
     [Fact]
     public void WillpowerLow_FirstCrossing_EmitsThenSuppresses()
@@ -160,7 +160,7 @@ public class NarrativeEventDetectorTests
         Assert.DoesNotContain(tick3, c => c.Kind == NarrativeEventKind.WillpowerLow);
     }
 
-    // ── AT-05: WillpowerLow re-emits after rising back above threshold ────────
+    // -- AT-05: WillpowerLow re-emits after rising back above threshold --------
 
     [Fact]
     public void WillpowerLow_ReEmits_AfterRisingAboveThreshold()
@@ -191,7 +191,7 @@ public class NarrativeEventDetectorTests
         Assert.Contains(tick4, c => c.Kind == NarrativeEventKind.WillpowerLow);
     }
 
-    // ── AT-06: ConversationStarted on EnteredConversationRange ───────────────
+    // -- AT-06: ConversationStarted on EnteredConversationRange ---------------
 
     [Fact]
     public void ConversationStarted_OnEnteredConversationRange()
@@ -212,7 +212,7 @@ public class NarrativeEventDetectorTests
         Assert.Equal(2, candidates[0].ParticipantIds.Count);
     }
 
-    // ── AT-07: LeftRoomAbruptly within window of DriveSpike ──────────────────
+    // -- AT-07: LeftRoomAbruptly within window of DriveSpike ------------------
 
     [Fact]
     public void LeftRoomAbruptly_WithinWindow_EmitsCandidate()

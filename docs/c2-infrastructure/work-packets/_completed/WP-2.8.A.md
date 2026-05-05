@@ -24,14 +24,14 @@ Added per-listener recording in `DialogFragmentRetrievalSystem.Update()` — imm
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `DialogHistoryComponentPerListenerTests.cs` — 5 tests: construction, isolation, reference semantics, independence of both dicts |
-| AT-02 | ✓ | `DialogFragmentRetrievalPerListenerBiasTests.cs` — 4 tests: bias applied, no bias without history, no bias with different listener, count recorded |
-| AT-03 | ✓ | `DialogCodeSwitchingScenarioTests.cs` — chi-square on 50 moments (25 per listener) yields chi-square=50, p<<0.01 (threshold 6.635) |
-| AT-04 | ✓ | All existing WP-1.10.A dialog tests pass — calcify, retrieval, corpus service, base determinism unchanged |
-| AT-05 | ✓ | `DialogPerListenerDeterminismTests.cs` — two 5000-tick runs with same setup produce identical global + per-listener snapshots |
-| AT-06 | ✓ | 929 total tests pass across all projects (Wave 1–4 regressions = 0) |
-| AT-07 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors |
-| AT-08 | ✓ | `dotnet test ECSSimulation.sln` — 929 passed, 0 failed |
+| AT-01 | OK | `DialogHistoryComponentPerListenerTests.cs` — 5 tests: construction, isolation, reference semantics, independence of both dicts |
+| AT-02 | OK | `DialogFragmentRetrievalPerListenerBiasTests.cs` — 4 tests: bias applied, no bias without history, no bias with different listener, count recorded |
+| AT-03 | OK | `DialogCodeSwitchingScenarioTests.cs` — chi-square on 50 moments (25 per listener) yields chi-square=50, p<<0.01 (threshold 6.635) |
+| AT-04 | OK | All existing WP-1.10.A dialog tests pass — calcify, retrieval, corpus service, base determinism unchanged |
+| AT-05 | OK | `DialogPerListenerDeterminismTests.cs` — two 5000-tick runs with same setup produce identical global + per-listener snapshots |
+| AT-06 | OK | 929 total tests pass across all projects (Wave 1–4 regressions = 0) |
+| AT-07 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors |
+| AT-08 | OK | `dotnet test ECSSimulation.sln` — 929 passed, 0 failed |
 
 ---
 

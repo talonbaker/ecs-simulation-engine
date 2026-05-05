@@ -116,7 +116,7 @@ public sealed class ActionSelectionSystem : ISystem
         public CandidateSource Source;
     }
 
-    // ── Services ──────────────────────────────────────────────────────────────
+    // -- Services --------------------------------------------------------------
     private readonly ISpatialIndex        _spatial;
     private readonly EntityRoomMembership _rooms;
     private readonly WillpowerEventQueue  _willpowerQueue;
@@ -383,7 +383,7 @@ public sealed class ActionSelectionSystem : ISystem
             CleanFleeTarget(n);
     }
 
-    // ── Candidate enumeration ─────────────────────────────────────────────────
+    // -- Candidate enumeration -------------------------------------------------
 
     /// <summary>
     /// Walks <see cref="DriveTable"/> and emits one or more candidates per drive whose
@@ -488,7 +488,7 @@ public sealed class ActionSelectionSystem : ISystem
         });
     }
 
-    // ── Winner selection ──────────────────────────────────────────────────────
+    // -- Winner selection ------------------------------------------------------
 
     /// <summary>
     /// Picks the highest-weight candidate, adding a tiny seeded jitter so equal weights
@@ -516,7 +516,7 @@ public sealed class ActionSelectionSystem : ISystem
         return candidates[bestIdx];
     }
 
-    // ── Suppression event emission ────────────────────────────────────────────
+    // -- Suppression event emission --------------------------------------------
 
     /// <summary>
     /// Finds the highest-raw-push loser whose drive came within <c>SuppressionEpsilon</c> of
@@ -570,7 +570,7 @@ public sealed class ActionSelectionSystem : ISystem
         }
     }
 
-    // ── Movement / flee target helpers ────────────────────────────────────────
+    // -- Movement / flee target helpers ----------------------------------------
 
     /// <summary>
     /// Spawns (or replaces) the ephemeral entity that an Avoid-acting NPC will path toward.
@@ -643,7 +643,7 @@ public sealed class ActionSelectionSystem : ISystem
         return null;
     }
 
-    // ── Drive readers ─────────────────────────────────────────────────────────
+    // -- Drive readers ---------------------------------------------------------
 
     /// <summary>
     /// Returns the <c>Current</c> value of the drive identified by <paramref name="key"/>.

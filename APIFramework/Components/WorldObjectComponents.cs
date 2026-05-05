@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace APIFramework.Components;
 
-// ── World-object marker components ────────────────────────────────────────────
+// -- World-object marker components --------------------------------------------
 // Empty structs — used as tags to identify the type of a world-object entity.
 
 /// <summary>Marks the fridge. FoodCount tracks how many bananas remain before starvation.</summary>
@@ -19,7 +19,7 @@ public struct ToiletComponent  { }
 /// <summary>Marks a bed world-object entity. NPCs use beds to sleep.</summary>
 public struct BedComponent     { }
 
-// ── StoredTag ─────────────────────────────────────────────────────────────────
+// -- StoredTag -----------------------------------------------------------------
 /// <summary>
 /// Marks food items that are physically stored inside a container (e.g. fridge).
 /// Prevents the fallback world-food scan in FeedingSystem from treating them as
@@ -27,7 +27,7 @@ public struct BedComponent     { }
 /// </summary>
 public struct StoredTag { }
 
-// ── ContainerComponent ────────────────────────────────────────────────────────
+// -- ContainerComponent --------------------------------------------------------
 /// <summary>
 /// Holds a list of entity IDs representing items stored inside this container.
 /// Used on fridge entities to track banana inventory.

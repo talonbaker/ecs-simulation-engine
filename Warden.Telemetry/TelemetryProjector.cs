@@ -29,16 +29,16 @@ namespace Warden.Telemetry;
 /// wire-format <see cref="WorldStateDto"/> consumed by Tier-3 Haiku agents.
 ///
 /// DESIGN RULES
-/// ────────────
-/// • Pure function — no I/O, no side-effects, no mutable state.
-/// • Never calls <c>DateTime.UtcNow</c> or <c>Guid.NewGuid</c>.
+/// ------------
+/// - Pure function — no I/O, no side-effects, no mutable state.
+/// - Never calls <c>DateTime.UtcNow</c> or <c>Guid.NewGuid</c>.
 ///   Both <paramref name="capturedAt"/> and <paramref name="tick"/> are explicit
 ///   caller inputs so two runs with identical parameters produce identical output.
-/// • Does not modify <c>APIFramework</c>. This is a projection, not a refactor.
+/// - Does not modify <c>APIFramework</c>. This is a projection, not a refactor.
 /// </summary>
 public static class TelemetryProjector
 {
-    // ── Public surface ────────────────────────────────────────────────────────
+    // -- Public surface --------------------------------------------------------
 
     /// <summary>
     /// Projects <paramref name="snap"/> to a <see cref="WorldStateDto"/>.
@@ -108,7 +108,7 @@ public static class TelemetryProjector
         string             simVersion)
         => Project(snap, null, capturedAt, tick, seed, simVersion);
 
-    // ── Clock ─────────────────────────────────────────────────────────────────
+    // -- Clock -----------------------------------------------------------------
 
     private static ClockStateDto ProjectClock(ClockSnapshot c, SunStateService? sunService) => new()
     {
@@ -127,7 +127,7 @@ public static class TelemetryProjector
         DayPhase     = (ContractDayPhase)(int)s.DayPhase,
     };
 
-    // ── Rooms ─────────────────────────────────────────────────────────────────
+    // -- Rooms -----------------------------------------------------------------
 
     private static IReadOnlyList<RoomDto>? ProjectRooms(EntityManager em)
     {
@@ -166,7 +166,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Light sources ─────────────────────────────────────────────────────────
+    // -- Light sources ---------------------------------------------------------
 
     private static IReadOnlyList<LightSourceDto>? ProjectLightSources(EntityManager em)
     {
@@ -195,7 +195,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Light apertures ───────────────────────────────────────────────────────
+    // -- Light apertures -------------------------------------------------------
 
     private static IReadOnlyList<LightApertureDto>? ProjectLightApertures(EntityManager em)
     {
@@ -222,7 +222,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Entities ──────────────────────────────────────────────────────────────
+    // -- Entities --------------------------------------------------------------
 
     private static List<EntityStateDto> ProjectEntities(
         IReadOnlyList<EntitySnapshot> snapshots,
@@ -291,7 +291,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Social state ─────────────────────────────────────────────────────────
+    // -- Social state ---------------------------------------------------------
 
     private static SocialStateDto ProjectSocial(Entity e)
     {
@@ -375,7 +375,7 @@ public static class TelemetryProjector
         Baseline = SocialDrivesComponent.Clamp0100(d.Baseline),
     };
 
-    // ── Relationships ─────────────────────────────────────────────────────────
+    // -- Relationships ---------------------------------------------------------
 
     private static List<RelationshipDto>? ProjectRelationships(EntityManager em)
     {
@@ -413,7 +413,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Memory events ─────────────────────────────────────────────────────────
+    // -- Memory events ---------------------------------------------------------
 
     private static List<MemoryEventDto>? ProjectMemoryEvents(EntityManager em)
     {
@@ -477,7 +477,7 @@ public static class TelemetryProjector
         return new Guid(bytes).ToString();
     }
 
-    // ── World items ───────────────────────────────────────────────────────────
+    // -- World items -----------------------------------------------------------
 
     private static List<WorldItemDto> ProjectWorldItems(IReadOnlyList<WorldItemSnapshot> items)
     {
@@ -495,7 +495,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── World objects ─────────────────────────────────────────────────────────
+    // -- World objects ---------------------------------------------------------
 
     private static List<WorldObjectDto> ProjectWorldObjects(IReadOnlyList<WorldObjectSnapshot> objects)
     {
@@ -516,7 +516,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Transit items ─────────────────────────────────────────────────────────
+    // -- Transit items ---------------------------------------------------------
 
     private static List<TransitItemDto>? ProjectTransitItems(IReadOnlyList<TransitItemSnapshot> items)
     {
@@ -536,7 +536,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Chronicle ─────────────────────────────────────────────────────────────
+    // -- Chronicle -------------------------------------------------------------
 
     private static IReadOnlyList<ChronicleEntryDto>? ProjectChronicle(ChronicleService svc)
     {
@@ -563,7 +563,7 @@ public static class TelemetryProjector
         return result;
     }
 
-    // ── Enum mapping ──────────────────────────────────────────────────────────
+    // -- Enum mapping ----------------------------------------------------------
 
     private static DominantDrive MapDominant(DesireType d) => d switch
     {

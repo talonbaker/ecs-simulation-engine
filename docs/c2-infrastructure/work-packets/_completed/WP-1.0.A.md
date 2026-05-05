@@ -24,17 +24,17 @@ The SCHEMA-ROADMAP §v0.2 section was updated in place to reflect the actual lan
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | All new surfaces carry `additionalProperties: false`; `maxItems` and `minimum`/`maximum` present on every new array/numeric field. Verified by `dotnet build` (0 warnings) and schema inspection. |
-| AT-02 | ✓ | `WorldState_V01SampleRoundTripsUnderV02Schema` and the existing `WorldState_RoundTrips` both pass. |
-| AT-03 | ✓ | `WorldState_V02SampleRoundTrips` passes full round-trip (validate → deserialise → re-serialise → validate → idempotency check). |
-| AT-04 | ✓ | `WorldState_V02_RelationshipThreePatterns_FailsMaxItems` passes. |
-| AT-05 | ✓ | `WorldState_V02_MemoryEventDescriptionTooLong_FailsMaxLength` passes. |
-| AT-06 | ✓ | `WorldState_V02_GlobalMemoryScope_RejectedByReferentialChecker` passes with exact reason `"global-scope-reserved-for-v0.3"`. |
-| AT-07 | ✓ | `WorldState_V02_RelationshipParticipantMissing_RejectedByReferentialChecker` passes. |
-| AT-08 | ✓ | `WorldState_V02_DuplicateUnorderedPair_RejectedByReferentialChecker` passes with exact reason `"duplicate-pair"`. |
-| AT-09 | ✓ | All 24 `Warden.Telemetry.Tests` pass. Projector still emits `SchemaVersion = "0.1.0"`; new fields absent from output. |
-| AT-10 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-11 | ✓ | `dotnet test ECSSimulation.sln` — 0 failures across all test projects. |
+| AT-01 | OK | All new surfaces carry `additionalProperties: false`; `maxItems` and `minimum`/`maximum` present on every new array/numeric field. Verified by `dotnet build` (0 warnings) and schema inspection. |
+| AT-02 | OK | `WorldState_V01SampleRoundTripsUnderV02Schema` and the existing `WorldState_RoundTrips` both pass. |
+| AT-03 | OK | `WorldState_V02SampleRoundTrips` passes full round-trip (validate → deserialise → re-serialise → validate → idempotency check). |
+| AT-04 | OK | `WorldState_V02_RelationshipThreePatterns_FailsMaxItems` passes. |
+| AT-05 | OK | `WorldState_V02_MemoryEventDescriptionTooLong_FailsMaxLength` passes. |
+| AT-06 | OK | `WorldState_V02_GlobalMemoryScope_RejectedByReferentialChecker` passes with exact reason `"global-scope-reserved-for-v0.3"`. |
+| AT-07 | OK | `WorldState_V02_RelationshipParticipantMissing_RejectedByReferentialChecker` passes. |
+| AT-08 | OK | `WorldState_V02_DuplicateUnorderedPair_RejectedByReferentialChecker` passes with exact reason `"duplicate-pair"`. |
+| AT-09 | OK | All 24 `Warden.Telemetry.Tests` pass. Projector still emits `SchemaVersion = "0.1.0"`; new fields absent from output. |
+| AT-10 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-11 | OK | `dotnet test ECSSimulation.sln` — 0 failures across all test projects. |
 
 ## Files added
 

@@ -2,7 +2,7 @@ using APIFramework.Core;
 
 namespace APIFramework.Systems.Spatial;
 
-// ── Proximity event records ────────────────────────────────────────────────────
+// -- Proximity event records ----------------------------------------------------
 // Each record is a readonly struct: value-type, allocation-free, pooling-friendly.
 // All carry the emitting Observer, the Target entity, and the simulation tick.
 

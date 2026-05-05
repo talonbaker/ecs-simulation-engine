@@ -215,7 +215,7 @@ public sealed class DialogFragmentRetrievalSystem : ISystem
         return best;
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────────
+    // -- Helpers ------------------------------------------------------------------
 
     private static string RegisterString(VocabularyRegister r) => r switch
     {

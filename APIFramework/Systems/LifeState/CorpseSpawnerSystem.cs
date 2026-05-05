@@ -88,7 +88,7 @@ public sealed class CorpseSpawnerSystem : ISystem
     /// <param name="deltaTime">Tick delta in seconds (unused).</param>
     public void Update(EntityManager em, float deltaTime) { /* event-driven; no per-tick work */ }
 
-    // ── Utility ───────────────────────────────────────────────────────────────
+    // -- Utility ---------------------------------------------------------------
 
     private Entity? FindEntityByIntId(int intId)
     {

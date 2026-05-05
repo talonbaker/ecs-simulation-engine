@@ -27,7 +27,7 @@ namespace APIFramework.Tests.Systems.LifeState;
 /// </summary>
 public class ChokingDetectionSystemTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static ChokingConfig DefaultCfg() => new()
     {
@@ -125,7 +125,7 @@ public class ChokingDetectionSystemTests
         ChokingConfig? cfg = null)
         => new(transitions, bus, em, clock, membership, cfg ?? DefaultCfg());
 
-    // ── AT-01: Tough bolus + distracted NPC → IsChokingTag ───────────────────
+    // -- AT-01: Tough bolus + distracted NPC → IsChokingTag -------------------
 
     [Fact]
     public void AT01_ToughBolus_DistractedNpc_AttachesIsChokingTag()
@@ -145,7 +145,7 @@ public class ChokingDetectionSystemTests
         Assert.True(npc.Has<ChokingComponent>());
     }
 
-    // ── AT-02: Soft bolus → no choke ─────────────────────────────────────────
+    // -- AT-02: Soft bolus → no choke -----------------------------------------
 
     [Fact]
     public void AT02_SoftBolus_BelowThreshold_NoIsChokingTag()
@@ -166,7 +166,7 @@ public class ChokingDetectionSystemTests
         Assert.True(npc.Has<IsChokingTag>());
     }
 
-    // ── AT-03: Already choking → idempotent ──────────────────────────────────
+    // -- AT-03: Already choking → idempotent ----------------------------------
 
     [Fact]
     public void AT03_NpcAlreadyChoking_NoSecondChokingComponent()
@@ -178,7 +178,7 @@ public class ChokingDetectionSystemTests
         Assert.False(npc.Has<ChokingComponent>());
     }
 
-    // ── AT-04: Deceased NPC → no choke ───────────────────────────────────────
+    // -- AT-04: Deceased NPC → no choke ---------------------------------------
 
     [Fact]
     public void AT04_DeceasedNpc_NoChokeTrigger()
@@ -189,7 +189,7 @@ public class ChokingDetectionSystemTests
         Assert.False(npc.Has<IsChokingTag>());
     }
 
-    // ── AT-05: No distraction → no choke ─────────────────────────────────────
+    // -- AT-05: No distraction → no choke -------------------------------------
 
     [Fact]
     public void AT05_NoDistractionConditions_NoChoke()
@@ -202,7 +202,7 @@ public class ChokingDetectionSystemTests
         Assert.False(npc.Has<IsChokingTag>());
     }
 
-    // ── AT-06: Low energy alone is sufficient ─────────────────────────────────
+    // -- AT-06: Low energy alone is sufficient ---------------------------------
 
     [Fact]
     public void AT06_LowEnergy_AloneIsSufficientDistraction()
@@ -215,7 +215,7 @@ public class ChokingDetectionSystemTests
         Assert.True(npc.Has<IsChokingTag>());
     }
 
-    // ── AT-07: High stress alone is sufficient ────────────────────────────────
+    // -- AT-07: High stress alone is sufficient --------------------------------
 
     [Fact]
     public void AT07_HighStress_AloneIsSufficientDistraction()
@@ -228,7 +228,7 @@ public class ChokingDetectionSystemTests
         Assert.True(npc.Has<IsChokingTag>());
     }
 
-    // ── AT-08: High irritation alone is sufficient ────────────────────────────
+    // -- AT-08: High irritation alone is sufficient ----------------------------
 
     [Fact]
     public void AT08_HighIrritation_AloneIsSufficientDistraction()
@@ -241,7 +241,7 @@ public class ChokingDetectionSystemTests
         Assert.True(npc.Has<IsChokingTag>());
     }
 
-    // ── AT-09: ChokeStarted narrative emitted ─────────────────────────────────
+    // -- AT-09: ChokeStarted narrative emitted ---------------------------------
 
     [Fact]
     public void AT09_EmitNarrativeTrue_ChokeStartedCandidateEmitted()
@@ -256,7 +256,7 @@ public class ChokingDetectionSystemTests
         Assert.Contains(candidates, c => c.Kind == NarrativeEventKind.ChokeStarted);
     }
 
-    // ── AT-10: No narrative when flag is off ──────────────────────────────────
+    // -- AT-10: No narrative when flag is off ----------------------------------
 
     [Fact]
     public void AT10_EmitNarrativeFalse_NoChokeStartedCandidate()
@@ -271,7 +271,7 @@ public class ChokingDetectionSystemTests
         Assert.DoesNotContain(candidates, c => c.Kind == NarrativeEventKind.ChokeStarted);
     }
 
-    // ── AT-11: ChokingComponent.BolusSize mirrors Toughness ──────────────────
+    // -- AT-11: ChokingComponent.BolusSize mirrors Toughness ------------------
 
     [Fact]
     public void AT11_ChokingComponent_BolusSize_MirrorsBolusComponentToughness()
@@ -284,7 +284,7 @@ public class ChokingDetectionSystemTests
         Assert.Equal(toughness, npc.Get<ChokingComponent>().BolusSize);
     }
 
-    // ── AT-12: MoodComponent.PanicLevel set to config value ──────────────────
+    // -- AT-12: MoodComponent.PanicLevel set to config value ------------------
 
     [Fact]
     public void AT12_PanicLevel_SetToPanicMoodIntensity()
@@ -295,7 +295,7 @@ public class ChokingDetectionSystemTests
         Assert.Equal(DefaultCfg().PanicMoodIntensity, npc.Get<MoodComponent>().PanicLevel);
     }
 
-    // ── AT-13: LifeStateTransitionSystem drains request in same tick ─────────
+    // -- AT-13: LifeStateTransitionSystem drains request in same tick ---------
 
     [Fact]
     public void AT13_LifeStateTransition_Drains_ChokingNpc_BecomesIncapacitated()

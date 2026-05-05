@@ -77,7 +77,7 @@ public sealed class ScheduleSystem : ISystem
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static int FindActiveBlock(IReadOnlyList<ScheduleBlock> blocks, float gameHour)
     {

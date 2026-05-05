@@ -10,7 +10,7 @@ using Warden.Contracts.SchemaValidation;
 
 namespace APIFramework.Bootstrap;
 
-// ── DTOs (deserialization targets) ────────────────────────────────────────────
+// -- DTOs (deserialization targets) --------------------------------------------
 
 /// <summary>Top-level deserialization target for <c>archetypes.json</c>.</summary>
 public sealed class ArchetypeCatalogDto
@@ -130,7 +130,7 @@ public sealed class DialogHintsDto
     public string[] CalcifyPriorityTags { get; set; } = Array.Empty<string>();
 }
 
-// ── ArchetypeCatalog ───────────────────────────────────────────────────────────
+// -- ArchetypeCatalog -----------------------------------------------------------
 
 /// <summary>
 /// Loads, validates, and exposes the archetype catalog from
@@ -211,7 +211,7 @@ public sealed class ArchetypeCatalog
         return null;
     }
 
-    // ── Inhibition class parsing ──────────────────────────────────────────────
+    // -- Inhibition class parsing ----------------------------------------------
 
     /// <summary>Maps an archetype JSON inhibition-class string to an <see cref="InhibitionClass"/>; unknown values fall back to <see cref="InhibitionClass.Vulnerability"/>.</summary>
     /// <param name="s">Inhibition class string from the JSON (e.g. "infidelity", "publicEmotion").</param>

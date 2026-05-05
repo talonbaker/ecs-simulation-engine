@@ -27,7 +27,7 @@ public class DialogCalcifySystemTests
         return e;
     }
 
-    // ── AT-07: Fragment calcifies when threshold and dominance are met ────────
+    // -- AT-07: Fragment calcifies when threshold and dominance are met --------
 
     [Fact]
     public void AT07_Fragment_CalcifiesWhenThresholdAndDominanceMet()
@@ -56,7 +56,7 @@ public class DialogCalcifySystemTests
             "Fragment should be calcified once threshold and dominance are met.");
     }
 
-    // ── AT-07b: Fragment does NOT calcify if dominance is below minimum ───────
+    // -- AT-07b: Fragment does NOT calcify if dominance is below minimum -------
 
     [Fact]
     public void AT07b_Fragment_DoesNotCalcify_WhenDominanceTooLow()
@@ -84,7 +84,7 @@ public class DialogCalcifySystemTests
             "Fragment should NOT calcify when dominance fraction < CalcifyContextDominanceMin.");
     }
 
-    // ── AT-07c: Fragment does NOT calcify below use count threshold ───────────
+    // -- AT-07c: Fragment does NOT calcify below use count threshold -----------
 
     [Fact]
     public void AT07c_Fragment_DoesNotCalcify_BelowUseCountThreshold()
@@ -111,7 +111,7 @@ public class DialogCalcifySystemTests
             "Fragment should NOT calcify when UseCount < CalcifyThreshold.");
     }
 
-    // ── AT-09: Calcified fragment decalcifies after timeout ───────────────────
+    // -- AT-09: Calcified fragment decalcifies after timeout -------------------
 
     [Fact]
     public void AT09_Calcified_Fragment_Decalcifies_AfterTimeout()
@@ -144,7 +144,7 @@ public class DialogCalcifySystemTests
             "Calcified fragment should decalcify after DecalcifyTimeoutDays of disuse.");
     }
 
-    // ── AT-09b: Calcified fragment STAYS calcified before timeout ─────────────
+    // -- AT-09b: Calcified fragment STAYS calcified before timeout -------------
 
     [Fact]
     public void AT09b_Calcified_Fragment_StaysCalcified_BeforeTimeout()

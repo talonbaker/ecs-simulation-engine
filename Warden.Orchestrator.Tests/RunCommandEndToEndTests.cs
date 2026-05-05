@@ -36,7 +36,7 @@ public sealed class RunCommandEndToEndTests : IDisposable
         catch { /* best effort */ }
     }
 
-    // ── AT-01 ─────────────────────────────────────────────────────────────────────
+    // -- AT-01 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT01_MockRun_ExitsZeroAndWritesLedger()
@@ -63,7 +63,7 @@ public sealed class RunCommandEndToEndTests : IDisposable
         Assert.True(lines.Length > 0, "Ledger must contain at least one entry.");
     }
 
-    // ── AT-01b ────────────────────────────────────────────────────────────────────
+    // -- AT-01b --------------------------------------------------------------------
 
     [Fact]
     public async Task AT01b_MockRun_TenIterations_AllSucceed()
@@ -96,7 +96,7 @@ public sealed class RunCommandEndToEndTests : IDisposable
         }
     }
 
-    // ── AT-04 ─────────────────────────────────────────────────────────────────────
+    // -- AT-04 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT04_DryRun_ExitsZeroWithoutCreatingLedger()
@@ -116,7 +116,7 @@ public sealed class RunCommandEndToEndTests : IDisposable
         Assert.Equal(0, exitCode);
     }
 
-    // ── AT-05 ─────────────────────────────────────────────────────────────────────
+    // -- AT-05 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT05_InvalidSpec_AbortsBeforeApiCallExitCode4()
@@ -141,7 +141,7 @@ public sealed class RunCommandEndToEndTests : IDisposable
         Assert.Equal(4, exitCode);
     }
 
-    // ── AT-07 ─────────────────────────────────────────────────────────────────────
+    // -- AT-07 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT07_CancellationDuringMockRun_CompletesWithinTwoSecondsAndWritesPartialLedger()
@@ -182,7 +182,7 @@ public sealed class RunCommandEndToEndTests : IDisposable
             $"Expected exit code 0 or 2; got {exitCode}.");
     }
 
-    // ── AT-07 (WP-2.0.A) ─────────────────────────────────────────────────────────
+    // -- AT-07 (WP-2.0.A) ---------------------------------------------------------
 
     [Fact]
     public async Task AT07_SpecWithReferenceFile_InlinedBlockPresentInDispatchedUserTurn()
@@ -211,7 +211,7 @@ public sealed class RunCommandEndToEndTests : IDisposable
         Assert.Contains("## Spec packet", capturingClient.CapturedUserText);
     }
 
-    // ── AT-08 (WP-2.0.A) ─────────────────────────────────────────────────────────
+    // -- AT-08 (WP-2.0.A) ---------------------------------------------------------
 
     [Fact]
     public async Task AT08_SpecWithMissingReferenceFile_BlockedAndNoLedgerEntry()
@@ -267,7 +267,7 @@ public sealed class RunCommandEndToEndTests : IDisposable
                 "Could not locate repo root (ECSSimulation.sln not found in any ancestor directory).");
     }
 
-    // ── AT-07/AT-08 helpers ───────────────────────────────────────────────────────
+    // -- AT-07/AT-08 helpers -------------------------------------------------------
 
     private static SonnetDispatcher BuildDispatcher(
         IAnthropicClient client, InfraLedger ledger, string repoRoot)
@@ -297,7 +297,7 @@ public sealed class RunCommandEndToEndTests : IDisposable
             WorkerBudgetUsd = 0.5
         };
 
-    // ── Inner types ───────────────────────────────────────────────────────────────
+    // -- Inner types ---------------------------------------------------------------
 
     /// <summary>
     /// Stub Anthropic client that records the user-turn text from the first

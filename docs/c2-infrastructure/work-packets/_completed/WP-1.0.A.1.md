@@ -28,20 +28,20 @@ The branch required merging `ecs-p1-initial` (which contained the packet file) a
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `world-state.schema.json` enum is `["0.1.0", "0.2.1"]` — verified by unit test and schema inspection. |
-| AT-02 | ✓ | `WorldState_V01SampleRoundTripsUnderV021Schema` passes; v0.1 sample round-trips clean. |
-| AT-03 | ✓ | `WorldState_V021SampleRoundTrips` passes full round-trip. |
-| AT-04 | ✓ | `WorldState_V021_DriveCurrentOver100_FailsMaximum` — 101 rejected with maximum error. |
-| AT-05 | ✓ | `WorldState_V021_WillpowerBaselineNegative_FailsMinimum` — -1 rejected with minimum error. |
-| AT-06 | ✓ | `WorldState_V021_InhibitionBadClass_FailsEnum` — unknown class rejected with enum error. |
-| AT-07 | ✓ | `WorldState_V021_NineInhibitions_FailsMaxItems` — 9 entries rejected. |
-| AT-08 | ✓ | `WorldState_V021_InhibitionHiddenAwareness_RoundTripsClean` — `awareness: "hidden"` round-trips and deserialises correctly. |
-| AT-09 | ✓ | `WorldState_V021_DriveMissingSubField_FailsRequired` — drives object missing `loneliness` rejected. |
-| AT-10 | ✓ | `WorldState_V021_RelationshipPairDrives_RejectedByAdditionalProperties` — `pairDrives` rejected. |
-| AT-11 | ✓ | `DtoGraph_ContainsNo_SelfDrivesDto_PairDrivesDto_JealousyField` — reflection confirms types absent. |
-| AT-12 | ✓ | All 24 `Warden.Telemetry.Tests` pass; projector still emits `SchemaVersion = "0.1.0"`. |
-| AT-13 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-14 | ✓ | `dotnet test ECSSimulation.sln` — 388 passed, 0 failed across all test projects. |
+| AT-01 | OK | `world-state.schema.json` enum is `["0.1.0", "0.2.1"]` — verified by unit test and schema inspection. |
+| AT-02 | OK | `WorldState_V01SampleRoundTripsUnderV021Schema` passes; v0.1 sample round-trips clean. |
+| AT-03 | OK | `WorldState_V021SampleRoundTrips` passes full round-trip. |
+| AT-04 | OK | `WorldState_V021_DriveCurrentOver100_FailsMaximum` — 101 rejected with maximum error. |
+| AT-05 | OK | `WorldState_V021_WillpowerBaselineNegative_FailsMinimum` — -1 rejected with minimum error. |
+| AT-06 | OK | `WorldState_V021_InhibitionBadClass_FailsEnum` — unknown class rejected with enum error. |
+| AT-07 | OK | `WorldState_V021_NineInhibitions_FailsMaxItems` — 9 entries rejected. |
+| AT-08 | OK | `WorldState_V021_InhibitionHiddenAwareness_RoundTripsClean` — `awareness: "hidden"` round-trips and deserialises correctly. |
+| AT-09 | OK | `WorldState_V021_DriveMissingSubField_FailsRequired` — drives object missing `loneliness` rejected. |
+| AT-10 | OK | `WorldState_V021_RelationshipPairDrives_RejectedByAdditionalProperties` — `pairDrives` rejected. |
+| AT-11 | OK | `DtoGraph_ContainsNo_SelfDrivesDto_PairDrivesDto_JealousyField` — reflection confirms types absent. |
+| AT-12 | OK | All 24 `Warden.Telemetry.Tests` pass; projector still emits `SchemaVersion = "0.1.0"`. |
+| AT-13 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-14 | OK | `dotnet test ECSSimulation.sln` — 388 passed, 0 failed across all test projects. |
 
 ## Files added
 

@@ -21,7 +21,7 @@ namespace APIFramework.Tests.Systems.LifeState;
 /// </summary>
 public class BereavementSystemTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static BereavementConfig DefaultCfg() => new()
     {
@@ -79,7 +79,7 @@ public class BereavementSystemTests
         return list;
     }
 
-    // ── AT-04: Witness → WitnessedDeathEventsToday ───────────────────────────
+    // -- AT-04: Witness → WitnessedDeathEventsToday ---------------------------
 
     [Fact]
     public void AT04_DeathWithWitness_IncrementsWitnessedDeathEventsToday()
@@ -100,7 +100,7 @@ public class BereavementSystemTests
         Assert.Equal(1, witness.Get<StressComponent>().WitnessedDeathEventsToday);
     }
 
-    // ── AT-05: Witness → GriefLevel spikes ───────────────────────────────────
+    // -- AT-05: Witness → GriefLevel spikes -----------------------------------
 
     [Fact]
     public void AT05_DeathWithWitness_GriefLevel_AtLeastWitnessGriefIntensity()
@@ -145,7 +145,7 @@ public class BereavementSystemTests
         Assert.Equal(95f, witness.Get<MoodComponent>().GriefLevel); // max preserves higher value
     }
 
-    // ── AT-06: Colleague above threshold → BereavementEventsToday ────────────
+    // -- AT-06: Colleague above threshold → BereavementEventsToday ------------
 
     [Fact]
     public void AT06_Colleague_AboveThreshold_IncrementsBereavementEventsToday()
@@ -167,7 +167,7 @@ public class BereavementSystemTests
         Assert.Equal(1, colleague.Get<StressComponent>().BereavementEventsToday);
     }
 
-    // ── AT-07: Colleague below threshold → skipped ───────────────────────────
+    // -- AT-07: Colleague below threshold → skipped ---------------------------
 
     [Fact]
     public void AT07_Colleague_BelowThreshold_NoBereavementEffect()
@@ -190,7 +190,7 @@ public class BereavementSystemTests
         Assert.Equal(0f, colleague.Get<MoodComponent>().GriefLevel);
     }
 
-    // ── AT-08: Colleague GriefLevel scaled by intensity fraction ─────────────
+    // -- AT-08: Colleague GriefLevel scaled by intensity fraction -------------
 
     [Fact]
     public void AT08_Colleague_GriefLevel_ScaledByIntensityFraction()
@@ -215,7 +215,7 @@ public class BereavementSystemTests
         Assert.Equal(expected, colleague.Get<MoodComponent>().GriefLevel, precision: 3);
     }
 
-    // ── AT-09: BereavementImpact narrative emitted for colleague ──────────────
+    // -- AT-09: BereavementImpact narrative emitted for colleague --------------
 
     [Fact]
     public void AT09_Colleague_BereavementImpact_NarrativeEmitted()
@@ -242,7 +242,7 @@ public class BereavementSystemTests
         Assert.Contains(allCandidates, c => c.Kind == NarrativeEventKind.BereavementImpact);
     }
 
-    // ── AT-10: Witness is not also counted as a colleague ────────────────────
+    // -- AT-10: Witness is not also counted as a colleague --------------------
 
     [Fact]
     public void AT10_Witness_NotDoubleCounted_NoBereavementImpactForWitness()

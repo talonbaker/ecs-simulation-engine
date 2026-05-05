@@ -9,7 +9,7 @@ using APIFramework.Config;
 /// Add this component to an empty GameObject named "SimulationManager" in the scene.
 ///
 /// ROLE
-/// ────
+/// ----
 /// Unity is a pure renderer in this architecture — it never writes to the simulation.
 /// Each frame:
 ///   1. Engine.Update(deltaTime) — advances the simulation by one real-second step
@@ -17,18 +17,18 @@ using APIFramework.Config;
 ///   3. All views read from Snapshot — no other coupling to the engine exists
 ///
 /// CONFIG
-/// ──────
+/// ------
 /// The system walks up from the Unity project folder looking for SimConfig.json —
 /// it will find the one at the repo root automatically. Override configPath in
 /// the Inspector to point at a different file.
 /// </summary>
 public class SimulationManager : MonoBehaviour
 {
-    // ── Singleton ─────────────────────────────────────────────────────────────
+    // -- Singleton -------------------------------------------------------------
     public static SimulationManager Instance  { get; private set; }
     public static SimulationSnapshot Snapshot { get; private set; }
 
-    // ── Inspector fields ──────────────────────────────────────────────────────
+    // -- Inspector fields ------------------------------------------------------
     [Header("Config")]
     [Tooltip("Absolute or relative path to SimConfig.json. Leave blank to auto-locate.")]
     public string configPath = "";
@@ -39,11 +39,11 @@ public class SimulationManager : MonoBehaviour
     [Range(0f, 5f)]
     public float speedMultiplier = 1f;
 
-    // ── Private ───────────────────────────────────────────────────────────────
+    // -- Private ---------------------------------------------------------------
     private SimulationBootstrapper _sim;
     private bool _ready = false;
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     void Awake()
     {
@@ -87,7 +87,7 @@ public class SimulationManager : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    // ── Config resolution ─────────────────────────────────────────────────────
+    // -- Config resolution -----------------------------------------------------
 
     /// <summary>
     /// Locates SimConfig.json. Checks (in order):

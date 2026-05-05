@@ -142,7 +142,7 @@ public sealed class CachedPrefixSource
         }
     }
 
-    // ── Private helpers ────────────────────────────────────────────────────────
+    // -- Private helpers --------------------------------------------------------
 
     private bool NeedsReload()
     {
@@ -194,7 +194,7 @@ public sealed class CachedPrefixSource
         return resolved;
     }
 
-    // ── Manifest DTOs ──────────────────────────────────────────────────────────
+    // -- Manifest DTOs ----------------------------------------------------------
 
     private sealed record CorpusManifest(string Version, CorpusEntry[] Entries);
 

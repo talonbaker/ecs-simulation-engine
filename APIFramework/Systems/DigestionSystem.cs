@@ -9,12 +9,12 @@ namespace APIFramework.Systems;
 /// Drains the stomach over time and releases queued nutrients into the body.
 ///
 /// PIPELINE POSITION
-/// ─────────────────
+/// -----------------
 ///   FeedingSystem → EsophagusSystem → StomachComponent → DigestionSystem → MetabolismComponent
-///                                                                         ↘ SmallIntestineComponent (residue)
+///                                                                         -> SmallIntestineComponent (residue)
 ///
 /// v0.7.0 BIOLOGY LAYER
-/// ────────────────────
+/// --------------------
 /// Food is now a <see cref="NutrientProfile"/> (macros, water, vitamins, minerals) rather
 /// than flat scalar points. Each tick we compute the ratio of stomach volume digested,
 /// release that same fraction of the queued NutrientProfile, and:
@@ -29,7 +29,7 @@ namespace APIFramework.Systems;
 /// (banana ≈117 kcal * 0.3 ≈ 35 satiation; 15 ml water * 2.0 = 30 hydration).
 ///
 /// RESIDUE HANDOFF (v0.7.3+)
-/// ─────────────────────────
+/// -------------------------
 /// When an entity has a SmallIntestineComponent, DigestionSystem additionally
 /// deposits a fraction of digested volume as chyme (ResidueFraction from config).
 /// Satiation/Hydration conversion stays here; the intestine pipeline is purely
@@ -88,12 +88,12 @@ public class DigestionSystem : ISystem
 
             var meta = entity.Get<MetabolismComponent>();
 
-            // ── 1. Accumulate into the biology layer ─────────────────────────────
+            // -- 1. Accumulate into the biology layer -----------------------------
             // Real grams of carbs/protein/fat, ml of water, mg of vitamins/minerals
             // pool into NutrientStores. Future organ-systems will drain from here.
             meta.NutrientStores += released;
 
-            // ── 2. Derive gameplay metrics from the release ──────────────────────
+            // -- 2. Derive gameplay metrics from the release ----------------------
             // Calories  → Satiation (how fed Billy feels)
             // Water (ml) → Hydration (how quenched Billy feels)
             float satiationGain = released.Calories * _cfg.SatiationPerCalorie;
@@ -104,7 +104,7 @@ public class DigestionSystem : ISystem
 
             entity.Add(meta);
 
-            // ── 3. Residue handoff to small intestine (optional component) ───
+            // -- 3. Residue handoff to small intestine (optional component) ---
             // Backwards-compatible: skipped when no SmallIntestineComponent exists.
             // ResidueFraction of the digested volume becomes chyme in the SI.
             // The chyme NutrientProfile inherits the same fraction of released

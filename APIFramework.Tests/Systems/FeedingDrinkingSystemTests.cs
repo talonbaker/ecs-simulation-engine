@@ -20,7 +20,7 @@ namespace APIFramework.Tests.Systems;
 /// </summary>
 public class FeedingDrinkingSystemTests
 {
-    // ── Feeding config ─────────────────────────────────────────────────────────
+    // -- Feeding config ---------------------------------------------------------
 
     private static readonly FeedingSystemConfig FeedCfg = new()
     {
@@ -36,7 +36,7 @@ public class FeedingDrinkingSystemTests
         }
     };
 
-    // ── Drinking config ────────────────────────────────────────────────────────
+    // -- Drinking config --------------------------------------------------------
 
     private static readonly DrinkingSystemConfig DrinkCfg = new()
     {
@@ -50,7 +50,7 @@ public class FeedingDrinkingSystemTests
         }
     };
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     /// <summary>Creates an entity in a state where FeedingSystem WILL feed it.</summary>
     private static (EntityManager em, Entity eater) ReadyToEat(
@@ -90,9 +90,9 @@ public class FeedingDrinkingSystemTests
         return (em, drinker);
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
+    // --------------------------------------------------------------------------
     //  FEEDING SYSTEM
-    // ──────────────────────────────────────────────────────────────────────────
+    // --------------------------------------------------------------------------
 
     [Fact]
     public void FeedingSystem_SpawnsBolus_WhenEatIsDominant()
@@ -227,9 +227,9 @@ public class FeedingDrinkingSystemTests
         Assert.Single(em.Query<BolusComponent>().ToList());
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
+    // --------------------------------------------------------------------------
     //  DRINKING SYSTEM
-    // ──────────────────────────────────────────────────────────────────────────
+    // --------------------------------------------------------------------------
 
     [Fact]
     public void DrinkingSystem_SpawnsWater_WhenDrinkIsDominant()

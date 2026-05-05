@@ -10,7 +10,7 @@ namespace APIFramework.Tests.Systems;
 ///   SmallIntestineSystem → LargeIntestineSystem → ColonSystem
 ///
 /// PIPELINE CONTRACT (v0.7.3)
-/// ──────────────────────────
+/// --------------------------
 /// 1. DigestionSystem deposits ResidueFraction × digested volume as chyme into
 ///    SmallIntestineComponent (tested in DigestionSystemTests; assumed correct here).
 /// 2. SmallIntestineSystem drains chyme at AbsorptionRate, passing
@@ -25,13 +25,13 @@ namespace APIFramework.Tests.Systems;
 /// </summary>
 public class IntestineSystemTests
 {
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
     // SmallIntestineSystem
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
 
     private static SmallIntestineSystem SiSys => new();
 
-    // ── Volume drainage ────────────────────────────────────────────────────────
+    // -- Volume drainage --------------------------------------------------------
 
     [Fact]
     public void SI_ChymeVolume_DrainedAt_AbsorptionRate_Times_DeltaTime()
@@ -68,7 +68,7 @@ public class IntestineSystemTests
         Assert.Equal(10f, GetSi(em).Chyme.Fiber);
     }
 
-    // ── Chyme nutrient tracking ────────────────────────────────────────────────
+    // -- Chyme nutrient tracking ------------------------------------------------
 
     [Fact]
     public void SI_ChymeNutrients_DrainedProportionally()
@@ -101,7 +101,7 @@ public class IntestineSystemTests
         Assert.Equal(360f, q.Potassium,     precision: 2);
     }
 
-    // ── Residue handoff to LargeIntestine ─────────────────────────────────────
+    // -- Residue handoff to LargeIntestine -------------------------------------
 
     [Fact]
     public void SI_ResidueHandoff_AddsToLI_ContentVolume()
@@ -143,13 +143,13 @@ public class IntestineSystemTests
         Assert.Null(ex);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
     // LargeIntestineSystem
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
 
     private static LargeIntestineSystem LiSys => new();
 
-    // ── Water reabsorption ─────────────────────────────────────────────────────
+    // -- Water reabsorption -----------------------------------------------------
 
     [Fact]
     public void LI_WaterReabsorption_IncreasesHydration()
@@ -188,7 +188,7 @@ public class IntestineSystemTests
         Assert.Null(ex);
     }
 
-    // ── Content mobility ──────────────────────────────────────────────────────
+    // -- Content mobility ------------------------------------------------------
 
     [Fact]
     public void LI_ContentVolume_ReducedAt_MobilityRate_Times_DeltaTime()
@@ -215,7 +215,7 @@ public class IntestineSystemTests
         Assert.Null(ex);
     }
 
-    // ── Stool formation → ColonComponent ──────────────────────────────────────
+    // -- Stool formation → ColonComponent --------------------------------------
 
     [Fact]
     public void LI_StoolHandoff_AddsToColon_StoolVolume()
@@ -259,9 +259,9 @@ public class IntestineSystemTests
         Assert.Null(ex);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
     // ColonSystem — tag lifecycle
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
 
     private static ColonSystem ColonSys => new();
 
@@ -345,9 +345,9 @@ public class IntestineSystemTests
         Assert.False(entity.Has<BowelCriticalTag>());
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
     // Pipeline integration — one tick through all three systems in order
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
 
     [Fact]
     public void Pipeline_ChymeFlowsFromSI_ThroughLI_IntoColon_InOnePass()
@@ -395,9 +395,9 @@ public class IntestineSystemTests
         Assert.False(entity.Has<DefecationUrgeTag>());
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
     // Helpers
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ===========================================================================
 
     private static (EntityManager em, Entity entity) BuildSi(
         float chymeVol      = 100f,
@@ -489,7 +489,7 @@ public class IntestineSystemTests
         return (em, entity);
     }
 
-    // ── Data accessors ────────────────────────────────────────────────────────
+    // -- Data accessors --------------------------------------------------------
 
     private static SmallIntestineComponent GetSi(EntityManager em) =>
         em.Query<SmallIntestineComponent>().First().Get<SmallIntestineComponent>();

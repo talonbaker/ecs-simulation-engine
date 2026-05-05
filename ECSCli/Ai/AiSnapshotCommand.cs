@@ -17,7 +17,7 @@ namespace ECSCli.Ai;
 /// writes it as JSON to <c>--out</c>.
 ///
 /// EXIT CODES
-/// ──────────
+/// ----------
 /// 0  success — file written.
 /// 2  invariant violation count > 0 after the first tick.
 /// 1  unexpected error.
@@ -67,7 +67,7 @@ public static class AiSnapshotCommand
         return cmd;
     }
 
-    // ── Implementation ────────────────────────────────────────────────────────
+    // -- Implementation --------------------------------------------------------
 
     internal static int Run(FileInfo outFile, bool pretty)
     {

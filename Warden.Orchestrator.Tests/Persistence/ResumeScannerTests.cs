@@ -28,7 +28,7 @@ public sealed class ResumeScannerTests : IDisposable
 
     private string Runs => Path.Combine(_tempDir, "runs");
 
-    // ── Helpers ──────────────────────────────────────────────────────────────────
+    // -- Helpers ------------------------------------------------------------------
 
     private static string MakeSpecJson(string specId) =>
         JsonSerializer.Serialize(new OpusSpecPacket
@@ -74,7 +74,7 @@ public sealed class ResumeScannerTests : IDisposable
             await store.PersistResultAsync(runId, workerId, resultJson, default);
     }
 
-    // ── AT-02 ─────────────────────────────────────────────────────────────────────
+    // -- AT-02 ---------------------------------------------------------------------
 
     /// <summary>
     /// AT-02: After 2 Sonnet completions, the scanner identifies only specs 3/4/5 as pending.
@@ -117,7 +117,7 @@ public sealed class ResumeScannerTests : IDisposable
         Assert.Contains("sonnet-05", incomplete);
     }
 
-    // ── AT-03 ─────────────────────────────────────────────────────────────────────
+    // -- AT-03 ---------------------------------------------------------------------
 
     /// <summary>
     /// AT-03: <c>resume</c> does not redispatch workers whose <c>result.json</c>
@@ -147,7 +147,7 @@ public sealed class ResumeScannerTests : IDisposable
             $"Worker {w.WorkerId} should be complete but IsComplete=false"));
     }
 
-    // ── AT-04 ─────────────────────────────────────────────────────────────────────
+    // -- AT-04 ---------------------------------------------------------------------
 
     /// <summary>
     /// AT-04: <c>resume</c> with an invalid <c>result.json</c> (schema mismatch)
@@ -199,7 +199,7 @@ public sealed class ResumeScannerTests : IDisposable
         Assert.False(worker.IsComplete);
     }
 
-    // ── Edge cases ────────────────────────────────────────────────────────────────
+    // -- Edge cases ----------------------------------------------------------------
 
     [Fact]
     public async Task RunRootNotFound_ThrowsDirectoryNotFoundException()

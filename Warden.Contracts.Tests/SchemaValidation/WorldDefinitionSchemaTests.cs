@@ -31,7 +31,7 @@ public class WorldDefinitionSchemaTests
         }
         """;
 
-    // ── AT-01: schema structural discipline ──────────────────────────────────
+    // -- AT-01: schema structural discipline ----------------------------------
 
     [Fact]
     public void Schema_CanBeLoaded_WithoutUnsupportedKeywords()
@@ -75,7 +75,7 @@ public class WorldDefinitionSchemaTests
         Assert.Contains(result.Errors, e => e.Contains("schemaVersion") || e.Contains("9.9.9"));
     }
 
-    // ── AT-02: starter file validates clean ──────────────────────────────────
+    // -- AT-02: starter file validates clean ----------------------------------
 
     [Fact]
     public void StarterFile_ValidatesClean()
@@ -87,7 +87,7 @@ public class WorldDefinitionSchemaTests
             string.Join("\n", result.Errors));
     }
 
-    // ── AT-06: malformed files are rejected with specific path in error ──────
+    // -- AT-06: malformed files are rejected with specific path in error ------
 
     [Fact]
     public void MissingSchemaVersion_RejectsWithPath()
@@ -185,7 +185,7 @@ public class WorldDefinitionSchemaTests
         Assert.Contains(result.Errors, e => e.Contains("colorTemperatureK") || e.Contains("minimum"));
     }
 
-    // ── AT-07: free archetypeHint validates clean ─────────────────────────────
+    // -- AT-07: free archetypeHint validates clean -----------------------------
 
     [Fact]
     public void NpcSlot_WithUnknownArchetypeHint_ValidatesClean()
@@ -206,7 +206,7 @@ public class WorldDefinitionSchemaTests
             string.Join("\n", result.Errors));
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────────
+    // -- Helper ----------------------------------------------------------------
 
     private static string LoadStarterJson()
     {

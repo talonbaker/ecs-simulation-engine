@@ -27,16 +27,16 @@ public class EntityCubeView : MonoBehaviour
     // How fast the cube slides towards its ECS target position (lerp speed).
     private const float LerpSpeed = 15f;
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     void Awake()
     {
-        // ── Body cube material ────────────────────────────────────────────────
+        // -- Body cube material ------------------------------------------------
         _renderer          = GetComponent<Renderer>();
         _mat               = new Material(Shader.Find("Standard"));
         _renderer.material = _mat;
 
-        // ── Floating label above the cube ─────────────────────────────────────
+        // -- Floating label above the cube -------------------------------------
         var labelGo = new GameObject("Label");
         labelGo.transform.SetParent(transform, worldPositionStays: false);
         labelGo.transform.localScale = Vector3.one * 0.14f;
@@ -47,7 +47,7 @@ public class EntityCubeView : MonoBehaviour
         _label.fontSize  = 28;
         _label.color     = Color.white;
 
-        // ── Organ strip (child GameObject, positioned to the entity's right) ──
+        // -- Organ strip (child GameObject, positioned to the entity's right) --
         var organGo = new GameObject("Organs");
         organGo.transform.SetParent(transform, worldPositionStays: false);
         _organs = organGo.AddComponent<OrganCluster>();
@@ -64,7 +64,7 @@ public class EntityCubeView : MonoBehaviour
             Time.deltaTime * LerpSpeed);
     }
 
-    // ── Called every frame by WorldSceneBuilder ───────────────────────────────
+    // -- Called every frame by WorldSceneBuilder -------------------------------
 
     public void UpdateFromSnapshot(
         EntitySnapshot                     entity,
@@ -81,7 +81,7 @@ public class EntityCubeView : MonoBehaviour
             entity.PosZ * worldScale);
         _initialized = true;
 
-        // ── Label text ────────────────────────────────────────────────────────
+        // -- Label text --------------------------------------------------------
         // Line 1 — entity name
         // Line 2 — movement destination (if walking somewhere)
         // Line 3 — dominant drive / state abbreviation
@@ -98,7 +98,7 @@ public class EntityCubeView : MonoBehaviour
         // Lift label just above the cube top (cube half-height = 0.5)
         _label.transform.localPosition = new Vector3(0f, 0.5f + 0.4f, 0f);
 
-        // ── Organ strip ───────────────────────────────────────────────────────
+        // -- Organ strip -------------------------------------------------------
         var myTransitItems = transitItems
             .Where(t => t.TargetEntityId == entity.Id)
             .ToList();
@@ -106,7 +106,7 @@ public class EntityCubeView : MonoBehaviour
         _organs.UpdateFromSnapshot(entity, myTransitItems);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     private static string FormatDrive(DesireType drive) => drive switch
     {

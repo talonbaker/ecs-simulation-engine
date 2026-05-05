@@ -13,7 +13,7 @@ namespace APIFramework.Tests.Systems.LifeState;
 /// </summary>
 public class ChokingCleanupSystemTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static Entity BuildChokingNpc(EntityManager em, LifeState state)
     {
@@ -24,7 +24,7 @@ public class ChokingCleanupSystemTests
         return npc;
     }
 
-    // ── AT-01: Deceased NPC → IsChokingTag removed ───────────────────────────
+    // -- AT-01: Deceased NPC → IsChokingTag removed ---------------------------
 
     [Fact]
     public void AT01_DeceasedNpc_WithIsChokingTag_TagIsRemoved()
@@ -37,7 +37,7 @@ public class ChokingCleanupSystemTests
         Assert.False(npc.Has<IsChokingTag>());
     }
 
-    // ── AT-02: Deceased NPC → both tag and component removed ─────────────────
+    // -- AT-02: Deceased NPC → both tag and component removed -----------------
 
     [Fact]
     public void AT02_DeceasedNpc_WithChokingComponent_ComponentAlsoRemoved()
@@ -52,7 +52,7 @@ public class ChokingCleanupSystemTests
         Assert.False(npc.Has<ChokingComponent>());
     }
 
-    // ── AT-03: Incapacitated NPC → tag preserved (still choking) ─────────────
+    // -- AT-03: Incapacitated NPC → tag preserved (still choking) -------------
 
     [Fact]
     public void AT03_IncapacitatedNpc_IsChokingTag_NotRemoved()
@@ -65,7 +65,7 @@ public class ChokingCleanupSystemTests
         Assert.True(npc.Has<IsChokingTag>());
     }
 
-    // ── AT-04: Alive NPC → tag preserved ─────────────────────────────────────
+    // -- AT-04: Alive NPC → tag preserved -------------------------------------
 
     [Fact]
     public void AT04_AliveNpc_IsChokingTag_NotRemoved()

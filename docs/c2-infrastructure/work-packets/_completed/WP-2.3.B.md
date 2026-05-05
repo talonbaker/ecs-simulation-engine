@@ -24,13 +24,13 @@ Full suite: 959 tests, 0 failures, 0 warnings.
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `IsPersistent(MaskSlip)` → true. Covered by `MaskSlip_IsPersistent`. |
-| AT-02 | ✓ | `IsPersistent(OverdueTask)` → true. Covered by `OverdueTask_IsPersistent`. |
-| AT-03 | ✓ | `IsPersistent(TaskCompleted)` → false. Covered by `TaskCompleted_IsNotPersistent`. |
-| AT-04 | ✓ | `WillpowerCollapse` and `LeftRoomAbruptly` still true. Covered by `ExistingPersistentKinds_StillPersistent`. |
-| AT-05 | ✓ | Full suite 959 tests, 0 failures. All Wave 1–3 tests green. |
-| AT-06 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-07 | ✓ | `dotnet test ECSSimulation.sln` (excluding RunCommandEndToEndTests.AT01) — 959 passed. |
+| AT-01 | OK | `IsPersistent(MaskSlip)` → true. Covered by `MaskSlip_IsPersistent`. |
+| AT-02 | OK | `IsPersistent(OverdueTask)` → true. Covered by `OverdueTask_IsPersistent`. |
+| AT-03 | OK | `IsPersistent(TaskCompleted)` → false. Covered by `TaskCompleted_IsNotPersistent`. |
+| AT-04 | OK | `WillpowerCollapse` and `LeftRoomAbruptly` still true. Covered by `ExistingPersistentKinds_StillPersistent`. |
+| AT-05 | OK | Full suite 959 tests, 0 failures. All Wave 1–3 tests green. |
+| AT-06 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-07 | OK | `dotnet test ECSSimulation.sln` (excluding RunCommandEndToEndTests.AT01) — 959 passed. |
 
 ---
 

@@ -11,7 +11,7 @@ namespace APIFramework.Systems.LifeState;
 /// and queues the transition back to <see cref="LifeState.Alive"/>.
 ///
 /// RECOVERY CONTRACT
-/// ─────────────────
+/// -----------------
 /// For each Incapacitated NPC with <see cref="IsFaintingTag"/>:
 ///   1. If <c>clock.CurrentTick &gt;= FaintingComponent.RecoveryTick</c>:
 ///      a. Optionally emits <see cref="NarrativeEventKind.RegainedConsciousness"/>
@@ -25,7 +25,7 @@ namespace APIFramework.Systems.LifeState;
 ///         it was stubbed as the "rescue mechanic" in WP-3.0.0.
 ///
 /// PHASE ORDERING
-/// ──────────────
+/// --------------
 /// Cleanup phase, registered BEFORE <see cref="LifeStateTransitionSystem"/> so the
 /// recovery request is drained and applied in the same tick it is queued.
 /// <see cref="LifeStateTransitionSystem"/> processes the recovery queue (step 1 of its
@@ -86,7 +86,7 @@ public sealed class FaintingRecoverySystem : ISystem
             // Recovery tick not yet reached — keep waiting.
             if (_clock.CurrentTick < faint.RecoveryTick) continue;
 
-            // ── Recovery triggered ────────────────────────────────────────────
+            // -- Recovery triggered --------------------------------------------
 
             // Step 1: Optionally emit RegainedConsciousness narrative BEFORE state flip.
             if (_cfg.EmitRegainedConsciousnessNarrative)
@@ -109,7 +109,7 @@ public sealed class FaintingRecoverySystem : ISystem
         }
     }
 
-    // ── Utility ───────────────────────────────────────────────────────────────
+    // -- Utility ---------------------------------------------------------------
 
     private static int EntityIntId(Entity entity)
     {

@@ -62,7 +62,7 @@ public static class WorldDefinitionLoader
         foreach (var floor in dto.Floors)
             floorEnumMap[floor.Id] = floor.FloorEnum;
 
-        // ── Rooms ─────────────────────────────────────────────────────────────
+        // -- Rooms -------------------------------------------------------------
         foreach (var room in dto.Rooms)
         {
             var floor    = ParseFloor(room.FloorId, floorEnumMap);
@@ -91,7 +91,7 @@ public static class WorldDefinitionLoader
             roomCount++;
         }
 
-        // ── Light sources ─────────────────────────────────────────────────────
+        // -- Light sources -----------------------------------------------------
         foreach (var src in dto.LightSources)
         {
             var kind  = ParseLightKind(src.Kind);
@@ -104,7 +104,7 @@ public static class WorldDefinitionLoader
             lightSourceCount++;
         }
 
-        // ── Light apertures ───────────────────────────────────────────────────
+        // -- Light apertures ---------------------------------------------------
         foreach (var apt in dto.LightApertures)
         {
             var facing = ParseFacing(apt.Facing);
@@ -115,7 +115,7 @@ public static class WorldDefinitionLoader
             apertureCount++;
         }
 
-        // ── NPC slots — marker entities for the cast generator ────────────────
+        // -- NPC slots — marker entities for the cast generator ----------------
         foreach (var slot in dto.NpcSlots)
         {
             var entity = entityManager.CreateEntity();
@@ -131,7 +131,7 @@ public static class WorldDefinitionLoader
             npcSlotCount++;
         }
 
-        // ── Anchor objects ────────────────────────────────────────────────────
+        // -- Anchor objects ----------------------------------------------------
         foreach (var obj in dto.ObjectsAtAnchors)
         {
             int tileX = 0, tileY = 0;
@@ -148,7 +148,7 @@ public static class WorldDefinitionLoader
         return new LoadResult(roomCount, lightSourceCount, apertureCount, npcSlotCount, objectCount, dto.Seed);
     }
 
-    // ── Enum parsers ──────────────────────────────────────────────────────────
+    // -- Enum parsers ----------------------------------------------------------
 
     private static BuildingFloor ParseFloor(string floorId, Dictionary<string, string> floorEnumMap)
     {

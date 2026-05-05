@@ -14,12 +14,12 @@ namespace ECSVisualizer.ViewModels;
 /// </summary>
 public sealed class ChartSeriesViewModel
 {
-    // ── Ring buffer ───────────────────────────────────────────────────────────
+    // -- Ring buffer -----------------------------------------------------------
     private readonly double[] _ring;
     private int _writePos; // index of NEXT write position (oldest after wrap)
     private int _count;    // number of valid samples (0 → Capacity)
 
-    // ── Public metadata ───────────────────────────────────────────────────────
+    // -- Public metadata -------------------------------------------------------
     /// <summary>Short display label shown at the top-left of the chart (e.g. "SATIATION").</summary>
     public string Label    { get; }
     /// <summary>Hex color string (e.g. "#30D158") used to draw the line.</summary>
@@ -39,7 +39,7 @@ public sealed class ChartSeriesViewModel
     /// <summary>Fired after every Push(); ScrollingChart subscribes to this.</summary>
     public event Action? Refreshed;
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     /// <summary>
     /// Creates a new chart series with a fixed-size ring buffer, display
@@ -60,7 +60,7 @@ public sealed class ChartSeriesViewModel
         _ring    = new double[capacity];
     }
 
-    // ── Write ─────────────────────────────────────────────────────────────────
+    // -- Write -----------------------------------------------------------------
 
     /// <summary>
     /// Add a new sample. If the buffer is full the oldest sample is silently evicted.
@@ -76,7 +76,7 @@ public sealed class ChartSeriesViewModel
         Refreshed?.Invoke();
     }
 
-    // ── Read ──────────────────────────────────────────────────────────────────
+    // -- Read ------------------------------------------------------------------
 
     /// <summary>
     /// Copies the last <paramref name="n"/> samples (oldest first) into

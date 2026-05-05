@@ -37,7 +37,7 @@ public sealed class CostLedgerTests : IDisposable
         Timestamp        = new DateTimeOffset(2026, 4, 26, 12, 0, 0, TimeSpan.Zero)
     };
 
-    // ── AT_CL_01: 100 parallel appends, all persisted ────────────────────────────
+    // -- AT_CL_01: 100 parallel appends, all persisted ----------------------------
 
     [Fact]
     public async Task AT_CL_01_ParallelAppends_AllPersistedAndParseable()
@@ -56,7 +56,7 @@ public sealed class CostLedgerTests : IDisposable
         Assert.All(entries, e => Assert.Equal("run-test", e.RunId));
     }
 
-    // ── AT_CL_02: Cancelled token propagates cleanly; semaphore stays usable ─────
+    // -- AT_CL_02: Cancelled token propagates cleanly; semaphore stays usable -----
 
     [Fact]
     public async Task AT_CL_02_Cancellation_DuringWait_PropagatesToCallerAndLeavesLedgerUsable()

@@ -12,7 +12,7 @@ using APIFramework.Core;
 /// </summary>
 public class WorldSceneBuilder : MonoBehaviour
 {
-    // ── Inspector fields ──────────────────────────────────────────────────────
+    // -- Inspector fields ------------------------------------------------------
     [Header("Scale")]
     [Tooltip("Converts ECS world-units → Unity metres.  1 = 1 unit per metre.")]
     public float worldScale = 1f;
@@ -21,17 +21,17 @@ public class WorldSceneBuilder : MonoBehaviour
     public Transform worldObjectRoot;
     public Transform entityRoot;
 
-    // ── Runtime state ─────────────────────────────────────────────────────────
+    // -- Runtime state ---------------------------------------------------------
     private readonly Dictionary<Guid, WorldObjectCubeView> _worldObjViews = new();
     private readonly Dictionary<Guid, EntityCubeView>      _entityViews   = new();
 
-    // ── World-object cube sizes (x, y, z Unity units) ────────────────────────
+    // -- World-object cube sizes (x, y, z Unity units) ------------------------
     private static readonly Vector3 FridgeScale  = new(1.0f, 2.0f, 0.8f);
     private static readonly Vector3 SinkScale    = new(0.8f, 0.5f, 0.6f);
     private static readonly Vector3 ToiletScale  = new(0.8f, 0.7f, 1.0f);
     private static readonly Vector3 BedScale     = new(2.0f, 0.4f, 1.2f);
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     void Start()
     {
@@ -47,7 +47,7 @@ public class WorldSceneBuilder : MonoBehaviour
         SyncEntities(snap);
     }
 
-    // ── Floor ─────────────────────────────────────────────────────────────────
+    // -- Floor -----------------------------------------------------------------
 
     private static void BuildFloor()
     {
@@ -61,7 +61,7 @@ public class WorldSceneBuilder : MonoBehaviour
         floor.GetComponent<Renderer>().material = mat;
     }
 
-    // ── World objects ─────────────────────────────────────────────────────────
+    // -- World objects ---------------------------------------------------------
 
     private void SyncWorldObjects(SimulationSnapshot snap)
     {
@@ -113,7 +113,7 @@ public class WorldSceneBuilder : MonoBehaviour
         return Vector3.one;
     }
 
-    // ── Living entities ───────────────────────────────────────────────────────
+    // -- Living entities -------------------------------------------------------
 
     private void SyncEntities(SimulationSnapshot snap)
     {
@@ -155,7 +155,7 @@ public class WorldSceneBuilder : MonoBehaviour
         return view;
     }
 
-    // ── Utilities ─────────────────────────────────────────────────────────────
+    // -- Utilities -------------------------------------------------------------
 
     /// Returns keys that are in <paramref name="existing"/> but not in <paramref name="current"/>.
     private static List<Guid> StaleKeys(IEnumerable<Guid> existing, HashSet<Guid> current)

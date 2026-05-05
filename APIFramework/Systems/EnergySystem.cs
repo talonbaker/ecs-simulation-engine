@@ -50,20 +50,20 @@ public class EnergySystem : ISystem
 
             if (e.IsSleeping)
             {
-                // ── Sleeping: restore energy, drain sleepiness ────────────────
+                // -- Sleeping: restore energy, drain sleepiness ----------------
                 e.Energy     = MathF.Min(100f, e.Energy     + e.EnergyRestoreRate    * deltaTime);
                 e.Sleepiness = MathF.Max(0f,   e.Sleepiness - e.SleepinessDrainRate  * deltaTime);
             }
             else
             {
-                // ── Awake: drain energy, accumulate sleepiness ────────────────
+                // -- Awake: drain energy, accumulate sleepiness ----------------
                 e.Energy     = MathF.Max(0f,   e.Energy     - e.EnergyDrainRate     * deltaTime);
                 e.Sleepiness = MathF.Min(100f, e.Sleepiness + e.SleepinessGainRate  * deltaTime);
             }
 
             entity.Add(e); // write back (struct copy)
 
-            // ── Energy-state tags ─────────────────────────────────────────────
+            // -- Energy-state tags ---------------------------------------------
 
             // SleepingTag mirrors the IsSleeping flag
             if (e.IsSleeping) entity.Add(new SleepingTag());

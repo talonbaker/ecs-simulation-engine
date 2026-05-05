@@ -27,7 +27,7 @@ public class ApertureBeamSystemTests
     private static SunStateRecord MakeSun(double azimuth, double elevation) =>
         new(azimuth, elevation, DayPhase.Afternoon);
 
-    // ── AT-07: South-facing at noon ───────────────────────────────────────────
+    // -- AT-07: South-facing at noon -------------------------------------------
 
     [Fact]
     public void SouthFacingAperture_AdmitsBeam_AtNoon()
@@ -41,7 +41,7 @@ public class ApertureBeamSystemTests
         Assert.True(beam!.Value.Intensity > 0, $"Expected positive beam intensity, got {beam.Value.Intensity}");
     }
 
-    // ── AT-08: No beam when elevation ≤ 0 ────────────────────────────────────
+    // -- AT-08: No beam when elevation ≤ 0 ------------------------------------
 
     [Theory]
     [InlineData(ApertureFacing.North)]
@@ -59,7 +59,7 @@ public class ApertureBeamSystemTests
         Assert.Null(ApertureBeamSystem.ComputeBeam(sunAtNight,   apt, 4000));
     }
 
-    // ── Facing direction acceptance logic ─────────────────────────────────────
+    // -- Facing direction acceptance logic -------------------------------------
 
     [Fact]
     public void NorthFacingAperture_AdmitsBeam_WhenSunIsInNorth()
@@ -130,7 +130,7 @@ public class ApertureBeamSystemTests
         Assert.Null(ApertureBeamSystem.ComputeBeam(sun20, apt, 5000));
     }
 
-    // ── Intensity scales with AreaSqTiles ─────────────────────────────────────
+    // -- Intensity scales with AreaSqTiles -------------------------------------
 
     [Fact]
     public void LargerArea_ProducesHigherBeamIntensity()
@@ -148,7 +148,7 @@ public class ApertureBeamSystemTests
             $"Large area ({beamLarge.Value.Intensity}) should be brighter than small area ({beamSmall.Value.Intensity})");
     }
 
-    // ── Color temperature is propagated ──────────────────────────────────────
+    // -- Color temperature is propagated --------------------------------------
 
     [Fact]
     public void BeamColorTemperature_MatchesSuppliedValue()

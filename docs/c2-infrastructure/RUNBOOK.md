@@ -226,24 +226,24 @@ After a run, `./runs/<runId>/` contains:
 
 ```
 runs/20260424-143200-smoke/
-├── mission.md                  # copy of the input mission brief
-├── events.jsonl                # state transitions, one per line, append-only
-├── cost-ledger.jsonl           # one line per API call, append-only, fsync'd
-├── report.md                   # human-readable mission report
-├── report.json                 # machine-parseable mirror of report.md
-├── sonnet-01/
-│   ├── spec.json               # the Opus → Sonnet SpecPacket
-│   ├── prompt.txt              # assembled prompt with slab boundary markers
-│   ├── response.raw.json       # exact Anthropic response body
-│   ├── result.json             # validated SonnetResult (the worker's verdict)
-│   ├── worktree/               # git worktree the Sonnet edited
-│   └── haiku-batch.json        # the ScenarioBatch this Sonnet emitted
-│       └── haiku-01/
-│           ├── scenario.json
-│           ├── prompt.txt
-│           ├── response.raw.json
-│           ├── result.json     # validated HaikuResult
-│           └── telemetry.jsonl # telemetry the Haiku's ECSCli replay produced
++-- mission.md                  # copy of the input mission brief
++-- events.jsonl                # state transitions, one per line, append-only
++-- cost-ledger.jsonl           # one line per API call, append-only, fsync'd
++-- report.md                   # human-readable mission report
++-- report.json                 # machine-parseable mirror of report.md
++-- sonnet-01/
+|   +-- spec.json               # the Opus → Sonnet SpecPacket
+|   +-- prompt.txt              # assembled prompt with slab boundary markers
+|   +-- response.raw.json       # exact Anthropic response body
+|   +-- result.json             # validated SonnetResult (the worker's verdict)
+|   +-- worktree/               # git worktree the Sonnet edited
+|   +-- haiku-batch.json        # the ScenarioBatch this Sonnet emitted
+|       +-- haiku-01/
+|           +-- scenario.json
+|           +-- prompt.txt
+|           +-- response.raw.json
+|           +-- result.json     # validated HaikuResult
+|           +-- telemetry.jsonl # telemetry the Haiku's ECSCli replay produced
 ```
 
 **Write-order invariant:** per worker, files are written `prompt.txt → response.raw.json → result.json` in strict order. A worker is considered "done" if and only if `result.json` is present and valid. Resume uses this invariant.

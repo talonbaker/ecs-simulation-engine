@@ -26,14 +26,14 @@ The checked-in `docs/engine-fact-sheet.md` was regenerated as part of this packe
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `FactSheet_IsCurrent_ForCurrentEngineState` passes after fact-sheet regeneration. |
-| AT-02 | ✓ | Manually verified with stale fact sheet: failure message reads "Engine fact sheet is out of date. Run `dotnet run --project ECSCli -- ai describe --out docs/engine-fact-sheet.md` and commit the result." |
-| AT-03 | ✓ | `StripGeneratedLine` removes the `**Generated:**` line (and normalizes line endings); two runs of the test pass. |
-| AT-04 | ✓ | Test runs in 24 ms (well under 5 s). |
-| AT-05 | ✓ | Regenerated fact sheet lists 48 systems including all Wave 1–4 systems; visually verified. |
-| AT-06 | ✓ | All 18 pre-existing `ECSCli.Tests` pass; all 632 `APIFramework.Tests` pass; 17 Anthropic, 66 Contracts, 48 Telemetry, 135 Orchestrator — 917 total, 0 failures. |
-| AT-07 | ✓ | `dotnet build ECSSimulation.sln -c Release` → 0 warnings, 0 errors. |
-| AT-08 | ✓ | `dotnet test ECSSimulation.sln` (excluding pre-existing `AT01_MockRun_ExitsZeroAndWritesLedger` flake) → 917 passed, 0 failed. |
+| AT-01 | OK | `FactSheet_IsCurrent_ForCurrentEngineState` passes after fact-sheet regeneration. |
+| AT-02 | OK | Manually verified with stale fact sheet: failure message reads "Engine fact sheet is out of date. Run `dotnet run --project ECSCli -- ai describe --out docs/engine-fact-sheet.md` and commit the result." |
+| AT-03 | OK | `StripGeneratedLine` removes the `**Generated:**` line (and normalizes line endings); two runs of the test pass. |
+| AT-04 | OK | Test runs in 24 ms (well under 5 s). |
+| AT-05 | OK | Regenerated fact sheet lists 48 systems including all Wave 1–4 systems; visually verified. |
+| AT-06 | OK | All 18 pre-existing `ECSCli.Tests` pass; all 632 `APIFramework.Tests` pass; 17 Anthropic, 66 Contracts, 48 Telemetry, 135 Orchestrator — 917 total, 0 failures. |
+| AT-07 | OK | `dotnet build ECSSimulation.sln -c Release` → 0 warnings, 0 errors. |
+| AT-08 | OK | `dotnet test ECSSimulation.sln` (excluding pre-existing `AT01_MockRun_ExitsZeroAndWritesLedger` flake) → 917 passed, 0 failed. |
 
 ## Files added
 

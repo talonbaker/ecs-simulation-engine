@@ -11,7 +11,7 @@ namespace APIFramework.Systems;
 /// Feeds the entity when Eat is the dominant drive.
 ///
 /// FOOD SOURCE PRIORITY (in order)
-/// ─────────────────────────────────
+/// ---------------------------------
 /// 1. World food sitting loose (BolusComponent, not in transit) — eat immediately.
 /// 2. Fridge has food (FridgeComponent.FoodCount > 0):
 ///    a. Entity is NOT near the fridge → set MovementTargetComponent, wait next tick.
@@ -19,7 +19,7 @@ namespace APIFramework.Systems;
 /// 3. Fridge is empty → no action.  Entity accumulates hunger indefinitely (starvation).
 ///
 /// PROXIMITY
-/// ─────────
+/// ---------
 /// "Near the fridge" means the entity's PositionComponent is within ProximityRadius
 /// of the fridge's PositionComponent.  If the entity has no PositionComponent the
 /// system falls through to the old instant-conjure behaviour so non-spatial entities
@@ -87,7 +87,7 @@ public class FeedingSystem : ISystem
                 if (stomach.NutrientsQueued.Calories >= _cfg.NutritionQueueCap) continue;
             }
 
-            // ── 1. Loose world food (dropped / pre-placed bolus) ─────────────
+            // -- 1. Loose world food (dropped / pre-placed bolus) -------------
             var worldFood = em.Query<BolusComponent>()
                 .Where(f => !f.Has<EsophagusTransitComponent>() && !f.Has<StoredTag>())
                 .ToList();
@@ -98,7 +98,7 @@ public class FeedingSystem : ISystem
                 continue;
             }
 
-            // ── 2. Fridge ─────────────────────────────────────────────────────
+            // -- 2. Fridge -----------------------------------------------------
             if (fridgeEntity == null)
             {
                 // No fridge in this world — fall back to conjure (supports old tests/CLI).
@@ -156,7 +156,7 @@ public class FeedingSystem : ISystem
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private void SendToEsophagus(EntityManager em, Entity foodEntity, Entity eater)
     {

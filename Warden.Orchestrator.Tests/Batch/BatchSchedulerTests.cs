@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Warden.Orchestrator.Tests.Batch;
 
-// ── In-process HTTP stub ───────────────────────────────────────────────────────
+// -- In-process HTTP stub -------------------------------------------------------
 
 internal sealed class StubHandler : HttpMessageHandler
 {
@@ -28,7 +28,7 @@ internal sealed class StubHandler : HttpMessageHandler
         => Task.FromResult(_respond(request));
 }
 
-// ── JSON fixture helpers ───────────────────────────────────────────────────────
+// -- JSON fixture helpers -------------------------------------------------------
 
 internal static class Fixtures
 {
@@ -157,7 +157,7 @@ internal static class Fixtures
         };
 }
 
-// ── Tests ──────────────────────────────────────────────────────────────────────
+// -- Tests ----------------------------------------------------------------------
 
 public sealed class BatchSchedulerTests : IDisposable
 {
@@ -198,7 +198,7 @@ public sealed class BatchSchedulerTests : IDisposable
     private static BatchPoller FastPoller()
         => new(sleep: (_, _) => Task.CompletedTask);
 
-    // ── AT-01 ─────────────────────────────────────────────────────────────────────
+    // -- AT-01 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT01_RunAsync_Submits_Exactly_One_Batch_For_25_Unique_Scenarios()
@@ -251,7 +251,7 @@ public sealed class BatchSchedulerTests : IDisposable
         }
     }
 
-    // ── AT-02 ─────────────────────────────────────────────────────────────────────
+    // -- AT-02 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT02_Identical_Scenarios_Produce_One_Batch_Entry_And_N_Results()
@@ -311,7 +311,7 @@ public sealed class BatchSchedulerTests : IDisposable
         }
     }
 
-    // ── AT-03 ─────────────────────────────────────────────────────────────────────
+    // -- AT-03 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT03_More_Than_25_Scenarios_Throws_InvalidOperationException_With_Clear_Message()
@@ -335,7 +335,7 @@ public sealed class BatchSchedulerTests : IDisposable
         }
     }
 
-    // ── AT-04 ─────────────────────────────────────────────────────────────────────
+    // -- AT-04 ---------------------------------------------------------------------
 
     [Fact]
     public void AT04_BatchPoller_Default_Interval_Is_60_Seconds()
@@ -390,7 +390,7 @@ public sealed class BatchSchedulerTests : IDisposable
         Assert.Equal(TimeSpan.FromMinutes(5),  recordedDelays[11]);
     }
 
-    // ── AT-05 ─────────────────────────────────────────────────────────────────────
+    // -- AT-05 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT05_Cancellation_Stops_Poll_Loop_Within_2_Seconds()
@@ -435,7 +435,7 @@ public sealed class BatchSchedulerTests : IDisposable
         }
     }
 
-    // ── AT-06 ─────────────────────────────────────────────────────────────────────
+    // -- AT-06 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT06_Malformed_HaikuResult_JSON_Becomes_Blocked_Result_Not_Exception()
@@ -476,7 +476,7 @@ public sealed class BatchSchedulerTests : IDisposable
         }
     }
 
-    // ── AT-07 ─────────────────────────────────────────────────────────────────────
+    // -- AT-07 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT07_Cost_Ledger_Receives_One_Line_Per_Unique_Haiku_Call_Not_Per_Duplicate()
@@ -529,7 +529,7 @@ public sealed class BatchSchedulerTests : IDisposable
         Assert.All(entries, e => Assert.Equal("haiku", e.Tier));
     }
 
-    // ── AT-08 ─────────────────────────────────────────────────────────────────────
+    // -- AT-08 ---------------------------------------------------------------------
 
     [Fact]
     public async Task AT08_Five_Scenario_Run_Produces_Five_Haiku_Directories_With_Both_Files()
@@ -582,7 +582,7 @@ public sealed class BatchSchedulerTests : IDisposable
         }
     }
 
-    // ── AT_BS_X_TwoBatches ────────────────────────────────────────────────────────
+    // -- AT_BS_X_TwoBatches --------------------------------------------------------
 
     /// <summary>
     /// Two ScenarioBatches with overlapping scenario IDs (sc-01..sc-03 in each) must
@@ -682,7 +682,7 @@ public sealed class BatchSchedulerTests : IDisposable
         }
     }
 
-    // ── AT_BS_X_CustomIdRoundTrip ─────────────────────────────────────────────────
+    // -- AT_BS_X_CustomIdRoundTrip -------------------------------------------------
 
     /// <summary>
     /// Verifies the composite custom_id encode/decode round-trip: the scheduler submits

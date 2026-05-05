@@ -16,65 +16,65 @@ Do not propose alternative umbrella names without updating every document in thi
 
 ```
 ECSSimulation.sln                                   (existing)
-│
-├── APIFramework/                                   (existing; do not modify in Phase 0
-├── APIFramework.Tests/                              except as explicitly named in WPs)
-├── ECSCli/
-├── ECSVisualizer/
-│
-├── Warden.Contracts/                               (new — WP-02)
-│     ├── Telemetry/WorldStateDto.cs                    serialisable DTOs mirroring the
-│     ├── Telemetry/EntityStateDto.cs                   `SimulationSnapshot` record tree
-│     ├── Handshake/OpusSpecPacket.cs                   Opus → Sonnet contract
-│     ├── Handshake/SonnetResult.cs                     Sonnet → orchestrator contract
-│     ├── Handshake/ScenarioBatch.cs                    Sonnet → Haiku contract (≤25 scenarios)
-│     ├── Handshake/HaikuResult.cs                      Haiku → orchestrator contract
-│     ├── Handshake/AiCommandBatch.cs                   orchestrator → ECSCli whitelisted mutations
-│     ├── Handshake/OutcomeCode.cs                      the strict enum everyone uses
-│     ├── Handshake/BlockReason.cs                      union of Sonnet/Haiku block reasons
-│     ├── JsonOptions.cs                                canonical JsonSerializerOptions
-│     ├── SchemaValidation/SchemaValidator.cs           loads schemas from embedded resources
-│     └── *.schema.json                                 the JSON schemas, embedded
-│
-├── Warden.Telemetry/                               (new — WP-03)
-│     ├── TelemetryProjector.cs                         SimulationSnapshot → WorldStateDto
-│     ├── TelemetrySerializer.cs                        wire JSON writer (System.Text.Json)
-│     └── CommandDispatcher.cs                          applies AICommandBatch to engine
-│
-├── Warden.Anthropic/                               (new — WP-05)
-│     ├── AnthropicClient.cs                            thin Messages + Batches HTTP client
-│     ├── CacheControl.cs                               ephemeral cache marker type
-│     ├── CostRates.cs                                  per-model pricing constants
-│     ├── ModelId.cs                                    the three allowed model ids, as a
-│     │                                                 closed enum-like record
-│     └── BatchJobHandle.cs                             typed wrapper over a batch id
-│
-├── Warden.Orchestrator/                            (new — WP-09)
-│     ├── Program.cs                                    console entry point
-│     ├── Dispatcher/ConcurrencyController.cs           SemaphoreSlim + Task.WhenAll
-│     ├── Dispatcher/FailClosedEscalator.cs             enforces the state machine
-│     ├── Cache/PromptCacheManager.cs                   assembles cached prefix
-│     ├── Cache/PromptSlab.cs                           the four-slab prompt model
-│     ├── Batch/BatchScheduler.cs                       submit + poll
-│     ├── Persistence/ChainOfThoughtStore.cs            writes ./runs/<runId>/
-│     ├── Persistence/CostLedger.cs                     writes cost-ledger.jsonl
-│     ├── Reports/ReportAggregator.cs                   writes report.md + report.json
-│     └── Mocks/MockAnthropic.cs                        offline test harness
-│
-├── Warden.Orchestrator.Tests/                      (new — WP-09)
-│     └── (xunit tests for every orchestrator component)
-│
-├── Warden.Contracts.Tests/                         (new — WP-02)
-│     └── (schema round-trip + validator tests)
-│
-├── Warden.Telemetry.Tests/                         (new — WP-03)
-│     └── (projector + command-dispatcher tests)
-│
-├── Warden.Anthropic.Tests/                         (new — WP-05)
-│     └── (HttpMessageHandler-stubbed client tests)
-│
-└── ECSCli.Tests/                                   (new — WP-04)
-      └── (integration tests for `ai` verbs)
+|
++-- APIFramework/                                   (existing; do not modify in Phase 0
++-- APIFramework.Tests/                              except as explicitly named in WPs)
++-- ECSCli/
++-- ECSVisualizer/
+|
++-- Warden.Contracts/                               (new — WP-02)
+|     +-- Telemetry/WorldStateDto.cs                    serialisable DTOs mirroring the
+|     +-- Telemetry/EntityStateDto.cs                   `SimulationSnapshot` record tree
+|     +-- Handshake/OpusSpecPacket.cs                   Opus → Sonnet contract
+|     +-- Handshake/SonnetResult.cs                     Sonnet → orchestrator contract
+|     +-- Handshake/ScenarioBatch.cs                    Sonnet → Haiku contract (≤25 scenarios)
+|     +-- Handshake/HaikuResult.cs                      Haiku → orchestrator contract
+|     +-- Handshake/AiCommandBatch.cs                   orchestrator → ECSCli whitelisted mutations
+|     +-- Handshake/OutcomeCode.cs                      the strict enum everyone uses
+|     +-- Handshake/BlockReason.cs                      union of Sonnet/Haiku block reasons
+|     +-- JsonOptions.cs                                canonical JsonSerializerOptions
+|     +-- SchemaValidation/SchemaValidator.cs           loads schemas from embedded resources
+|     +-- *.schema.json                                 the JSON schemas, embedded
+|
++-- Warden.Telemetry/                               (new — WP-03)
+|     +-- TelemetryProjector.cs                         SimulationSnapshot → WorldStateDto
+|     +-- TelemetrySerializer.cs                        wire JSON writer (System.Text.Json)
+|     +-- CommandDispatcher.cs                          applies AICommandBatch to engine
+|
++-- Warden.Anthropic/                               (new — WP-05)
+|     +-- AnthropicClient.cs                            thin Messages + Batches HTTP client
+|     +-- CacheControl.cs                               ephemeral cache marker type
+|     +-- CostRates.cs                                  per-model pricing constants
+|     +-- ModelId.cs                                    the three allowed model ids, as a
+|     |                                                 closed enum-like record
+|     +-- BatchJobHandle.cs                             typed wrapper over a batch id
+|
++-- Warden.Orchestrator/                            (new — WP-09)
+|     +-- Program.cs                                    console entry point
+|     +-- Dispatcher/ConcurrencyController.cs           SemaphoreSlim + Task.WhenAll
+|     +-- Dispatcher/FailClosedEscalator.cs             enforces the state machine
+|     +-- Cache/PromptCacheManager.cs                   assembles cached prefix
+|     +-- Cache/PromptSlab.cs                           the four-slab prompt model
+|     +-- Batch/BatchScheduler.cs                       submit + poll
+|     +-- Persistence/ChainOfThoughtStore.cs            writes ./runs/<runId>/
+|     +-- Persistence/CostLedger.cs                     writes cost-ledger.jsonl
+|     +-- Reports/ReportAggregator.cs                   writes report.md + report.json
+|     +-- Mocks/MockAnthropic.cs                        offline test harness
+|
++-- Warden.Orchestrator.Tests/                      (new — WP-09)
+|     +-- (xunit tests for every orchestrator component)
+|
++-- Warden.Contracts.Tests/                         (new — WP-02)
+|     +-- (schema round-trip + validator tests)
+|
++-- Warden.Telemetry.Tests/                         (new — WP-03)
+|     +-- (projector + command-dispatcher tests)
+|
++-- Warden.Anthropic.Tests/                         (new — WP-05)
+|     +-- (HttpMessageHandler-stubbed client tests)
+|
++-- ECSCli.Tests/                                   (new — WP-04)
+      +-- (integration tests for `ai` verbs)
 ```
 
 ---
@@ -105,12 +105,12 @@ One namespace per folder, one public type per file (records and their associated
 The dependency graph is strict:
 
 ```
-APIFramework           ── no new deps ──
-ECSCli                 ── may reference Warden.Telemetry + Warden.Contracts
-Warden.Contracts       ── depends on nothing except System.Text.Json
-Warden.Telemetry       ── depends on APIFramework + Warden.Contracts
-Warden.Anthropic       ── depends on Warden.Contracts (for model ids + cost rates)
-Warden.Orchestrator    ── depends on Warden.Contracts + Warden.Anthropic
+APIFramework           -- no new deps --
+ECSCli                 -- may reference Warden.Telemetry + Warden.Contracts
+Warden.Contracts       -- depends on nothing except System.Text.Json
+Warden.Telemetry       -- depends on APIFramework + Warden.Contracts
+Warden.Anthropic       -- depends on Warden.Contracts (for model ids + cost rates)
+Warden.Orchestrator    -- depends on Warden.Contracts + Warden.Anthropic
                           NOT on Warden.Telemetry, NOT on APIFramework
 ```
 

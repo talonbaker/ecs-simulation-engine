@@ -18,7 +18,7 @@ public static class MarkdownReportWriter
             sb.AppendLine();
         }
 
-        // ── Header ────────────────────────────────────────────────────────────────
+        // -- Header ----------------------------------------------------------------
 
         sb.AppendLine($"# Mission Report — {report.MissionId}");
         sb.AppendLine();
@@ -44,7 +44,7 @@ public static class MarkdownReportWriter
         sb.AppendLine("---");
         sb.AppendLine();
 
-        // ── Summary ───────────────────────────────────────────────────────────────
+        // -- Summary ---------------------------------------------------------------
 
         sb.AppendLine("## Summary");
         sb.AppendLine();
@@ -53,7 +53,7 @@ public static class MarkdownReportWriter
         sb.AppendLine("---");
         sb.AppendLine();
 
-        // ── Tier 2 — Sonnet results ───────────────────────────────────────────────
+        // -- Tier 2 — Sonnet results -----------------------------------------------
 
         sb.AppendLine("## Tier 2 — Sonnet results");
         sb.AppendLine();
@@ -104,7 +104,7 @@ public static class MarkdownReportWriter
         sb.AppendLine("---");
         sb.AppendLine();
 
-        // ── Tier 3 — Haiku results ────────────────────────────────────────────────
+        // -- Tier 3 — Haiku results ------------------------------------------------
 
         sb.AppendLine("## Tier 3 — Haiku results");
         sb.AppendLine();
@@ -165,7 +165,7 @@ public static class MarkdownReportWriter
         sb.AppendLine("---");
         sb.AppendLine();
 
-        // ── Cost summary ──────────────────────────────────────────────────────────
+        // -- Cost summary ----------------------------------------------------------
 
         sb.AppendLine("## Cost summary");
         sb.AppendLine();
@@ -194,7 +194,7 @@ public static class MarkdownReportWriter
         sb.AppendLine("---");
         sb.AppendLine();
 
-        // ── Notable events ────────────────────────────────────────────────────────
+        // -- Notable events --------------------------------------------------------
 
         sb.AppendLine("## Notable events");
         sb.AppendLine();
@@ -214,7 +214,7 @@ public static class MarkdownReportWriter
         sb.AppendLine("---");
         sb.AppendLine();
 
-        // ── Artifacts ─────────────────────────────────────────────────────────────
+        // -- Artifacts -------------------------------------------------------------
 
         sb.AppendLine("## Artifacts");
         sb.AppendLine();
@@ -225,7 +225,7 @@ public static class MarkdownReportWriter
         return sb.ToString();
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────────
+    // -- Private helpers -----------------------------------------------------------
 
     private static string FormatDuration(TimeSpan ts)
     {

@@ -24,7 +24,7 @@ namespace APIFramework.Tests.Systems;
 /// </summary>
 public class BiologicalConditionSystemTests
 {
-    // ── Standard thresholds used in all tests ─────────────────────────────────
+    // -- Standard thresholds used in all tests ---------------------------------
 
     private static readonly BiologicalConditionSystemConfig Cfg = new()
     {
@@ -37,7 +37,7 @@ public class BiologicalConditionSystemTests
 
     private static BiologicalConditionSystem Sys => new(Cfg);
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     /// <summary>
     /// Build an entity with the given satiation / hydration.
@@ -54,7 +54,7 @@ public class BiologicalConditionSystemTests
         return (em, entity);
     }
 
-    // ── ThirstTag ──────────────────────────────────────────────────────────────
+    // -- ThirstTag --------------------------------------------------------------
 
     [Fact]
     public void ThirstTag_Applied_When_Thirst_MeetsThreshold()
@@ -88,7 +88,7 @@ public class BiologicalConditionSystemTests
         Assert.False(entity.Has<ThirstTag>());
     }
 
-    // ── DehydratedTag ─────────────────────────────────────────────────────────
+    // -- DehydratedTag ---------------------------------------------------------
 
     [Fact]
     public void DehydratedTag_Applied_When_Thirst_MeetsThreshold()
@@ -109,7 +109,7 @@ public class BiologicalConditionSystemTests
         Assert.False(entity.Has<DehydratedTag>());
     }
 
-    // ── HungerTag ─────────────────────────────────────────────────────────────
+    // -- HungerTag -------------------------------------------------------------
 
     [Fact]
     public void HungerTag_Applied_When_Hunger_MeetsThreshold()
@@ -142,7 +142,7 @@ public class BiologicalConditionSystemTests
         Assert.False(entity.Has<HungerTag>());
     }
 
-    // ── StarvingTag ───────────────────────────────────────────────────────────
+    // -- StarvingTag -----------------------------------------------------------
 
     [Fact]
     public void StarvingTag_Applied_When_Hunger_MeetsThreshold()
@@ -163,7 +163,7 @@ public class BiologicalConditionSystemTests
         Assert.False(entity.Has<StarvingTag>());
     }
 
-    // ── IrritableTag ──────────────────────────────────────────────────────────
+    // -- IrritableTag ----------------------------------------------------------
 
     [Fact]
     public void IrritableTag_Applied_When_Hunger_ExceedsThreshold()
@@ -205,7 +205,7 @@ public class BiologicalConditionSystemTests
         Assert.False(entity.Has<IrritableTag>());
     }
 
-    // ── Guard: deltaTime <= 0 ──────────────────────────────────────────────────
+    // -- Guard: deltaTime <= 0 --------------------------------------------------
 
     [Fact]
     public void Update_WithZeroDeltaTime_IsNoOp()
@@ -222,7 +222,7 @@ public class BiologicalConditionSystemTests
         Assert.False(entity.Has<HungerTag>());
     }
 
-    // ── Entity without MetabolismComponent ────────────────────────────────────
+    // -- Entity without MetabolismComponent ------------------------------------
 
     [Fact]
     public void EntityWithout_MetabolismComponent_IsIgnored()
@@ -234,7 +234,7 @@ public class BiologicalConditionSystemTests
         Assert.Null(ex);
     }
 
-    // ── Boundary: exactly at threshold ────────────────────────────────────────
+    // -- Boundary: exactly at threshold ----------------------------------------
 
     [Fact]
     public void ThirstTag_Applied_AtExactThreshold()

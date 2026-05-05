@@ -7,7 +7,7 @@ namespace Warden.Orchestrator.Tests.Persistence;
 
 public class CostLedgerTests
 {
-    // ── Helpers ──────────────────────────────────────────────────────────────
+    // -- Helpers --------------------------------------------------------------
 
     private static LedgerEntry SampleEntry(string runId = "run-test") => new(
         RunId:            runId,
@@ -25,7 +25,7 @@ public class CostLedgerTests
         UsdTotal:         0.024174m,
         Timestamp:        new DateTimeOffset(2026, 4, 23, 14, 23, 7, TimeSpan.Zero));
 
-    // ── AT-01: CostCalculator produces the exact §3 figure ───────────────────
+    // -- AT-01: CostCalculator produces the exact §3 figure -------------------
 
     /// <summary>
     /// AT-01: Sonnet call — 32 k cached-read + 2.5 k input + 1.5 k output (non-batch).
@@ -33,7 +33,7 @@ public class CostLedgerTests
     ///   32 000 / 1 M × $0.30  =  $0.0096
     ///  + 2 500 / 1 M × $3.00  =  $0.0075
     ///  + 1 500 / 1 M × $15.00 =  $0.0225
-    ///                           ────────
+    ///                           --------
     ///                            $0.0396
     /// </summary>
     [Fact]
@@ -51,7 +51,7 @@ public class CostLedgerTests
         Assert.Equal(0.0396m, result);
     }
 
-    // ── AT-02: JSONL round-trip ───────────────────────────────────────────────
+    // -- AT-02: JSONL round-trip -----------------------------------------------
 
     [Fact]
     public async Task AT02_CostLedger_WritesOneJsonlLinePerEntry_RoundTripsCleanly()
@@ -79,7 +79,7 @@ public class CostLedgerTests
         }
     }
 
-    // ── AT-03: Concurrent writers — no interleaved lines ─────────────────────
+    // -- AT-03: Concurrent writers — no interleaved lines ---------------------
 
     [Fact]
     public async Task AT03_ConcurrentWriters_NoInterleavedLines()
@@ -120,7 +120,7 @@ public class CostLedgerTests
         }
     }
 
-    // ── AT-06: Partial last line leaves prior lines intact ───────────────────
+    // -- AT-06: Partial last line leaves prior lines intact -------------------
 
     /// <summary>
     /// AT-06: Simulates a crash mid-write by appending an incomplete JSON fragment
@@ -168,7 +168,7 @@ public class CostLedgerTests
         }
     }
 
-    // ── AT-07: Zero tokens → decimal.Zero ────────────────────────────────────
+    // -- AT-07: Zero tokens → decimal.Zero ------------------------------------
 
     [Fact]
     public void AT07_CostCalculator_ZeroTokens_ReturnsDecimalZero()

@@ -4,13 +4,13 @@ namespace APIFramework.Components;
 /// Tracks the age and decay state of a food entity over game time.
 ///
 /// HOW IT WORKS
-/// ────────────
+/// ------------
 /// RotSystem increments AgeSeconds every tick.  Once AgeSeconds exceeds RotStartAge
 /// (the freshness window), RotLevel begins climbing at RotRate per game-second.
 /// When RotLevel exceeds the RotSystem's configured threshold, RotTag is applied.
 ///
 /// FRESHNESS WINDOW (RotStartAge examples at TimeScale 120)
-/// ─────────────────────────────────────────────────────────
+/// ---------------------------------------------------------
 ///   0 game-seconds   → spoils instantly (pre-rotted food for testing)
 ///   3600             → 1 game-hour of freshness
 ///   86400            → 1 game-day (a banana left on the counter)

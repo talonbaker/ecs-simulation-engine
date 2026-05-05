@@ -10,11 +10,11 @@ namespace APIFramework.Tests.Systems;
 /// Unit tests for EnergySystem — awake/sleep energy cycling and state tags.
 ///
 /// EnergySystem drives:
-///   • Energy drain (awake) / restore (sleeping)
-///   • Sleepiness gain (awake) / drain (sleeping)
-///   • SleepingTag  — mirrors IsSleeping flag
-///   • TiredTag     — Energy below TiredThreshold
-///   • ExhaustedTag — Energy below ExhaustedThreshold (supersedes TiredTag)
+///   - Energy drain (awake) / restore (sleeping)
+///   - Sleepiness gain (awake) / drain (sleeping)
+///   - SleepingTag  — mirrors IsSleeping flag
+///   - TiredTag     — Energy below TiredThreshold
+///   - ExhaustedTag — Energy below ExhaustedThreshold (supersedes TiredTag)
 ///
 /// This system takes an EnergySystemConfig in its constructor, which makes
 /// the threshold values explicit and injectable in tests — no SimConfig.json
@@ -22,7 +22,7 @@ namespace APIFramework.Tests.Systems;
 /// </summary>
 public class EnergySystemTests
 {
-    // ── Standard config used in most tests ────────────────────────────────────
+    // -- Standard config used in most tests ------------------------------------
 
     private static readonly EnergySystemConfig Cfg = new()
     {
@@ -32,7 +32,7 @@ public class EnergySystemTests
 
     private static EnergySystem Sys => new(Cfg);
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     private static (EntityManager em, Entity entity) BuildWithEnergy(
         float energy           = 80f,
@@ -58,7 +58,7 @@ public class EnergySystemTests
         return (em, entity);
     }
 
-    // ── Awake behaviour ────────────────────────────────────────────────────────
+    // -- Awake behaviour --------------------------------------------------------
 
     [Fact]
     public void Awake_EnergyShouldDrain_By_DrainRate_Times_DeltaTime()
@@ -102,7 +102,7 @@ public class EnergySystemTests
         Assert.Equal(100f, entity.Get<EnergyComponent>().Sleepiness);
     }
 
-    // ── Sleeping behaviour ─────────────────────────────────────────────────────
+    // -- Sleeping behaviour -----------------------------------------------------
 
     [Fact]
     public void Sleeping_EnergyShouldRestore_By_RestoreRate_Times_DeltaTime()
@@ -146,7 +146,7 @@ public class EnergySystemTests
         Assert.Equal(0f, entity.Get<EnergyComponent>().Sleepiness);
     }
 
-    // ── SleepingTag mirrors IsSleeping ─────────────────────────────────────────
+    // -- SleepingTag mirrors IsSleeping -----------------------------------------
 
     [Fact]
     public void IsSleeping_True_AddsSleepingTag()
@@ -169,7 +169,7 @@ public class EnergySystemTests
         Assert.False(entity.Has<SleepingTag>());
     }
 
-    // ── TiredTag / ExhaustedTag ────────────────────────────────────────────────
+    // -- TiredTag / ExhaustedTag ------------------------------------------------
 
     [Fact]
     public void TiredTag_Applied_When_Energy_BelowTiredThreshold()
@@ -232,7 +232,7 @@ public class EnergySystemTests
         Assert.False(entity.Has<ExhaustedTag>());
     }
 
-    // ── Multiple entities ──────────────────────────────────────────────────────
+    // -- Multiple entities ------------------------------------------------------
 
     [Fact]
     public void TwoEntities_UpdatedIndependently()

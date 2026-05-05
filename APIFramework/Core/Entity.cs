@@ -1,16 +1,16 @@
-﻿namespace APIFramework.Core;
+namespace APIFramework.Core;
 
 /// <summary>
 /// A single simulation entity — a Guid-keyed bag of struct components.
 ///
 /// COMPONENT STORAGE
-/// ─────────────────
+/// -----------------
 /// Components are stored as Dictionary&lt;Type, object&gt;, which boxes every struct
 /// on the heap. This is a known cost accepted in v0.7.x. The fix (ComponentStore&lt;T&gt;
 /// typed arrays) is documented in ARCHITECTURE.md and deferred to v0.8+.
 ///
 /// CHANGE NOTIFICATION
-/// ───────────────────
+/// -------------------
 /// Entity fires an optional onChange callback whenever a component type is added
 /// or removed. EntityManager uses this to maintain a component index so that
 /// Query&lt;T&gt;() is O(1) rather than O(E). The callback signature is:
@@ -36,7 +36,7 @@ public class Entity
     private readonly Dictionary<Type, object>      _components = new();
     private readonly Action<Entity, Type, bool>?   _onChange;
 
-    // ── Constructors ──────────────────────────────────────────────────────────
+    // -- Constructors ----------------------------------------------------------
 
     /// <summary>Creates a new entity with a fresh Guid.</summary>
     public Entity(Action<Entity, Type, bool>? onChange = null)
@@ -52,7 +52,7 @@ public class Entity
         _onChange = onChange;
     }
 
-    // ── Component API ─────────────────────────────────────────────────────────
+    // -- Component API ---------------------------------------------------------
 
     /// <summary>
     /// Adds or overwrites the component of type <typeparamref name="T"/> on this entity.
@@ -110,13 +110,13 @@ public class Entity
     /// <returns>An enumerable of all stored component values.</returns>
     public IEnumerable<object> GetAllComponents()   => _components.Values;
 
-    // ── Identity ──────────────────────────────────────────────────────────────
+    // -- Identity --------------------------------------------------------------
 
     /// <summary>
     /// Hash code derived from <see cref="Id"/> (not memory address).
     ///
     /// WHY THIS MATTERS FOR DETERMINISM
-    /// ──────────────────────────────────
+    /// ----------------------------------
     /// <see cref="EntityManager"/> stores entities in <c>HashSet&lt;Entity&gt;</c>
     /// buckets. If <c>GetHashCode()</c> returns a memory-address-based value
     /// (the <c>Object</c> default), bucket placement — and therefore
@@ -131,7 +131,7 @@ public class Entity
     ///
     /// CONTRACT NOTE: <see cref="Equals"/> uses reference equality (the correct
     /// semantic: one C# object = one simulation entity). The contract
-    ///   "a.Equals(b) ⟹ a.GetHashCode() == b.GetHashCode()"
+    ///   "a.Equals(b) => a.GetHashCode() == b.GetHashCode()"
     /// is satisfied because two references to the same object share the same
     /// <see cref="Id"/>, and therefore the same hash code.
     /// </summary>

@@ -26,21 +26,21 @@ All enum casts use the integer-mirror guarantee that every `APIFramework.Compone
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `AT01_SchemaVersion_Is030` asserts `dto.SchemaVersion == "0.3.0"`. |
-| AT-02 | ✓ | `AT02_TwoRoomEntities_ProjectsRoomsArrayOfLength2` — verifies id, name, category, floor, bounds X/Y/W/H, illumination ambient/colorTemp/dominantSourceId. |
-| AT-03 | ✓ | `AT03_ThreeLightSourceEntities_ProjectsLightSourcesArrayOfLength3` — verifies kind, state, intensity, colorTemperatureK, position, roomId for all three. |
-| AT-04 | ✓ | `AT04_OneLightApertureEntity_ProjectsLightAperturesArrayOfLength1` — verifies id, position, roomId, facing (South), areaSqTiles. |
-| AT-05 | ✓ | `AT05_NoonSunState_ProjectsCorrectAzimuthElevationDayPhase` — 180° azimuth, elevation > 0°, `DayPhase.Afternoon`. |
-| AT-06 | ✓ | `AT06_MidnightSunState_ProjectsNegativeElevationAndNightPhase` — elevation < 0°, `DayPhase.Night`. |
-| AT-07 | ✓ | `AT07_NoRoomEntities_RoomsIsNull` — empty entity manager → `dto.Rooms == null`. |
-| AT-08 | ✓ | `AT08_FullSpatialSnapshot_ValidatesAgainstSchema` — one room, one source, one aperture, noon sun → `SchemaValidator.Validate` passes. |
-| AT-09 | ✓ | `AT09_TwoProjectionsOfSameSnapshot_ProduceBytIdenticalJson` — byte-identical JSON for same inputs. |
-| AT-10 | ✓ | `AT10_RoomsLightSourcesAndApertures_SortedByIdAscending` — two rooms, two sources, two apertures each confirm ascending entity-Guid order. |
-| AT-11 | ✓ | All 30 pre-existing `TelemetryProjectorTests` pass; all 633 solution tests pass. |
-| AT-12 | ✓ | `Warden.Contracts.Tests` — 50 passed, 0 failed. DTOs unchanged. |
-| AT-13 | ✓ | `ECSCli.Tests` — 18 passed; `AiVerbTests` schema assertion updated to `"0.3.0"`. `Warden.Orchestrator.Tests` — 121 passed. |
-| AT-14 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-15 | ✓ | `dotnet test ECSSimulation.sln` — 633 passed, 0 failed. |
+| AT-01 | OK | `AT01_SchemaVersion_Is030` asserts `dto.SchemaVersion == "0.3.0"`. |
+| AT-02 | OK | `AT02_TwoRoomEntities_ProjectsRoomsArrayOfLength2` — verifies id, name, category, floor, bounds X/Y/W/H, illumination ambient/colorTemp/dominantSourceId. |
+| AT-03 | OK | `AT03_ThreeLightSourceEntities_ProjectsLightSourcesArrayOfLength3` — verifies kind, state, intensity, colorTemperatureK, position, roomId for all three. |
+| AT-04 | OK | `AT04_OneLightApertureEntity_ProjectsLightAperturesArrayOfLength1` — verifies id, position, roomId, facing (South), areaSqTiles. |
+| AT-05 | OK | `AT05_NoonSunState_ProjectsCorrectAzimuthElevationDayPhase` — 180° azimuth, elevation > 0°, `DayPhase.Afternoon`. |
+| AT-06 | OK | `AT06_MidnightSunState_ProjectsNegativeElevationAndNightPhase` — elevation < 0°, `DayPhase.Night`. |
+| AT-07 | OK | `AT07_NoRoomEntities_RoomsIsNull` — empty entity manager → `dto.Rooms == null`. |
+| AT-08 | OK | `AT08_FullSpatialSnapshot_ValidatesAgainstSchema` — one room, one source, one aperture, noon sun → `SchemaValidator.Validate` passes. |
+| AT-09 | OK | `AT09_TwoProjectionsOfSameSnapshot_ProduceBytIdenticalJson` — byte-identical JSON for same inputs. |
+| AT-10 | OK | `AT10_RoomsLightSourcesAndApertures_SortedByIdAscending` — two rooms, two sources, two apertures each confirm ascending entity-Guid order. |
+| AT-11 | OK | All 30 pre-existing `TelemetryProjectorTests` pass; all 633 solution tests pass. |
+| AT-12 | OK | `Warden.Contracts.Tests` — 50 passed, 0 failed. DTOs unchanged. |
+| AT-13 | OK | `ECSCli.Tests` — 18 passed; `AiVerbTests` schema assertion updated to `"0.3.0"`. `Warden.Orchestrator.Tests` — 121 passed. |
+| AT-14 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-15 | OK | `dotnet test ECSSimulation.sln` — 633 passed, 0 failed. |
 
 ---
 

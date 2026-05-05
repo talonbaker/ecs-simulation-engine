@@ -20,7 +20,7 @@ namespace APIFramework.Tests.Systems.Narrative;
 /// </summary>
 public class NarrativeEventBusTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static (EntityManager em,
                     NarrativeEventBus bus,
@@ -54,7 +54,7 @@ public class NarrativeEventBusTests
         return list;
     }
 
-    // ── AT-08: entity-id ascending order within a tick ────────────────────────
+    // -- AT-08: entity-id ascending order within a tick ------------------------
 
     [Fact]
     public void CandidatesWithinTick_EmittedInEntityIdAscendingOrder()
@@ -103,7 +103,7 @@ public class NarrativeEventBusTests
         Assert.Equal(idB, candidates[1].ParticipantIds[0]);
     }
 
-    // ── AT-09: 5000-tick determinism ─────────────────────────────────────────
+    // -- AT-09: 5000-tick determinism -----------------------------------------
 
     [Fact]
     public void SameSeed_FiveThousandTicks_ProducesByteIdenticalCandidateStream()

@@ -6,19 +6,19 @@ namespace APIFramework.Core;
 /// Watches SimConfig.json for changes and fires a callback when the file is saved.
 ///
 /// DEBOUNCE
-/// ────────
+/// --------
 /// Most editors (VS Code, Rider, Notepad++) write files in several rapid bursts.
 /// We wait 250 ms after the last write event before reading — this ensures we get
 /// the complete file, not a half-written one.
 ///
 /// THREAD SAFETY
-/// ─────────────
+/// -------------
 /// The FileSystemWatcher fires on a background thread. The callback runs on that
 /// same thread. Callers that need to apply config on a specific thread (e.g. the
 /// Avalonia UI thread) must marshal the call themselves.
 ///
 /// Usage
-/// ─────
+/// -----
 ///   var watcher = new SimConfigWatcher(path, newCfg => bootstrapper.ApplyConfig(newCfg));
 ///   // ... later ...
 ///   watcher.Dispose();
@@ -62,7 +62,7 @@ public sealed class SimConfigWatcher : IDisposable
         _fsw.Created += OnFileChanged; // some editors replace the file entirely on save
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────────
+    // -- Internal --------------------------------------------------------------
 
     private void OnFileChanged(object sender, FileSystemEventArgs e)
     {
@@ -85,7 +85,7 @@ public sealed class SimConfigWatcher : IDisposable
         _onChanged(newCfg);
     }
 
-    // ── IDisposable ───────────────────────────────────────────────────────────
+    // -- IDisposable -----------------------------------------------------------
 
     /// <summary>
     /// Stops the underlying <see cref="FileSystemWatcher"/>, cancels any pending

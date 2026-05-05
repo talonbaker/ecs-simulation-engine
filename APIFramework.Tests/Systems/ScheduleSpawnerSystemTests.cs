@@ -40,7 +40,7 @@ public class ScheduleSpawnerSystemTests
         return path;
     }
 
-    // ── AT-04 ─────────────────────────────────────────────────────────────────
+    // -- AT-04 -----------------------------------------------------------------
 
     [Fact]
     public void AT04_Spawner_AttachesSchedule_ToMatchingArchetype()
@@ -129,7 +129,7 @@ public class ScheduleSpawnerSystemTests
         }
     }
 
-    // ── AT-05: Idempotency ────────────────────────────────────────────────────
+    // -- AT-05: Idempotency ----------------------------------------------------
 
     [Fact]
     public void AT05_Spawner_IsIdempotent_RunningTwiceDoesNotDuplicate()
@@ -158,7 +158,7 @@ public class ScheduleSpawnerSystemTests
         }
     }
 
-    // ── LoadSchedules unit test ───────────────────────────────────────────────
+    // -- LoadSchedules unit test -----------------------------------------------
 
     [Fact]
     public void LoadSchedules_ParsesBlocksCorrectly()

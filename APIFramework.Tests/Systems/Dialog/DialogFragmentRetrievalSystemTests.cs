@@ -12,7 +12,7 @@ namespace APIFramework.Tests.Systems.Dialog;
 /// </summary>
 public class DialogFragmentRetrievalSystemTests
 {
-    // ── Corpus with two fragments in casual×lashOut ───────────────────────────
+    // -- Corpus with two fragments in casual×lashOut ---------------------------
 
     private const string TwoFragmentCorpus = """
         {
@@ -80,7 +80,7 @@ public class DialogFragmentRetrievalSystemTests
         return e;
     }
 
-    // ── AT-05: Fragment is selected and event is emitted ─────────────────────
+    // -- AT-05: Fragment is selected and event is emitted ---------------------
 
     [Fact]
     public void AT05_SpokenFragmentEvent_EmittedForPendingDialog()
@@ -101,7 +101,7 @@ public class DialogFragmentRetrievalSystemTests
         Assert.Equal(listener, captured!.Value.ListenerId);
     }
 
-    // ── AT-06: Valence scoring selects the irritation-high fragment ───────────
+    // -- AT-06: Valence scoring selects the irritation-high fragment -----------
 
     [Fact]
     public void AT06_HighIrritationSpeaker_SelectsIrritationHighFragment()
@@ -124,7 +124,7 @@ public class DialogFragmentRetrievalSystemTests
         Assert.Equal("casual-lashOut-A", captured!.Value.FragmentId);
     }
 
-    // ── AT-07: Recency penalty suppresses recently-used fragment ─────────────
+    // -- AT-07: Recency penalty suppresses recently-used fragment -------------
 
     [Fact]
     public void AT07_RecentlyUsedFragment_GetsRecencyPenalty()
@@ -170,7 +170,7 @@ public class DialogFragmentRetrievalSystemTests
         Assert.Equal("casual-lashOut-B", captured!.Value.FragmentId);
     }
 
-    // ── AT-08: CalcifyBiasScore boosts a calcified fragment ──────────────────
+    // -- AT-08: CalcifyBiasScore boosts a calcified fragment ------------------
 
     [Fact]
     public void AT08_CalcifiedFragment_ReceivesBiasBonus()
@@ -211,7 +211,7 @@ public class DialogFragmentRetrievalSystemTests
         Assert.Equal("casual-lashOut-B", captured!.Value.FragmentId);
     }
 
-    // ── AT-05b: History is updated after selection ────────────────────────────
+    // -- AT-05b: History is updated after selection ----------------------------
 
     [Fact]
     public void AT05b_AfterSelection_HistoryUseCountIncremented()
@@ -230,7 +230,7 @@ public class DialogFragmentRetrievalSystemTests
         Assert.Equal(1, rec.UseCount);
     }
 
-    // ── AT-05c: Tic hearing count incremented on listener ────────────────────
+    // -- AT-05c: Tic hearing count incremented on listener --------------------
 
     [Fact]
     public void AT05c_AfterSelection_ListenerHearingCountIncremented()

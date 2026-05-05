@@ -65,13 +65,13 @@ public class SleepSystem : ISystem
 
             if (!energy.IsSleeping && brainWantsSleep)
             {
-                // ── Fall asleep ───────────────────────────────────────────────
+                // -- Fall asleep -----------------------------------------------
                 energy.IsSleeping = true;
                 entity.Add(energy);
             }
             else if (energy.IsSleeping && !brainWantsSleep)
             {
-                // ── Wake up — only when sleepiness is genuinely low enough ────
+                // -- Wake up — only when sleepiness is genuinely low enough ----
                 // This prevents snapping awake momentarily just because hunger
                 // briefly spikes and then gets satisfied mid-sleep.
                 if (energy.Sleepiness <= _cfg.WakeThreshold)

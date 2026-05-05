@@ -20,7 +20,7 @@ public class RoomMembershipSystemTests
         return (em, membership, bus, sys);
     }
 
-    // ── AT-05: point-in-rect classification ───────────────────────────────────
+    // -- AT-05: point-in-rect classification -----------------------------------
 
     [Fact]
     public void Entity_InsideRoom_GetsRoomAssigned()
@@ -66,7 +66,7 @@ public class RoomMembershipSystemTests
         Assert.NotEqual(large, membership.GetRoom(entity));
     }
 
-    // ── AT-06: transition events ──────────────────────────────────────────────
+    // -- AT-06: transition events ----------------------------------------------
 
     [Fact]
     public void EnteringRoom_FiresRoomMembershipChangedOnce()

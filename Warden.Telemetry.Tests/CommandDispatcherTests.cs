@@ -20,7 +20,7 @@ namespace Warden.Telemetry.Tests;
 /// </summary>
 public class CommandDispatcherTests
 {
-    // ── Shared fixture helpers ────────────────────────────────────────────────
+    // -- Shared fixture helpers ------------------------------------------------
 
     private static SimulationBootstrapper MakeSim(int humanCount = 1)
         => new(new InMemoryConfigProvider(new SimConfig()), humanCount);
@@ -36,7 +36,7 @@ public class CommandDispatcherTests
     private static int EntityCount(SimulationBootstrapper sim)
         => sim.EntityManager.Entities.Count;
 
-    // ── AT-04 ─────────────────────────────────────────────────────────────────
+    // -- AT-04 -----------------------------------------------------------------
 
     /// <summary>
     /// AT-04: A batch containing an invalid command is rejected atomically.
@@ -113,7 +113,7 @@ public class CommandDispatcherTests
         Assert.True(result.Rejected > 0);
     }
 
-    // ── AT-05 ─────────────────────────────────────────────────────────────────
+    // -- AT-05 -----------------------------------------------------------------
 
     /// <summary>
     /// AT-05: A valid spawn-food command creates a new bolus entity visible
@@ -178,7 +178,7 @@ public class CommandDispatcherTests
         Assert.Contains(snap.WorldItems, i => i.Label == "Water");
     }
 
-    // ── AT-06 ─────────────────────────────────────────────────────────────────
+    // -- AT-06 -----------------------------------------------------------------
 
     /// <summary>
     /// AT-06: A valid set-config-value command mutates the running SimConfig
@@ -240,7 +240,7 @@ public class CommandDispatcherTests
         Assert.Equal(9f, pos.Z, precision: 5);
     }
 
-    // ── AT-07 ─────────────────────────────────────────────────────────────────
+    // -- AT-07 -----------------------------------------------------------------
 
     /// <summary>
     /// AT-07: Dispatching each whitelisted command in isolation produces
@@ -289,7 +289,7 @@ public class CommandDispatcherTests
                 "Systems.Brain.SleepMaxScore",
                 JsonSerializer.SerializeToElement(0.8f))));
 
-    // ── AT-07 helper ──────────────────────────────────────────────────────────
+    // -- AT-07 helper ----------------------------------------------------------
 
     private void AssertNoNewViolations(Func<SimulationBootstrapper, AiCommandBatch> batchFactory)
     {
@@ -310,7 +310,7 @@ public class CommandDispatcherTests
             $"Violation count grew unexpectedly from {before} to {after}.");
     }
 
-    // ── Entity lookup helpers ─────────────────────────────────────────────────
+    // -- Entity lookup helpers -------------------------------------------------
 
     private static Entity GetFirstHuman(SimulationBootstrapper sim)
     {

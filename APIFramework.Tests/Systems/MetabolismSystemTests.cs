@@ -23,7 +23,7 @@ public class MetabolismSystemTests
 {
     private static readonly MetabolismSystem Sys = new();
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     /// <summary>Creates an EntityManager with one entity that has a MetabolismComponent.</summary>
     private static (EntityManager em, Entity entity) BuildWithMetab(
@@ -46,7 +46,7 @@ public class MetabolismSystemTests
         return (em, entity);
     }
 
-    // ── Basic drain ────────────────────────────────────────────────────────────
+    // -- Basic drain ------------------------------------------------------------
 
     [Fact]
     public void AwakeEntity_DrainsSatiation_ByRate_Times_DeltaTime()
@@ -90,7 +90,7 @@ public class MetabolismSystemTests
         Assert.Equal(0f, entity.Get<MetabolismComponent>().Hydration);
     }
 
-    // ── Sleep multiplier ───────────────────────────────────────────────────────
+    // -- Sleep multiplier -------------------------------------------------------
 
     [Fact]
     public void SleepingEntity_DrainIsReduced_By_SleepMultiplier()
@@ -122,7 +122,7 @@ public class MetabolismSystemTests
         Assert.Equal(70f, entity.Get<MetabolismComponent>().Satiation, precision: 3);
     }
 
-    // ── Anger multiplier ───────────────────────────────────────────────────────
+    // -- Anger multiplier -------------------------------------------------------
 
     [Fact]
     public void AngryTag_IncreaseDrainBy25Percent()
@@ -163,7 +163,7 @@ public class MetabolismSystemTests
         Assert.Equal(expected, entity.Get<MetabolismComponent>().Satiation, precision: 3);
     }
 
-    // ── Multi-entity isolation ─────────────────────────────────────────────────
+    // -- Multi-entity isolation -------------------------------------------------
 
     [Fact]
     public void TwoEntities_DrainsAreIndependent()

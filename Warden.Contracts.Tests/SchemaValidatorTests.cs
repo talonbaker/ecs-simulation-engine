@@ -14,7 +14,7 @@ namespace Warden.Contracts.Tests;
 /// </summary>
 public class SchemaValidatorTests
 {
-    // ── AT-02: required field missing ─────────────────────────────────────────
+    // -- AT-02: required field missing -----------------------------------------
 
     [Fact]
     public void Validate_MissingRequiredField_ReturnsError()
@@ -69,7 +69,7 @@ public class SchemaValidatorTests
         Assert.NotEmpty(result.Errors);
     }
 
-    // ── AT-03: additionalProperties:false violation ───────────────────────────
+    // -- AT-03: additionalProperties:false violation ---------------------------
 
     [Fact]
     public void Validate_AdditionalProperty_AtRoot_ReturnsError()
@@ -131,7 +131,7 @@ public class SchemaValidatorTests
         Assert.Contains(result.Errors, e => e.Contains("undocumentedClockField"));
     }
 
-    // ── AT-04: maxItems overflow ───────────────────────────────────────────────
+    // -- AT-04: maxItems overflow -----------------------------------------------
 
     [Fact]
     public void Validate_ScenarioBatch_TwentySixScenarios_ExceedsMaxItems()
@@ -181,7 +181,7 @@ public class SchemaValidatorTests
         Assert.True(result.IsValid, string.Join("; ", result.Errors));
     }
 
-    // ── AT-05: unknown schema keyword → NotSupportedException ─────────────────
+    // -- AT-05: unknown schema keyword → NotSupportedException -----------------
 
     [Fact]
     public void ValidateWithSchema_UnknownKeyword_ThrowsNotSupportedException()
@@ -241,7 +241,7 @@ public class SchemaValidatorTests
         Assert.True(result.IsValid, string.Join("; ", result.Errors));
     }
 
-    // ── Extra coverage: happy paths and edge cases ─────────────────────────────
+    // -- Extra coverage: happy paths and edge cases -----------------------------
 
     [Fact]
     public void Validate_ValidAiCommandBatch_SpawnFood_ReturnsOk()

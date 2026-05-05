@@ -124,18 +124,18 @@ Not all tests are valuable. Here is how to tell the difference.
 
 ```
 APIFramework.Tests/
-├── Core/
-│   ├── EntityTests.cs           ← Entity: Add, Has, Get, Remove, onChange
-│   └── EntityManagerTests.cs   ← EntityManager: Query, Create, Destroy, index
-├── Systems/
-│   ├── MetabolismSystemTests.cs         ← drain rates, sleep/anger multipliers
-│   ├── EnergySystemTests.cs             ← awake/sleep cycling, state tags
-│   ├── BiologicalConditionSystemTests.cs ← tag thresholds
-│   ├── DigestionSystemTests.cs          ← pipeline contract, nutrient release
-│   ├── BrainSystemTests.cs              ← drive scoring, mood modifiers
-│   └── FeedingDrinkingSystemTests.cs    ← guard conditions, spawn behaviour
-└── Integration/
-    └── SmokeTests.cs            ← full 24h run, invariant assertions
++-- Core/
+|   +-- EntityTests.cs           ← Entity: Add, Has, Get, Remove, onChange
+|   +-- EntityManagerTests.cs   ← EntityManager: Query, Create, Destroy, index
++-- Systems/
+|   +-- MetabolismSystemTests.cs         ← drain rates, sleep/anger multipliers
+|   +-- EnergySystemTests.cs             ← awake/sleep cycling, state tags
+|   +-- BiologicalConditionSystemTests.cs ← tag thresholds
+|   +-- DigestionSystemTests.cs          ← pipeline contract, nutrient release
+|   +-- BrainSystemTests.cs              ← drive scoring, mood modifiers
+|   +-- FeedingDrinkingSystemTests.cs    ← guard conditions, spawn behaviour
++-- Integration/
+    +-- SmokeTests.cs            ← full 24h run, invariant assertions
 ```
 
 **Core tests** check the ECS machinery itself. If `Query<T>()` returns the wrong entity or `Add<T>()` doesn't fire the onChange callback, everything above it breaks — so we test these thoroughly first.
@@ -302,11 +302,11 @@ A useful mental model for how many tests of each kind to write:
          /\
         /  \
        / E2E\       ← End-to-end (fewest, slowest, most fragile)
-      /──────\
+      /------\
      / Integr \     ← Integration (some, moderate speed)
-    /──────────\
+    /----------\
    / Unit Tests \   ← Unit (most, fast, precise)
-  /──────────────\
+  /--------------\
 ```
 
 This project follows the pyramid:

@@ -8,7 +8,7 @@ namespace ECSCli.Ai;
 /// delegate to it with a single call.
 ///
 /// DESIGN NOTE
-/// ───────────
+/// -----------
 /// <c>System.CommandLine</c> is used ONLY for the <c>ai</c> verb subtree.
 /// Top-level ECSCli flags continue to use the existing bespoke parser so that
 /// running <c>ECSCli</c> with no arguments is byte-identical to pre-WP-04

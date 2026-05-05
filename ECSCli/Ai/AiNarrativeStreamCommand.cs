@@ -22,7 +22,7 @@ namespace ECSCli.Ai;
 /// (no pretty-printing) — one candidate object per line, flushed immediately.
 ///
 /// EXIT CODES
-/// ──────────
+/// ----------
 /// 0  success — stream complete.
 /// 1  unexpected error.
 /// </summary>
@@ -88,7 +88,7 @@ public static class AiNarrativeStreamCommand
         return cmd;
     }
 
-    // ── Implementation ────────────────────────────────────────────────────────
+    // -- Implementation --------------------------------------------------------
 
     internal static void Run(FileInfo? outFile, double? duration, int seed = 0)
     {

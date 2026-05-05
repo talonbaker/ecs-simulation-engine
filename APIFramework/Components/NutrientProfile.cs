@@ -5,7 +5,7 @@ namespace APIFramework.Components;
 /// a bolus in transit, a stomach's queued contents, or a body's accumulated stores.
 ///
 /// DESIGN INTENT
-/// ─────────────
+/// -------------
 /// This struct is the ONE type used everywhere nutrients are represented:
 ///   - FoodItemConfig.Nutrients  — what a piece of food provides
 ///   - BolusComponent.Nutrients  — nutrients travelling down the esophagus
@@ -18,7 +18,7 @@ namespace APIFramework.Components;
 /// translation layer between stages.
 ///
 /// UNITS
-/// ─────
+/// -----
 ///   Macros / Fiber  → grams
 ///   Water           → millilitres (ml)
 ///   Vitamins        → milligrams (mg)
@@ -29,7 +29,7 @@ namespace APIFramework.Components;
 /// deficiency/toxicity tags become inputs to MoodSystem and BiologicalConditionSystem.
 ///
 /// FORWARD COMPATIBILITY
-/// ──────────────────────
+/// ----------------------
 /// The same struct flows through every digestive stage (stomach → small intestine →
 /// large intestine → absorption). When we add intestine components in v0.7.1+, they
 /// will also hold a NutrientProfile representing their current chyme/waste contents.
@@ -37,7 +37,7 @@ namespace APIFramework.Components;
 /// </summary>
 public struct NutrientProfile
 {
-    // ── Macronutrients (grams) ────────────────────────────────────────────────
+    // -- Macronutrients (grams) ------------------------------------------------
 
     /// <summary>Carbohydrates in grams.</summary>
     public float Carbohydrates;
@@ -48,12 +48,12 @@ public struct NutrientProfile
     /// <summary>Fiber in grams. Counted within carbohydrates by convention; not added to <see cref="Calories"/>.</summary>
     public float Fiber;
 
-    // ── Hydration (ml) ────────────────────────────────────────────────────────
+    // -- Hydration (ml) --------------------------------------------------------
 
     /// <summary>Water content in millilitres.</summary>
     public float Water;
 
-    // ── Vitamins (mg) ─────────────────────────────────────────────────────────
+    // -- Vitamins (mg) ---------------------------------------------------------
 
     /// <summary>Vitamin A in milligrams.</summary>
     public float VitaminA;
@@ -68,7 +68,7 @@ public struct NutrientProfile
     /// <summary>Vitamin K in milligrams.</summary>
     public float VitaminK;
 
-    // ── Minerals (mg) ─────────────────────────────────────────────────────────
+    // -- Minerals (mg) ---------------------------------------------------------
 
     /// <summary>Sodium in milligrams.</summary>
     public float Sodium;
@@ -81,7 +81,7 @@ public struct NutrientProfile
     /// <summary>Magnesium in milligrams.</summary>
     public float Magnesium;
 
-    // ── Derived ───────────────────────────────────────────────────────────────
+    // -- Derived ---------------------------------------------------------------
 
     /// <summary>
     /// Energy content in kilocalories using the Atwater factors:
@@ -99,7 +99,7 @@ public struct NutrientProfile
         Sodium < 0.001f && Potassium < 0.001f && Calcium < 0.001f &&
         Iron < 0.001f && Magnesium < 0.001f;
 
-    // ── Arithmetic — so the digestive pipeline can do `a + b`, `profile * 0.5f` ─
+    // -- Arithmetic — so the digestive pipeline can do `a + b`, `profile * 0.5f` -
 
     /// <summary>Combine two profiles (accumulate body stores, merge queued nutrients).</summary>
     public static NutrientProfile operator +(NutrientProfile a, NutrientProfile b) => new()

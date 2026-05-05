@@ -7,7 +7,7 @@ using APIFramework.Core;
 
 namespace APIFramework.Systems;
 
-// ── Deserialization DTOs ──────────────────────────────────────────────────────
+// -- Deserialization DTOs ------------------------------------------------------
 
 /// <summary>Top-level deserialization shape for archetype-workload-capacity.json.</summary>
 internal sealed class WorkloadCapacityDto
@@ -27,7 +27,7 @@ internal sealed class WorkloadCapacityEntryDto
     public int    Capacity    { get; set; } = 3;
 }
 
-// ── System ────────────────────────────────────────────────────────────────────
+// -- System --------------------------------------------------------------------
 
 /// <summary>
 /// PreUpdate phase. Attaches <see cref="WorkloadComponent"/> to every NPC that has
@@ -76,7 +76,7 @@ public class WorkloadInitializerSystem : ISystem
         }
     }
 
-    // ── Static helpers ────────────────────────────────────────────────────────
+    // -- Static helpers --------------------------------------------------------
 
     /// <summary>
     /// Loads the archetype workload capacities from the given JSON path,

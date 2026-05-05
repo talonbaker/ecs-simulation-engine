@@ -109,26 +109,26 @@ Every arrow carrying JSON validates **on both ends**. The producer's serialiser 
 ## Process boundaries and who holds what
 
 ```
-┌─ Machine-local filesystem ──────────────────────────────────────────────┐
-│                                                                         │
-│  ./runs/<runId>/           ← orchestrator writes, everyone reads        │
-│  ./missions/*.md           ← human writes                                │
-│  ./specs/*.json            ← Opus output, human curates                  │
-│  ./docs/c2-infrastructure/ ← this folder; cached prefix source          │
-│  SimConfig.json            ← engine config; delta-patched per scenario   │
-│                                                                         │
-├─ Processes ────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  1× Warden.Orchestrator (long-lived, one per mission)                   │
-│  N× ECSCli (short-lived, one per scenario replay)                       │
-│  0× Anthropic key anywhere except the orchestrator's env                │
-│                                                                         │
-├─ Network ──────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Orchestrator → api.anthropic.com (HTTPS, persistent HttpClient)        │
-│  Nobody else talks to Anthropic, ever.                                  │
-│                                                                         │
-└────────────────────────────────────────────────────────────────────────┘
++- Machine-local filesystem ----------------------------------------------+
+|                                                                         |
+|  ./runs/<runId>/           ← orchestrator writes, everyone reads        |
+|  ./missions/*.md           ← human writes                                |
+|  ./specs/*.json            ← Opus output, human curates                  |
+|  ./docs/c2-infrastructure/ ← this folder; cached prefix source          |
+|  SimConfig.json            ← engine config; delta-patched per scenario   |
+|                                                                         |
++- Processes ------------------------------------------------------------+
+|                                                                         |
+|  1× Warden.Orchestrator (long-lived, one per mission)                   |
+|  N× ECSCli (short-lived, one per scenario replay)                       |
+|  0× Anthropic key anywhere except the orchestrator's env                |
+|                                                                         |
++- Network --------------------------------------------------------------+
+|                                                                         |
+|  Orchestrator → api.anthropic.com (HTTPS, persistent HttpClient)        |
+|  Nobody else talks to Anthropic, ever.                                  |
+|                                                                         |
++------------------------------------------------------------------------+
 ```
 
 The one-key-one-process invariant is what makes this safe to leave running overnight. Key leakage is impossible at the architectural level.

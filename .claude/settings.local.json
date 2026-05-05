@@ -22,7 +22,16 @@
       "Bash(dotnet clean *)",
       "Bash(pkill -9 testhost)",
       "Bash(pkill -9 dotnet)",
-      "Bash(timeout 120 bash -c 'while ! dotnet test --no-build 2>&1 | grep -q \"Test Run\"; do sleep 5; done')"
+      "Bash(timeout 120 bash -c 'while ! dotnet test --no-build 2>&1 | grep -q \"Test Run\"; do sleep 5; done')",
+      "Bash(awk '/^ *)",
+      "Bash(sed -n '40,55p' APIFramework/Systems/LifeState/LockoutDetectionSystem.cs)",
+      "Bash(sed -n '30,42p' APIFramework/Systems/LifeState/SlipAndFallSystem.cs)",
+      "Bash(sed -n '1,15p' APIFramework/Systems/LifeState/ChokingCleanupSystem.cs)",
+      "Bash(sed -n '180,215p' APIFramework/Systems/LifeState/LifeStateTransitionSystem.cs)",
+      "Bash(sed -n '70,90p' APIFramework/Systems/LifeState/LifeStateTransitionSystem.cs)",
+      "Bash(sed -n '1,20p' APIFramework/Systems/LifeState/LifeStateTransitionSystem.cs)",
+      "Bash(sed -n '14p' APIFramework/Systems/LifeState/LifeStateTransitionRequest.cs)",
+      "Bash(sed -n '79p' APIFramework/Systems/LifeState/LifeStateTransitionSystem.cs)"
     ]
   }
 }

@@ -21,7 +21,7 @@ public class MemoryRecordingSystemBufferTests
         return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
     }
 
-    // ── Relationship buffer: 50 into capacity-32 ──────────────────────────────
+    // -- Relationship buffer: 50 into capacity-32 ------------------------------
 
     [Fact]
     public void RelationshipBuffer_50Candidates_Capacity32_Retains32MostRecent()
@@ -104,7 +104,7 @@ public class MemoryRecordingSystemBufferTests
         }
     }
 
-    // ── Personal buffer: capacity-16 ─────────────────────────────────────────
+    // -- Personal buffer: capacity-16 -----------------------------------------
 
     [Fact]
     public void PersonalBuffer_30Candidates_Capacity16_Retains16MostRecent()

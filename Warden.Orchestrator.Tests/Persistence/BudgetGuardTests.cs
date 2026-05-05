@@ -5,7 +5,7 @@ namespace Warden.Orchestrator.Tests.Persistence;
 
 public class BudgetGuardTests
 {
-    // ── AT-04: Fails closed when running sum + projected > budget ─────────────
+    // -- AT-04: Fails closed when running sum + projected > budget -------------
 
     [Fact]
     public void AT04_BudgetGuard_HaltsWhenProjectedExceedsBudget()
@@ -37,7 +37,7 @@ public class BudgetGuardTests
         Assert.Null(verdict.HaltReason);
     }
 
-    // ── AT-05: Running sum accumulates; blocks once ceiling is reached ─────────
+    // -- AT-05: Running sum accumulates; blocks once ceiling is reached ---------
 
     /// <summary>
     /// AT-05: With a $1.00 budget and $0.06 projected per call, the guard
@@ -70,7 +70,7 @@ public class BudgetGuardTests
         Assert.Equal(16 * perCall, blocked.SpentUsd);
     }
 
-    // ── Thread safety smoke test ───────────────────────────────────────────────
+    // -- Thread safety smoke test -----------------------------------------------
 
     [Fact]
     public async Task BudgetGuard_ConcurrentRecords_DoNotCorruptRunningSum()

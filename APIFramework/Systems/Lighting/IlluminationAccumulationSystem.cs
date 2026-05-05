@@ -85,7 +85,7 @@ public sealed class IlluminationAccumulationSystem : ISystem
             string? dominantId    = null;
             double  dominantMax   = 0.0;
 
-            // ── Source contributions ──────────────────────────────────────────
+            // -- Source contributions ------------------------------------------
             foreach (var (srcEntity, src) in sources)
             {
                 if (src.RoomId != roomId) continue;
@@ -111,7 +111,7 @@ public sealed class IlluminationAccumulationSystem : ISystem
                 }
             }
 
-            // ── Aperture contributions ────────────────────────────────────────
+            // -- Aperture contributions ----------------------------------------
             foreach (var (aptEntity, apt) in apertures)
             {
                 if (apt.RoomId != roomId) continue;
@@ -132,7 +132,7 @@ public sealed class IlluminationAccumulationSystem : ISystem
                 }
             }
 
-            // ── Write back ────────────────────────────────────────────────────
+            // -- Write back ----------------------------------------------------
             int ambientLevel  = (int)Math.Clamp(Math.Round(totalIntensity), 0, 100);
             int colorTempK    = weightSum > 0.0
                 ? (int)Math.Round(weightedColorK / weightSum)

@@ -28,7 +28,7 @@ public sealed record AiCommandBatch
 [JsonDerivedType(typeof(SetConfigValueCommand),"set-config-value")]
 public abstract record AiCommand;
 
-// ── Concrete command types ────────────────────────────────────────────────────
+// -- Concrete command types ----------------------------------------------------
 
 public sealed record SpawnFoodCommand(
     string FoodType,

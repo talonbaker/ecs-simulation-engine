@@ -65,7 +65,7 @@ public class WorkloadDeterminismTests
         Assert.Equal(count1, count2);
     }
 
-    // ── Simulation runner ─────────────────────────────────────────────────────
+    // -- Simulation runner -----------------------------------------------------
 
     private static List<(int Priority, float EffortHours)> RunSimulation(int seed)
     {

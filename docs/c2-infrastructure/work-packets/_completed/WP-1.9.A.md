@@ -24,21 +24,21 @@ All 707 tests pass; build has zero warnings.
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | `world-state.schema.json` has `"0.4.0"` in `schemaVersion` enum and `chronicle[]` with `maxItems: 4096`. Verified by `WorldState_V04_SchemaHas040EnumAndChronicleArray`. |
-| AT-02 | ✓ | v0.3 sample round-trips under v0.4 schema. `WorldState_V03SampleRoundTripsUnderV04Schema` passes. |
-| AT-03 | ✓ | v0.4 sample with 3 chronicle entries round-trips. `WorldState_V04SampleRoundTrips` passes. |
-| AT-04 | ✓ | Relationship intensity delta ≥ 15 → chronicle entry. `RelationshipImpact_AboveThreshold_Persists` passes. |
-| AT-05 | ✓ | Minor-effect candidate produces no entry. `RelationshipImpact_BelowThreshold_DoesNotPersist` and `WillpowerLow_NeverPersists` pass. |
-| AT-06 | ✓ | High-irritation spike + nearby item → Stain entity + `SpilledSomething` chronicle entry. `HighIrritationSpike_NearbyItem_SpawnsStainAndChronicleEntry` passes. |
-| AT-07 | ✓ | `BrokenItemTag` entity with missing `ChronicleEntryId` → invariant violation. `BrokenItemTag_MissingChronicleEntry_ProducesViolation` passes. |
-| AT-08 | ✓ | Chronicle entry with missing `physicalManifestEntityId` → invariant violation. `ChronicleEntry_MissingPhysicalManifestEntity_ProducesViolation` passes. |
-| AT-09 | ✓ | Ring buffer drops oldest on overflow. `ChronicleService_RingBuffer_DropsOldestOnOverflow` passes. |
-| AT-10 | ✓ | Same seed → same chronicle entry IDs. `Determinism_SameSeed_ProducesSameEntryId` passes. |
-| AT-11 | ✓ | `TelemetryProjector` emits `"0.4.0"` and projects `ChronicleService` entries. `AT01_SchemaVersion_Is040` and `AT11_ChronicleService_WithEntries_ProjectsToChronicleArray` pass. |
-| AT-12 | ✓ | All existing `Warden.Telemetry.Tests` pass (44 total). |
-| AT-13 | ✓ | All existing `APIFramework.Tests` pass (441 total). |
-| AT-14 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-15 | ✓ | `dotnet test ECSSimulation.sln` — 707 passed, 0 failed, 0 skipped. |
+| AT-01 | OK | `world-state.schema.json` has `"0.4.0"` in `schemaVersion` enum and `chronicle[]` with `maxItems: 4096`. Verified by `WorldState_V04_SchemaHas040EnumAndChronicleArray`. |
+| AT-02 | OK | v0.3 sample round-trips under v0.4 schema. `WorldState_V03SampleRoundTripsUnderV04Schema` passes. |
+| AT-03 | OK | v0.4 sample with 3 chronicle entries round-trips. `WorldState_V04SampleRoundTrips` passes. |
+| AT-04 | OK | Relationship intensity delta ≥ 15 → chronicle entry. `RelationshipImpact_AboveThreshold_Persists` passes. |
+| AT-05 | OK | Minor-effect candidate produces no entry. `RelationshipImpact_BelowThreshold_DoesNotPersist` and `WillpowerLow_NeverPersists` pass. |
+| AT-06 | OK | High-irritation spike + nearby item → Stain entity + `SpilledSomething` chronicle entry. `HighIrritationSpike_NearbyItem_SpawnsStainAndChronicleEntry` passes. |
+| AT-07 | OK | `BrokenItemTag` entity with missing `ChronicleEntryId` → invariant violation. `BrokenItemTag_MissingChronicleEntry_ProducesViolation` passes. |
+| AT-08 | OK | Chronicle entry with missing `physicalManifestEntityId` → invariant violation. `ChronicleEntry_MissingPhysicalManifestEntity_ProducesViolation` passes. |
+| AT-09 | OK | Ring buffer drops oldest on overflow. `ChronicleService_RingBuffer_DropsOldestOnOverflow` passes. |
+| AT-10 | OK | Same seed → same chronicle entry IDs. `Determinism_SameSeed_ProducesSameEntryId` passes. |
+| AT-11 | OK | `TelemetryProjector` emits `"0.4.0"` and projects `ChronicleService` entries. `AT01_SchemaVersion_Is040` and `AT11_ChronicleService_WithEntries_ProjectsToChronicleArray` pass. |
+| AT-12 | OK | All existing `Warden.Telemetry.Tests` pass (44 total). |
+| AT-13 | OK | All existing `APIFramework.Tests` pass (441 total). |
+| AT-14 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-15 | OK | `dotnet test ECSSimulation.sln` — 707 passed, 0 failed, 0 skipped. |
 
 ## Files added
 

@@ -8,17 +8,17 @@ namespace Warden.Contracts;
 /// serialising or deserialising Warden cross-tier messages.
 ///
 /// RULES
-/// ─────
-/// • Property names are camelCase in JSON (C# PascalCase ↔ JSON camelCase).
-/// • Enums are serialised as strings. Each enum type applies its own naming
+/// -----
+/// - Property names are camelCase in JSON (C# PascalCase ↔ JSON camelCase).
+/// - Enums are serialised as strings. Each enum type applies its own naming
 ///   policy via a [JsonConverter] attribute (see OutcomeCode, BlockReason, etc.).
-/// • Null properties are omitted from the output (WhenWritingNull).
-/// • No indentation — wire format is compact. Use JsonWriterOptions for pretty-
+/// - Null properties are omitted from the output (WhenWritingNull).
+/// - No indentation — wire format is compact. Use JsonWriterOptions for pretty-
 ///   printing in diagnostics.
-/// • Fields are NOT included (records and DTOs use properties only).
+/// - Fields are NOT included (records and DTOs use properties only).
 ///
 /// USAGE
-/// ─────
+/// -----
 ///   string json = JsonSerializer.Serialize(result, JsonOptions.Wire);
 ///   SonnetResult? r = JsonSerializer.Deserialize&lt;SonnetResult&gt;(json, JsonOptions.Wire);
 /// </summary>
@@ -38,8 +38,8 @@ public static class JsonOptions
         Converters =
         {
             // Routes every enum to the right policy:
-            //   • enums with [JsonConverter] on the type → that converter
-            //   • everything else → camelCase string
+            //   - enums with [JsonConverter] on the type → that converter
+            //   - everything else → camelCase string
             // See JsonSmartEnumConverterFactory for the full explanation.
             new JsonSmartEnumConverterFactory()
         }

@@ -4,11 +4,11 @@ namespace APIFramework.Components;
 /// The large intestine (colon proximal) — water reabsorption and waste concentration.
 ///
 /// PIPELINE POSITION
-/// ─────────────────
+/// -----------------
 ///   SmallIntestine → LargeIntestine → ColonComponent
 ///
 /// WHAT HAPPENS HERE
-/// ─────────────────
+/// -----------------
 /// LargeIntestineSystem processes content each tick:
 ///   1. Reabsorbs water from the residue → adds Hydration to MetabolismComponent
 ///      (models electrolyte/water recovery that happens in the ascending colon).
@@ -19,7 +19,7 @@ namespace APIFramework.Components;
 /// smaller than direct drinking, but meaningful for long-term fluid balance.
 ///
 /// CAPACITY
-/// ─────────
+/// ---------
 /// ~300 ml working capacity. Content here represents a few meals worth of fiber
 /// and unabsorbed matter. A healthy entity will see this at 10–50% between meals.
 /// </summary>
@@ -52,7 +52,7 @@ public struct LargeIntestineComponent
     /// </summary>
     public float StoolFraction;
 
-    // ── Derived ───────────────────────────────────────────────────────────────
+    // -- Derived ---------------------------------------------------------------
 
     /// <summary>Normalised fill 0.0 – 1.0 against <see cref="MaxVolumeMl"/>.</summary>
     public readonly float Fill    => ContentVolumeMl / MaxVolumeMl;

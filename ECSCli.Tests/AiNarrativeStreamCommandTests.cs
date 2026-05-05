@@ -22,7 +22,7 @@ namespace ECSCli.Tests;
 /// </summary>
 public sealed class AiNarrativeStreamCommandTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static SimulationBootstrapper BuildSim(
         int driveSpikeThreshold = 1,
@@ -50,7 +50,7 @@ public sealed class AiNarrativeStreamCommandTests
         }
     }
 
-    // ── AT-10: valid JSONL format ─────────────────────────────────────────────
+    // -- AT-10: valid JSONL format ---------------------------------------------
 
     [Fact]
     public void RunCore_WritesValidJsonlWithRequiredFields()
@@ -92,7 +92,7 @@ public sealed class AiNarrativeStreamCommandTests
         }
     }
 
-    // ── AT-11: all three common kinds in 600 game-seconds ────────────────────
+    // -- AT-11: all three common kinds in 600 game-seconds --------------------
 
     [Fact]
     public void RunCore_ProducesAllThreeKindsIn600GameSeconds()

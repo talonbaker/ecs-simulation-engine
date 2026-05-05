@@ -20,19 +20,19 @@ The starter `office-starter.json` covers the 3-floor office bible (8 rooms, 8 li
 
 | ID | Pass/Fail | Notes |
 |:---|:---:|:---|
-| AT-01 | ✓ | Schema: `additionalProperties: false` on all 9 object types; all 6 arrays have `maxItems`; all numeric fields have `minimum`/`maximum`. Verified by `WorldDefinitionSchemaTests.Schema_HasNoUnsupportedKeywords`. |
-| AT-02 | ✓ | `office-starter.json` validates clean in `WorldDefinitionSchemaTests.StarterFile_ValidatesClean`. |
-| AT-03 | ✓ | Starter produces 8 rooms (≥6), 8 sources (≥8), 2 apertures (≥2), 6 NPC slots (≥5). Both `LoadFromFile_StarterJson_ProducesMinimumEntityCounts` and entity-manager tag-count variant pass. |
-| AT-04 | ✓ | `LoadFromFile_BreakroomEntity_HasCorrectRoomComponentFields` validates all 10 fields; `LoadFromFile_ConferenceRoom_HasCorrectFloor` validates top-floor mapping. |
-| AT-05 | ✓ | `LoadFromFile_BreakroomEntity_HasNamedAnchorComponent_WithCorrectTag` checks tag, smellTag, non-empty description. `LoadFromFile_BreakroomEntity_HasNoteComponent_WithExpectedNotes` checks ≥2 notes and "PLEASE LABEL" content. `LoadFromFile_CubicleGridWest_HasNoNamedAnchor` confirms negative case. |
-| AT-06 | ✓ | Missing `schemaVersion` → `WorldDefinitionInvalidException` with "schemaVersion" in `ValidationErrors`. Negative seed → exception with "seed" or "minimum" in errors. Both cases tested. |
-| AT-07 | ✓ | `WorldDefinitionSchemaTests.FreeArchetypeHint_ValidatesClean` passes arbitrary string `"not-a-real-archetype"` through schema validation without error. |
-| AT-08 | ✓ | `LoadFromFile_TwoRunsSameSeed_ProduceIdenticalRoomComponents` compares all room fields across two independent loads with seed 42. `LoadFromFile_SeedIsPreservedInLoadResult` confirms `SeedUsed == 19990101`. |
-| AT-09 | ✓ | `LoaderIntegrationTests.WorldDefinitionBootstrap_Runs100TicksWithoutError` ticks the full system pipeline 100 times with the starter file; no invariant violations or exceptions. |
-| AT-10 | ✓ | `LoaderIntegrationTests.NoWorldDefinition_UsesSpawnWorldFallback` confirms `WorldLoadResult == null` and entity manager has humans via `SpawnWorld` path. |
-| AT-11 | ✓ | 650 passing (17 Anthropic + 61 Contracts + 31 Telemetry + 402 APIFramework + 18 ECSCli + 121 Orchestrator), 0 failures. |
-| AT-12 | ✓ | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
-| AT-13 | ✓ | `dotnet test ECSSimulation.sln` — 650 passed, 0 failed, 0 skipped. |
+| AT-01 | OK | Schema: `additionalProperties: false` on all 9 object types; all 6 arrays have `maxItems`; all numeric fields have `minimum`/`maximum`. Verified by `WorldDefinitionSchemaTests.Schema_HasNoUnsupportedKeywords`. |
+| AT-02 | OK | `office-starter.json` validates clean in `WorldDefinitionSchemaTests.StarterFile_ValidatesClean`. |
+| AT-03 | OK | Starter produces 8 rooms (≥6), 8 sources (≥8), 2 apertures (≥2), 6 NPC slots (≥5). Both `LoadFromFile_StarterJson_ProducesMinimumEntityCounts` and entity-manager tag-count variant pass. |
+| AT-04 | OK | `LoadFromFile_BreakroomEntity_HasCorrectRoomComponentFields` validates all 10 fields; `LoadFromFile_ConferenceRoom_HasCorrectFloor` validates top-floor mapping. |
+| AT-05 | OK | `LoadFromFile_BreakroomEntity_HasNamedAnchorComponent_WithCorrectTag` checks tag, smellTag, non-empty description. `LoadFromFile_BreakroomEntity_HasNoteComponent_WithExpectedNotes` checks ≥2 notes and "PLEASE LABEL" content. `LoadFromFile_CubicleGridWest_HasNoNamedAnchor` confirms negative case. |
+| AT-06 | OK | Missing `schemaVersion` → `WorldDefinitionInvalidException` with "schemaVersion" in `ValidationErrors`. Negative seed → exception with "seed" or "minimum" in errors. Both cases tested. |
+| AT-07 | OK | `WorldDefinitionSchemaTests.FreeArchetypeHint_ValidatesClean` passes arbitrary string `"not-a-real-archetype"` through schema validation without error. |
+| AT-08 | OK | `LoadFromFile_TwoRunsSameSeed_ProduceIdenticalRoomComponents` compares all room fields across two independent loads with seed 42. `LoadFromFile_SeedIsPreservedInLoadResult` confirms `SeedUsed == 19990101`. |
+| AT-09 | OK | `LoaderIntegrationTests.WorldDefinitionBootstrap_Runs100TicksWithoutError` ticks the full system pipeline 100 times with the starter file; no invariant violations or exceptions. |
+| AT-10 | OK | `LoaderIntegrationTests.NoWorldDefinition_UsesSpawnWorldFallback` confirms `WorldLoadResult == null` and entity manager has humans via `SpawnWorld` path. |
+| AT-11 | OK | 650 passing (17 Anthropic + 61 Contracts + 31 Telemetry + 402 APIFramework + 18 ECSCli + 121 Orchestrator), 0 failures. |
+| AT-12 | OK | `dotnet build ECSSimulation.sln` — 0 warnings, 0 errors. |
+| AT-13 | OK | `dotnet test ECSSimulation.sln` — 650 passed, 0 failed, 0 skipped. |
 
 ## Files added
 

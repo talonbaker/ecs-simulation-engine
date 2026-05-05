@@ -23,7 +23,7 @@ namespace ECSCli.Tests;
 [Collection("AiCommandSingleton")]
 public sealed class AiVerbTests : IDisposable
 {
-    // ── Shared temp directory ─────────────────────────────────────────────────
+    // -- Shared temp directory -------------------------------------------------
 
     private readonly string _tmp;
 
@@ -41,9 +41,9 @@ public sealed class AiVerbTests : IDisposable
 
     private string Tmp(string name) => Path.Combine(_tmp, name);
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // AT-01 — no-args path is unaffected by `ai` verb presence
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     /// <summary>
     /// AT-01: When the first argument is NOT "ai", the old CliOptions parser is
@@ -68,9 +68,9 @@ public sealed class AiVerbTests : IDisposable
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // AT-02 — ai describe
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     [Fact]
     public async System.Threading.Tasks.Task AiDescribe_WritesNonEmptyMarkdown()
@@ -99,9 +99,9 @@ public sealed class AiVerbTests : IDisposable
         Assert.Contains("## Component Types", content);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // AT-03 — ai snapshot
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     [Fact]
     public async System.Threading.Tasks.Task AiSnapshot_WritesValidJsonAndPassesSchema()
@@ -145,9 +145,9 @@ public sealed class AiVerbTests : IDisposable
             "Expected indented (pretty) JSON.");
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // AT-04 — ai stream
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     [Fact]
     public async System.Threading.Tasks.Task AiStream_ProducesAtLeastSixLines()
@@ -175,9 +175,9 @@ public sealed class AiVerbTests : IDisposable
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // AT-05 — ai inject
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     [Fact]
     public async System.Threading.Tasks.Task AiInject_ValidBatch_ExitCode0()
@@ -240,9 +240,9 @@ public sealed class AiVerbTests : IDisposable
         Assert.Equal(1, exit);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // AT-06 — Deterministic replay
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     /// <summary>
     /// Two replay runs with the same seed and duration must produce byte-identical
@@ -305,9 +305,9 @@ public sealed class AiVerbTests : IDisposable
             "Different seeds must produce different telemetry.");
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // AT-07 — --help at every level
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     // InlineData cannot hold arrays (CS0182 — attribute argument must be a constant
     // or typed array creation of the exact parameter type). MemberData + TheoryData<T>
@@ -330,9 +330,9 @@ public sealed class AiVerbTests : IDisposable
         Assert.Equal(0, exit);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
     // Helpers
-    // ─────────────────────────────────────────────────────────────────────────
+    // -------------------------------------------------------------------------
 
     /// <summary>
     /// Removes the <c>capturedAt</c> field from a JSON line so two replay runs

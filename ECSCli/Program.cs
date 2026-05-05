@@ -6,7 +6,7 @@ using ECSCli.Ai;
 using System.CommandLine;   // CommandExtensions.InvokeAsync — used for `ai` verb delegation
 using System.Diagnostics;
 
-// ── AI verb delegation ────────────────────────────────────────────────────────
+// -- AI verb delegation --------------------------------------------------------
 //
 // If the first argument is "ai", hand control entirely to the System.CommandLine
 // sub-tree and exit with its return code. The existing bespoke parser below is
@@ -18,7 +18,7 @@ if (args.Length > 0 && args[0] == "ai")
     Environment.Exit(exitCode);
 }
 
-// ── Parse CLI args ─────────────────────────────────────────────────────────────
+// -- Parse CLI args -------------------------------------------------------------
 var options = CliOptions.Parse(args);
 
 Console.WriteLine($"{SimVersion.Full}  —  Headless CLI");
@@ -40,7 +40,7 @@ else
 
 Console.WriteLine();
 
-// ── Boot simulation ───────────────────────────────────────────────────────────
+// -- Boot simulation -----------------------------------------------------------
 //
 // SimulationBootstrapper is the composition root — it wires every system and
 // spawns the initial entities.  The CLI drives Engine.Update() in its own loop,
@@ -59,7 +59,7 @@ Console.WriteLine($"  Active TimeScale : {sim.Clock.TimeScale}x  " +
                   $"(1 real-sec = {sim.Clock.TimeScale / 60:F1} game-min)");
 Console.WriteLine();
 
-// ── Hot-reload watcher ────────────────────────────────────────────────────────
+// -- Hot-reload watcher --------------------------------------------------------
 //
 // Runs on a background thread; sets a flag.  The main loop checks the flag at
 // the start of each tick and applies the new config before any system runs.
@@ -88,10 +88,10 @@ else
     Console.WriteLine();
 }
 
-// ── Metrics collector ─────────────────────────────────────────────────────────
+// -- Metrics collector ---------------------------------------------------------
 var metrics = new SimMetrics(sim);
 
-// ── Run state ─────────────────────────────────────────────────────────────────
+// -- Run state -----------------------------------------------------------------
 long   tick         = 0;
 double nextSnapshot = options.SnapshotInterval > 0 ? options.SnapshotInterval : double.MaxValue;
 bool   running      = true;
@@ -105,38 +105,38 @@ Console.CancelKeyPress += (_, e) =>
     Console.WriteLine("  (Ctrl+C — finishing current tick then stopping)");
 };
 
-// ── Main loop ─────────────────────────────────────────────────────────────────
+// -- Main loop -----------------------------------------------------------------
 const float dt = 1f / 60f;
 
 while (running)
 {
-    // ── Hot-reload: apply pending config BEFORE any system runs this tick ─────
+    // -- Hot-reload: apply pending config BEFORE any system runs this tick -----
     SimConfig? pending;
     lock (_pendingLock) { pending = _pendingConfig; _pendingConfig = null; }
     if (pending != null) sim.ApplyConfig(pending);
 
-    // ── Advance simulation ────────────────────────────────────────────────────
+    // -- Advance simulation ----------------------------------------------------
     sim.Engine.Update(dt);
     tick++;
 
-    // ── Collect metrics ───────────────────────────────────────────────────────
+    // -- Collect metrics -------------------------------------------------------
     metrics.Tick(tick);
 
-    // ── Print live invariant violations ──────────────────────────────────────
+    // -- Print live invariant violations --------------------------------------
     if (options.LiveViolations)
     {
         foreach (var v in sim.Invariants.FlushNewViolations())
             Console.WriteLine($"  ⚠  INVARIANT  {sim.Clock.DayTimeDisplay,-20}  {v}");
     }
 
-    // ── Snapshot ──────────────────────────────────────────────────────────────
+    // -- Snapshot --------------------------------------------------------------
     if (!options.Quiet && sim.Clock.TotalTime >= nextSnapshot)
     {
         CliRenderer.PrintSnapshot(sim, tick, wallStart);
         nextSnapshot += options.SnapshotInterval;
     }
 
-    // ── Exit conditions ───────────────────────────────────────────────────────
+    // -- Exit conditions -------------------------------------------------------
     if (options.MaxTicks.HasValue && tick >= options.MaxTicks.Value)
         break;
 
@@ -144,19 +144,19 @@ while (running)
         break;
 }
 
-// ── Final snapshot + report ───────────────────────────────────────────────────
+// -- Final snapshot + report ---------------------------------------------------
 Console.WriteLine();
-Console.WriteLine("══ SIMULATION ENDED ════════════════════════════════════════════");
+Console.WriteLine("== SIMULATION ENDED ============================================");
 CliRenderer.PrintSnapshot(sim, tick, wallStart);
 
 if (options.Report)
     CliRenderer.PrintReport(sim, metrics, tick, wallStart);
 
-// ── Cleanup ───────────────────────────────────────────────────────────────────
+// -- Cleanup -------------------------------------------------------------------
 watcher?.Dispose();
 Console.WriteLine();
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 
 static string? FindConfigPath(string fileName)
 {

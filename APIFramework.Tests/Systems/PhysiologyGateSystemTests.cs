@@ -14,7 +14,7 @@ namespace APIFramework.Tests.Systems;
 /// </summary>
 public class PhysiologyGateSystemTests
 {
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private static PhysiologyGateConfig DefaultCfg() => new()
     {
@@ -50,7 +50,7 @@ public class PhysiologyGateSystemTests
         return e;
     }
 
-    // ── Leakage helpers (white-box) ───────────────────────────────────────────
+    // -- Leakage helpers (white-box) -------------------------------------------
 
     [Theory]
     [InlineData(80, 30, 0.0)]          // above threshold → no leakage
@@ -73,7 +73,7 @@ public class PhysiologyGateSystemTests
         Assert.Equal(expected, actual, precision: 6);
     }
 
-    // ── Core veto logic ───────────────────────────────────────────────────────
+    // -- Core veto logic -------------------------------------------------------
 
     [Fact]
     public void NpcWithNoInhibitions_NeverVetoed()

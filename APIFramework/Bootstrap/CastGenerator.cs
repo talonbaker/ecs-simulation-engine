@@ -28,7 +28,7 @@ namespace APIFramework.Bootstrap;
 /// <seealso cref="CastGeneratorConfig"/>
 public static class CastGenerator
 {
-    // ── Public entry points ───────────────────────────────────────────────────
+    // -- Public entry points ---------------------------------------------------
 
     /// <summary>
     /// Spawns an NPC entity for every <see cref="NpcSlotTag"/> entity in
@@ -105,7 +105,7 @@ public static class CastGenerator
         SeededRandom        rng,
         CastGeneratorConfig config)
     {
-        // ── 1. Drive baselines ────────────────────────────────────────────────
+        // -- 1. Drive baselines ------------------------------------------------
         var elevSet  = new HashSet<string>(archetype.ElevatedDrives,  StringComparer.OrdinalIgnoreCase);
         var depSet   = new HashSet<string>(archetype.DepressedDrives, StringComparer.OrdinalIgnoreCase);
 
@@ -121,7 +121,7 @@ public static class CastGenerator
             Loneliness = SampleDrive("loneliness", elevSet, depSet, rng, config),
         };
 
-        // ── 2. Personality ────────────────────────────────────────────────────
+        // -- 2. Personality ----------------------------------------------------
         var pr          = archetype.PersonalityRanges;
         var personality = new PersonalityComponent(
             openness:          SampleBigFive(pr.Openness, rng),
@@ -131,11 +131,11 @@ public static class CastGenerator
             neuroticism:       SampleBigFive(pr.Neuroticism, rng),
             register:          PersonalityComponent.ParseRegister(PickFrom(archetype.GetRegisters(), rng)));
 
-        // ── 3. Willpower ──────────────────────────────────────────────────────
+        // -- 3. Willpower ------------------------------------------------------
         int wpBaseline = SampleIntRange(archetype.WillpowerBaselineRange, rng);
         var willpower  = new WillpowerComponent(wpBaseline, wpBaseline);
 
-        // ── 4. Inhibitions ────────────────────────────────────────────────────
+        // -- 4. Inhibitions ----------------------------------------------------
         var inhibList = new List<Inhibition>(archetype.StarterInhibitions.Length);
         foreach (var spec in archetype.StarterInhibitions)
         {
@@ -146,7 +146,7 @@ public static class CastGenerator
         }
         var inhibitions = new InhibitionsComponent(inhibList);
 
-        // ── 5. Silhouette ─────────────────────────────────────────────────────
+        // -- 5. Silhouette -----------------------------------------------------
         var sf = archetype.SilhouetteFamily;
         var silhouette = new SilhouetteComponent
         {
@@ -158,7 +158,7 @@ public static class CastGenerator
             DistinctiveItem = sf.DistinctiveItems.Length > 0 ? PickFrom(sf.DistinctiveItems, rng) : "lanyard",
         };
 
-        // ── 6. Deal ───────────────────────────────────────────────────────────
+        // -- 6. Deal -----------------------------------------------------------
         var deal = new NpcDealComponent
         {
             Deal = archetype.DealOptions.Length > 0
@@ -166,7 +166,7 @@ public static class CastGenerator
                 : ""
         };
 
-        // ── 7. Assemble entity ────────────────────────────────────────────────
+        // -- 7. Assemble entity ------------------------------------------------
         var entity = em.CreateEntity();
         entity.Add(new PositionComponent { X = slot.X, Y = 0f, Z = slot.Y });
         entity.Add(new MovementComponent { Speed = 0.04f, ArrivalDistance = 0.4f });
@@ -210,7 +210,7 @@ public static class CastGenerator
         // Track used pairs to avoid exact duplicates on same pattern.
         var usedPairs = new HashSet<(int, int)>();
 
-        // ── 1. Archetype-driven relationships (The Affair, The Crush) ─────────
+        // -- 1. Archetype-driven relationships (The Affair, The Crush) ---------
         foreach (var npc in npcs)
         {
             if (!npc.Has<NpcArchetypeComponent>()) continue;
@@ -252,7 +252,7 @@ public static class CastGenerator
             created.Add(rel);
         }
 
-        // ── 2. Additional relationships from the starting sketch ──────────────
+        // -- 2. Additional relationships from the starting sketch --------------
         SeedPattern(em, npcs, npcSeqId, rng, config, created, usedPairs,
             RelationshipPattern.Rival,                    config.RivalryCount);
         SeedPattern(em, npcs, npcSeqId, rng, config, created, usedPairs,
@@ -269,7 +269,7 @@ public static class CastGenerator
         return created.AsReadOnly();
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // -- Helpers ----------------------------------------------------------------
 
     private static void SeedPattern(
         EntityManager             em,

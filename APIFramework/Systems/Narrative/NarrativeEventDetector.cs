@@ -87,7 +87,7 @@ public sealed class NarrativeEventDetector : ISystem
         _tick++;
         var candidates = new List<(int primaryId, NarrativeEventCandidate c)>();
 
-        // ── Drive-delta detection ─────────────────────────────────────────────
+        // -- Drive-delta detection ---------------------------------------------
         // Iterate in entity-id order so accumulators are always visited consistently.
         foreach (var entity in em.Query<NpcTag>().OrderBy(e => e.Id).ToList())
         {
@@ -119,7 +119,7 @@ public sealed class NarrativeEventDetector : ISystem
             _prevDrives[id] = curr;
         }
 
-        // ── Willpower-delta detection ─────────────────────────────────────────
+        // -- Willpower-delta detection -----------------------------------------
         foreach (var entity in em.Query<NpcTag>().OrderBy(e => e.Id).ToList())
         {
             if (!entity.Has<WillpowerComponent>()) continue;
@@ -157,7 +157,7 @@ public sealed class NarrativeEventDetector : ISystem
             _prevWillpower[id] = curr;
         }
 
-        // ── Proximity-mediated candidates ─────────────────────────────────────
+        // -- Proximity-mediated candidates -------------------------------------
         foreach (var ev in _convEvents)
         {
             int idA     = EntityIntId(ev.Observer);
@@ -199,7 +199,7 @@ public sealed class NarrativeEventDetector : ISystem
                 new[] { id }, roomId, detail)));
         }
 
-        // ── Emit in entity-id ascending order (stable within same id) ─────────
+        // -- Emit in entity-id ascending order (stable within same id) ---------
         // LINQ OrderBy is a stable sort — ties preserve insertion order, which is
         // deterministic because we iterated entities in Id order above.
         foreach (var (_, c) in candidates.OrderBy(x => x.primaryId))
@@ -209,7 +209,7 @@ public sealed class NarrativeEventDetector : ISystem
         _roomEvents.Clear();
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     private string? RoomNameOf(Entity entity)
     {

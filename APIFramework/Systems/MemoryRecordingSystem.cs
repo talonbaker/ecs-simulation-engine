@@ -63,7 +63,7 @@ public sealed class MemoryRecordingSystem : ISystem
     /// </summary>
     public void Update(EntityManager em, float deltaTime) { }
 
-    // ── Candidate routing ─────────────────────────────────────────────────────
+    // -- Candidate routing -----------------------------------------------------
 
     private void OnCandidateEmitted(NarrativeEventCandidate candidate)
     {
@@ -89,7 +89,7 @@ public sealed class MemoryRecordingSystem : ISystem
             AppendToPersonal(pid, candidate);
     }
 
-    // ── Append helpers ────────────────────────────────────────────────────────
+    // -- Append helpers --------------------------------------------------------
 
     private void AppendToRelationshipMemory(Entity rel, NarrativeEventCandidate candidate)
     {
@@ -116,7 +116,7 @@ public sealed class MemoryRecordingSystem : ISystem
         entity.Add(new PersonalMemoryComponent { Recent = next });
     }
 
-    // ── Entity lookup ─────────────────────────────────────────────────────────
+    // -- Entity lookup ---------------------------------------------------------
 
     private Entity FindOrCreateRelationship(int pA, int pB)
     {
@@ -149,7 +149,7 @@ public sealed class MemoryRecordingSystem : ISystem
         return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
     }
 
-    // ── Entry construction ────────────────────────────────────────────────────
+    // -- Entry construction ----------------------------------------------------
 
     private static MemoryEntry BuildEntry(NarrativeEventCandidate c)
     {

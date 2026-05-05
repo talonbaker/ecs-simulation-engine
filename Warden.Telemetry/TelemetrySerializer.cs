@@ -8,7 +8,7 @@ namespace Warden.Telemetry;
 /// Serialises <see cref="WorldStateDto"/> to JSON using <see cref="JsonOptions.Wire"/>.
 ///
 /// TWO FORMATS
-/// ───────────
+/// -----------
 /// <see cref="SerializeSnapshot"/> — single compact JSON object.
 ///   Use for <c>ECSCli ai snapshot --out world.json</c>.
 ///

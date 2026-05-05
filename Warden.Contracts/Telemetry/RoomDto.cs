@@ -1,6 +1,6 @@
 namespace Warden.Contracts.Telemetry;
 
-// ── Room (spatial pillar v0.3) ────────────────────────────────────────────────
+// -- Room (spatial pillar v0.3) ------------------------------------------------
 
 public sealed record RoomDto
 {
@@ -27,7 +27,7 @@ public sealed record IlluminationDto
     public string? DominantSourceId  { get; init; }
 }
 
-// ── Enums ─────────────────────────────────────────────────────────────────────
+// -- Enums ---------------------------------------------------------------------
 
 /// <summary>Room functional category. Serialises as camelCase string.</summary>
 public enum RoomCategory

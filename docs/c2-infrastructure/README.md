@@ -27,24 +27,24 @@ This folder is the complete architectural spec for the infrastructure that has t
 
 ```
 WP-01 Solution Scaffolding
-   │
-   ├──► WP-02 Warden.Contracts (DTOs & schemas)
-   │        │
-   │        ├──► WP-03 AI Telemetry (engine → JSON)
-   │        │        │
-   │        │        └──► WP-04 CLI AI verbs (inject/snapshot/stream/replay)
-   │        │
-   │        └──► WP-05 Anthropic client (Messages + Batches)
-   │                 │
-   │                 ├──► WP-06 Prompt Cache Manager
-   │                 ├──► WP-07 Message Batch Scheduler
-   │                 └──► WP-08 Cost Ledger
-   │
-   └──► WP-09 Orchestrator Core (Task.WhenAll + concurrency control)
-             │
-             ├──► WP-10 Chain-of-Thought Persistence
-             ├──► WP-11 Fail-Closed Escalation Policy
-             └──► WP-12 Report Aggregator (readable end-of-run reports)
+   |
+   +--► WP-02 Warden.Contracts (DTOs & schemas)
+   |        |
+   |        +--► WP-03 AI Telemetry (engine → JSON)
+   |        |        |
+   |        |        +--► WP-04 CLI AI verbs (inject/snapshot/stream/replay)
+   |        |
+   |        +--► WP-05 Anthropic client (Messages + Batches)
+   |                 |
+   |                 +--► WP-06 Prompt Cache Manager
+   |                 +--► WP-07 Message Batch Scheduler
+   |                 +--► WP-08 Cost Ledger
+   |
+   +--► WP-09 Orchestrator Core (Task.WhenAll + concurrency control)
+             |
+             +--► WP-10 Chain-of-Thought Persistence
+             +--► WP-11 Fail-Closed Escalation Policy
+             +--► WP-12 Report Aggregator (readable end-of-run reports)
 ```
 
 Sonnet agents should take them in that order. Each packet names the packets it depends on, so a distracted agent cannot accidentally skip a foundation.

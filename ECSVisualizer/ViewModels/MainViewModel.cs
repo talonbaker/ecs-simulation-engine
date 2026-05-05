@@ -22,37 +22,37 @@ namespace ECSVisualizer.ViewModels;
 /// </summary>
 public partial class MainViewModel : ObservableObject
 {
-    // ── Simulation ───────────────────────────────────────────────────────────
+    // -- Simulation -----------------------------------------------------------
     private readonly SimulationBootstrapper _sim;
     private readonly DispatcherTimer        _timer;
 
-    // ── Version ──────────────────────────────────────────────────────────────
+    // -- Version --------------------------------------------------------------
     /// <summary>Full simulation version string shown in the title bar.</summary>
     public string VersionDisplay => SimVersion.Full;
 
-    // ── Clock ────────────────────────────────────────────────────────────────
+    // -- Clock ----------------------------------------------------------------
     [ObservableProperty] private string _currentTimeDisplay = "6:00 AM";
     [ObservableProperty] private string _dayDisplay         = "Day 1";
     [ObservableProperty] private string _dayNightIcon       = "☀";
     [ObservableProperty] private string _circadianLabel     = "circadian ×0.10";
 
-    // ── Sim stats ────────────────────────────────────────────────────────────
+    // -- Sim stats ------------------------------------------------------------
     [ObservableProperty] private string _entityCountLabel    = "0 living";
     [ObservableProperty] private int    _invariantViolations = 0;
     [ObservableProperty] private bool   _hasViolations       = false;
 
-    // ── Performance display ───────────────────────────────────────────────────
+    // -- Performance display ---------------------------------------------------
     [ObservableProperty] private string _fpsLabel           = "60 fps";
     [ObservableProperty] private string _refreshRateLabel   = "UI: every 3 frames";
 
     [ObservableProperty] private float _timeScale = 1.0f;
     partial void OnTimeScaleChanged(float value) => _sim.Clock.TimeScale = value;
 
-    // ── Charts ────────────────────────────────────────────────────────────────
+    // -- Charts ----------------------------------------------------------------
     /// <summary>Collection of scrolling-chart series (resources, mood, FPS, entity load).</summary>
     public ChartViewModel Charts { get; } = new();
 
-    // ── Entity Collections ───────────────────────────────────────────────────
+    // -- Entity Collections ---------------------------------------------------
     /// <summary>Living entities (those carrying a <c>MetabolismComponent</c>) bound to the entity panel.</summary>
     public ObservableCollection<EntityViewModel>      LivingEntities   { get; } = new();
     /// <summary>Entities currently in the esophagus transit pipeline.</summary>
@@ -63,29 +63,29 @@ public partial class MainViewModel : ObservableObject
     private readonly Dictionary<Guid, EntityViewModel>      _viewModelCache      = new();
     private readonly Dictionary<Guid, WorldEntityViewModel> _worldViewModelCache = new();
 
-    // ── Adaptive refresh state ────────────────────────────────────────────────
+    // -- Adaptive refresh state ------------------------------------------------
     private int  _frameCount     = 0;
     private int  _uiRefreshEvery = 3;  // recomputed each tick
 
-    // ── Chart sampling state ──────────────────────────────────────────────────
+    // -- Chart sampling state --------------------------------------------------
     // Charts sample every GameChartIntervalSec game-seconds (= 1 game-minute).
     // This is independent of TimeScale — same game-time resolution at any speed.
     private const double GameChartIntervalSec = 60.0;
     private double _lastChartGameTime = 0.0;
 
-    // ── FPS measurement ───────────────────────────────────────────────────────
+    // -- FPS measurement -------------------------------------------------------
     private readonly Stopwatch _fpsWatch   = Stopwatch.StartNew();
     private int                _fpsTicks   = 0;
     private const int          FpsSampleEvery = 60; // real frames between FPS reads
 
-    // ── Design-time constructor ───────────────────────────────────────────────
+    // -- Design-time constructor -----------------------------------------------
     /// <summary>
     /// Design-time constructor — boots a fresh <see cref="SimulationBootstrapper"/>
     /// so the Avalonia previewer has a populated view model to render.
     /// </summary>
     public MainViewModel() : this(new SimulationBootstrapper()) { }
 
-    // ── Runtime constructor ───────────────────────────────────────────────────
+    // -- Runtime constructor ---------------------------------------------------
     private SimConfigWatcher? _configWatcher;
 
     /// <summary>
@@ -132,7 +132,7 @@ public partial class MainViewModel : ObservableObject
         const float fixedDelta = 1f / 60f;
         _sim.Engine.Update(fixedDelta);
 
-        // ── Adaptive UI refresh interval ──────────────────────────────────────
+        // -- Adaptive UI refresh interval --------------------------------------
         // At low TimeScale the UI refreshes frequently (every 3 frames = ~20fps)
         // At high TimeScale we back off so the UI thread doesn't saturate.
         // Formula: refresh every N real frames, where N grows with TimeScale.
@@ -143,17 +143,17 @@ public partial class MainViewModel : ObservableObject
         // The simulation itself always runs at full speed; only the UI slows.
         _uiRefreshEvery = Math.Max(3, (int)(_sim.Clock.TimeScale / 15f));
 
-        // ── Clock display (every tick — lightweight string ops) ───────────────
+        // -- Clock display (every tick — lightweight string ops) ---------------
         CurrentTimeDisplay = _sim.Clock.GameTimeDisplay;
         DayDisplay         = $"Day {_sim.Clock.DayNumber}";
         DayNightIcon       = _sim.Clock.IsDaytime ? "☀" : "🌙";
         CircadianLabel     = $"circadian ×{_sim.Clock.CircadianFactor:F2}";
 
-        // ── Sim stats (every tick) ────────────────────────────────────────────
+        // -- Sim stats (every tick) --------------------------------------------
         InvariantViolations = _sim.Invariants.Violations.Count;
         HasViolations       = InvariantViolations > 0;
 
-        // ── FPS measurement ───────────────────────────────────────────────────
+        // -- FPS measurement ---------------------------------------------------
         _fpsTicks++;
         if (_fpsTicks >= FpsSampleEvery)
         {
@@ -166,7 +166,7 @@ public partial class MainViewModel : ObservableObject
             _fpsTicks = 0;
         }
 
-        // ── Chart sampling (game-time driven — same resolution at any speed) ──
+        // -- Chart sampling (game-time driven — same resolution at any speed) --
         double gameNow = _sim.Clock.TotalTime;
         if (gameNow - _lastChartGameTime >= GameChartIntervalSec)
         {
@@ -174,7 +174,7 @@ public partial class MainViewModel : ObservableObject
             SampleCharts();
         }
 
-        // ── Throttled UI entity refresh ───────────────────────────────────────
+        // -- Throttled UI entity refresh ---------------------------------------
         _frameCount++;
         if (_frameCount % _uiRefreshEvery != 0) return;
         _frameCount = 0;
@@ -188,7 +188,7 @@ public partial class MainViewModel : ObservableObject
         RefreshWorldEntities();
     }
 
-    // ── Chart sampling ────────────────────────────────────────────────────────
+    // -- Chart sampling --------------------------------------------------------
 
     private void SampleCharts()
     {
@@ -219,7 +219,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    // ── Entity list refreshes ─────────────────────────────────────────────────
+    // -- Entity list refreshes -------------------------------------------------
 
     private void RefreshLivingEntities()
     {

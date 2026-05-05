@@ -81,7 +81,7 @@ public class SimConfig
     /// <summary>End-of-day lockout detection (door reachability, starvation budget).</summary>
     public LockoutConfig          Lockout         { get; set; } = new();
 
-    // ── Loading ───────────────────────────────────────────────────────────────
+    // -- Loading ---------------------------------------------------------------
 
     // Newtonsoft.Json settings:
     //   MissingMemberHandling.Ignore  — unknown JSON keys are silently skipped
@@ -141,9 +141,9 @@ public class SimConfig
     }
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
+// =============================================================================
 //  ENTITY CONFIGS
-// ═════════════════════════════════════════════════════════════════════════════
+// =============================================================================
 
 /// <summary>
 /// Per-species starting values and biological rates. Keys are species —
@@ -158,7 +158,7 @@ public class EntitiesConfig
     public EntityConfig Cat   { get; set; } = EntityConfig.DefaultCat;
 }
 
-// ── World / clock ─────────────────────────────────────────────────────────────
+// -- World / clock -------------------------------------------------------------
 
 /// <summary>Simulation clock and global time-scale configuration.</summary>
 public class WorldConfig
@@ -407,9 +407,9 @@ public class EnergyEntityConfig
     public float SleepinessDrainRate { get; set; } = 0.0026f;
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
+// =============================================================================
 //  SYSTEM CONFIGS
-// ═════════════════════════════════════════════════════════════════════════════
+// =============================================================================
 
 /// <summary>
 /// Per-system tuning bundle (one inner config object per system).
@@ -449,7 +449,7 @@ public class SystemsConfig
     // Note: BladderFillSystem has no system-level config — all values live in BladderEntityConfig.
 }
 
-// ── BiologicalConditionSystem ─────────────────────────────────────────────────
+// -- BiologicalConditionSystem -------------------------------------------------
 
 /// <summary>
 /// Thresholds at which BiologicalConditionSystem promotes physiology values into
@@ -473,7 +473,7 @@ public class BiologicalConditionSystemConfig
     public float IrritableThreshold { get; set; } = 60f;
 }
 
-// ── BrainSystem ───────────────────────────────────────────────────────────────
+// -- BrainSystem ---------------------------------------------------------------
 
 /// <summary>
 /// BrainSystem drive-scoring ceilings and modifiers. Final per-drive scores
@@ -530,7 +530,7 @@ public class BrainSystemConfig
     public float PeeMaxScore { get; set; } = 0.80f;
 }
 
-// ── FeedingSystem ─────────────────────────────────────────────────────────────
+// -- FeedingSystem -------------------------------------------------------------
 
 /// <summary>FeedingSystem hunger/queue tuning plus the temporary hardcoded banana food source.</summary>
 public class FeedingSystemConfig
@@ -593,7 +593,7 @@ public class FoodItemConfig
     public float EsophagusSpeed { get; set; } = 0.3f;
 }
 
-// ── DrinkingSystem ────────────────────────────────────────────────────────────
+// -- DrinkingSystem ------------------------------------------------------------
 
 /// <summary>DrinkingSystem queue caps plus the temporary hardcoded water source.</summary>
 public class DrinkingSystemConfig
@@ -636,7 +636,7 @@ public class DrinkItemConfig
     public float EsophagusSpeed { get; set; } = 0.8f;
 }
 
-// ── DigestionSystem ───────────────────────────────────────────────────────────
+// -- DigestionSystem -----------------------------------------------------------
 
 /// <summary>
 /// Conversion factors from real-biology nutrients (NutrientProfile) to gameplay
@@ -666,7 +666,7 @@ public class DigestionSystemConfig
     public float ResidueFraction { get; set; } = 0.2f;
 }
 
-// ── EnergySystem ─────────────────────────────────────────────────────────────
+// -- EnergySystem -------------------------------------------------------------
 
 /// <summary>EnergySystem TiredTag / ExhaustedTag thresholds.</summary>
 public class EnergySystemConfig
@@ -678,7 +678,7 @@ public class EnergySystemConfig
     public float ExhaustedThreshold { get; set; } = 25f;
 }
 
-// ── SleepSystem ───────────────────────────────────────────────────────────────
+// -- SleepSystem ---------------------------------------------------------------
 
 /// <summary>SleepSystem wake-threshold configuration.</summary>
 public class SleepSystemConfig
@@ -690,7 +690,7 @@ public class SleepSystemConfig
     public float WakeThreshold { get; set; } = 20f;
 }
 
-// ── InteractionSystem ─────────────────────────────────────────────────────────
+// -- InteractionSystem ---------------------------------------------------------
 
 /// <summary>InteractionSystem bite-bolus volume and esophagus speed configuration.</summary>
 public class InteractionSystemConfig
@@ -702,7 +702,7 @@ public class InteractionSystemConfig
     public float EsophagusSpeed { get; set; } = 0.3f;
 }
 
-// ── MoodSystem ────────────────────────────────────────────────────────────────
+// -- MoodSystem ----------------------------------------------------------------
 
 /// <summary>
 /// Starting values for MoodComponent. All emotions begin near zero for an average
@@ -752,7 +752,7 @@ public class MoodSystemConfig
     /// <summary>Emotion value above which the high-intensity tag is applied (ecstasy, loathing, rage, etc.).</summary>
     public float HighThreshold { get; set; } = 67f;
 
-    // ── Decay rates — emotions fade over time if not sustained by inputs ─────
+    // -- Decay rates — emotions fade over time if not sustained by inputs -----
 
     /// <summary>Rate at which positive emotions (Joy, Trust, Anticipation) decay per game-second.</summary>
     public float PositiveDecayRate { get; set; } = 0.005f;
@@ -763,7 +763,7 @@ public class MoodSystemConfig
     /// <summary>Rate at which Surprise decays (fastest — surprise is brief by nature).</summary>
     public float SurpriseDecayRate { get; set; } = 0.05f;
 
-    // ── Gain rates — how fast each emotion accumulates from its inputs ────────
+    // -- Gain rates — how fast each emotion accumulates from its inputs --------
 
     /// <summary>Joy gained per game-second while needs are comfortably met (all resources above JoyComfortThreshold).</summary>
     public float JoyGainRate { get; set; } = 0.01f;
@@ -793,7 +793,7 @@ public class MoodSystemConfig
     public float AnticipationHungerMax { get; set; } = 50f;
 }
 
-// ── RotSystem ─────────────────────────────────────────────────────────────────
+// -- RotSystem -----------------------------------------------------------------
 
 /// <summary>RotSystem RotTag threshold for food entities.</summary>
 public class RotSystemConfig
@@ -805,7 +805,7 @@ public class RotSystemConfig
     public float RotTagThreshold { get; set; } = 30f;
 }
 
-// ── Dialog system ─────────────────────────────────────────────────────────────
+// -- Dialog system -------------------------------------------------------------
 
 /// <summary>
 /// Tuning knobs for the dialog phrase-selection and calcification pipeline.
@@ -856,7 +856,7 @@ public class DialogConfig
     public double DialogAttemptProbability      { get; set; } = 0.05;
 }
 
-// ── Social systems ────────────────────────────────────────────────────────────
+// -- Social systems ------------------------------------------------------------
 
 /// <summary>
 /// DriveDynamicsSystem / WillpowerSystem / RelationshipLifecycle tuning. Controls
@@ -910,7 +910,7 @@ public class SocialSystemConfig
     /// <summary>Intensity points lost per tick in the absence of proximity interaction signals.</summary>
     public double RelationshipIntensityDecayPerTick { get; set; } = 0.05;
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // -- Helpers ---------------------------------------------------------------
 
     /// <summary>
     /// Returns the circadian amplitude for the given drive (lowercase name),
@@ -931,7 +931,7 @@ public class SocialSystemConfig
         => DriveCircadianPhases.TryGetValue(driveName, out var v) ? v : 0.0;
 }
 
-// ── Movement systems ──────────────────────────────────────────────────────────
+// -- Movement systems ----------------------------------------------------------
 
 /// <summary>
 /// MovementSystem / step-aside / idle-jitter / pathfinding tuning. Movement
@@ -1004,7 +1004,7 @@ public class MovementPathfindingConfig
     public float WarnIfCacheHitRateBelow { get; set; } = 0.50f;
 }
 
-// ── Structural change system ──────────────────────────────────────────────────
+// -- Structural change system --------------------------------------------------
 
 /// <summary>
 /// StructuralChangeBus emission toggles. Determines when the bus fires —
@@ -1019,7 +1019,7 @@ public class StructuralChangeConfig
     public bool EmitOnRoomBoundsChange { get; set; } = true;
 }
 
-// ── Spatial systems ───────────────────────────────────────────────────────────
+// -- Spatial systems -----------------------------------------------------------
 
 /// <summary>
 /// GridSpatialIndex configuration — cell size, world dimensions, and seed
@@ -1060,7 +1060,7 @@ public class ProximityRangeDefaultsConfig
     public int SightTiles        { get; set; } = 32;
 }
 
-// ── Lighting systems ──────────────────────────────────────────────────────────
+// -- Lighting systems ----------------------------------------------------------
 
 /// <summary>
 /// Sun cycle, light-source state machine, aperture/source ranges, and the
@@ -1115,7 +1115,7 @@ public class DayPhaseBoundariesConfig
     public double NightStart        { get; set; } = 0.85;
 }
 
-// ── Narrative telemetry channel ───────────────────────────────────────────────
+// -- Narrative telemetry channel -----------------------------------------------
 
 /// <summary>
 /// Thresholds and window sizes for NarrativeEventDetector.
@@ -1152,7 +1152,7 @@ public class NarrativeConfig
     public int CandidateDetailMaxLength { get; set; } = 280;
 }
 
-// ── Cast generator ─────────────────────────────────────────────────────────────
+// -- Cast generator -------------------------------------------------------------
 
 /// <summary>
 /// Tunables for <see cref="CastGenerator"/> — drive baselines per archetype tier
@@ -1194,7 +1194,7 @@ public class CastGeneratorConfig
     public int[] RelationshipIntensityRange { get; set; } = new[] { 30, 70 };
 }
 
-// ── Chronicle systems ─────────────────────────────────────────────────────────
+// -- Chronicle systems ---------------------------------------------------------
 
 /// <summary>
 /// Persistent ChronicleService capacity, magnitude ranges (stains, broken items),
@@ -1238,7 +1238,7 @@ public class ChronicleThresholdRulesConfig
     public int TalkAboutMinReferenceCount { get; set; } = 2;
 }
 
-// ── Action-selection system ───────────────────────────────────────────────────
+// -- Action-selection system ---------------------------------------------------
 
 /// <summary>
 /// ActionSelectionSystem candidate enumeration / suppression / inversion thresholds.
@@ -1277,7 +1277,7 @@ public class ActionSelectionConfig
     public int    AvoidStandoffDistance         { get; set; } = 4;
 }
 
-// ── Stress system ─────────────────────────────────────────────────────────────
+// -- Stress system -------------------------------------------------------------
 
 /// <summary>
 /// StressSystem acute/chronic accumulation, decay, and tag thresholds. Stress
@@ -1328,7 +1328,7 @@ public class StressConfig
     public double NeuroticismStressFactor       { get; set; } = 0.2;
 }
 
-// ── Schedule system ───────────────────────────────────────────────────────────
+// -- Schedule system -----------------------------------------------------------
 
 /// <summary>
 /// Tunables for <see cref="ScheduleSystem"/> + ActionSelectionSystem schedule integration —
@@ -1344,7 +1344,7 @@ public class ScheduleConfig
     public float  ScheduleLingerThresholdCells { get; set; } = 2.0f;
 }
 
-// ── Workload system ───────────────────────────────────────────────────────────
+// -- Workload system -----------------------------------------------------------
 
 /// <summary>
 /// TaskGeneratorSystem / WorkloadSystem tuning — when tasks spawn, their effort/deadline
@@ -1395,7 +1395,7 @@ public class WorkloadConfig
     public double OverdueTaskStressGain        { get; set; } = 1.0;
 }
 
-// ── Memory system ─────────────────────────────────────────────────────────────
+// -- Memory system -------------------------------------------------------------
 
 /// <summary>
 /// MemoryRecordingSystem capacity caps. Per-pair / per-NPC ring buffers exceeding
@@ -1410,7 +1410,7 @@ public class MemoryConfig
     public int MaxPersonalMemoryCount { get; set; } = 16;
 }
 
-// ── Physiology gate system ────────────────────────────────────────────────────
+// -- Physiology gate system ----------------------------------------------------
 
 /// <summary>
 /// Tuning knobs for PhysiologyGateSystem — the layer that lets social inhibitions
@@ -1438,7 +1438,7 @@ public class PhysiologyGateConfig
     public double StressMaxRelaxation { get; set; } = 0.7;
 }
 
-// ── Social mask system ────────────────────────────────────────────────────────
+// -- Social mask system --------------------------------------------------------
 
 /// <summary>
 /// SocialMaskSystem / MaskCrackSystem tuning — how quickly the mask drifts in
@@ -1478,7 +1478,7 @@ public class SocialMaskConfig
     public int    SlipCooldownTicks            { get; set; } = 1800;
 }
 
-// ── Life state system ─────────────────────────────────────────────────────────
+// -- Life state system ---------------------------------------------------------
 
 /// <summary>
 /// Tuning knobs for LifeStateTransitionSystem — the layer that manages

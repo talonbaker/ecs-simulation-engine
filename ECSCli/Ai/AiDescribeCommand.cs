@@ -18,7 +18,7 @@ namespace ECSCli.Ai;
 /// Sonnet and Haiku calls (Pillar D.1).
 ///
 /// EXIT CODES
-/// ──────────
+/// ----------
 /// 0  success — file written at <c>--out</c> path.
 /// 1  unexpected error.
 /// </summary>
@@ -58,7 +58,7 @@ public static class AiDescribeCommand
         return cmd;
     }
 
-    // ── Implementation ────────────────────────────────────────────────────────
+    // -- Implementation --------------------------------------------------------
 
     internal static void Run(FileInfo outFile)
     {
@@ -80,7 +80,7 @@ public static class AiDescribeCommand
         Console.WriteLine($"[ai describe] Written: {outFile.FullName}");
     }
 
-    // ── Sections ─────────────────────────────────────────────────────────────
+    // -- Sections -------------------------------------------------------------
 
     private static void AppendHeader(StringBuilder sb)
     {

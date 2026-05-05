@@ -5,7 +5,7 @@ using UnityEngine;
 /// any empty scene — no manual Inspector setup required.
 ///
 /// HOW TO USE
-/// ──────────
+/// ----------
 /// 1. Open the default Unity scene (or any empty scene).
 /// 2. Press Play.
 /// 3. Done.  This class fires automatically via RuntimeInitializeOnLoadMethod.
@@ -14,7 +14,7 @@ using UnityEngine;
 /// so it is safe to leave this class in the project permanently.
 ///
 /// SCENE HIERARCHY CREATED
-/// ────────────────────────
+/// ------------------------
 ///   SimulationManager          — ticks the ECS engine, produces Snapshot each frame
 ///   WorldSceneBuilder          — reads Snapshot, creates/moves cubes
 ///   Directional Light          — warm overhead light
@@ -39,7 +39,7 @@ public static class SceneBootstrap
         Debug.Log("[SceneBootstrap] Scene ready. SimulationManager + WorldSceneBuilder + BiologyOverlay active.");
     }
 
-    // ── SimulationManager ─────────────────────────────────────────────────────
+    // -- SimulationManager -----------------------------------------------------
 
     private static void CreateSimulationManager()
     {
@@ -49,7 +49,7 @@ public static class SceneBootstrap
         sim.speedMultiplier = 1f;
     }
 
-    // ── WorldSceneBuilder ─────────────────────────────────────────────────────
+    // -- WorldSceneBuilder -----------------------------------------------------
 
     private static void CreateWorldSceneBuilder()
     {
@@ -64,7 +64,7 @@ public static class SceneBootstrap
         builder.entityRoot      = entityRoot.transform;
     }
 
-    // ── Directional light ─────────────────────────────────────────────────────
+    // -- Directional light -----------------------------------------------------
 
     private static void SetupDirectionalLight()
     {
@@ -86,7 +86,7 @@ public static class SceneBootstrap
         go.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
     }
 
-    // ── Biology overlay ───────────────────────────────────────────────────────
+    // -- Biology overlay -------------------------------------------------------
 
     private static void CreateBiologyOverlay()
     {
@@ -94,15 +94,15 @@ public static class SceneBootstrap
         go.AddComponent<BiologyOverlayUI>();
     }
 
-    // ── Camera ────────────────────────────────────────────────────────────────
+    // -- Camera ----------------------------------------------------------------
     //
     //  The world is roughly 10×10 units.  Entities walk around in the centre.
     //  Organ strips extend ~6 units to the right (+X) of each entity.
     //
     //  This position looks from the front-left at ~45° down so you can see:
-    //    • The floor with world objects (fridge, sink, toilet, bed)
-    //    • Entity cubes moving around
-    //    • The full organ strip for each entity to their right
+    //    - The floor with world objects (fridge, sink, toilet, bed)
+    //    - Entity cubes moving around
+    //    - The full organ strip for each entity to their right
     //
     //  You can freely move/rotate the Camera in the Inspector while running.
 

@@ -4,11 +4,11 @@ namespace APIFramework.Components;
 /// The colon/rectum — terminal holding vessel for formed stool.
 ///
 /// PIPELINE POSITION
-/// ─────────────────
+/// -----------------
 ///   LargeIntestine → ColonComponent → [DefecationSystem eliminates waste]
 ///
 /// WHAT HAPPENS HERE
-/// ─────────────────
+/// -----------------
 /// ColonSystem accumulates stool from LargeIntestine each tick.
 /// When StoolVolumeMl exceeds UrgeThresholdMl:
 ///   → DefecationUrgeTag is applied (entity has an urge to defecate)
@@ -23,7 +23,7 @@ namespace APIFramework.Components;
 /// per game-day — matching biological frequency (~1–2 bowel movements per day).
 ///
 /// DESIGN NOTE
-/// ───────────
+/// -----------
 /// The ColonComponent deliberately does NOT contain a NutrientProfile — all
 /// nutritional absorption has completed upstream. This component is purely a
 /// volume-tracking vessel for the elimination drive.
@@ -39,7 +39,7 @@ public struct ColonComponent
     /// <summary>Formed stool currently held in the colon/rectum (ml).</summary>
     public float StoolVolumeMl;
 
-    // ── Derived ───────────────────────────────────────────────────────────────
+    // -- Derived ---------------------------------------------------------------
 
     /// <summary>Normalised fill 0.0 (empty) – 1.0 (at <see cref="CapacityMl"/>).</summary>
     public readonly float Fill       => CapacityMl > 0 ? StoolVolumeMl / CapacityMl : 0f;

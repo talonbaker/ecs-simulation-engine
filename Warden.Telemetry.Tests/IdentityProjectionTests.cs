@@ -20,7 +20,7 @@ public class IdentityProjectionTests
     private static SimulationBootstrapper MakeSim()
         => new(new InMemoryConfigProvider(new SimConfig()), humanCount: 0);
 
-    // ── AT-07: IdentityComponent.Name flows through to EntityStateDto.Name ────
+    // -- AT-07: IdentityComponent.Name flows through to EntityStateDto.Name ----
 
     [Fact]
     public void AT07_EntityWithIdentityName_ProjectsNameToDto()

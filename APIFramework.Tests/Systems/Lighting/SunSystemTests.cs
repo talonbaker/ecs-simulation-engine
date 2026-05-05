@@ -14,7 +14,7 @@ public class SunSystemTests
 {
     private static LightingConfig DefaultCfg() => new();
 
-    // ── AT-02 ────────────────────────────────────────────────────────────────
+    // -- AT-02 ----------------------------------------------------------------
 
     [Fact]
     public void SunSystem_AtDayFraction055_ProducesAfternoonPhase()
@@ -23,7 +23,7 @@ public class SunSystemTests
         Assert.Equal(DayPhase.Afternoon, state.DayPhase);
     }
 
-    // ── AT-03 ────────────────────────────────────────────────────────────────
+    // -- AT-03 ----------------------------------------------------------------
 
     [Fact]
     public void SunSystem_BetweenSunriseAndSunset_ElevationIsPositive()
@@ -49,7 +49,7 @@ public class SunSystemTests
         }
     }
 
-    // ── Orbital model spot checks ─────────────────────────────────────────────
+    // -- Orbital model spot checks ---------------------------------------------
 
     [Fact]
     public void SunSystem_AtNoon_ElevationNear90()
@@ -72,7 +72,7 @@ public class SunSystemTests
         Assert.Equal(180.0, state.AzimuthDeg, precision: 5);
     }
 
-    // ── Day-phase boundaries ─────────────────────────────────────────────────
+    // -- Day-phase boundaries -------------------------------------------------
 
     [Theory]
     [InlineData(0.00,  DayPhase.Night)]
@@ -95,7 +95,7 @@ public class SunSystemTests
         Assert.Equal(expected, state.DayPhase);
     }
 
-    // ── Clock integration ────────────────────────────────────────────────────
+    // -- Clock integration ----------------------------------------------------
 
     [Fact]
     public void SunSystem_Update_WritesSunStateService()

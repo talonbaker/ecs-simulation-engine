@@ -7,24 +7,24 @@ namespace APIFramework.Tests.Core;
 /// Unit tests for Entity — the component bag at the heart of the ECS pattern.
 ///
 /// What we're testing:
-///   • Add / Has / Get / Remove behave correctly in isolation
-///   • The onChange callback fires at exactly the right moments
-///   • Overwriting a component value does NOT fire onChange (it's not a new type)
-///   • ID construction (fresh Guid vs existing Guid)
+///   - Add / Has / Get / Remove behave correctly in isolation
+///   - The onChange callback fires at exactly the right moments
+///   - Overwriting a component value does NOT fire onChange (it's not a new type)
+///   - ID construction (fresh Guid vs existing Guid)
 ///
 /// Each test is entirely self-contained — it creates its own Entity instance
 /// with a small private struct. No shared state between tests.
 /// </summary>
 public class EntityTests
 {
-    // ── Tiny private structs used only inside this test class ─────────────────
+    // -- Tiny private structs used only inside this test class -----------------
     // Using one-letter names to keep test code scannable without noise.
 
     private struct PositionComp { public float X; public float Y; }
     private struct VelocityComp { public float Vx; public float Vy; }
     private struct TagComp      { public bool Active; }
 
-    // ── Has<T> ────────────────────────────────────────────────────────────────
+    // -- Has<T> ----------------------------------------------------------------
 
     [Fact]
     public void Has_ReturnsFalse_BeforeAnyAdd()
@@ -50,7 +50,7 @@ public class EntityTests
         Assert.False(entity.Has<PositionComp>());
     }
 
-    // ── Get<T> ────────────────────────────────────────────────────────────────
+    // -- Get<T> ----------------------------------------------------------------
 
     [Fact]
     public void Get_ReturnsExactValueAdded()
@@ -86,7 +86,7 @@ public class EntityTests
         Assert.Throws<KeyNotFoundException>(() => entity.Get<PositionComp>());
     }
 
-    // ── Remove<T> ─────────────────────────────────────────────────────────────
+    // -- Remove<T> -------------------------------------------------------------
 
     [Fact]
     public void Remove_NonExistent_IsNoOp()
@@ -112,7 +112,7 @@ public class EntityTests
         Assert.Equal(5f, entity.Get<PositionComp>().X);
     }
 
-    // ── onChange callback ─────────────────────────────────────────────────────
+    // -- onChange callback -----------------------------------------------------
 
     [Fact]
     public void Add_FiresOnChange_WithIsNew_True()
@@ -184,7 +184,7 @@ public class EntityTests
         Assert.Contains(typeof(TagComp),      seenTypes);
     }
 
-    // ── Identity ──────────────────────────────────────────────────────────────
+    // -- Identity --------------------------------------------------------------
 
     [Fact]
     public void TwoEntities_HaveDifferent_Ids()
