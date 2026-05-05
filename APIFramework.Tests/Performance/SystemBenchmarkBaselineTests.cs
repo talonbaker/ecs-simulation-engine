@@ -62,6 +62,10 @@ public class SystemBenchmarkBaselineTests
     /// <summary>Top-N systems to show in the per-system breakdown.</summary>
     private const int TopSystemsToShow = 15;
 
+    /// <summary>Iterations per system in the allocation profile (lower than timing — alloc per
+    /// call is more stable than time per call, fewer samples are sufficient).</summary>
+    private const int AllocSampleIterations = 50;
+
     // ── Headline test: regenerates the checked-in fixture ────────────────────────
 
     [Fact]
@@ -115,9 +119,36 @@ public class SystemBenchmarkBaselineTests
         fixture.AppendLine($"- Median bytes / tick: **{allocPerTick:N0}**");
         fixture.AppendLine();
 
+        fixture.AppendLine("## Per-system allocation (humanCount=30)");
+        fixture.AppendLine();
+        fixture.AppendLine($"Top {TopSystemsToShow} systems by bytes allocated per Update() call. Each system is measured in isolation by forcing a GC.Collect, sampling `GC.GetTotalAllocatedBytes(precise: true)`, running the system {AllocSampleIterations} times, then re-sampling and dividing. Systems that allocate ~0 bytes per call are omitted. **Direct input for WP-4.2.2 LoD design — high-allocation systems are first candidates for `[ZoneLod(CoarsenInInactive)]`.**");
+        fixture.AppendLine();
+
+        var perSystemAlloc = MeasurePerSystemAllocations(npcCount: 30);
+        var topAlloc = perSystemAlloc
+            .Where(kv => kv.Value > 0)
+            .OrderByDescending(kv => kv.Value)
+            .Take(TopSystemsToShow)
+            .ToList();
+
+        fixture.AppendLine("| Phase | System | bytes / call | per-tick @ 30 NPCs (proj.) |");
+        fixture.AppendLine("|------:|:-------|-------------:|---------------------------:|");
+        foreach (var (key, bytesPerCall) in topAlloc)
+        {
+            // Per-call cost × 1 = per-tick cost (each system runs once per Engine.Update).
+            // But the natural-tick measurement above represents the FULL stack and may include
+            // shared allocations; the column exists for human eyeballing of contribution.
+            fixture.AppendLine(
+                $"| {(int)key.Phase,5} | {key.Name} | {bytesPerCall,12:N0} | {bytesPerCall,26:N0} |");
+        }
+        fixture.AppendLine();
+        var totalPerSystemBytes = perSystemAlloc.Values.Sum();
+        fixture.AppendLine($"- Sum of per-system allocations: **{totalPerSystemBytes:N0} bytes** (compare against natural per-tick **{allocPerTick:N0}** — discrepancy reflects measurement noise + isolation effects).");
+        fixture.AppendLine();
+
         fixture.AppendLine("## Notes");
         fixture.AppendLine();
-        fixture.AppendLine("- Numbers are environment-dependent (CPU, thermal state, background load). Treat as relative baselines, not absolute targets — regression on the same machine is meaningful; absolute comparison across machines is not.");
+        fixture.AppendLine("- Numbers are environment-dependent (CPU, thermal state, background load) AND test-load-dependent (concurrent xUnit test execution adds noise). Treat as relative baselines, not absolute targets. **For clean baselines, run perf tests in isolation:** `dotnet test --filter \"FullyQualifiedName~SystemBenchmarkBaseline\"`. Running the full suite typically inflates allocation numbers 5–10× due to GC pressure from concurrent tests.");
         fixture.AppendLine("- Per-system timing walks `SimulationEngine.Registrations` directly — re-runs each system in turn, not a natural Engine.Update path. The relative ordering is reliable; absolute totals do NOT sum to the whole-tick time (that runs each system once per tick).");
         fixture.AppendLine("- Allocation budget: at the current baseline (~25 KB / tick at humanCount=30), the GC sees ~1.5 MB/sec of allocation pressure at 60 FPS. Within Gen0 budget but worth keeping an eye on as scenarios add allocations. Future Phase 4.2.x packets should aim to NOT increase per-tick allocations meaningfully.");
         fixture.AppendLine("- For Phase 4.2.x perf-critical packets (zone substrate, simulation LoD, fire-evacuation cross-zone stress test), regenerate this fixture pre/post and diff. >25% growth in a system's median or in tick-time at any NPC count is a flag for review. The LoD packet (WP-4.2.2) specifically claims 100 NPCs across 4 zones at 60 FPS — that maps to ~3.5 ms tick-time as a hard ceiling (line up against the 100-NPC row above for current full-fidelity baseline).");
@@ -155,6 +186,18 @@ public class SystemBenchmarkBaselineTests
         // SimulationBootstrapper registers ~50+ systems.
         Assert.True(perSystem.Count > 30,
             $"Expected to time more than 30 systems; got {perSystem.Count}");
+    }
+
+    [Fact]
+    public void Harness_PerSystemAllocations_ReportsForAllRegisteredSystems()
+    {
+        var alloc = MeasurePerSystemAllocations(npcCount: 10);
+        Assert.True(alloc.Count > 30,
+            $"Expected per-system allocation data for more than 30 systems; got {alloc.Count}");
+        // At least ONE system should have measurable allocations (something always allocates;
+        // if everything reported 0, the harness is broken).
+        Assert.True(alloc.Values.Any(v => v > 0),
+            "Expected at least one system to report > 0 bytes per call.");
     }
 
     // ── Measurement primitives ───────────────────────────────────────────────────
@@ -216,6 +259,45 @@ public class SystemBenchmarkBaselineTests
                 samples[samples.Length / 2],
                 samples[(int)(samples.Length * 0.90)],
                 samples[(int)(samples.Length * 0.99)]);
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// Bytes allocated per Update() call, per system. For each registered system:
+    /// run a few warmup invocations, force GC, sample allocation counter, run the
+    /// system <see cref="AllocSampleIterations"/> times, sample again, divide.
+    /// Returns a dictionary keyed by SystemKey with bytes-per-call values.
+    /// </summary>
+    private static Dictionary<SystemKey, long> MeasurePerSystemAllocations(int npcCount)
+    {
+        var sim = BootSim(npcCount);
+        // Warm up the whole engine so each system sees realistic state.
+        for (int i = 0; i < WarmupTicks; i++) sim.Engine.Update(TickDelta);
+
+        var em = sim.EntityManager;
+        var results = new Dictionary<SystemKey, long>();
+
+        foreach (var reg in sim.Engine.Registrations)
+        {
+            // Per-system warmup — let any first-touch allocations settle.
+            for (int w = 0; w < 5; w++) reg.System.Update(em, TickDelta);
+
+            // Force GC, then snapshot the cumulative allocation counter (precise=true
+            // ensures we get per-thread-pool-allocator-aware bytes; reliable across collections).
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            long allocBefore = GC.GetTotalAllocatedBytes(precise: true);
+
+            for (int i = 0; i < AllocSampleIterations; i++)
+                reg.System.Update(em, TickDelta);
+
+            long allocAfter = GC.GetTotalAllocatedBytes(precise: true);
+            long bytesPerCall = (allocAfter - allocBefore) / AllocSampleIterations;
+
+            var key = new SystemKey(reg.System.GetType().Name, reg.Phase);
+            results[key] = bytesPerCall;
         }
         return results;
     }
