@@ -3,7 +3,9 @@ using APIFramework.Core;
 using APIFramework.Diagnostics;
 using ECSCli;
 using ECSCli.Ai;
+#if WARDEN
 using ECSCli.World;
+#endif
 using System.CommandLine;   // CommandExtensions.InvokeAsync — used for `ai` and `world` verb delegation
 using System.Diagnostics;
 
@@ -19,15 +21,18 @@ if (args.Length > 0 && args[0] == "ai")
     Environment.Exit(exitCode);
 }
 
-// ── World verb delegation ─────────────────────────────────────────────────────
+#if WARDEN
+// ── World verb delegation (Warden-gated dev surface — WP-3.0.W) ───────────────
 //
 // `world map [options]` — renders the current world snapshot as an ASCII floor plan.
+// Compiled out at ship time when WARDEN is undefined.
 //
 if (args.Length > 0 && args[0] == "world")
 {
     int exitCode = await WorldCommand.Root.InvokeAsync(args[1..]);
     Environment.Exit(exitCode);
 }
+#endif
 
 // ── Parse CLI args ─────────────────────────────────────────────────────────────
 var options = CliOptions.Parse(args);

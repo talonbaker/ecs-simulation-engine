@@ -2,9 +2,13 @@ using System.CommandLine;
 
 namespace ECSCli.World;
 
+#if WARDEN
+
 /// <summary>
 /// Root <c>world</c> command. Registers spatial visualisation subcommands.
 /// Mirrors the <c>ai</c> command pattern (System.CommandLine subtree).
+///
+/// Warden-gated dev surface (WP-3.0.W). Strips at ship time via <c>#if WARDEN</c>.
 /// </summary>
 public static class WorldCommand
 {
@@ -23,3 +27,5 @@ public static class WorldCommand
         return root;
     }
 }
+
+#endif

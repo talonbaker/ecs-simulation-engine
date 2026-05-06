@@ -8,6 +8,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- Mirrors ECSCli's WARDEN gate so tests for #if WARDEN code compile. -->
+    <DefineConstants>$(DefineConstants);WARDEN</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

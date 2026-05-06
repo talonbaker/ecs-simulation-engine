@@ -9,6 +9,8 @@ using Warden.Telemetry.AsciiMap;
 
 namespace ECSCli.World;
 
+#if WARDEN
+
 /// <summary>
 /// <c>world map [--floor N] [--no-legend] [--no-hazards] [--no-furniture] [--no-npcs] [--watch]</c>
 ///
@@ -25,6 +27,10 @@ namespace ECSCli.World;
 /// </summary>
 public static class WorldMapCommand
 {
+    /// <summary>
+    /// Constructs the <c>map</c> sub-command with its option set and handler.
+    /// Returns a <see cref="Command"/> ready to be added to <see cref="WorldCommand.Root"/>.
+    /// </summary>
     public static Command Build()
     {
         var floorOpt = new Option<int>(
@@ -79,11 +85,17 @@ public static class WorldMapCommand
         return cmd;
     }
 
+    /// <summary>
+    /// Executes the verb against a freshly-bootstrapped simulation. When
+    /// <paramref name="watchEveryN"/> is non-null, advances the engine and re-renders
+    /// every N ticks; otherwise prints a one-shot snapshot and returns.
+    /// </summary>
     internal static void Run(AsciiMapOptions opts, int? watchEveryN)
     {
         var sim  = new SimulationBootstrapper(new InMemoryConfigProvider(new SimConfig()), humanCount: 1);
         var snap = sim.Capture();
-        var dto  = TelemetryProjector.Project(snap, DateTimeOffset.UtcNow, tick: 0, seed: 0, simVersion: "cli");
+        var dto  = TelemetryProjector.Project(snap, sim.EntityManager,
+            DateTimeOffset.UtcNow, tick: 0, seed: 0, simVersion: "cli");
 
         Console.WriteLine(AsciiMapProjector.Render(dto, opts));
 
@@ -97,10 +109,14 @@ public static class WorldMapCommand
                 for (int i = 0; i < n; i++)
                     sim.Engine.Update(1f / 60f);
                 snap = sim.Capture();
-                dto  = TelemetryProjector.Project(snap, DateTimeOffset.UtcNow, tick: sim.Engine.Clock.CurrentTick, seed: 0, simVersion: "cli");
+                dto  = TelemetryProjector.Project(snap, sim.EntityManager,
+                    DateTimeOffset.UtcNow, tick: sim.Engine.Clock.CurrentTick,
+                    seed: 0, simVersion: "cli");
                 Console.Clear();
                 Console.WriteLine(AsciiMapProjector.Render(dto, opts));
             }
         }
     }
 }
+
+#endif
