@@ -9,18 +9,21 @@ using Xunit;
 namespace Warden.Telemetry.Tests;
 
 /// <summary>
-/// Acceptance tests for <see cref="AsciiMapProjector"/>:
+/// Acceptance tests for <see cref="AsciiMapProjector"/>. Glyph identities use the
+/// canonical constants from <see cref="AsciiGlyphCatalog"/> — the symbol
+/// vocabulary was extended in WP-3.0.W (extended) so every entity type owns
+/// one dedicated codepoint.
 ///
 /// AT-01 — Class exists with the public API; compiles with #if WARDEN guard.
-/// AT-02 — Empty WorldStateDto → minimal ╔══╗/╚══╝ outline.
+/// AT-02 — Empty WorldStateDto → minimal exterior-boundary outline.
 /// AT-03 — Single-room world → outer double-line + inner single-line wall outline.
-/// AT-04 — Two-room world with open door → · glyph at door tile.
-/// AT-05 — Closed-door variant → + glyph at door tile.
-/// AT-06 — Room shading by category (Corridor→░, Breakroom→▒, Bathroom→▓).
-/// AT-07 — All eight furniture glyphs (D C M F T S B O).
-/// AT-08 — NPC rendering: Donna → d at her tile.
-/// AT-09 — NPC tile collision → * glyph, both names in legend.
-/// AT-10 — NPC name-letter collision: both render as d, both in legend.
+/// AT-04 — Two-room world with open door → DoorOpen glyph at door tile.
+/// AT-05 — Closed-door variant → DoorClosed glyph at door tile.
+/// AT-06 — Room shading by category (Corridor / Breakroom / Bathroom).
+/// AT-07 — All eight core furniture glyphs (Desk / Chair / Microwave / Fridge / Toilet / Sink / Bed / Other).
+/// AT-08 — NPC rendering: Donna → 'd' at her tile.
+/// AT-09 — NPC tile collision → NpcCollision glyph ('@'), both names in legend.
+/// AT-10 — NPC name-letter collision: both render as 'd', both in legend.
 /// AT-11 — Hazard rendering + Z-order (NPC beats hazard on same tile, legend lists both).
 /// AT-12 — Z-order: NPC over furniture, both in legend.
 /// AT-13 — IncludeLegend = false → no LEGEND section in output.
@@ -200,8 +203,8 @@ public class AsciiMapProjectorTests
 
         var result = AsciiMapProjector.Render(state, new AsciiMapOptions(FloorIndex: 0));
 
-        Assert.Contains("+", result);
-        Assert.DoesNotContain("·", result);
+        Assert.Contains(AsciiGlyphCatalog.DoorClosed.ToString(), result);
+        Assert.DoesNotContain(AsciiGlyphCatalog.DoorOpen.ToString(), result);
     }
 
     // ── AT-06: Room shading by category ──────────────────────────────────────
@@ -251,14 +254,14 @@ public class AsciiMapProjectorTests
 
         var result = AsciiMapProjector.Render(state, new AsciiMapOptions(FloorIndex: 0));
 
-        Assert.Contains("D", result); // Desk
-        Assert.Contains("C", result); // Chair
-        Assert.Contains("M", result); // Microwave
-        Assert.Contains("F", result); // Fridge
-        Assert.Contains("T", result); // Toilet
-        Assert.Contains("S", result); // Sink
-        Assert.Contains("B", result); // Bed
-        Assert.Contains("O", result); // Other
+        Assert.Contains(AsciiGlyphCatalog.FurnitureDesk.ToString(),      result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureChair.ToString(),     result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureMicrowave.ToString(), result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureFridge.ToString(),    result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureToilet.ToString(),    result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureSink.ToString(),      result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureBed.ToString(),       result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureOther.ToString(),     result);
     }
 
     // ── AT-08: NPC rendering ──────────────────────────────────────────────────
@@ -286,7 +289,7 @@ public class AsciiMapProjectorTests
     // ── AT-09: NPC tile collision ─────────────────────────────────────────────
 
     [Fact]
-    public void AT09_NpcTileCollision_StarGlyph()
+    public void AT09_NpcTileCollision_CollisionGlyph()
     {
         var state = EmptyWorld() with
         {
@@ -300,8 +303,9 @@ public class AsciiMapProjectorTests
 
         var result = AsciiMapProjector.Render(state, new AsciiMapOptions(FloorIndex: 0));
 
-        // The grid must contain * (collision marker)
-        Assert.Contains("*", result);
+        // The grid must contain the collision marker ('@', distinct from every
+        // hazard / furniture / wall glyph).
+        Assert.Contains(AsciiGlyphCatalog.NpcCollision.ToString(), result);
         // Both names in legend
         Assert.Contains("Donna", result);
         Assert.Contains("Frank", result);
@@ -361,12 +365,12 @@ public class AsciiMapProjectorTests
 
         var result = AsciiMapProjector.Render(state, new AsciiMapOptions(FloorIndex: 0));
 
-        Assert.Contains("*", result);  // stain
-        Assert.Contains("!", result);  // fire
-        Assert.Contains("x", result);  // corpse appears in legend (NPC wins the tile)
-        Assert.Contains("d", result);  // Donna wins the (7,3) tile
-        Assert.Contains("Donna", result);
-        Assert.Contains("corpse", result); // hazard still in legend
+        Assert.Contains(AsciiGlyphCatalog.HazardStain.ToString(),  result); // stain ∘
+        Assert.Contains(AsciiGlyphCatalog.HazardFire.ToString(),   result); // fire  ▲
+        Assert.Contains(AsciiGlyphCatalog.HazardCorpse.ToString(), result); // corpse legend entry uses †
+        Assert.Contains("d", result);                                       // Donna wins the (7,3) tile
+        Assert.Contains("Donna",  result);
+        Assert.Contains("corpse", result);                                  // hazard still in legend
     }
 
     // ── AT-12: Z-order NPC over furniture ────────────────────────────────────
@@ -433,9 +437,11 @@ public class AsciiMapProjectorTests
         var result = AsciiMapProjector.Render(state,
             new AsciiMapOptions(FloorIndex: 0, ShowHazards: false));
 
-        // Grid chars for hazards should not appear in context of their tile
-        // (fire '!' and stain-as-hazard '*' should be absent outside wall context)
-        Assert.DoesNotContain("!", result);
+        // Hazard glyphs must be absent both from the grid and from the
+        // SYMBOLS legend (DescribeActiveGlyphs only lists rendered glyphs).
+        Assert.DoesNotContain(AsciiGlyphCatalog.HazardFire.ToString(),  result);
+        Assert.DoesNotContain(AsciiGlyphCatalog.HazardStain.ToString(), result);
+        // Hazard names must be absent from the (per-entity) LEGEND list.
         Assert.DoesNotContain("fire",  result);
         Assert.DoesNotContain("stain", result);
     }
@@ -500,5 +506,410 @@ public class AsciiMapProjectorTests
         double meanMs = sw.Elapsed.TotalMilliseconds / runs;
         Assert.True(meanMs < 50.0,
             $"Mean render time {meanMs:F2} ms exceeded 50 ms budget.");
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Extended-vocabulary acceptance tests (WP-3.0.W extended)
+    //
+    //  Every distinct entity type owns one dedicated codepoint. The tests
+    //  below pin those codepoints through AsciiGlyphCatalog so a glyph
+    //  rename (e.g. swapping a door variant) surfaces as a single
+    //  catalog edit rather than a scattered string-literal hunt.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private static NpcSaveDto MakeNpcSave(
+        string id,
+        SaveLifeState? lifeState = null,
+        bool fainting             = false,
+        bool choking              = false) =>
+        new NpcSaveDto
+        {
+            Id        = id,
+            Name      = id,
+            LifeState = lifeState is null
+                ? null
+                : new LifeStateSaveDto { State = lifeState.Value },
+            Fainting  = fainting ? new FaintSaveDto() : null,
+            Choking   = choking  ? new ChokeSaveDto() : null,
+        };
+
+    /// <summary>
+    /// Locked-door world-objects (Name contains "locked" + "door") render as
+    /// the dedicated locked-door glyph, distinct from the closed-door glyph.
+    /// </summary>
+    [Fact]
+    public void ExtendedDoors_LockedDoor_RendersLockedGlyph()
+    {
+        var state = EmptyWorld() with
+        {
+            Rooms = new List<RoomDto>
+            {
+                MakeRoom("ra", 0, 0, 5, 5),
+                MakeRoom("rb", 4, 0, 5, 5),
+            },
+            WorldObjects = new List<WorldObjectDto>
+            {
+                MakeObj("d1", "locked-door", WorldObjectKind.Other, 4f, 2f),
+            },
+        };
+
+        var result = AsciiMapProjector.Render(state, new AsciiMapOptions());
+
+        Assert.Contains(AsciiGlyphCatalog.DoorLocked.ToString(), result);
+        Assert.DoesNotContain(AsciiGlyphCatalog.DoorClosed.ToString(), result);
+    }
+
+    /// <summary>
+    /// Blocked / obstacle world-objects render as the dedicated blocked glyph.
+    /// </summary>
+    [Fact]
+    public void ExtendedDoors_BlockedObstacle_RendersBlockedGlyph()
+    {
+        var state = EmptyWorld() with
+        {
+            Rooms = new List<RoomDto> { MakeRoom("r1", 0, 0, 6, 6) },
+            WorldObjects = new List<WorldObjectDto>
+            {
+                MakeObj("o1", "blocked-passage", WorldObjectKind.Other, 2f, 2f),
+            },
+        };
+
+        var result = AsciiMapProjector.Render(state, new AsciiMapOptions());
+
+        Assert.Contains(AsciiGlyphCatalog.DoorBlocked.ToString(), result);
+    }
+
+    /// <summary>
+    /// Conference / Storage / Reception / Server-room categories all render
+    /// their dedicated floor-shading glyphs.
+    /// </summary>
+    [Fact]
+    public void ExtendedFloorShading_AllNewCategories()
+    {
+        var state = EmptyWorld() with
+        {
+            Rooms = new List<RoomDto>
+            {
+                MakeRoom("conf",   0,  0, 4, 4, RoomCategory.ConferenceRoom),
+                MakeRoom("store",  4,  0, 4, 4, RoomCategory.SupplyCloset),
+                MakeRoom("recpt",  8,  0, 4, 4, RoomCategory.Lobby),
+                MakeRoom("svr",   12,  0, 4, 4, RoomCategory.ItCloset),
+            },
+        };
+
+        var result = AsciiMapProjector.Render(state, new AsciiMapOptions());
+
+        Assert.Contains(AsciiGlyphCatalog.FloorConference.ToString(), result);
+        Assert.Contains(AsciiGlyphCatalog.FloorStorage.ToString(),    result);
+        Assert.Contains(AsciiGlyphCatalog.FloorReception.ToString(),  result);
+        Assert.Contains(AsciiGlyphCatalog.FloorServer.ToString(),     result);
+    }
+
+    /// <summary>
+    /// Eleven extended furniture categories — printer, coffee maker, sofa,
+    /// conference table, whiteboard, filing cabinet, water cooler, vending
+    /// machine, bookshelf, copy machine, plant — each render their
+    /// dedicated glyph from the catalog.
+    /// </summary>
+    [Fact]
+    public void ExtendedFurniture_AllNewCategories_DistinctGlyphs()
+    {
+        var state = EmptyWorld() with
+        {
+            Rooms = new List<RoomDto> { MakeRoom("r1", 0, 0, 16, 16) },
+            WorldObjects = new List<WorldObjectDto>
+            {
+                MakeObj("p1",  "Printer",          WorldObjectKind.Other, 1f, 1f),
+                MakeObj("cm1", "Coffee maker",     WorldObjectKind.Other, 2f, 1f),
+                MakeObj("s1",  "Sofa",             WorldObjectKind.Other, 3f, 1f),
+                MakeObj("ct1", "Conference Table", WorldObjectKind.Other, 4f, 1f),
+                MakeObj("wb1", "Whiteboard",       WorldObjectKind.Other, 5f, 1f),
+                MakeObj("fc1", "Filing Cabinet",   WorldObjectKind.Other, 6f, 1f),
+                MakeObj("wc1", "Water cooler",     WorldObjectKind.Other, 7f, 1f),
+                MakeObj("vm1", "Vending machine",  WorldObjectKind.Other, 8f, 1f),
+                MakeObj("bs1", "Bookshelf",        WorldObjectKind.Other, 9f, 1f),
+                MakeObj("cp1", "Copy machine",     WorldObjectKind.Other, 10f, 1f),
+                MakeObj("pl1", "Plant",            WorldObjectKind.Other, 11f, 1f),
+            },
+        };
+
+        var result = AsciiMapProjector.Render(state, new AsciiMapOptions());
+
+        Assert.Contains(AsciiGlyphCatalog.FurniturePrinter.ToString(),         result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureCoffeeMaker.ToString(),     result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureSofa.ToString(),            result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureConferenceTable.ToString(), result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureWhiteboard.ToString(),      result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureFilingCabinet.ToString(),   result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureWaterCooler.ToString(),     result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureVendingMachine.ToString(),  result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureBookshelf.ToString(),       result);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureCopyMachine.ToString(),     result);
+        Assert.Contains(AsciiGlyphCatalog.FurniturePlant.ToString(),           result);
+    }
+
+    /// <summary>
+    /// Extended hazard categories — broken glass, oil slick, vomit — each
+    /// render their dedicated glyph.
+    /// </summary>
+    [Fact]
+    public void ExtendedHazards_GlassOilVomit_DistinctGlyphs()
+    {
+        var state = EmptyWorld() with
+        {
+            Rooms = new List<RoomDto> { MakeRoom("r1", 0, 0, 10, 6) },
+            WorldObjects = new List<WorldObjectDto>
+            {
+                MakeObj("g1", "broken-glass", WorldObjectKind.Other, 1f, 1f),
+                MakeObj("o1", "oil-slick",    WorldObjectKind.Other, 3f, 1f),
+                MakeObj("v1", "vomit",        WorldObjectKind.Other, 5f, 1f),
+            },
+        };
+
+        var result = AsciiMapProjector.Render(state, new AsciiMapOptions());
+
+        Assert.Contains(AsciiGlyphCatalog.HazardBrokenGlass.ToString(), result);
+        Assert.Contains(AsciiGlyphCatalog.HazardOilSlick.ToString(),    result);
+        Assert.Contains(AsciiGlyphCatalog.HazardVomit.ToString(),       result);
+    }
+
+    /// <summary>
+    /// Sleeping NPC (Physiology.IsSleeping = true) renders as the dedicated
+    /// sleeping glyph in place of the lowercase name letter.
+    /// </summary>
+    [Fact]
+    public void NpcState_Sleeping_RendersSleepGlyph()
+    {
+        var donna = MakeNpc("Donna", 3f, 3f) with
+        {
+            Physiology = new PhysiologyStateDto { IsSleeping = true },
+        };
+
+        var state = EmptyWorld() with
+        {
+            Rooms    = new List<RoomDto> { MakeRoom("r1", 0, 0, 10, 6) },
+            Entities = new List<EntityStateDto> { donna },
+        };
+
+        var result = AsciiMapProjector.Render(state, new AsciiMapOptions());
+
+        Assert.Contains(AsciiGlyphCatalog.NpcSleeping.ToString(), result);
+        // 'd' should still appear in the LEGEND for the name "Donna" but
+        // the on-tile glyph is replaced; that means at least one ezh rendered.
+    }
+
+    /// <summary>
+    /// Fainted NPC (NpcSaveDto.Fainting != null) renders as the fainted glyph.
+    /// </summary>
+    [Fact]
+    public void NpcState_Fainted_RendersFaintedGlyph()
+    {
+        var npc   = MakeNpc("Greg", 4f, 4f);
+        var state = EmptyWorld() with
+        {
+            Rooms         = new List<RoomDto> { MakeRoom("r1", 0, 0, 10, 8) },
+            Entities      = new List<EntityStateDto> { npc },
+            NpcSaveStates = new[] { MakeNpcSave("Greg", fainting: true) },
+        };
+
+        var result = AsciiMapProjector.Render(state, new AsciiMapOptions());
+
+        Assert.Contains(AsciiGlyphCatalog.NpcFainted.ToString(), result);
+    }
+
+    /// <summary>
+    /// Choking NPC (NpcSaveDto.Choking != null) renders as the choking glyph.
+    /// </summary>
+    [Fact]
+    public void NpcState_Choking_RendersChokingGlyph()
+    {
+        var npc   = MakeNpc("Frank", 4f, 4f);
+        var state = EmptyWorld() with
+        {
+            Rooms         = new List<RoomDto> { MakeRoom("r1", 0, 0, 10, 8) },
+            Entities      = new List<EntityStateDto> { npc },
+            NpcSaveStates = new[] { MakeNpcSave("Frank", choking: true) },
+        };
+
+        var result = AsciiMapProjector.Render(state, new AsciiMapOptions());
+
+        Assert.Contains(AsciiGlyphCatalog.NpcChoking.ToString(), result);
+    }
+
+    /// <summary>
+    /// Deceased NPC (NpcSaveDto.LifeState.State == Deceased) renders as the
+    /// deceased glyph (dagger — same codepoint as <see cref="AsciiGlyphCatalog.HazardCorpse"/>).
+    /// State precedence: deceased beats fainted beats choking beats sleeping.
+    /// </summary>
+    [Fact]
+    public void NpcState_Deceased_RendersDeceasedGlyph()
+    {
+        var npc   = MakeNpc("Alice", 5f, 5f);
+        var state = EmptyWorld() with
+        {
+            Rooms         = new List<RoomDto> { MakeRoom("r1", 0, 0, 10, 8) },
+            Entities      = new List<EntityStateDto> { npc },
+            NpcSaveStates = new[] { MakeNpcSave("Alice", lifeState: SaveLifeState.Deceased) },
+        };
+
+        var result = AsciiMapProjector.Render(state, new AsciiMapOptions());
+
+        Assert.Contains(AsciiGlyphCatalog.NpcDeceased.ToString(), result);
+    }
+
+    /// <summary>
+    /// SYMBOLS section appears at the bottom of every legend-enabled render
+    /// and lists only catalog glyphs that are actually rendered on the map.
+    /// </summary>
+    [Fact]
+    public void SymbolsLegend_ListsOnlyActiveGlyphs()
+    {
+        var state = EmptyWorld() with
+        {
+            Rooms = new List<RoomDto>
+            {
+                MakeRoom("r1", 0, 0, 6, 6, RoomCategory.Bathroom),
+            },
+            WorldObjects = new List<WorldObjectDto>
+            {
+                MakeObj("s1", "Sink", WorldObjectKind.Sink, 2f, 2f),
+            },
+        };
+
+        var result = AsciiMapProjector.Render(state, new AsciiMapOptions());
+
+        Assert.Contains("SYMBOLS", result);
+
+        // Active categories must be described.
+        Assert.Contains("Bathroom",          result);
+        Assert.Contains("Sink",              result);
+        Assert.Contains("Exterior boundary", result);
+
+        // Inactive categories must NOT be described in SYMBOLS.
+        Assert.DoesNotContain("Microwave",        result);
+        Assert.DoesNotContain("Vending machine",  result);
+        Assert.DoesNotContain("Printer",          result);
+        Assert.DoesNotContain("Fire",             result);
+    }
+
+    /// <summary>
+    /// <see cref="AsciiGlyphCatalog.RenderReference"/> emits every catalog
+    /// glyph in a single printable block. Used as a one-shot decoder ring
+    /// for Haiku prompt slabs.
+    /// </summary>
+    [Fact]
+    public void GlyphCatalog_RenderReference_IncludesEveryCategory()
+    {
+        var reference = AsciiGlyphCatalog.RenderReference();
+
+        Assert.Contains("WALLS",          reference);
+        Assert.Contains("DOORS",          reference);
+        Assert.Contains("FLOOR SHADING",  reference);
+        Assert.Contains("FURNITURE",      reference);
+        Assert.Contains("HAZARDS",        reference);
+        Assert.Contains("NPCS",           reference);
+
+        // Spot-check that each category renders at least one canonical glyph.
+        Assert.Contains(AsciiGlyphCatalog.WallExteriorTopLeft.ToString(),      reference);
+        Assert.Contains(AsciiGlyphCatalog.DoorOpen.ToString(),                 reference);
+        Assert.Contains(AsciiGlyphCatalog.FloorCorridor.ToString(),            reference);
+        Assert.Contains(AsciiGlyphCatalog.FurnitureMicrowave.ToString(),       reference);
+        Assert.Contains(AsciiGlyphCatalog.HazardFire.ToString(),               reference);
+        Assert.Contains(AsciiGlyphCatalog.NpcSleeping.ToString(),              reference);
+    }
+
+    /// <summary>
+    /// Every catalog codepoint is unique within its semantic category. The
+    /// only intentional cross-category alias is <see cref="AsciiGlyphCatalog.HazardCorpse"/>
+    /// = <see cref="AsciiGlyphCatalog.NpcDeceased"/> ('†' — the dagger
+    /// represents death in either context). All other codepoints are
+    /// pairwise distinct.
+    /// </summary>
+    [Fact]
+    public void GlyphCatalog_NoUnintendedCodepointReuse()
+    {
+        // Build a flat list of all catalog constants with their owning category.
+        (string Category, string Name, char Glyph)[] all =
+        {
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorTopLeft),     AsciiGlyphCatalog.WallInteriorTopLeft),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorTopRight),    AsciiGlyphCatalog.WallInteriorTopRight),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorBottomLeft),  AsciiGlyphCatalog.WallInteriorBottomLeft),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorBottomRight), AsciiGlyphCatalog.WallInteriorBottomRight),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorHorizontal),  AsciiGlyphCatalog.WallInteriorHorizontal),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorVertical),    AsciiGlyphCatalog.WallInteriorVertical),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorTDown),       AsciiGlyphCatalog.WallInteriorTDown),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorTUp),         AsciiGlyphCatalog.WallInteriorTUp),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorTRight),      AsciiGlyphCatalog.WallInteriorTRight),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorTLeft),       AsciiGlyphCatalog.WallInteriorTLeft),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallInteriorCross),       AsciiGlyphCatalog.WallInteriorCross),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallExteriorTopLeft),     AsciiGlyphCatalog.WallExteriorTopLeft),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallExteriorTopRight),    AsciiGlyphCatalog.WallExteriorTopRight),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallExteriorBottomLeft),  AsciiGlyphCatalog.WallExteriorBottomLeft),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallExteriorBottomRight), AsciiGlyphCatalog.WallExteriorBottomRight),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallExteriorHorizontal),  AsciiGlyphCatalog.WallExteriorHorizontal),
+            ("Wall",     nameof(AsciiGlyphCatalog.WallExteriorVertical),    AsciiGlyphCatalog.WallExteriorVertical),
+            ("Door",     nameof(AsciiGlyphCatalog.DoorOpen),                AsciiGlyphCatalog.DoorOpen),
+            ("Door",     nameof(AsciiGlyphCatalog.DoorClosed),              AsciiGlyphCatalog.DoorClosed),
+            ("Door",     nameof(AsciiGlyphCatalog.DoorLocked),              AsciiGlyphCatalog.DoorLocked),
+            ("Door",     nameof(AsciiGlyphCatalog.DoorBlocked),             AsciiGlyphCatalog.DoorBlocked),
+            ("Floor",    nameof(AsciiGlyphCatalog.FloorCorridor),           AsciiGlyphCatalog.FloorCorridor),
+            ("Floor",    nameof(AsciiGlyphCatalog.FloorBreakroom),          AsciiGlyphCatalog.FloorBreakroom),
+            ("Floor",    nameof(AsciiGlyphCatalog.FloorBathroom),           AsciiGlyphCatalog.FloorBathroom),
+            ("Floor",    nameof(AsciiGlyphCatalog.FloorConference),         AsciiGlyphCatalog.FloorConference),
+            ("Floor",    nameof(AsciiGlyphCatalog.FloorStorage),            AsciiGlyphCatalog.FloorStorage),
+            ("Floor",    nameof(AsciiGlyphCatalog.FloorReception),          AsciiGlyphCatalog.FloorReception),
+            ("Floor",    nameof(AsciiGlyphCatalog.FloorServer),             AsciiGlyphCatalog.FloorServer),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureDesk),            AsciiGlyphCatalog.FurnitureDesk),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureChair),           AsciiGlyphCatalog.FurnitureChair),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureMicrowave),       AsciiGlyphCatalog.FurnitureMicrowave),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureFridge),          AsciiGlyphCatalog.FurnitureFridge),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureToilet),          AsciiGlyphCatalog.FurnitureToilet),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureSink),            AsciiGlyphCatalog.FurnitureSink),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureBed),             AsciiGlyphCatalog.FurnitureBed),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurniturePrinter),         AsciiGlyphCatalog.FurniturePrinter),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureCoffeeMaker),     AsciiGlyphCatalog.FurnitureCoffeeMaker),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureSofa),            AsciiGlyphCatalog.FurnitureSofa),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureConferenceTable), AsciiGlyphCatalog.FurnitureConferenceTable),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureWhiteboard),      AsciiGlyphCatalog.FurnitureWhiteboard),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureFilingCabinet),   AsciiGlyphCatalog.FurnitureFilingCabinet),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureWaterCooler),     AsciiGlyphCatalog.FurnitureWaterCooler),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureVendingMachine),  AsciiGlyphCatalog.FurnitureVendingMachine),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureBookshelf),       AsciiGlyphCatalog.FurnitureBookshelf),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureCopyMachine),     AsciiGlyphCatalog.FurnitureCopyMachine),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurniturePlant),           AsciiGlyphCatalog.FurniturePlant),
+            ("Furniture",nameof(AsciiGlyphCatalog.FurnitureOther),           AsciiGlyphCatalog.FurnitureOther),
+            ("Hazard",   nameof(AsciiGlyphCatalog.HazardFire),               AsciiGlyphCatalog.HazardFire),
+            ("Hazard",   nameof(AsciiGlyphCatalog.HazardWater),              AsciiGlyphCatalog.HazardWater),
+            ("Hazard",   nameof(AsciiGlyphCatalog.HazardStain),              AsciiGlyphCatalog.HazardStain),
+            ("Hazard",   nameof(AsciiGlyphCatalog.HazardCorpse),             AsciiGlyphCatalog.HazardCorpse),
+            ("Hazard",   nameof(AsciiGlyphCatalog.HazardBrokenGlass),        AsciiGlyphCatalog.HazardBrokenGlass),
+            ("Hazard",   nameof(AsciiGlyphCatalog.HazardOilSlick),           AsciiGlyphCatalog.HazardOilSlick),
+            ("Hazard",   nameof(AsciiGlyphCatalog.HazardVomit),              AsciiGlyphCatalog.HazardVomit),
+            ("Hazard",   nameof(AsciiGlyphCatalog.HazardUnknown),            AsciiGlyphCatalog.HazardUnknown),
+            ("Npc",      nameof(AsciiGlyphCatalog.NpcCollision),             AsciiGlyphCatalog.NpcCollision),
+            ("Npc",      nameof(AsciiGlyphCatalog.NpcSleeping),              AsciiGlyphCatalog.NpcSleeping),
+            ("Npc",      nameof(AsciiGlyphCatalog.NpcFainted),               AsciiGlyphCatalog.NpcFainted),
+            ("Npc",      nameof(AsciiGlyphCatalog.NpcDeceased),              AsciiGlyphCatalog.NpcDeceased),
+            ("Npc",      nameof(AsciiGlyphCatalog.NpcChoking),               AsciiGlyphCatalog.NpcChoking),
+            ("Npc",      nameof(AsciiGlyphCatalog.NpcInConversation),        AsciiGlyphCatalog.NpcInConversation),
+        };
+
+        // Within each category every glyph must be unique.
+        foreach (var byCat in all.GroupBy(t => t.Category))
+        {
+            var dupes = byCat.GroupBy(t => t.Glyph).Where(g => g.Count() > 1).ToList();
+            Assert.True(dupes.Count == 0,
+                $"Category '{byCat.Key}' has duplicate codepoints: " +
+                string.Join(", ", dupes.Select(g => $"{g.Key}=[{string.Join(",", g.Select(x => x.Name))}]")));
+        }
+
+        // The dagger (corpse / deceased) is the only sanctioned alias across
+        // categories; verify nothing else collides.
+        var crossCat = all.GroupBy(t => t.Glyph)
+                          .Where(g => g.Select(t => t.Category).Distinct().Count() > 1)
+                          .ToList();
+        Assert.Single(crossCat);
+        var alias = crossCat[0].Select(t => t.Name).OrderBy(n => n).ToArray();
+        Assert.Equal(new[] { nameof(AsciiGlyphCatalog.HazardCorpse), nameof(AsciiGlyphCatalog.NpcDeceased) }, alias);
     }
 }
