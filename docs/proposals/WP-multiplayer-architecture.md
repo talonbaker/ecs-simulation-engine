@@ -40,6 +40,73 @@ This mode is the most marketable but the most architecturally complex. It depend
 
 ---
 
+## Foundation-First Sequencing
+
+Before anything in this document touches code, the single-player simulation must be **bulletproof** — semi-truck-stable, performant, and feature-complete enough that "what is the player doing" has a clear answer. Multiplayer is a *force multiplier* on whatever the single-player experience already is. If single-player is shaky, multiplayer makes it twice as shaky and ten times harder to debug.
+
+This translates to a hard sequencing rule for everything below: **don't build the secondary effect before the primary feature it depends on exists.** Don't build poltergeist mode before the acoustic glyph system lands. Don't build acoustic-glyph world-level effects (printer fluff, ambient-sound-starts-fire) before the core glyph propagation system exists. Don't build rival-mode resource arbitration before co-op build mode is shipped. Don't build any of this before the simulation foundation can run a thousand-tick session without a hiccup.
+
+The corollary: every multiplayer-prep activity in the *Discipline Rules* and *What Should Happen Now* sections below is also a single-player improvement. Determinism audits, snapshot hashing, command-DTO formalization — these all make the single-player experience more stable, more debuggable, more performant. None of them are "doing multiplayer work early." They're foundation work that happens to be multiplayer-compatible.
+
+---
+
+## Resolved Design Decisions
+
+### Spectator agency (poltergeist mode)
+
+The spectating player must have enough agency to **never get bored**. The default impulse — "click everything just to see" — must be rewarded. Every interactable object in the office reacts to a ghost click in *some* small way, even if cosmetic:
+
+- A potted plant shivers its leaves.
+- A cup of coffee ripples.
+- A monitor flickers briefly.
+- A door creaks without opening.
+- A piece of paper flutters to the floor.
+
+NPCs in particular must react to being clicked. Not picked up, not flung, but **something** — a startle animation, a glance over the shoulder, a brief mood-state perturbation, a single line of dialog. The principle is *acknowledgment of presence*, not control.
+
+Bandwidth-wise this is fine: clicks are tiny `EmitGhostInteractionCommand { TargetEntityId, X, Y }` events, the same shape as every other command. A budget cap (e.g. one significant interaction per second of sim time, with cosmetic clicks unmetered) prevents a misbehaving spectator from drowning out the world's actual events.
+
+### Spectator visual identity (poltergeist mode)
+
+The host player sees the spectator as **an ethereal ghost figure** — floating, soft-edged, *cute and curious* rather than threatening. They drift through the office, look at things, click on them. Their visual identity is "lore creature," not "UI cursor." When they aren't actively doing something, they're doing the same thing the host's NPCs are doing: existing in the space, reacting to it, being a small presence.
+
+### Spectator origin lore
+
+The ghost emerges from **Mark's old cube** — directly referencing the [acoustic glyph proposal's example NPC](WP-acoustic-glyph-system.md), where Marcus is the sleeper woken by an argument. In the lore, Marcus is gone (transferred? laid off? something worse?), but his cube has become a thin spot in the world. Spectator-players manifest from it. This single piece of worldbuilding accomplishes three things at once:
+
+1. It explains *diegetically* why the host's NPCs are scared of the player's presence — the ghost isn't an abstract spectator, it's a thing that came out of the haunted cube. Stress reactions to ghost proximity have an in-world reason.
+2. It ties multiplayer narratively to the acoustic-glyph proposal, making both proposals feel like parts of the same game rather than disconnected systems.
+3. It gives every multiplayer session a built-in setting beat: "remember Mark? He's still… around."
+
+This is the kind of cross-system lore coherence the project should aim for everywhere: design choices that solve a mechanical problem and tell a story at the same time.
+
+---
+
+## Long-Term Player Goals — The Unanswered Design Question
+
+The architecture below is sound. The gameplay modes are crisp. **What the player is *doing* over hours of play is not yet decided**, and this is the single most important unanswered question for the entire project — not just multiplayer.
+
+In Factorio, the moment-to-moment goal is "build the next thing in the production chain." The macro goal is "launch a rocket." The two are fractally connected: every small build is a step toward the big build, and the production chain itself produces the satisfaction loop.
+
+For an office-NPC simulation, the *factory-line analog* is plausible but unconfirmed:
+
+- **Cast (NPCs) generate "work product"** through their daily routines — emails sent, reports filed, contracts closed, code committed. The exact unit doesn't matter; what matters is that NPC activity *produces* something measurable.
+- **The player builds infrastructure** — desks, bathrooms, breakrooms, conference rooms — that supports or bottlenecks productivity. A poorly-laid-out office has worse output than a well-laid-out one for reasons the simulation can compute (longer walking distances, queues at the bathroom, stress from overcrowding, fights over the last coffee).
+- **Productivity converts to a meta-resource** — revenue, reputation, headcount budget — that the player spends to expand. The expansion gives more NPCs, more office space, more gameplay surface.
+- **Bottlenecks in the office are like bottlenecks in a factory line.** The fun is identifying them and fixing them. "Why is everyone late to meetings? Oh — the only working printer is on the other side of the building."
+
+This is one hypothesis, not a commitment. It maps cleanly onto the existing systems (`StressComponent`, `EnergyComponent`, `MoodSystem`, the schedule and digestion loops, room categories and furniture, NPC pathfinding) and would let multiplayer modes inherit a meaningful goal: in co-op, build the world's best office; in rival mode, out-produce the other player while sabotaging their production; in poltergeist mode, observe and minorly perturb a real, goal-driven world.
+
+**Alternative hypotheses worth considering** before this one is locked in:
+
+- *Survival-mode office:* dwindling budget, layoffs, building maintenance failures. Player keeps the office alive against entropy.
+- *Drama-driven office:* the goal is *narrative*, not productivity. Player engineers situations that produce stories worth telling. The Sims model.
+- *Audit/inspection office:* a periodic external check evaluates the office on multiple axes (productivity, employee well-being, regulatory compliance) and the player optimizes against those.
+
+Pick one before any milestone past the simulation foundation. Without a chosen goal, every feature decision is uncalibrated. The acoustic glyph system is a great feature *if* the player goal benefits from emergent narrative; less essential *if* the goal is pure productivity-min/max. Multiplayer modes are gameplay containers — they need a goal to contain.
+
+---
+
 ## Architecture: Deterministic Lockstep
 
 ### The model
@@ -170,18 +237,17 @@ The "no laggy" goal is achievable because lockstep doesn't generate the latency 
 
 ## Open Questions
 
-These need answers before any implementation begins. Listed in approximate dependency order — earlier answers constrain later ones.
+These need answers before any implementation begins. Listed in approximate dependency order — earlier answers constrain later ones. (Two original questions — spectator command budget and spectator visual representation — have been resolved; see the *Resolved Design Decisions* section above.)
 
-1. **Tick coordinator election.** Static (lobby host) or dynamic (re-elect on drop)? Static is simpler and probably fine for v1; dynamic matters if sessions are long-lived.
-2. **What constitutes a "command"?** Specifically: is camera pan a command? Is hovering a tile a command? The temptation is to make everything a command for purity, but most cosmetic state should stay client-local. Draw the line carefully.
-3. **Spectator command budget for poltergeist mode.** How much can a ghost actually do? One sound emission per N ticks? A budget that refills? An intensity cap so they can't drown out the world's actual events?
+1. **Long-term player goal.** The factory-line analog vs. survival vs. drama vs. audit-mode question above. The single most important question in this document and arguably in the whole project. Until this is answered, every other feature is being built against a moving target.
+2. **Tick coordinator election.** Static (lobby host) or dynamic (re-elect on drop)? Static is simpler and probably fine for v1; dynamic matters if sessions are long-lived.
+3. **What constitutes a "command"?** Specifically: is camera pan a command? Is hovering a tile a command? The temptation is to make everything a command for purity, but most cosmetic state should stay client-local. Draw the line carefully.
 4. **Clock-decoupling strategy.** Can the simulation locally run faster than the network tick rate? If yes, what happens to commands queued mid-fast-forward? Probably they fire on the next network-tick boundary, but this needs an answer.
 5. **Save / share game state.** Single-player saves already exist via `SimulationSnapshot`. Does a multiplayer save come from one peer or require consensus? (Probably one peer; all peers should have identical state, so any peer's snapshot is the truth — unless they disagree, in which case the desync was already caught.)
 6. **Floating-point determinism.** This is the question that will eventually bite. Today the engine uses `float` and `double` freely. At what point do we audit and document every floating-point hot path? Probably before WP-Multiplayer-1 lands. A cross-platform desync test (run the same seed + commands on Windows and Linux, compare snapshots) is the canonical check.
 7. **Mod / scenario interaction.** If players have different `SimConfig.json` files, lockstep is impossible. The handshake must verify config equality. Out-of-band config mods need to be a session-level negotiation.
 8. **Anti-cheat.** Lockstep is naturally cheat-resistant — if you mutate your local state, the next CRC will desync you out of the game. But it's not cheat-*proof*. Worth thinking about before competitive rival mode ships.
 9. **Late-join cost vs. session length.** A 4-hour session generates a long command stream. Replay-from-bootstrap may be too slow. Probably the bootstrap snapshot is taken at tick T directly (not T-K + replay), avoiding replay entirely. Confirm this.
-10. **The poltergeist's *visual* representation to the host player.** Does the host see the ghost as a glyph cursor? An ambient cold spot? No visual at all (only sim effects)? Design decision, not architecture, but worth picking before implementation.
 
 ---
 
