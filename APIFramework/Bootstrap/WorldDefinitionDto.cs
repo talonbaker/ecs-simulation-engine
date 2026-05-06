@@ -113,6 +113,8 @@ internal sealed class NpcSlotDto
     public int     Y             { get; set; }
     /// <summary>Optional archetype id hint; if it doesn't match the catalog a random archetype is chosen.</summary>
     public string? ArchetypeHint { get; set; }
+    /// <summary>Optional name hint applied to the spawned NPC's IdentityComponent.</summary>
+    public string? NameHint      { get; set; }
 }
 
 /// <summary>Definition of an anchor object placed at a room's named anchor.</summary>

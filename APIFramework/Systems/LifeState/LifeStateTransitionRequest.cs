@@ -1,5 +1,6 @@
 using APIFramework.Components;
 
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>

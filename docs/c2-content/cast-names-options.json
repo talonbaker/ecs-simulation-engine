@@ -1,0 +1,173 @@
+{
+  "first_names": {
+    "male": ["Richard", "Dickard", "Billy", "Fredrick", "Guy", "Fry", "Sonny", "Harden", "Hardon", "Rod", "Woody", "Harry", "Johnson", "Peter", "Phil", "Buster", "Artie", "Lance", "Seamore", "Mike", "Ben", "Otto", "Dickie", "Barry", "Chuck", "Dong", "Willie", "Tug", "Rusty", "Buck", "Gus", "Morty", "Butch", "Skip", "Humpy", "Stroker", "Wedge", "Biff", "Dixon", "Digby", "Gomer", "Eustace", "Barnaby", "Bort", "Slab"],
+    "female": ["Camilla", "Midge", "Soon", "Fanny", "Candy", "Barb", "Kitty", "Flo", "Bev", "Anita", "Ivana", "Penny", "Gigi", "Misty", "Bunny", "Dixie", "Trixie", "Tessie", "Dot", "Peaches", "Olive", "Cherry", "Verna", "Babs", "Agatha", "Tootsie", "Goldie", "Marge", "Pansy", "Ethel", "Blanche", "Prue", "Beulah", "Gertrude", "Helga", "Mildred", "Hortense"],
+    "neutral": ["Spanky", "Milky", "Smalky", "Smokey", "Dolla", "Spazzy", "Weird", "Pat", "Pip", "Ziggy", "Skitter", "Boop", "Gorp", "Zip", "Nacho", "Pudge", "Squeak", "Dripple", "Fodder", "Gristle", "Titch", "Sniff", "Puff", "Wobble", "Jinx", "Riff", "Soggy", "Lump", "Crusty", "Dab", "Fleck", "Grit", "Poke", "Tubby", "Skid", "Slick", "Winky", "Binky", "Widget"]
+  },
+  "fusion_prefixes": [
+    "Beef", "Blob", "Chunky", "Clump", "Dong", "Fizzle", "Frump", "Gloom", "Grump", "Gurgle", "Honk", "Jiggle", "Klutzo", "Lump", "Muck", "Noodle", "Plop", "Poot", "Pork", "Quack", "Rump", "Slap", "Sludge", "Shnoz", "Snort", "Stink", "Twerp", "Waffle", "Zonk", "Bung", "Long", "Hard", "Wet", "Soft", "Big", "Small", "Short", "Stiff", "Wood", "Bush", "Sack", "Crack", "Nut", "Cream", "Stroke", "Rub", "Tug", "Poke", "Shaft", "Rack", "Hole", "Knob", "Junk", "Beaver", "Ball", "Wedge", "Grab", "Munch", "Schlep", "Squirt", "Grunt", "Throttle", "Smear", "Guzzle", "Flop"
+  ],
+  "fusion_suffixes": [
+    "berg", "bord", "son", "sin", "er", "ing", "gal", "sit", "man", "men", "mon", "en", "den", "tch", "billa", "butt", "ker", "y", "oid", "kins", "munch", "face", "ee", "bottom", "wick", "ford", "ling", "ton", "blatt", "doodle", "fink", "goose", "hole", "knob", "lick", "moose", "nugget", "puss", "rump", "snout", "toes", "wad", "well", "off", "on", "ly", "kin", "pecker", "shiner", "rider", "grinder", "smith", "field", "wood", "water", "cock", "bridge", "house", "bag", "sack", "mouth", "foot", "leg", "hand", "finger"
+  ],
+  "static_last_names": [
+    "Prickens", "Dickonson", "Grundle", "Pooman", "Pooson", "Plowman", "Plowson", "Ploob", "Ploomb", "Dumbe", "Snell", "Snellky", "Harden", "Spanks", "Spanky", "Boobilla", "Dumbus", "Cranker", "Cracker", "Conch", "Couch", "Chaire", "Redass", "Milk", "Milky", "Hardass", "Bonker", "Spankman", "Shoeman", "Shoegal", "Choson", "Dooson", "Roden", "Roddan", "Bigman", "Biggins", "Bingus", "Fetch", "Ballson", "Ballman", "Buttson", "Buttman", "Hooker", "Honker", "Honkey", "Fux", "Beefbottom", "Crackerjack", "Dunderhead", "Eggfart", "Flapjack", "Goosehonk", "Hamhock", "Ironbutt", "Jellybelly", "Knucklehead", "Lardass", "Meatball", "Nutcase", "Picklebreath", "Rumptunnel", "Slapnuts", "Thickneck", "Wormguy", "Snodgrass", "Crandall", "Lumpkin", "Pumpernickel", "Shunt", "Blump", "Gristle", "Waffleman", "Squelch", "Dripman", "Stinkleton", "Swallow", "Cox", "Dix", "Hancock", "Wacker", "Pounder", "Grabman", "Tugwell", "Rubbin", "Dixon", "Morehead", "Butts", "Fillmore", "Cummings", "Hardcastle", "Lovelady", "Glasscock", "Wiener", "Wankel", "Fiddler", "Rodman", "Pecker", "Sackett", "Wang", "Schlong"
+  ]
+}
+
+{
+  "divine_roots": {
+    "male": ["Zeus", "Odin", "Ares", "Thor", "Kratos", "Apollo", "Titan", "Ragnar", "Ra", "Anubis"],
+    "female": ["Hera", "Athena", "Artemis", "Valkyrie", "Freya", "Isis", "Nyx", "Hecate", "Sigrid"],
+    "neutral": ["Phoenix", "Oracle", "Zenith", "Aeon", "Ether", "Chaos"]
+  }
+}
+
+NOTES:
+
+Stage 1: The First NameSelect from male, female, or neutral arrays based on character metadata.Stage 2: The Primary Surname ConstructionRoll to decide if the surname is Static (picked from the list) or Fused (Prefix + Suffix).70% Static: Pull one from static_last_names.30% Fusion: Combine 1 fusion_prefix + 1 fusion_suffix. (e.g., Grab + puss = Grabpuss).Stage 3: The Complexity Modifier (The "Suffix Roll")Generate a random float $r_1 \in [0, 1]$.If $r_1 \le 0.65$: The name gets a "Dangling Suffix."Pull from fusion_suffixes and append it to the end of whatever was generated in Stage 2.Example: Plowson becomes Plowsonberg.Stage 4: The Hyphenation BranchIf (and only if) Stage 3 triggered (the 65% chance), roll $r_2 \in [0, 1]$.If $r_2 \le 0.50$: The name becomes hyphenated.Run Stage 2 again to generate a second surname.Append it with a hyphen: Plowsonberg-Schleppman.Stage 5: The "Double Suffix" RarityIf Stage 4 triggered, roll $r_3 \in [0, 1]$.If $r_3 \le 0.10$: The second half of the hyphenated name also gets a suffix.Example: Dickard Spankman-Buttsinger.
+
+Since you are fusing words, you’ll occasionally get double letters (e.g., Sack + ker = Sackker). Tell the developer to add a simple regex or string check to collapse triple consonants or fix awkward pairings like "ttb" into "tb" if you want it to look slightly more "natural."
+
+Would you like me to generate a few dozen "Ultra-Rare" samples just to see how the logic holds up?
+
+Name Type,Probability,Rarity Level,Example
+Vanilla,35%,Common,Dick Johnson
+Suffixed,32.5%,Uncommon,Dick Johnsonwick
+Hyphenated,29.25%,Rare,Dick Johnsonwick-Poot
+Double-Suffixed Hyphen,3.25%,Ultra-Rare,Dick Johnsonwick-Pootberg
+
+Ultra-Rare Samples (Double-Suffixed Hyphens)
+These names represent the ~3.25% probability tier where the algorithm hits every possible complexity roll: First Name + [Lastname + Suffix] - [Lastname + Suffix].
+
+Dickard Spankman-Buttsinger
+
+Fanny Pootberg-Grabwick
+
+Humpy Shaftford-Holeling
+
+Midge Snortface-Gurglebottom
+
+Buster Rackman-Sackford
+
+Tootsie Slapton-Grabton
+
+Rodden Beefwick-Plowsonberg
+
+Candy Creamly-Munchkins
+
+Stroker Knobshiner-Wedgeson
+
+Grizelda Stinkleton-Pooten
+
+Barnaby Bungwick-Finkden
+
+Tugwell Rubbiner-Shaftman
+
+Beulah Gruntface-Squelchberg
+
+Dickie Longbottom-Wackerly
+
+Dixon Ballinger-Sacksmith
+
+Prudence Shnozgal-Snouten
+
+Otto Guzzleman-Mucken
+
+Anita Fillmore-Hardcastleberg
+
+Skip Jigglebutt-Waffleman
+
+Morty Dunderhead-Plopwell
+
+The "Legendary" Modifier (Optional Add-on)
+If you want an even rarer tier (the "1 in 1,000" employee), you can add a Title Prefix roll. If the name is already a Double-Suffixed Hyphen, give it a 1% chance to prepend a ridiculous corporate title:
+
+Senior Associate Pootberg-Grabwick
+
+Executive VP Dickard Spankman-Buttsinger
+
+Lead Synergy Coordinator Stroker Knobshiner-Wedgeson
+
+Interim Regional Director Beulah Gruntface-Squelchberg
+
+Element,Source,Selection Logic
+First Name,first_names,Direct pick based on gender/neutrality.
+Primary Root,fusion_prefixes OR static_last_names,50/50 chance to use a prefix or a full static name as the root.
+Suffix A,fusion_suffixes,Append to Primary Root (65% chance).
+Hyphen,-,Add if Suffix A exists (50% chance).
+Secondary Root,fusion_prefixes OR static_last_names,Pick new root if Hyphen exists.
+Suffix B,fusion_suffixes,Append to Secondary Root (10% chance).
+
+
+RarityProbabilityColor CodeVisual FXLogic PathCommon$50\%$#D3D3D3 (Grey)NoneFirstName + StaticLastNameUncommon$30\%$#31FF31 (Green)StaticFirstName + FusedName (Prefix+Suffix)Rare$14\%$#0070DD (Blue)Subtle PulseFirstName + FusedName + SuffixEpic$5\%$#A335EE (Purple)Inner GlowFirstName + Hyphenated-FusedLegendary$1\%$#FF8000 (Orange)Shimmer & GoldDivineRoot OR Double-Suffixed Hyphen + Title
+
+{
+  "legendary_names": {
+    "roots": {
+      "male": ["Zeus", "Odin", "Ares", "Thor", "Kratos", "Apollo", "Titan", "Ragnar", "Ra", "Anubis", "Maximus", "Leonidas", "Gunnar", "Rollo", "Attila", "Ajax", "Siegfried", "Beowulf", "Thanatos", "Hades", "Erebus", "Belial"],
+      "female": ["Hera", "Athena", "Artemis", "Valkyrie", "Freya", "Isis", "Nyx", "Hecate", "Sigrid", "Zenobia", "Boudica", "Lagertha", "Hippolyta", "Ishtar", "Morrigan", "Sekhmet", "Kali", "Medusa", "Tiamat", "Lilith"],
+      "neutral": ["Phoenix", "Oracle", "Zenith", "Aeon", "Ether", "Chaos", "Nova", "Pulsar", "Abyss", "Obsidian", "Onyx", "Harbinger", "Paragon", "Vanguard", "Sovereign", "Nemesis"]
+    },
+    "titles": [
+      "The Unconquered", "The World-Eater", "Storm-Born", "Void-Walker", "The Eternal", 
+      "Iron-Willed", "The Doom-Slayer", "Shadow-Stalker", "The Prime", "The Harbinger", 
+      "Earth-Shaker", "The Blood-Axe", "Star-Reaper", "The Sovereign", "The Inevitable"
+    ]
+  }
+}
+
+3. The "Loot Drop" Visual Tiers
+To give your developer the "WoW" feeling, define the UI requirements for these names specifically. Each tier should have an increasingly intense CSS or Shader effect.
+
+Common (Grey)
+Name: Richard Snell
+
+Effect: Standard font, no glow.
+
+Uncommon (Green)
+Name: Gomer Slapton
+
+Effect: Slight green text glow (#31FF31).
+
+Rare (Blue)
+Name: Fanny Pootberg-Wick
+
+Effect: Blue text pulse (#0070DD).
+
+Epic (Purple)
+Name: Stroker Knobshiner-Wedgeson
+
+Effect: Purple outer-glow with "Inner Shadow" text (#A335EE).
+
+Legendary (Gold/Orange Shimmer)
+Name: [LEGENDARY] Ares The Doom-Slayer
+
+Animation:
+
+The Sweep: A white/gold light "glint" that slides across the name every 1.5 seconds.
+
+The Aura: Gold particle "dust" floating upward from the letters.
+
+The Weight: The text itself has a slight bounce or "breathing" animation to show its power.
+
+4. Sample Legendary Roster
+When the 1% luck strikes, these are the types of names the engine will spit out:
+
+[LEGENDARY] Kratos Iron-Willed
+
+[LEGENDARY] Valkyrie The Inevitable
+
+[LEGENDARY] Zenith The World-Eater
+
+[LEGENDARY] Ragnar Storm-Born
+
+[LEGENDARY] Morrigan Star-Reaper
+
+[LEGENDARY] Chaos The Eternal
+
+[LEGENDARY] Beowulf Earth-Shaker
+
+[LEGENDARY] Hecate Shadow-Stalker
+
+By mixing these "God" names into a sea of Buttsons and Plowmans, the "Badass" characters feel genuinely special and intimidating in an office setting. It makes the player want to collect them all!

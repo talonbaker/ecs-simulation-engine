@@ -6,6 +6,8 @@ using APIFramework.Systems.LifeState;
 using APIFramework.Systems.Narrative;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.LifeState;
 
 /// <summary>
@@ -32,7 +34,7 @@ public class CorpseSpawnerSystemTests
 
         var deceased = em.CreateEntity();
         deceased.Add(new NpcTag());
-        deceased.Add(new LifeStateComponent { State = LifeState.Deceased });
+        deceased.Add(new LifeStateComponent { State = LS.Deceased });
 
         return (em, bus, deceased);
     }
@@ -119,17 +121,18 @@ public class CorpseSpawnerSystemTests
         var (em, bus, deceased) = Build();
         _ = new CorpseSpawnerSystem(bus, em);
 
+        var roomId = Guid.NewGuid();
         deceased.Add(new CauseOfDeathComponent
         {
             Cause        = CauseOfDeath.Choked,
             DeathTick    = 99,
-            LocationRoomId = "room-kitchen",
+            LocationRoomId = roomId,
         });
 
         bus.RaiseCandidate(DeathEvent(deceased));
 
         var c = deceased.Get<CorpseComponent>();
-        Assert.Equal("room-kitchen", c.LocationRoomId);
+        Assert.Equal(roomId.ToString(), c.LocationRoomId);
         Assert.Equal(99L, c.DeathTick);
     }
 }

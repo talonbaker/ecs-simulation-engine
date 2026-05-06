@@ -1,59 +1,118 @@
+using System;
 using APIFramework.Components;
 
 namespace APIFramework.Mutation;
 
 /// <summary>
-/// Public contract for mutating the world topology at runtime.
+/// Public contract for all runtime structural topology mutations.
 /// All structural mutations after WP-3.0.4 flow through this interface.
+/// Tests, WP-3.0.3 stain spawner, and WP-3.1.D Unity glue all call through here.
 ///
-/// Each method validates inputs, applies the mutation, and emits the corresponding
-/// StructuralChangeEvent so subscribers (including the pathfinding cache invalidator) can react.
+/// Direct entity.Set(new PositionComponent(...)) on a StructuralTag entity
+/// outside this API is a code smell — it bypasses bus emission and leaves the
+/// pathfinding cache stale.
 ///
-/// Tests, 3.0.3's stain spawner, and 3.1.D's Unity glue all use this API.
-/// Direct entity mutations outside this API are code smell and should be escalated.
+/// Boot-time spawns (WorldDefinitionLoader, SpawnWorld) are exempt: they happen
+/// before the bus has subscribers and do not need cache invalidation.
 /// </summary>
 public interface IWorldMutationApi
 {
     /// <summary>
-    /// Move a MutableTopologyTag entity to a new tile position.
-    /// Fails closed (returns false) if the entity lacks MutableTopologyTag or if the move is invalid.
-    /// On success, emits EntityMoved on StructuralChangeBus.
+    /// Moves a MutableTopologyTag entity to a new tile.
+    /// Throws InvalidOperationException if the entity lacks MutableTopologyTag (fail-closed).
     /// </summary>
-    bool MoveEntity(Guid entityId, int newTileX, int newTileY);
+    void MoveEntity(Guid entityId, int newTileX, int newTileY);
+
+    /// <summary>Spawns a new structural entity at the given tile. Returns the new entity's ID.</summary>
+    Guid SpawnStructural(int tileX, int tileY);
+
+    /// <summary>Despawns a StructuralTag entity and emits EntityRemoved.</summary>
+    void DespawnStructural(Guid entityId);
+
+    /// <summary>Attaches ObstacleTag and StructuralTag to an existing entity.</summary>
+    void AttachObstacle(Guid entityId);
+
+    /// <summary>Removes ObstacleTag from an entity. StructuralTag is retained.</summary>
+    void DetachObstacle(Guid entityId);
+
+    /// <summary>Updates RoomComponent.Bounds for the given room entity.</summary>
+    void ChangeRoomBounds(Guid roomId, BoundsRect newBounds);
 
     /// <summary>
-    /// Spawn a structural entity at a given tile (e.g., a desk placed by the player in 3.1.D).
-    /// The entity is created from a template and must have StructuralTag.
-    /// Emits EntityAdded on StructuralChangeBus.
-    /// Returns the created entity's Guid, or Guid.Empty if spawn failed.
+    /// Attaches ThrownVelocityComponent and ThrownTag to an existing entity, launching it.
     /// </summary>
-    Guid SpawnStructural(Guid templateId, int tileX, int tileY);
+    void ThrowEntity(Guid entityId, float velocityX, float velocityZ, float velocityY, float decayPerTick);
 
     /// <summary>
-    /// Despawn a structural entity (e.g., a desk removed by the player).
-    /// Emits EntityRemoved on StructuralChangeBus.
-    /// Fails closed (does nothing) if the entity is not found or lacks StructuralTag.
+    /// Spawns a stain entity from a template (see StainTemplates) at the given tile.
+    /// Attaches StainTag, StainComponent, FallRiskComponent, and PositionComponent.
+    /// Returns the new entity's ID.
     /// </summary>
-    bool DespawnStructural(Guid entityId);
+    Guid SpawnStain(string templateId, int tileX, int tileY);
+
+    // ── Author-mode extensions (WP-4.0.J) ────────────────────────────────────────
 
     /// <summary>
-    /// Attach ObstacleTag to an entity (e.g., marking a tile as a fall risk).
-    /// Emits ObstacleAttached on StructuralChangeBus.
-    /// Fails closed if the entity is not found.
+    /// Spawns a new room entity with the given category, floor, and bounds.
+    /// Returns the new room entity's ID. Emits StructuralChangeKind.EntityAdded.
     /// </summary>
-    bool AttachObstacle(Guid entityId);
+    Guid CreateRoom(RoomCategory category, BuildingFloor floor, BoundsRect bounds, string? name = null);
 
     /// <summary>
-    /// Remove ObstacleTag from an entity.
-    /// Emits ObstacleDetached on StructuralChangeBus.
-    /// Fails closed if the entity is not found or lacks ObstacleTag.
+    /// Despawns a room. <paramref name="policy"/> controls whether contents are orphaned
+    /// or cascade-deleted (NPC slots are never cascade-deleted regardless of policy).
+    /// Emits StructuralChangeKind.EntityRemoved for each despawned entity.
     /// </summary>
-    bool DetachObstacle(Guid entityId);
+    void DespawnRoom(Guid roomId, RoomDespawnPolicy policy);
 
     /// <summary>
-    /// Change a room's bounding box (e.g., when 3.1.D adds a wall to a room).
-    /// Emits RoomBoundsChanged on StructuralChangeBus.
-    /// Fails closed if the room entity is not found or lacks RoomComponent.
+    /// Spawns a light source in the named room at the given tile.
+    /// Returns the new light entity's ID.
     /// </summary>
-    bool ChangeRoomBounds(Guid roomId, BoundsRect newBounds);
+    Guid CreateLightSource(string roomId, int tileX, int tileY,
+                           LightKind kind, LightState state, int intensity, int colorTempK);
+
+    /// <summary>
+    /// Mutates a light source's tunable properties in place (state, intensity, color temperature).
+    /// Throws InvalidOperationException if the entity is not a light source.
+    /// </summary>
+    void TuneLightSource(Guid lightId, LightState state, int intensity, int colorTempK);
+
+    /// <summary>
+    /// Spawns a light aperture (window/skylight) on the boundary of a room.
+    /// Returns the new aperture entity's ID.
+    /// </summary>
+    Guid CreateLightAperture(string roomId, int tileX, int tileY,
+                             ApertureFacing facing, double areaSqTiles);
+
+    /// <summary>
+    /// Despawns a light source or aperture entity.
+    /// Throws InvalidOperationException if the entity is neither.
+    /// </summary>
+    void DespawnLight(Guid lightId);
+
+    // ── NPC authoring (WP-4.0.K) ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Spawns a new NPC of the given archetype at the tile, in the named room.
+    /// All archetype-derived components (drives, personality, inhibitions, silhouette,
+    /// deal) are sampled per the existing CastGenerator semantics; <paramref name="name"/>
+    /// becomes the NPC's IdentityComponent.Name.
+    /// Returns the new NPC's entity ID.
+    /// Requires the WorldMutationApi to have been constructed with the cast deps —
+    /// throws InvalidOperationException otherwise.
+    /// </summary>
+    Guid CreateNpc(string roomId, int tileX, int tileY, string archetypeId, string name);
+
+    /// <summary>
+    /// Despawns an NPC entity.
+    /// Throws InvalidOperationException if the entity has no NpcArchetypeComponent.
+    /// </summary>
+    void DespawnNpc(Guid npcId);
+
+    /// <summary>
+    /// Renames an existing NPC's IdentityComponent.
+    /// Throws InvalidOperationException if the entity has no IdentityComponent.
+    /// </summary>
+    void RenameNpc(Guid npcId, string newName);
 }

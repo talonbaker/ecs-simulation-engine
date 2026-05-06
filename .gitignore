@@ -91,6 +91,14 @@ StyleCopReport.xml
 *_h.h
 *.ilk
 *.meta
+# Unity exception: Unity .meta files MUST be committed alongside their assets
+# or scene/prefab GUIDs become non-portable across checkouts. See BUG-003 for
+# the regression this rule caused (Sonnet fabricated GUIDs in PlaytestScene
+# because real meta files were silently ignored). The VS template's *.meta
+# is for VisualStudio C++ build metadata; the negation below restores Unity
+# meta files for the engine's Unity host.
+!ECSUnity/**/*.meta
+!UnityVisualizer/**/*.meta
 *.obj
 *.idb
 *.iobj
@@ -221,6 +229,11 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
+# Unity package manifests must be tracked — the rule above is for NuGet, not UPM
+!ECSUnity/Packages/manifest.json
+!ECSUnity/Packages/packages-lock.json
+!UnityVisualizer/Packages/manifest.json
+!UnityVisualizer/Packages/packages-lock.json
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files

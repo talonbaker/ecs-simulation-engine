@@ -33,7 +33,7 @@ namespace Warden.Telemetry.Tests;
 /// <summary>
 /// Acceptance tests for <see cref="TelemetryProjector"/>:
 ///
-/// AT-01 — Projector emits SchemaVersion = "0.4.0".
+/// AT-01 — Projector emits SchemaVersion = "0.5.0".
 /// AT-02 — Two rooms produce a rooms[] array of length 2 with correct fields.
 /// AT-03 — Three light sources produce a lightSources[] array of length 3 with correct fields.
 /// AT-04 — One light aperture produces a lightApertures[] array of length 1 with correct fields.
@@ -73,7 +73,7 @@ public class TelemetryProjectorTests
     public void AT01_SchemaVersion_Is040()
     {
         var dto = Capture(MakeSim());
-        Assert.Equal("0.4.0", dto.SchemaVersion);
+        Assert.Equal("0.5.0", dto.SchemaVersion);
     }
 
     // -- AT-02: NPC social projection -----------------------------------------

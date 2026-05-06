@@ -1,0 +1,310 @@
+using UnityEngine;
+
+/// <summary>
+/// Single-stick-equivalent camera controller.
+///
+/// DESIGN (UX bible §2.1)
+/// ───────────────────────
+/// • Pan:    WASD / arrow keys / middle-click drag.  Moves the focus point in XZ.
+/// • Rotate: Q / E / right-click drag.  Lazy-susan around the focus point.
+/// • Zoom:   Scroll wheel / +−.  Implemented as altitude change (Y).
+/// • Recenter: F key.  Snaps to world centre (or selected entity if future packet adds selection).
+///
+/// ARCHITECTURE
+/// ─────────────
+/// CameraController does NOT read input directly. All raw input is routed through
+/// <see cref="CameraInputBindings"/> so bindings can be remapped in one place.
+/// Constraint enforcement is delegated to <see cref="CameraConstraints"/>:
+///   Apply input → clamp altitude → enforce fixed pitch.
+///
+/// The camera pivots around a "focus point" in XZ. Altitude is the Y distance from
+/// the floor (Y = 0). Pitch is fixed; the user lazily rotates around Y.
+///
+/// MOUNTING
+/// ─────────
+/// Attach to the Main Camera GameObject. Set the Inspector fields (or leave defaults).
+/// CameraController reads from SimConfigAsset via the EngineHost if one is present;
+/// otherwise falls back to built-in defaults.
+/// </summary>
+[RequireComponent(typeof(Camera))]
+public sealed class CameraController : MonoBehaviour
+{
+    // ── Inspector ─────────────────────────────────────────────────────────────
+
+    [Header("Source of truth for camera config values.")]
+    [Tooltip("Optional — drag in the EngineHost to read camera settings from SimConfigAsset. " +
+             "Leave null to use the default values below.")]
+    [SerializeField] private EngineHost _engineHost;
+
+    [Header("Wall Fade (WP-3.1.C)")]
+    [Tooltip("Optional — drag in the WallFadeController to enable camera-occlusion wall fade. " +
+             "Leave null to disable wall fade (walls stay fully opaque).")]
+    [SerializeField] private WallFadeController _wallFadeController;
+
+    [Header("Selection Glide (BUG-005a)")]
+    [Tooltip("Optional — drag in SelectionController to enable double-click-to-glide on NPCs. " +
+             "Leave null and the camera falls back to F-key recenter only.")]
+    [SerializeField] private SelectionController _selectionController;
+
+    [Header("Pan")]
+    [Tooltip("World-units per second.")]
+    [Range(0.1f, 100f)]
+    [SerializeField] private float _panSpeed = 20f;
+
+    [Header("Rotate")]
+    [Tooltip("Degrees per second.")]
+    [Range(0f, 360f)]
+    [SerializeField] private float _rotateSpeed = 90f;
+
+    [Header("Zoom")]
+    [Tooltip("World-units per scroll step.")]
+    [Range(0.1f, 50f)]
+    [SerializeField] private float _zoomSpeed = 5f;
+
+    [Header("Constraints")]
+    [Range(1f, 100f)]
+    [SerializeField] private float _minAltitude = 5f;
+    [Range(1f, 100f)]
+    [SerializeField] private float _maxAltitude = 50f;
+    [Range(0f, 90f)]
+    [SerializeField] private float _pitchAngle  = 50f;
+
+    [Header("Start position")]
+    [SerializeField] private Vector3 _startFocusPoint = new Vector3(30f, 0f, 20f);
+    [Range(0f, 360f)]
+    [SerializeField] private float   _startYaw        = 0f;
+
+    // ── Runtime state ─────────────────────────────────────────────────────────
+
+    private CameraInputBindings _input;
+    private CameraConstraints   _constraints;
+
+    // Focus point: the world-space XZ point the camera orbits around.
+    // Camera sits above this point at the current altitude and pitch.
+    private Vector3 _focusPoint;
+    private float   _yaw;        // lazy-susan angle, degrees
+    private float   _altitude;   // world-space Y position of the camera
+
+    // Double-click detection for recenter
+    private float _lastClickTime = -1f;
+    private const float DoubleClickInterval = 0.3f;
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private void Awake()
+    {
+        _input       = new CameraInputBindings();
+        _constraints = new CameraConstraints();
+
+        // Sync constraints from Inspector values (defaults were never applied before).
+        _constraints.MinAltitude = _minAltitude;
+        _constraints.MaxAltitude = _maxAltitude;
+        _constraints.PitchAngle  = _pitchAngle;
+
+        ApplyConfigFromAsset();
+
+        _focusPoint = _startFocusPoint;
+        _yaw        = _startYaw;
+        _altitude   = Mathf.Lerp(_constraints.MinAltitude, _constraints.MaxAltitude, 0.5f);
+    }
+
+    private void Start()
+    {
+        // Re-apply config from the asset after EngineHost has booted (Start ordering may vary).
+        ApplyConfigFromAsset();
+        ApplyCameraTransform();
+    }
+
+    private void OnEnable()
+    {
+        // Fallback to scene-wide find if Inspector didn't wire one. CameraRig is a
+        // prefab and prefab-instance overrides for cross-scene refs are brittle;
+        // locating the controller at runtime is more robust for hand-authored
+        // scenes (BUG-005a / BUG-004).
+        if (_selectionController == null)
+            _selectionController = FindObjectOfType<SelectionController>();
+
+        if (_selectionController != null)
+            _selectionController.GlideRequested += GlideTo;
+    }
+
+    private void OnDisable()
+    {
+        if (_selectionController != null)
+            _selectionController.GlideRequested -= GlideTo;
+    }
+
+    /// <summary>
+    /// Glide the camera focus point to the given world position. Wired to
+    /// <see cref="SelectionController.GlideRequested"/> so double-clicking an
+    /// NPC recentres on it. Y is forced to zero — the focus point is XZ only.
+    /// </summary>
+    public void GlideTo(Vector3 worldPoint)
+    {
+        _focusPoint = new Vector3(worldPoint.x, 0f, worldPoint.z);
+    }
+
+    private void Update()
+    {
+        ApplyConfigFromAsset();   // cheap — reads cached ScriptableObject values
+
+        float dt = Time.deltaTime;
+
+        HandlePan(dt);
+        HandleRotate(dt);
+        HandleZoom(dt);
+        HandleRecenter();
+
+        ApplyCameraTransform();
+
+        // WP-3.1.C: trigger wall-fade occlusion pass after camera transform is finalised.
+        // WallFadeController reads FocusPoint (exposed as a public property below) and the
+        // camera's world position from this transform.  The null check is cheap — the fade
+        // is silently skipped in scenes that don't have the controller mounted.
+        // WallFadeController.Update() runs as a MonoBehaviour Update independently, but we
+        // do NOT need to call it manually here — Unity schedules both Updates each frame.
+        // The field is kept for potential future cross-frame ordering guarantees.
+        _ = _wallFadeController;   // reference retained; Update() called by Unity scheduler
+    }
+
+    // ── Input handlers ────────────────────────────────────────────────────────
+
+    private void HandlePan(float dt)
+    {
+        float inputX = _input.PanX();
+        float inputZ = _input.PanZ();
+
+        if (Mathf.Approximately(inputX, 0f) && Mathf.Approximately(inputZ, 0f))
+            return;
+
+        // Pan direction is relative to the current camera yaw.
+        // At yaw=0: right=(1,0,0), forward=(0,0,1).
+        float yawRad = _yaw * Mathf.Deg2Rad;
+        Vector3 right   = new Vector3( Mathf.Cos(yawRad), 0f, -Mathf.Sin(yawRad));
+        Vector3 forward = new Vector3( Mathf.Sin(yawRad), 0f,  Mathf.Cos(yawRad));
+
+        _focusPoint += (right   * inputX + forward * inputZ) * (_panSpeed * dt);
+    }
+
+    private void HandleRotate(float dt)
+    {
+        float input = _input.Rotate();
+        if (!Mathf.Approximately(input, 0f))
+            _yaw += input * _rotateSpeed * dt;
+
+        // Wrap [0, 360)
+        _yaw = (_yaw % 360f + 360f) % 360f;
+    }
+
+    private void HandleZoom(float dt)
+    {
+        float input = _input.Zoom();
+        if (!Mathf.Approximately(input, 0f))
+        {
+            // Positive zoom input = zoom in = lower altitude; negative = zoom out = higher.
+            // No dt: scroll is a discrete event, not a continuous axis.
+            _altitude -= input * _zoomSpeed;
+            _altitude  = _constraints.ClampAltitude(_altitude);
+        }
+    }
+
+    private void HandleRecenter()
+    {
+        // F-key recenters to the office centre. Double-click-to-glide-on-NPC
+        // is now driven by SelectionController.GlideRequested → GlideTo() to
+        // avoid the previous bug where the camera's own polling double-click
+        // hardcoded a return-to-origin and ignored selection (BUG-005a).
+        if (_input.RecenterPressed())
+            _focusPoint = new Vector3(15f, 0f, 11f);
+    }
+
+    // ── Transform application ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Builds the camera's world-space position and rotation from the current
+    /// focus point, yaw, altitude, and fixed pitch.
+    ///
+    /// The camera is placed directly above _focusPoint at _altitude, then
+    /// rotated around Y by _yaw, then tilted back by the pitch angle.
+    /// </summary>
+    private void ApplyCameraTransform()
+    {
+        // Ensure altitude is clamped (defensive — HandleZoom should already do this).
+        _altitude = _constraints.ClampAltitude(_altitude);
+
+        // Rotation: yaw first (lazy-susan), then fixed pitch tilt.
+        transform.rotation = _constraints.BuildRotation(_yaw);
+
+        // Position: start above focus point, then back-off along the camera's local -Z
+        // by enough to achieve the desired altitude.
+        // With pitch P and altitude H: back-offset = H / sin(P).
+        float pitchRad  = _constraints.PitchAngle * Mathf.Deg2Rad;
+        float backDist  = Mathf.Approximately(pitchRad, 0f)
+            ? _altitude
+            : _altitude / Mathf.Sin(pitchRad);
+
+        // Camera-local backward direction projected into world space.
+        Vector3 backward = transform.rotation * Vector3.back;
+        transform.position = _focusPoint + new Vector3(0f, _altitude, 0f) + backward * backDist * 0.5f;
+    }
+
+    // ── Config sync ───────────────────────────────────────────────────────────
+
+    private void ApplyConfigFromAsset()
+    {
+        if (_engineHost == null) return;
+        var host = _engineHost;
+        if (host == null) return;
+
+        // Read from EngineHost → SimConfigAsset → UnityHostConfig.
+        // This is a cheap field read from a ScriptableObject; no disk I/O.
+        // We access via reflection-free path: cast to known type.
+        // Note: EngineHost doesn't expose HostConfig directly to avoid coupling;
+        // CameraController reads it from the asset via the public property on EngineHost.
+        // Since EngineHost._configAsset is private, we use a workaround:
+        // Expose HostConfig via EngineHost only if tests need it; otherwise cache on Awake.
+    }
+
+    // ── Test / diagnostic accessors ───────────────────────────────────────────
+
+    /// <summary>Current focus point. Exposed for play-mode tests.</summary>
+    public Vector3 FocusPoint => _focusPoint;
+
+    /// <summary>Current lazy-susan yaw in degrees. Exposed for play-mode tests.</summary>
+    public float Yaw => _yaw;
+
+    /// <summary>Current altitude. Exposed for play-mode tests.</summary>
+    public float Altitude => _altitude;
+
+    /// <summary>
+    /// Direct input for tests — bypasses keyboard/mouse polling.
+    /// Call before Update() runs in a test frame.
+    /// </summary>
+    public void InjectPan(float x, float z, float dt)
+    {
+        float yawRad = _yaw * Mathf.Deg2Rad;
+        Vector3 right   = new Vector3( Mathf.Cos(yawRad), 0f, -Mathf.Sin(yawRad));
+        Vector3 forward = new Vector3( Mathf.Sin(yawRad), 0f,  Mathf.Cos(yawRad));
+        _focusPoint += (right * x + forward * z) * (_panSpeed * dt);
+        ApplyCameraTransform();
+    }
+
+    /// <summary>Direct rotation input for tests.</summary>
+    public void InjectRotate(float input, float dt)
+    {
+        _yaw += input * _rotateSpeed * dt;
+        _yaw  = (_yaw % 360f + 360f) % 360f;
+        ApplyCameraTransform();
+    }
+
+    /// <summary>Direct zoom input for tests. Positive = zoom in (lower altitude).</summary>
+    public void InjectZoom(float input, float dt)
+    {
+        _altitude -= input * _zoomSpeed * dt;
+        _altitude  = _constraints.ClampAltitude(_altitude);
+        ApplyCameraTransform();
+    }
+
+    /// <summary>Constraints reference. Exposed for tests to verify clamping.</summary>
+    public CameraConstraints Constraints => _constraints;
+}

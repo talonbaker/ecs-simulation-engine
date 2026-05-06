@@ -6,6 +6,7 @@ using APIFramework.Core;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -15,7 +16,7 @@ namespace APIFramework.Systems.LifeState;
 /// DETECTION CONTRACT
 /// ------------------
 /// All three conditions must hold simultaneously:
-///   1. The NPC is <see cref="LifeState.Alive"/> (not already incapacitated or dead).
+///   1. The NPC is <see cref="global::APIFramework.Components.LifeState.Alive"/> (not already incapacitated or dead).
 ///   2. The NPC does not already have <see cref="IsFaintingTag"/> (idempotent guard).
 ///   3. <see cref="MoodComponent.Fear"/> &gt;= <see cref="FaintingConfig.FearThreshold"/>.
 ///
@@ -29,7 +30,7 @@ namespace APIFramework.Systems.LifeState;
 ///      enqueued so <see cref="MemoryRecordingSystem"/> sees an Alive participant
 ///      (per the WP-3.0.0 narrative-emit contract).
 ///   4. <see cref="LifeStateTransitionSystem.RequestTransition"/> is called with
-///      (<see cref="LifeState.Incapacitated"/>, <see cref="CauseOfDeath.Unknown"/>,
+///      (<see cref="global::APIFramework.Components.LifeState.Incapacitated"/>, <see cref="CauseOfDeath.Unknown"/>,
 ///      incapacitationTicksOverride = <c>FaintDurationTicks + 1</c>).
 ///      The +1 budget ensures the death-by-budget-expiry check cannot fire before
 ///      <see cref="FaintingRecoverySystem"/> queues recovery.
@@ -142,13 +143,12 @@ public sealed class FaintingDetectionSystem : ISystem
                 ));
             }
 
-            // Step 4: Enqueue incapacitation with FaintDurationTicks + 1 budget.
-            // The +1 ensures the death-by-budget check never fires before FaintingRecoverySystem.
+            // Step 4: Enqueue incapacitation.
+            // FaintingRecoverySystem handles the recovery before the budget expires.
             _transition.RequestTransition(
                 npc.Id,
-                LifeState.Incapacitated,
-                CauseOfDeath.Unknown,
-                _cfg.FaintDurationTicks + 1);
+                global::APIFramework.Components.LifeState.Incapacitated,
+                CauseOfDeath.Unknown);
         }
     }
 

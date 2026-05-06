@@ -1,0 +1,27 @@
+{
+    "name": "ECSUnity.Tests.Edit",
+    "rootNamespace": "",
+    "references": [
+        "ECSUnity",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "APIFramework.dll",
+        "Warden.Contracts.dll",
+        "Warden.Telemetry.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

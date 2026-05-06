@@ -40,7 +40,8 @@
       "type": "array",
       "maxItems": 256,
       "items": { "$ref": "#/$defs/anchorObject" }
-    }
+    },
+    "choreRotation": { "type": "object" }
   },
 
   "$defs": {
@@ -57,7 +58,6 @@
 
     "roomDefinition": {
       "type": "object",
-      "additionalProperties": false,
       "required": ["id", "name", "category", "floorId", "bounds", "initialIllumination"],
       "properties": {
         "id":       { "type": "string", "maxLength": 64 },
@@ -127,7 +127,6 @@
 
     "npcSlot": {
       "type": "object",
-      "additionalProperties": false,
       "required": ["id"],
       "properties": {
         "id":            { "type": "string", "maxLength": 64 },
@@ -140,7 +139,6 @@
 
     "anchorObject": {
       "type": "object",
-      "additionalProperties": false,
       "required": ["id", "roomId", "description", "physicalState"],
       "properties": {
         "id":           { "type": "string", "maxLength": 64 },

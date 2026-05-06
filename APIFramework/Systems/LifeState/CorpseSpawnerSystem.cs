@@ -3,6 +3,7 @@ using APIFramework.Components;
 using APIFramework.Core;
 using APIFramework.Systems.Narrative;
 
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -14,8 +15,8 @@ namespace APIFramework.Systems.LifeState;
 ///
 /// The subscription fires synchronously from the bus at the moment
 /// <see cref="LifeStateTransitionSystem"/> raises the death candidate — before
-/// <see cref="LifeState.Deceased"/> is actually written (per the WP-3.0.0 narrative-emit contract).
-/// By the time the next tick begins, both CorpseTag and LifeState.Deceased are set.
+/// <see cref="global::APIFramework.Components.LifeState.Deceased"/> is actually written (per the WP-3.0.0 narrative-emit contract).
+/// By the time the next tick begins, both CorpseTag and global::APIFramework.Components.LifeState.Deceased are set.
 ///
 /// Idempotent: re-emitting the same death event will not duplicate the tag or component
 /// (guarded by the early-return on existing CorpseTag).
@@ -67,7 +68,7 @@ public sealed class CorpseSpawnerSystem : ISystem
         if (deceased.Has<CauseOfDeathComponent>())
         {
             var cod  = deceased.Get<CauseOfDeathComponent>();
-            roomId   = cod.LocationRoomId;
+            roomId   = cod.LocationRoomId == Guid.Empty ? null : cod.LocationRoomId.ToString();
             deathTick = cod.DeathTick;
         }
 

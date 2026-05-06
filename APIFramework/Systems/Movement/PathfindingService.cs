@@ -70,21 +70,15 @@ public sealed class PathfindingService
         if (fromX == toX && fromY == toY)
             return Array.Empty<(int, int)>();
 
-        // Check cache first
         var key = new PathQueryKey(fromX, fromY, toX, toY, seed, _bus.TopologyVersion);
         if (_cache.TryGet(key, out var cached))
             return cached;
 
-        // Cache miss — compute the path
         var path = ComputePathUncached(fromX, fromY, toX, toY, seed);
         _cache.Put(key, path);
         return path;
     }
 
-    /// <summary>
-    /// Internal method that performs the uncached A* computation.
-    /// Extracted to keep ComputePath clean; called only on cache misses.
-    /// </summary>
     private IReadOnlyList<(int X, int Y)> ComputePathUncached(int fromX, int fromY, int toX, int toY, int seed)
     {
         var obstacles = BuildObstacleSet();

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "0.1.0",
+  "propFootprints": [
+    {
+      "propTypeId": "cube-wall",
+      "widthTiles": 1,
+      "depthTiles": 1,
+      "bottomHeight": 0.0,
+      "topHeight": 2.5,
+      "canStackOnTop": false,
+      "footprintCategory": "Wall"
+    },
+    {
+      "propTypeId": "door",
+      "widthTiles": 1,
+      "depthTiles": 1,
+      "bottomHeight": 0.0,
+      "topHeight": 2.2,
+      "canStackOnTop": false,
+      "footprintCategory": "Wall"
+    },
+    {
+      "propTypeId": "desk",
+      "widthTiles": 2,
+      "depthTiles": 1,
+      "bottomHeight": 0.0,
+      "topHeight": 0.75,
+      "canStackOnTop": true,
+      "footprintCategory": "Furniture"
+    },
+    {
+      "propTypeId": "chair",
+      "widthTiles": 1,
+      "depthTiles": 1,
+      "bottomHeight": 0.0,
+      "topHeight": 0.45,
+      "canStackOnTop": false,
+      "footprintCategory": "Furniture"
+    },
+    {
+      "propTypeId": "monitor",
+      "widthTiles": 1,
+      "depthTiles": 1,
+      "bottomHeight": 0.0,
+      "topHeight": 0.40,
+      "canStackOnTop": false,
+      "footprintCategory": "DeskAccessory"
+    },
+    {
+      "propTypeId": "computer",
+      "widthTiles": 1,
+      "depthTiles": 1,
+      "bottomHeight": 0.0,
+      "topHeight": 0.45,
+      "canStackOnTop": false,
+      "footprintCategory": "DeskAccessory"
+    },
+    {
+      "propTypeId": "printer",
+      "widthTiles": 1,
+      "depthTiles": 1,
+      "bottomHeight": 0.0,
+      "topHeight": 0.35,
+      "canStackOnTop": true,
+      "footprintCategory": "DeskAccessory"
+    },
+    {
+      "propTypeId": "banana",
+      "widthTiles": 1,
+      "depthTiles": 1,
+      "bottomHeight": 0.0,
+      "topHeight": 0.05,
+      "canStackOnTop": false,
+      "footprintCategory": "FloorProp"
+    }
+  ]
+}

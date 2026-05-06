@@ -4,11 +4,12 @@ using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Narrative;
 
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
 /// Per-tick system that watches for fainted NPCs whose recovery window has elapsed
-/// and queues the transition back to <see cref="LifeState.Alive"/>.
+/// and queues the transition back to <see cref="global::APIFramework.Components.LifeState.Alive"/>.
 ///
 /// RECOVERY CONTRACT
 /// -----------------
@@ -19,9 +20,9 @@ namespace APIFramework.Systems.LifeState;
 ///         participant is still technically Incapacitated when the event fires —
 ///         consistent with the "emit before flip" contract of WP-3.0.0).
 ///      b. Calls <see cref="LifeStateTransitionSystem.RequestTransition"/> with
-///         <see cref="LifeState.Alive"/> and <see cref="CauseOfDeath.Unknown"/>.
-///         The existing <c>case LifeState.Alive</c> branch in
-///         <see cref="LifeStateTransitionSystem.ApplyRequest"/> handles this —
+///         <see cref="global::APIFramework.Components.LifeState.Alive"/> and <see cref="CauseOfDeath.Unknown"/>.
+///         The existing <c>case global::APIFramework.Components.LifeState.Alive</c> branch in
+///         <c>LifeStateTransitionSystem.ApplyRequest</c> handles this —
 ///         it was stubbed as the "rescue mechanic" in WP-3.0.0.
 ///
 /// PHASE ORDERING
@@ -78,7 +79,7 @@ public sealed class FaintingRecoverySystem : ISystem
         {
             // Only process Incapacitated fainted NPCs (not ones already recovered).
             if (!npc.Has<LifeStateComponent>()) continue;
-            if (npc.Get<LifeStateComponent>().State != LifeState.Incapacitated) continue;
+            if (npc.Get<LifeStateComponent>().State != global::APIFramework.Components.LifeState.Incapacitated) continue;
 
             if (!npc.Has<FaintingComponent>()) continue;
             var faint = npc.Get<FaintingComponent>();
@@ -104,7 +105,7 @@ public sealed class FaintingRecoverySystem : ISystem
             // handles the Alive case from Incapacitated (the WP-3.0.0 rescue mechanic stub).
             _transition.RequestTransition(
                 npc.Id,
-                LifeState.Alive,
+                global::APIFramework.Components.LifeState.Alive,
                 CauseOfDeath.Unknown);
         }
     }

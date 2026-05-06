@@ -1,6 +1,8 @@
 using APIFramework.Components;
 using APIFramework.Core;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -36,7 +38,7 @@ public class LifeStateInitializerSystem : ISystem
 
             entity.Add(new LifeStateComponent
             {
-                State = Components.LifeState.Alive,
+                State = LS.Alive,
                 LastTransitionTick = 0,
                 IncapacitatedTickBudget = 0,
                 PendingDeathCause = CauseOfDeath.Unknown

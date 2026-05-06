@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "0.1.0",
+  "rooms": [
+    { "label": "Cubicle Area",       "roomKind": "cubicleGrid",     "tooltip": "Open-plan cubicle floor; carpet + cubicle walls." },
+    { "label": "Manager Office",     "roomKind": "office",          "tooltip": "Single-occupant office; hardwood + structural walls." },
+    { "label": "Kitchen / Breakroom","roomKind": "breakroom",       "tooltip": "Linoleum floor; structural walls." },
+    { "label": "Bathroom",           "roomKind": "bathroom",        "tooltip": "Linoleum floor; restroom doors." },
+    { "label": "Hallway",            "roomKind": "hallway",         "tooltip": "Office tile floor; structural walls." },
+    { "label": "Conference Room",    "roomKind": "conferenceRoom",  "tooltip": "Boardroom; structural walls + double door." },
+    { "label": "Supply Closet",      "roomKind": "supplyCloset",    "tooltip": "Concrete floor; structural walls." },
+    { "label": "IT Closet",          "roomKind": "itCloset",        "tooltip": "Server rack room; concrete + structural walls." },
+    { "label": "Lobby",              "roomKind": "lobby",           "tooltip": "Reception area; office tile + structural walls." }
+  ],
+  "lightSources": [
+    { "label": "Overhead Fluorescent", "kind": "overheadFluorescent", "defaultIntensity": 70, "defaultTempK": 4000, "defaultState": "on" },
+    { "label": "Desk Lamp",            "kind": "deskLamp",            "defaultIntensity": 65, "defaultTempK": 3800, "defaultState": "on" },
+    { "label": "Breakroom Strip",      "kind": "breakroomStrip",      "defaultIntensity": 58, "defaultTempK": 3900, "defaultState": "on" },
+    { "label": "Conference Track",     "kind": "conferenceTrack",     "defaultIntensity": 75, "defaultTempK": 4200, "defaultState": "on" },
+    { "label": "Server LED",           "kind": "serverLed",           "defaultIntensity": 30, "defaultTempK": 6500, "defaultState": "on" },
+    { "label": "Monitor Glow",         "kind": "monitorGlow",         "defaultIntensity": 40, "defaultTempK": 6500, "defaultState": "on" },
+    { "label": "Exterior Wall Light",  "kind": "exteriorWall",        "defaultIntensity": 55, "defaultTempK": 3000, "defaultState": "on" },
+    { "label": "Signage Glow",         "kind": "signageGlow",         "defaultIntensity": 50, "defaultTempK": 5500, "defaultState": "on" },
+    { "label": "Neon",                 "kind": "neon",                "defaultIntensity": 60, "defaultTempK": 5000, "defaultState": "on" }
+  ],
+  "lightApertures": [
+    { "label": "Window — Small",  "areaSqTiles": 3.0 },
+    { "label": "Window — Medium", "areaSqTiles": 5.0 },
+    { "label": "Window — Large",  "areaSqTiles": 8.0 },
+    { "label": "Skylight",        "areaSqTiles": 6.0 }
+  ]
+}

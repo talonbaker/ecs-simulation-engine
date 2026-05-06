@@ -7,6 +7,8 @@ using APIFramework.Core;
 using APIFramework.Systems.Movement;
 using APIFramework.Systems.Spatial;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -130,7 +132,7 @@ public class LockoutDetectionSystem : ISystem
                         // Starvation death
                         _lifeStateTransitionSystem.RequestTransition(
                             npc.Id,
-                            Components.LifeState.Deceased,
+                            LS.Deceased,
                             CauseOfDeath.StarvedAlone);
                         npc.Remove<LockedInComponent>();
                     }

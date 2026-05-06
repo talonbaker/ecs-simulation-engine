@@ -4,8 +4,11 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
+
+using LS = global::APIFramework.Components.LifeState;
 
 namespace APIFramework.Systems.LifeState;
 
@@ -49,6 +52,7 @@ public class LifeStateTransitionSystem : ISystem
     private readonly EntityManager _entityManager;
     private readonly SimulationClock _clock;
     private readonly SimConfig _config;
+    private readonly SoundTriggerBus? _soundBus;
 
     /// <summary>
     /// Constructs the life-state transition system.
@@ -57,17 +61,20 @@ public class LifeStateTransitionSystem : ISystem
     /// <param name="entityManager">Entity manager held for future use; queries flow through the manager passed to <see cref="Update"/>.</param>
     /// <param name="clock">Simulation clock; supplies LastTransitionTick and DeathTick stamps.</param>
     /// <param name="config">Simulation config; <see cref="SimConfig.LifeState"/>.DefaultIncapacitatedTicks seeds the countdown for new Incapacitated transitions.</param>
+    /// <param name="soundBus">Optional sound trigger bus; when supplied, life-state transitions emit corresponding sound triggers (e.g., death thuds, faint).</param>
     /// <exception cref="ArgumentNullException">Any dependency is null.</exception>
     public LifeStateTransitionSystem(
         NarrativeEventBus narrativeEventBus,
         EntityManager entityManager,
         SimulationClock clock,
-        SimConfig config)
+        SimConfig config,
+        SoundTriggerBus? soundBus = null)
     {
         _narrativeEventBus = narrativeEventBus ?? throw new ArgumentNullException(nameof(narrativeEventBus));
         _entityManager = entityManager ?? throw new ArgumentNullException(nameof(entityManager));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _config = config ?? throw new ArgumentNullException(nameof(config));
+        _soundBus = soundBus;
     }
 
     /// <summary>
@@ -111,13 +118,19 @@ public class LifeStateTransitionSystem : ISystem
             var current = npc.Get<LifeStateComponent>().State;
 
             // Legal transitions: Alive → Incapacitated → Deceased; Alive → Deceased (sudden death)
-            if (current == Components.LifeState.Deceased) continue;  // already dead, ignore request
-            if (req.TargetState == Components.LifeState.Alive && current == Components.LifeState.Deceased) continue;  // no resurrection
+            if (current == LS.Deceased) continue;  // already dead, ignore request
+            if (req.TargetState == LS.Alive && current == LS.Deceased) continue;  // no resurrection
 
             // Emit cause-of-death narrative BEFORE flipping state to Deceased,
             // so subscribers see the deceased while still flagged as Alive in their entity snapshot.
-            if (req.TargetState == Components.LifeState.Deceased)
+            if (req.TargetState == LS.Deceased)
             {
+                // Emit Thud sound at the moment of death
+                if (_soundBus != null)
+                {
+                    var deathPos = npc.Has<PositionComponent>() ? npc.Get<PositionComponent>() : default;
+                    _soundBus.Emit(SoundTriggerKind.Thud, npc.Id, deathPos.X, deathPos.Z, 0.9f, (long)_clock.TotalTime);
+                }
                 var witness = FindClosestWitness(npc, em);
                 // Location room ID: populated by future packets (3.0.2+).
                 // For now, we just store the position and later packets will resolve room membership.
@@ -154,14 +167,24 @@ public class LifeStateTransitionSystem : ISystem
             {
                 State = req.TargetState,
                 LastTransitionTick = (long)_clock.TotalTime,
-                IncapacitatedTickBudget = req.TargetState == Components.LifeState.Incapacitated
+                IncapacitatedTickBudget = req.TargetState == LS.Incapacitated
                     ? _config.LifeState.DefaultIncapacitatedTicks
                     : 0,
-                PendingDeathCause = req.TargetState == Components.LifeState.Incapacitated ? req.Cause : CauseOfDeath.Unknown
+                PendingDeathCause = req.TargetState == LS.Incapacitated ? req.Cause : CauseOfDeath.Unknown
             });
         }
 
         _queue.Clear();
+
+        // Emit Wheeze each tick for choking NPCs
+        if (_soundBus != null)
+        {
+            foreach (var npc in em.Query<IsChokingTag>())
+            {
+                var wheezePos = npc.Has<PositionComponent>() ? npc.Get<PositionComponent>() : default;
+                _soundBus.Emit(SoundTriggerKind.Wheeze, npc.Id, wheezePos.X, wheezePos.Z, 0.4f, (long)_clock.TotalTime);
+            }
+        }
 
         // Separately: tick down IncapacitatedTickBudget for any Incapacitated NPC.
         // When it reaches 0, enqueue a Deceased transition with the pending cause.
@@ -169,7 +192,7 @@ public class LifeStateTransitionSystem : ISystem
         {
             if (!npc.Has<LifeStateComponent>()) continue;
             var state = npc.Get<LifeStateComponent>();
-            if (state.State != Components.LifeState.Incapacitated) continue;
+            if (state.State != LS.Incapacitated) continue;
 
             // Decrement the budget.
             state.IncapacitatedTickBudget--;
@@ -178,7 +201,7 @@ public class LifeStateTransitionSystem : ISystem
             // If budget expired, queue a Deceased transition.
             if (state.IncapacitatedTickBudget <= 0)
             {
-                RequestTransition(npc.Id, Components.LifeState.Deceased, state.PendingDeathCause);
+                RequestTransition(npc.Id, LS.Deceased, state.PendingDeathCause);
             }
         }
 

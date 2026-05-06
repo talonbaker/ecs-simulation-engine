@@ -3,6 +3,8 @@ using APIFramework.Core;
 using APIFramework.Systems.LifeState;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.LifeState;
 
 /// <summary>
@@ -14,7 +16,7 @@ public class FaintingCleanupSystemTests
 {
     // -- Helpers ---------------------------------------------------------------
 
-    private static Entity BuildFaintingNpc(EntityManager em, LifeState state)
+    private static Entity BuildFaintingNpc(EntityManager em, LS state)
     {
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
@@ -29,7 +31,7 @@ public class FaintingCleanupSystemTests
     public void AT13_AliveNpc_WithIsFaintingTag_TagIsRemoved()
     {
         var em  = new EntityManager();
-        var npc = BuildFaintingNpc(em, LifeState.Alive);
+        var npc = BuildFaintingNpc(em, LS.Alive);
 
         new FaintingCleanupSystem().Update(em, 1f);
 
@@ -42,7 +44,7 @@ public class FaintingCleanupSystemTests
     public void AT14_AliveNpc_WithFaintingComponent_ComponentAlsoRemoved()
     {
         var em  = new EntityManager();
-        var npc = BuildFaintingNpc(em, LifeState.Alive);
+        var npc = BuildFaintingNpc(em, LS.Alive);
         npc.Add(new FaintingComponent { FaintStartTick = 1, RecoveryTick = 21 });
 
         new FaintingCleanupSystem().Update(em, 1f);
@@ -57,7 +59,7 @@ public class FaintingCleanupSystemTests
     public void AT15_IncapacitatedNpc_IsFaintingTag_NotRemoved()
     {
         var em  = new EntityManager();
-        var npc = BuildFaintingNpc(em, LifeState.Incapacitated);
+        var npc = BuildFaintingNpc(em, LS.Incapacitated);
 
         new FaintingCleanupSystem().Update(em, 1f);
 

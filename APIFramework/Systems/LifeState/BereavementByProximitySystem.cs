@@ -5,6 +5,7 @@ using APIFramework.Config;
 using APIFramework.Core;
 using APIFramework.Systems.Spatial;
 
+
 namespace APIFramework.Systems.LifeState;
 
 /// <summary>
@@ -16,7 +17,7 @@ namespace APIFramework.Systems.LifeState;
 ///   - The NPC has NOT previously been hit by this corpse's proximity-bereavement
 /// Then: apply ProximityBereavementStressGain to StressComponent.AcuteLevel (direct, one-shot).
 ///
-/// The hit is tracked via BereavementHistoryComponent.EncounteredCorpseIds (HashSet&lt;Guid&gt;),
+/// The hit is tracked via BereavementHistoryComponent.EncounteredCorpseIds (<c>HashSet&lt;Guid&gt;</c>),
 /// attached lazily on first encounter. Once recorded, the NPC is never hit again by the same
 /// corpse, regardless of how long they remain in the room or how often they re-enter.
 ///
@@ -113,7 +114,7 @@ public sealed class BereavementByProximitySystem : ISystem
         }
     }
 
-    // -- Relationship lookup ---------------------------------------------------
+    // ── Relationship lookup ───────────────────────────────────────────────────
 
     /// <summary>
     /// Returns the Intensity of the relationship between npcIntId and deceasedIntId,
@@ -134,7 +135,7 @@ public sealed class BereavementByProximitySystem : ISystem
         return 0;
     }
 
-    // -- Utility ---------------------------------------------------------------
+    // ── Utility ───────────────────────────────────────────────────────────────
 
     private static int EntityIntId(Entity entity)
     {

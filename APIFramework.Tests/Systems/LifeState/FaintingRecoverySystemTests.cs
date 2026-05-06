@@ -8,6 +8,8 @@ using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using Xunit;
 
+using LS = global::APIFramework.Components.LifeState;
+
 namespace APIFramework.Tests.Systems.LifeState;
 
 /// <summary>
@@ -45,14 +47,14 @@ public class FaintingRecoverySystemTests
         var em          = new EntityManager();
         var bus         = new NarrativeEventBus();
         var clock       = new SimulationClock();
-        var membership  = new EntityRoomMembership();
-        var transitions = new LifeStateTransitionSystem(bus, em, clock, DefaultLifeStateCfg(), membership);
+        var config      = new SimConfig { LifeState = DefaultLifeStateCfg() };
+        var transitions = new LifeStateTransitionSystem(bus, em, clock, config);
 
         var npc = em.CreateEntity();
         npc.Add(new NpcTag());
         npc.Add(new LifeStateComponent
         {
-            State                   = LifeState.Incapacitated,
+            State                   = LS.Incapacitated,
             IncapacitatedTickBudget = 21, // FaintDurationTicks+1 — won't expire before recovery
             PendingDeathCause       = CauseOfDeath.Unknown,
         });
@@ -92,7 +94,7 @@ public class FaintingRecoverySystemTests
         MakeSys(transitions, bus, clock).Update(em, 1f);
         transitions.Update(em, 1f);
 
-        Assert.Equal(LifeState.Alive, npc.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Alive, npc.Get<LifeStateComponent>().State);
     }
 
     [Fact]
@@ -104,7 +106,7 @@ public class FaintingRecoverySystemTests
         MakeSys(transitions, bus, clock).Update(em, 1f);
         transitions.Update(em, 1f);
 
-        Assert.Equal(LifeState.Alive, npc.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Alive, npc.Get<LifeStateComponent>().State);
     }
 
     // -- AT-11: Recovery not yet due → NPC stays Incapacitated ----------------
@@ -117,7 +119,7 @@ public class FaintingRecoverySystemTests
         MakeSys(transitions, bus, clock).Update(em, 1f);
         transitions.Update(em, 1f);
 
-        Assert.Equal(LifeState.Incapacitated, npc.Get<LifeStateComponent>().State);
+        Assert.Equal(LS.Incapacitated, npc.Get<LifeStateComponent>().State);
     }
 
     // -- AT-12: RegainedConsciousness narrative emitted ------------------------

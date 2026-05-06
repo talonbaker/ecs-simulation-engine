@@ -4,6 +4,8 @@ using System.Linq;
 using APIFramework.Components;
 using APIFramework.Config;
 using APIFramework.Core;
+using APIFramework.Systems.Chores;
+using APIFramework.Systems.Narrative;
 using APIFramework.Systems.Spatial;
 using APIFramework.Systems.LifeState;
 
@@ -42,9 +44,10 @@ public sealed class ActionSelectionSystem : ISystem
     /// <summary>
     /// Diagnostic tag identifying which enumerator produced a candidate.
     /// Drive candidates come from <see cref="DriveTable"/>; Schedule from the active routine
-    /// block; Idle is the always-present fallback; Workload from the NPC's active tasks.
+    /// block; Idle is the always-present fallback; Workload from the NPC's active tasks;
+    /// Chore from an assigned office chore entity.
     /// </summary>
-    private enum CandidateSource { Drive = 0, Schedule = 1, Idle = 2, Workload = 3 }
+    private enum CandidateSource { Drive = 0, Schedule = 1, Idle = 2, Workload = 3, Chore = 4 }
 
     /// <summary>
     /// Canonical ordering of the eight social drives. Used as a stable sort key when the
@@ -116,15 +119,18 @@ public sealed class ActionSelectionSystem : ISystem
         public CandidateSource Source;
     }
 
-    // -- Services --------------------------------------------------------------
-    private readonly ISpatialIndex        _spatial;
-    private readonly EntityRoomMembership _rooms;
-    private readonly WillpowerEventQueue  _willpowerQueue;
-    private readonly SeededRandom         _rng;
-    private readonly ActionSelectionConfig _cfg;
-    private readonly ScheduleConfig        _scheduleCfg;
-    private readonly WorkloadConfig        _workloadCfg;
-    private readonly EntityManager        _em;
+    // ── Services ──────────────────────────────────────────────────────────────
+    private readonly ISpatialIndex           _spatial;
+    private readonly EntityRoomMembership    _rooms;
+    private readonly WillpowerEventQueue     _willpowerQueue;
+    private readonly SeededRandom            _rng;
+    private readonly ActionSelectionConfig   _cfg;
+    private readonly ScheduleConfig          _scheduleCfg;
+    private readonly WorkloadConfig          _workloadCfg;
+    private readonly EntityManager           _em;
+    private readonly ChoreConfig?            _choreCfg;
+    private readonly ChoreAcceptanceBiasTable? _choreBiasTable;
+    private readonly NarrativeEventBus?      _narrativeBus;
 
     // Flee-target entities: NPC → ephemeral entity positioned at flee point.
     private readonly Dictionary<Entity, Entity> _fleeTargets = new();
@@ -141,24 +147,33 @@ public sealed class ActionSelectionSystem : ISystem
     /// <param name="em">Entity manager — used to spawn/destroy flee-target entities and resolve Guids.</param>
     /// <param name="workloadCfg">Optional workload tuning — supplies <c>WorkActionBaseWeight</c> for work candidates.
     /// Falls back to <see cref="WorkloadConfig"/> defaults when null.</param>
+    /// <param name="choreCfg">Optional chore tuning — supplies ChoreWork candidate weight and refusal threshold.</param>
+    /// <param name="choreBiasTable">Optional acceptance-bias lookup table. Required when choreCfg is non-null.</param>
+    /// <param name="narrativeBus">Optional narrative bus for ChoreRefused emission.</param>
     public ActionSelectionSystem(
-        ISpatialIndex        spatial,
-        EntityRoomMembership rooms,
-        WillpowerEventQueue  willpowerQueue,
-        SeededRandom         rng,
-        ActionSelectionConfig cfg,
-        ScheduleConfig        scheduleCfg,
-        EntityManager        em,
-        WorkloadConfig?       workloadCfg = null)
+        ISpatialIndex             spatial,
+        EntityRoomMembership      rooms,
+        WillpowerEventQueue       willpowerQueue,
+        SeededRandom              rng,
+        ActionSelectionConfig     cfg,
+        ScheduleConfig            scheduleCfg,
+        EntityManager             em,
+        WorkloadConfig?           workloadCfg    = null,
+        ChoreConfig?              choreCfg       = null,
+        ChoreAcceptanceBiasTable? choreBiasTable = null,
+        NarrativeEventBus?        narrativeBus   = null)
     {
-        _spatial        = spatial;
-        _rooms          = rooms;
-        _willpowerQueue = willpowerQueue;
-        _rng            = rng;
-        _cfg            = cfg;
-        _scheduleCfg    = scheduleCfg;
-        _workloadCfg    = workloadCfg ?? new WorkloadConfig();
-        _em             = em;
+        _spatial         = spatial;
+        _rooms           = rooms;
+        _willpowerQueue  = willpowerQueue;
+        _rng             = rng;
+        _cfg             = cfg;
+        _scheduleCfg     = scheduleCfg;
+        _workloadCfg     = workloadCfg ?? new WorkloadConfig();
+        _em              = em;
+        _choreCfg        = choreCfg;
+        _choreBiasTable  = choreBiasTable;
+        _narrativeBus    = narrativeBus;
     }
 
     /// <summary>
@@ -294,6 +309,49 @@ public sealed class ActionSelectionSystem : ISystem
                 }
             }
 
+            // ChoreWork candidate — emitted when this NPC is the assignee of a pending chore.
+            if (_choreCfg != null && _choreBiasTable != null)
+            {
+                string archetypeId = npc.Has<NpcArchetypeComponent>()
+                    ? npc.Get<NpcArchetypeComponent>().ArchetypeId ?? ""
+                    : "";
+
+                foreach (var ce in _em.GetAllEntities())
+                {
+                    if (!ce.Has<ChoreComponent>()) continue;
+                    var chore = ce.Get<ChoreComponent>();
+                    if (chore.CurrentAssigneeId != npc.Id) continue;
+                    if (chore.CompletionLevel >= 1.0f) continue;
+
+                    float bias = _choreBiasTable.GetBias(archetypeId, chore.Kind);
+
+                    if (bias < _choreCfg.MinChoreAcceptanceBias)
+                    {
+                        // Refused: emit persistent narrative; do not add candidate.
+                        _narrativeBus?.RaiseCandidate(new NarrativeEventCandidate(
+                            0L,
+                            NarrativeEventKind.ChoreRefused,
+                            new[] { WillpowerSystem.EntityIntId(npc) },
+                            null,
+                            $"{chore.Kind} refused by {archetypeId}"));
+                        continue;
+                    }
+
+                    candidates.Add(new Candidate
+                    {
+                        Kind               = IntendedActionKind.ChoreWork,
+                        Context            = DialogContextValue.None,
+                        TargetEntityId     = WillpowerSystem.EntityIntId(ce),
+                        TargetEntityGuid   = ce.Id,
+                        DriveOrdinal       = 96,
+                        SourceDriveCurrent = 0,
+                        Inhibition         = 0.0,
+                        Weight             = _choreCfg.ChoreActionBaseWeight,
+                        Source             = CandidateSource.Chore
+                    });
+                }
+            }
+
             // Idle is always present.
             candidates.Add(new Candidate
             {
@@ -383,7 +441,7 @@ public sealed class ActionSelectionSystem : ISystem
             CleanFleeTarget(n);
     }
 
-    // -- Candidate enumeration -------------------------------------------------
+    // ── Candidate enumeration ─────────────────────────────────────────────────
 
     /// <summary>
     /// Walks <see cref="DriveTable"/> and emits one or more candidates per drive whose
@@ -488,7 +546,7 @@ public sealed class ActionSelectionSystem : ISystem
         });
     }
 
-    // -- Winner selection ------------------------------------------------------
+    // ── Winner selection ──────────────────────────────────────────────────────
 
     /// <summary>
     /// Picks the highest-weight candidate, adding a tiny seeded jitter so equal weights
@@ -516,7 +574,7 @@ public sealed class ActionSelectionSystem : ISystem
         return candidates[bestIdx];
     }
 
-    // -- Suppression event emission --------------------------------------------
+    // ── Suppression event emission ────────────────────────────────────────────
 
     /// <summary>
     /// Finds the highest-raw-push loser whose drive came within <c>SuppressionEpsilon</c> of
@@ -570,7 +628,7 @@ public sealed class ActionSelectionSystem : ISystem
         }
     }
 
-    // -- Movement / flee target helpers ----------------------------------------
+    // ── Movement / flee target helpers ────────────────────────────────────────
 
     /// <summary>
     /// Spawns (or replaces) the ephemeral entity that an Avoid-acting NPC will path toward.
@@ -643,7 +701,7 @@ public sealed class ActionSelectionSystem : ISystem
         return null;
     }
 
-    // -- Drive readers ---------------------------------------------------------
+    // ── Drive readers ─────────────────────────────────────────────────────────
 
     /// <summary>
     /// Returns the <c>Current</c> value of the drive identified by <paramref name="key"/>.

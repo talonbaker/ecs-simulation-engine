@@ -5,7 +5,7 @@ namespace APIFramework.Components;
 /// one per primary emotion on Plutchik's Wheel.
 ///
 /// DESIGN INTENT
-/// -------------
+/// ─────────────
 /// These are raw intensities, not tags.  MoodSystem reads them each tick and
 /// applies the appropriate intensity-level tag (e.g. Disgust 12 → BoredTag,
 /// Disgust 45 → DisgustTag, Disgust 80 → LoathingTag).
@@ -14,7 +14,7 @@ namespace APIFramework.Components;
 /// incoming stimuli from other systems once those connections are wired.
 ///
 /// EMOTION FAMILIES  (Plutchik's Wheel — outer petal → middle ring → center)
-/// -------------------------------------------------------------------------
+/// ─────────────────────────────────────────────────────────────────────────
 ///   Joy          →  Serenity / Joy / Ecstasy
 ///   Trust        →  Acceptance / Trust / Admiration
 ///   Fear         →  Apprehension / Fear / Terror
@@ -25,7 +25,7 @@ namespace APIFramework.Components;
 ///   Anticipation →  Interest / Anticipation / Vigilance
 ///
 /// PLANNED INPUTS (not yet wired)
-/// -------------------------------
+/// ───────────────────────────────
 ///   Joy          ← needs met (satiation + hydration + energy all above thresholds)
 ///   Trust        ← stable familiar environment, no threats
 ///   Fear         ← threat entities nearby, sudden vital-stat drops
@@ -38,7 +38,7 @@ namespace APIFramework.Components;
 /// </summary>
 public struct MoodComponent
 {
-    // -- Primary Emotions (0 = absent, 100 = peak intensity) ------------------
+    // ── Primary Emotions (0 = absent, 100 = peak intensity) ──────────────────
 
     /// <summary>Positive emotion from needs being met and comfort. Low = serenity, High = ecstasy.</summary>
     public float Joy;
@@ -75,7 +75,14 @@ public struct MoodComponent
     /// </summary>
     public float PanicLevel;
 
-    // -- Convenience -----------------------------------------------------------
+    /// <summary>
+    /// Grief intensity — a sustained sorrow response to learning of or witnessing death.
+    /// Separate from the baseline Sadness emotion. Values 0–100.
+    /// Set by BereavementSystem when an NPC learns of a death; decays via MoodSystem's decay rules.
+    /// </summary>
+    public float GriefLevel;
+
+    // ── Convenience ───────────────────────────────────────────────────────────
 
     /// <summary>True if any emotion is above a negligible threshold (not emotionally neutral).</summary>
     public readonly bool HasAnyEmotion =>

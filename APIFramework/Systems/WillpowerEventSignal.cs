@@ -17,7 +17,7 @@ public enum WillpowerEventKind
 /// </summary>
 /// <param name="EntityId">Low 32 bits of the target entity's Guid (see <see cref="WillpowerSystem.EntityIntId"/>).</param>
 /// <param name="Kind">Whether this is a willpower cost or recovery.</param>
-/// <param name="Magnitude">0–10 cost or recovery applied to <see cref="WillpowerComponent"/>.Current.</param>
+/// <param name="Magnitude">0–10 cost or recovery applied to <c>WillpowerComponent.Current</c>.</param>
 public readonly record struct WillpowerEventSignal(
     int EntityId,
     WillpowerEventKind Kind,

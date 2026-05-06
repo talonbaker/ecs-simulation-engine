@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "0.1.0",
+  "particleTriggers": [
+    {"kind": "SteamFromCoffee",  "vfxAsset": "VFX/SteamFromCoffee.vfx",  "lifetimeSec": 4.0, "defaultIntensity": 1.0},
+    {"kind": "SteamFromFood",    "vfxAsset": "VFX/SteamFromFood.vfx",    "lifetimeSec": 5.0, "defaultIntensity": 1.0},
+    {"kind": "SmokeFromFire",    "vfxAsset": "VFX/SmokeFromFire.vfx",    "lifetimeSec": 8.0, "defaultIntensity": 1.0},
+    {"kind": "Sparks",           "vfxAsset": "VFX/Sparks.vfx",           "lifetimeSec": 1.5, "defaultIntensity": 1.0},
+    {"kind": "DustKickedUp",     "vfxAsset": "VFX/DustKickedUp.vfx",     "lifetimeSec": 1.5, "defaultIntensity": 1.0},
+    {"kind": "WaterSplash",      "vfxAsset": "VFX/WaterSplash.vfx",      "lifetimeSec": 1.0, "defaultIntensity": 1.0},
+    {"kind": "BulbFlicker",      "vfxAsset": "VFX/BulbFlicker.vfx",      "lifetimeSec": 0.3, "defaultIntensity": 1.0},
+    {"kind": "CleaningMist",     "vfxAsset": "VFX/CleaningMist.vfx",     "lifetimeSec": 2.0, "defaultIntensity": 1.0},
+    {"kind": "BreathPuff",       "vfxAsset": "VFX/BreathPuff.vfx",       "lifetimeSec": 1.0, "defaultIntensity": 1.0},
+    {"kind": "SpeechBubblePuff", "vfxAsset": "VFX/SpeechBubblePuff.vfx", "lifetimeSec": 0.6, "defaultIntensity": 1.0}
+  ]
+}

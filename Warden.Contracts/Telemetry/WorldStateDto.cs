@@ -1,19 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Warden.Contracts.Telemetry;
 
-// -- Root ---------------------------------------------------------------------
+// â”€â”€ Root â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /// <summary>
 /// Versioned, AI-consumable projection of <c>SimulationSnapshot</c>.
 /// Produced by <c>Warden.Telemetry.TelemetryProjector</c> (WP-03), consumed by
-/// Tier-3 Haikus. Schema: <c>world-state.schema.json</c> v0.4.0.
+/// Tier-3 Haikus. Schema: <c>world-state.schema.json</c> v0.5.0.
 /// </summary>
 public sealed record WorldStateDto
 {
-    public string                      SchemaVersion { get; init; } = "0.4.0";
+    public string                      SchemaVersion { get; init; } = "0.5.1";
     public DateTimeOffset              CapturedAt    { get; init; }
     public int                         Tick          { get; init; }
     public ClockStateDto               Clock         { get; init; } = default!;
@@ -27,20 +27,30 @@ public sealed record WorldStateDto
     public string?                 SimVersion   { get; init; }
     public List<TransitItemDto>?   TransitItems { get; init; }
 
-    // v0.2 — social pillar (optional; projector omits until populated)
+    // v0.2 â€” social pillar (optional; projector omits until populated)
     public List<RelationshipDto>?  Relationships { get; init; }
     public List<MemoryEventDto>?   MemoryEvents  { get; init; }
 
-    // v0.3 — spatial pillar (optional; projector omits until populated)
+    // v0.3 â€” spatial pillar (optional; projector omits until populated)
     public IReadOnlyList<RoomDto>?         Rooms          { get; init; }
     public IReadOnlyList<LightSourceDto>?  LightSources   { get; init; }
     public IReadOnlyList<LightApertureDto>? LightApertures { get; init; }
 
-    // v0.4 — persistent narrative chronicle (optional; projector omits when empty)
+    // v0.4 â€” persistent narrative chronicle (optional; projector omits when empty)
     public IReadOnlyList<ChronicleEntryDto>? Chronicle     { get; init; }
+
+    // v0.5 — save/load round-trip substrate (null on live telemetry snapshots)
+    public long?   SaveTick          { get; init; }
+    public double? SaveTotalTime     { get; init; }
+    public float?  SaveTimeScale     { get; init; }
+    public long?   EntityIdCounter   { get; init; }
+    public IReadOnlyList<NpcSaveDto>?          NpcSaveStates { get; init; }
+    public IReadOnlyList<TaskSaveDto>?         TaskEntities  { get; init; }
+    public IReadOnlyList<StainEntitySaveDto>?  StainEntities { get; init; }
+    public IReadOnlyList<LockedDoorSaveDto>?   LockedDoors   { get; init; }
 }
 
-// -- Clock ---------------------------------------------------------------------
+// â”€â”€ Clock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 public sealed record ClockStateDto
 {
@@ -50,11 +60,11 @@ public sealed record ClockStateDto
     public float       CircadianFactor { get; init; }
     public float       TimeScale       { get; init; }
 
-    // v0.3 — optional sun position
+    // v0.3 â€” optional sun position
     public SunStateDto? Sun            { get; init; }
 }
 
-// -- Entity --------------------------------------------------------------------
+// â”€â”€ Entity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 public sealed record EntityStateDto
 {
@@ -66,8 +76,20 @@ public sealed record EntityStateDto
     public DrivesStateDto     Drives     { get; init; } = default!;
     public PhysiologyStateDto Physiology { get; init; } = default!;
 
-    // v0.2 — optional social state
+    // v0.2 â€” optional social state
     public SocialStateDto?    Social     { get; init; }
+
+    // v0.5.1 — optional build footprint (populated for prop entities; null for NPCs)
+    public BuildFootprintDto? BuildFootprint { get; init; }
+    // v0.5.1 â€” optional personal-space telemetry
+    public PersonalSpaceStateDto? PersonalSpace { get; init; }
+}
+
+/// <summary>Telemetry view of <c>PersonalSpaceComponent</c> (radius and repulsion strength).</summary>
+public sealed record PersonalSpaceStateDto
+{
+    public float RadiusMeters      { get; init; }
+    public float RepulsionStrength { get; init; }
 }
 
 public sealed record PositionStateDto
@@ -108,7 +130,7 @@ public sealed record PhysiologyStateDto
     public float? BladderFill { get; init; }
 }
 
-// -- World items ---------------------------------------------------------------
+// â”€â”€ World items â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 public sealed record WorldItemDto
 {
@@ -141,7 +163,7 @@ public sealed record TransitItemDto
     public float  Progress       { get; init; }
 }
 
-// -- Invariants ----------------------------------------------------------------
+// â”€â”€ Invariants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 public sealed record InvariantDigestDto
 {
@@ -156,7 +178,23 @@ public sealed record InvariantEventDto
     public string Message { get; init; } = string.Empty;
 }
 
-// -- Enums ---------------------------------------------------------------------
+// â”€â”€ Build footprint (v0.5.1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+/// <summary>
+/// Serialised form of <c>APIFramework.Components.BuildFootprintComponent</c>.
+/// Populated on prop entities only; null on NPC entities.
+/// </summary>
+public sealed record BuildFootprintDto
+{
+    public int    WidthTiles        { get; init; }
+    public int    DepthTiles        { get; init; }
+    public float  BottomHeight      { get; init; }
+    public float  TopHeight         { get; init; }
+    public bool   CanStackOnTop     { get; init; }
+    public string FootprintCategory { get; init; } = string.Empty;
+}
+
+// â”€â”€ Enums â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /// <summary>Entity species. Serialises as camelCase lowercase string.</summary>
 public enum SpeciesType { Human, Cat, Unknown }

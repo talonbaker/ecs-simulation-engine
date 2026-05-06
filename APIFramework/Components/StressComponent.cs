@@ -42,4 +42,14 @@ public struct StressComponent
     /// clears to 0 (one-shot).
     /// </summary>
     public int    BereavementEventsToday;
+
+    // ── Chore overrotation counter (WP-3.2.3) ────────────────────────────────
+    /// <summary>
+    /// Incremented by <see cref="APIFramework.Systems.Chores.ChoreExecutionSystem"/> when this NPC
+    /// completes the same chore beyond the overrotation threshold within the rolling game-day window.
+    /// <see cref="APIFramework.Systems.StressSystem"/> applies
+    /// <see cref="APIFramework.Config.ChoreConfig.ChoreOverrotationStressGain"/> per count and
+    /// resets to 0 on day rollover.
+    /// </summary>
+    public int    ChoreOverrotationEventsToday;
 }

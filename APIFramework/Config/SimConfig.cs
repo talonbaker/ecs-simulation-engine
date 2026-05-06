@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using APIFramework.Components;
+using APIFramework.Systems.Audio;
 using APIFramework.Systems.Coupling;
 
 namespace APIFramework.Config;
@@ -80,6 +81,21 @@ public class SimConfig
 
     /// <summary>End-of-day lockout detection (door reachability, starvation budget).</summary>
     public LockoutConfig          Lockout         { get; set; } = new();
+    public SoundTriggerConfig     SoundTriggers   { get; set; } = new();
+
+    /// <summary>Bereavement stress gains and proximity-bereavement tuning.</summary>
+    public BereavementConfig      Bereavement     { get; set; } = new();
+
+    /// <summary>Fainting duration, fear threshold, and narrative emission tuning.</summary>
+    public FaintingConfig         Fainting        { get; set; } = new();
+
+    /// <summary>Rescue mechanic tuning — bias threshold, awareness range, success rates.</summary>
+    public RescueConfig           Rescue          { get; set; } = new();
+    /// <summary>Chore rotation assignment, execution, and overrotation tuning.</summary>
+    public ChoreConfig            Chores          { get; set; } = new();
+
+    /// <summary>Physics throw/gravity/decay tuning (WP-3.2.2).</summary>
+    public PhysicsConfig          Physics         { get; set; } = new();
 
     // -- Loading ---------------------------------------------------------------
 
@@ -1155,7 +1171,7 @@ public class NarrativeConfig
 // -- Cast generator -------------------------------------------------------------
 
 /// <summary>
-/// Tunables for <see cref="CastGenerator"/> — drive baselines per archetype tier
+/// Tunables for <c>CastGenerator</c> — drive baselines per archetype tier
 /// and counts of seeded relationships across the cast at boot.
 /// </summary>
 public class CastGeneratorConfig
@@ -1331,7 +1347,7 @@ public class StressConfig
 // -- Schedule system -----------------------------------------------------------
 
 /// <summary>
-/// Tunables for <see cref="ScheduleSystem"/> + ActionSelectionSystem schedule integration —
+/// Tunables for <c>ScheduleSystem</c> + ActionSelectionSystem schedule integration —
 /// how heavily the active schedule block influences candidate weighting and when an
 /// Approach to a schedule anchor turns into a Linger.
 /// </summary>
@@ -1515,7 +1531,7 @@ public class LifeStateConfig
 }
 
 /// <summary>
-/// Tuning knobs for <see cref="ChokingDetectionSystem"/> — when in-transit boluses
+/// Tuning knobs for <c>ChokingDetectionSystem</c> — when in-transit boluses
 /// trigger a choke, how long the resulting incapacitation lasts, and the panic
 /// mood spike applied. Phase 3 addition.
 /// </summary>
@@ -1637,4 +1653,169 @@ public class LockoutConfig
     /// Default "outdoor".
     /// </summary>
     public string ExitNamedAnchorTag { get; set; } = "outdoor";
+}
+
+// ── Bereavement system ────────────────────────────────────────────────────
+
+/// <summary>
+/// Configuration for bereavement-driven stress and proximity-bereavement mechanics (WP-3.0.2).
+/// Controls stress gains from witnessing death / learning of death, and proximity-encounter tuning.
+/// </summary>
+public class BereavementConfig
+{
+    /// <summary>Acute stress gained per witnessed death event (before neuroticism scaling). Default 5.0.</summary>
+    public double WitnessedDeathStressGain { get; set; } = 5.0;
+
+    /// <summary>Acute stress gained per bereavement event (learned of death, before neuroticism scaling). Default 3.0.</summary>
+    public double BereavementStressGain { get; set; } = 3.0;
+
+    /// <summary>Minimum relationship intensity required for proximity-bereavement stress to apply. Default 20.</summary>
+    public int ProximityBereavementMinIntensity { get; set; } = 20;
+
+    /// <summary>Acute stress applied as one-shot when NPC encounters corpse of someone they had a relationship with. Default 8.0.</summary>
+    public double ProximityBereavementStressGain { get; set; } = 8.0;
+
+    /// <summary>Minimum relationship intensity required for bereavement system to apply grief. Default 25.</summary>
+    public int BereavementMinIntensity { get; set; } = 25;
+
+    /// <summary>Grief intensity set on witness when learning of a colleague's death. Default 40.0.</summary>
+    public double ColleagueBereavementGriefIntensity { get; set; } = 40.0;
+
+    /// <summary>Maximum grief intensity applied based on relationship intensity to deceased. Default 60.0.</summary>
+    public double WitnessGriefIntensity { get; set; } = 60.0;
+}
+
+// ── Fainting system ──────────────────────────────────────────────────────
+
+/// <summary>
+/// Configuration for the fainting system (WP-3.0.6). Controls fear thresholds,
+/// incapacitation duration, and narrative emission.
+/// </summary>
+public class FaintingConfig
+{
+    /// <summary>
+    /// Fear mood level at or above which fainting becomes possible.
+    /// Default 70 (high fear state required).
+    /// </summary>
+    public float FearThreshold { get; set; } = 70f;
+
+    /// <summary>
+    /// Number of ticks a fainted NPC remains Incapacitated before recovery.
+    /// At current tick rate (~20 ticks/game-second), 180 ticks ≈ 9 seconds real-time / ~3 game-minutes.
+    /// Default 180.
+    /// </summary>
+    public int FaintDurationTicks { get; set; } = 180;
+
+    /// <summary>
+    /// Whether to emit FaintedNow narrative when an NPC faints.
+    /// Default true.
+    /// </summary>
+    public bool EmitFaintedNarrative { get; set; } = true;
+
+    /// <summary>
+    /// Whether to emit RegainedConsciousness narrative when an NPC recovers from fainting.
+    /// Default true.
+    /// </summary>
+    public bool EmitRegainedConsciousnessNarrative { get; set; } = true;
+}
+
+// ── Rescue system (WP-3.2.4) ─────────────────────────────────────────────────
+
+/// <summary>
+/// Configuration for the rescue mechanic (WP-3.2.4).
+/// Controls intent scoring thresholds, awareness range, and per-kind success rates.
+/// </summary>
+public class RescueConfig
+{
+    /// <summary>Minimum score for an NPC to commit to a rescue intent. Default 0.40.</summary>
+    public float RescueThreshold        { get; set; } = 0.40f;
+
+    /// <summary>Maximum tile distance at which a bystander notices an Incapacitated NPC. Default 3.0.</summary>
+    public float AwarenessRangeForRescue { get; set; } = 3.0f;
+
+    /// <summary>Rescuer's current willpower must be at or above this value. Default 20.</summary>
+    public int   MinRescueWillpower     { get; set; } = 20;
+
+    /// <summary>Rescuer's acute stress must be at or below this value. Default 80.</summary>
+    public float MaxRescueStress        { get; set; } = 80f;
+
+    /// <summary>Base probability of a successful Heimlich maneuver. Default 0.65.</summary>
+    public float HeimlichBaseSuccessRate   { get; set; } = 0.65f;
+
+    /// <summary>Base probability of a successful CPR attempt. Default 0.30.</summary>
+    public float CprBaseSuccessRate        { get; set; } = 0.30f;
+
+    /// <summary>Base probability of successfully unlocking a door. Default 0.95.</summary>
+    public float DoorUnlockBaseSuccessRate { get; set; } = 0.95f;
+}
+// ── Chore rotation system ─────────────────────────────────────────────────────
+
+/// <summary>
+/// ChoreAssignmentSystem / ChoreExecutionSystem tuning — chore frequencies,
+/// assignment weights, overrotation detection, and stress gain.
+/// </summary>
+public class ChoreConfig
+{
+    /// <summary>Game hour (0–24) at which ChoreAssignmentSystem runs each day. Default 18.0 (6 PM).</summary>
+    public double ChoreCheckHourOfDay { get; set; } = 18.0;
+
+    /// <summary>NextScheduledTick interval (in CurrentTick units) per chore kind.</summary>
+    public ChoreFrequencyConfig FrequencyTicks { get; set; } = new();
+
+    /// <summary>Base weight of the ChoreWork candidate in ActionSelectionSystem. Default 0.35.</summary>
+    public double ChoreActionBaseWeight { get; set; } = 0.35;
+
+    /// <summary>Times a chore must be done within the window before overrotation triggers. Default 3.</summary>
+    public int ChoreOverrotationThreshold { get; set; } = 3;
+
+    /// <summary>Game-day window for overrotation counting. Default 7.</summary>
+    public int ChoreOverrotationWindowGameDays { get; set; } = 7;
+
+    /// <summary>Acute stress gain per overrotation event (before neuroticism scaling). Default 1.5.</summary>
+    public double ChoreOverrotationStressGain { get; set; } = 1.5;
+
+    /// <summary>Base completion-level advance per game-second. Default 0.0001.</summary>
+    public double ChoreCompletionRatePerSecond { get; set; } = 0.0001;
+
+    /// <summary>Acceptance-bias below which ChoreWork candidate is not emitted (silent refusal). Default 0.20.</summary>
+    public double MinChoreAcceptanceBias { get; set; } = 0.20;
+
+    /// <summary>Completion quality below which ChoreBadlyDone narrative is emitted. Default 0.40.</summary>
+    public float BadQualityThreshold { get; set; } = 0.40f;
+
+    /// <summary>Default acceptance bias for archetypes/chore-kinds not listed in the JSON. Default 0.50.</summary>
+    public double DefaultAcceptanceBias { get; set; } = 0.50;
+}
+
+/// <summary>Per-chore NextScheduledTick frequency intervals (in CurrentTick units).</summary>
+public class ChoreFrequencyConfig
+{
+    public long CleanMicrowave    { get; set; } = 7_200_000;
+    public long CleanFridge       { get; set; } = 14_400_000;
+    public long CleanBathroom     { get; set; } = 3_600_000;
+    public long TakeOutTrash      { get; set; } = 1_440_000;
+    public long RefillWaterCooler { get; set; } = 2_880_000;
+    public long RestockSupplyCloset { get; set; } = 28_800_000;
+    public long ReplaceToner      { get; set; } = 14_400_000;
+}
+
+// ── Physics system (WP-3.2.2) ────────────────────────────────────────────────
+
+/// <summary>
+/// Gravity, velocity threshold, decay, and collision-margin tuning for PhysicsTickSystem.
+/// All values apply per-tick (not per-second).
+/// </summary>
+public class PhysicsConfig
+{
+    /// <summary>Downward velocity added to VelocityY each tick. Default 1.5.</summary>
+    public float GravityPerTick      { get; set; } = 1.5f;
+
+    /// <summary>Velocity magnitude below which the entity is considered stopped. Default 0.05.</summary>
+    public float MinVelocity         { get; set; } = 0.05f;
+
+    /// <summary>Default decay rate applied when ThrowEntity is called without an explicit value. Default 0.10.</summary>
+    public float DefaultDecayPerTick { get; set; } = 0.10f;
+
+    /// <summary>Margin from world boundary walls used for collision clamping. Default 0.01.</summary>
+    public float WallHitClampMargin  { get; set; } = 0.01f;
 }

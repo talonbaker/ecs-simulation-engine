@@ -1,0 +1,13 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d4c867f6bbd4464a8b5d6a9f8da4fc6, type: 3}
+  m_Name: BreathPuff
+  # PLACEHOLDER — open in VFX Graph editor to wire nodes.
+  # Design: ~12 particles, forward cone from mouth height. Color: white/light-gray. Lifetime: 0.5-1s. Spawn: burst of 12.
+  # Intensity exposed property controls spawn rate multiplier.
+  m_ExposedParameters:
+  - m_Name: Intensity
+    m_Type: {m_SerializableType: System.Single, mscorlib}
