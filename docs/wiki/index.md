@@ -2,6 +2,7 @@
 
 | Page | Description |
 |------|-------------|
+| [Core Game Loop](00-core-game-loop.md) | The authoritative tour: tick loop, phase pipeline, ECS model, narrative bus, life-state state machine, snapshot boundary, end-to-end example |
 | [Overview & Architecture](01-overview-and-architecture.md) | ECS pattern, tick loop, project structure |
 | [System Pipeline Reference](02-system-pipeline-reference.md) | Every system in phase order |
 | [Component & Tag Reference](03-component-and-tag-reference.md) | All components and tags |
