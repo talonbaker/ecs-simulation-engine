@@ -140,3 +140,46 @@ If this proposal is greenlit, the implementation splits cleanly into three work 
 - **WP-Acoustic-3**: Renderer layer integration (Z-layer in `AsciiMapProjector`, glyph visual vocabulary, density legibility testing)
 
 Estimated complexity: moderate across all three. No external dependencies. WP-Acoustic-1 and WP-Acoustic-3 can likely be developed in parallel once the component schema is locked. WP-Acoustic-2 depends on WP-Acoustic-1's component shape but is otherwise independent of the renderer.
+
+---
+
+## Phase 2 — World-Level Effects (Deferred)
+
+> **Status:** Deferred placeholder. None of these land before the core acoustic glyph system (WP-Acoustic-1..3) ships and stabilizes. Captured here so the ideas don't get lost between conversations. Per the foundation-first principle: build the printer before the printer fluff.
+
+The Phase 1 system has two consumers of glyphs: the NPC perception system and the renderer. Phase 2 introduces a third consumer: **the world itself**. Sound stops being something detected only by minds and starts being something that *physically affects* the environment over time. This is what turns the acoustic system from a sensory-input layer into a layer that produces wonder — the kind of "wait, what just happened?" moment a player tells their friend about.
+
+### Acoustic exposure accumulator (the "printer fluff" effect)
+
+Every tile carries a slow-decaying `AcousticExposure` accumulator. Glyphs that pass over a tile increment it, weighted by intensity and class. Above thresholds, tiles render visible decoration that signals their acoustic history:
+
+- A printer that's been running for sim-weeks has paper scraps, dust eddies, and faint glyph halos on the tiles around it.
+- A quiet meditation room reads visually different from a chronically loud sales floor *even when both are momentarily silent*.
+- The cumulative noise of a room is legible at a glance — environmental storytelling without anyone narrating.
+
+Cost: one float per tile, decremented each tick, incremented on glyph traversal. Render rule maps the accumulator value to one of N decoration levels. Cheap.
+
+### High-intensity acoustic events spawn world reactions
+
+Glyph emissions above a (very high, deliberately rare) intensity threshold can spawn other entities or effects. The most evocative example: a heated argument — sustained `Speech`-class emissions at maximum intensity in a small room — has a small probability per tick of spawning a `HazardFire` at the source, gated by ambient conditions (room dryness, presence of paper, current stress aggregate of the room).
+
+This isn't literal physics — sound doesn't actually combust paper — but it's a *gameplay illusion* that produces the right emergent story moment. RimWorld and Dwarf Fortress trade on this kind of low-cost causal chain. "Did that argument really just light the breakroom on fire?" is the kind of moment that justifies the entire system's existence.
+
+Implementation cost is one conditional in `SoundPropagationSystem`. The expensive part is *gameplay tuning*: how rare is rare enough that the moment feels magical instead of frustrating?
+
+### Proximity-driven emergent effects (broader than acoustic)
+
+The acoustic glyph system is the first instance of a more general design primitive: **proximity creates emergent effects that are simultaneously rewarding and costly.** Other propagation systems likely deserve the same treatment in Phase 2 or beyond:
+
+- **Olfactory propagation:** smell glyphs from the bathroom propagate into an adjacent breakroom; food contamination → no one eats → starvation cascade. Same propagation math, different consumer.
+- **Behavioral contagion:** a smoking lead in close proximity to subordinates spreads the smoking habit; productivity goes up, health goes down, player rolls dice on which matters more this quarter.
+- **Illness spread:** a sneezing worker emits low-intensity `Pathogen` glyphs that other workers in adjacent tiles can pick up. Group-clumping for productivity has a hidden epidemic cost.
+
+These should not be designed as five separate systems. They are five *applications* of the same propagation kernel. Get the kernel right with sound first; once it's solid, every other propagation pattern is a configuration problem rather than an engineering problem.
+
+### Open Questions for Phase 2
+
+1. **Decoration budget.** How many decorated tiles does a typical floor have at steady state? If everywhere becomes decorated, the visual signal collapses. Probably the accumulator's decay rate must be tuned so decoration is rare and meaningful.
+2. **Tuning the rare-event threshold.** A 0.001%-per-tick fire-from-argument event at 120× time-scale fires every few sim-days, which is probably right. But the intuition has to be checked against actual play.
+3. **Generalizing the propagation kernel.** Before olfactory / pathogen / behavioral systems land, the acoustic kernel should be refactored into a reusable form that takes a glyph type, a propagation rule, and a consumer. Otherwise we end up with five copies of the same code.
+4. **Player wonder as a tuning target.** "I can't believe what I'm seeing" is a real design target, not a vibe. It probably means: world-effect events should fire often enough that a typical play session encounters at least one, but rarely enough that they remain memorable. Concrete numbers belong in the tuning pass, not now.

@@ -82,28 +82,75 @@ This is the kind of cross-system lore coherence the project should aim for every
 
 ---
 
-## Long-Term Player Goals — The Unanswered Design Question
+## Long-Term Player Goals — The Vision
 
-The architecture below is sound. The gameplay modes are crisp. **What the player is *doing* over hours of play is not yet decided**, and this is the single most important unanswered question for the entire project — not just multiplayer.
+The player's goal is to **manage the controlled chaos of a startup full of young adults** — and to feel *wonder* doing it.
 
-In Factorio, the moment-to-moment goal is "build the next thing in the production chain." The macro goal is "launch a rocket." The two are fractally connected: every small build is a step toward the big build, and the production chain itself produces the satisfaction loop.
+### The cast: young adults with underdeveloped prefrontal cortexes
 
-For an office-NPC simulation, the *factory-line analog* is plausible but unconfirmed:
+The NPCs are framed not as employees in the abstract, but as *young adults whose prefrontal cortexes haven't fully formed yet*. They are slightly smarter than babies. They are smart enough to do their jobs, dumb enough to give in to short-term impulse, and not yet wise enough to know better. This single character framing is load-bearing for the whole project, because it tells every system how its NPCs should behave: they make locally-coherent decisions that are bad for them long-term. They eat the contaminated breakroom food because the breakroom is closer than the kitchen on the next floor. They start smoking because the lead does. They clump together because being alone is uncomfortable, and then they sneeze on each other.
 
-- **Cast (NPCs) generate "work product"** through their daily routines — emails sent, reports filed, contracts closed, code committed. The exact unit doesn't matter; what matters is that NPC activity *produces* something measurable.
-- **The player builds infrastructure** — desks, bathrooms, breakrooms, conference rooms — that supports or bottlenecks productivity. A poorly-laid-out office has worse output than a well-laid-out one for reasons the simulation can compute (longer walking distances, queues at the bathroom, stress from overcrowding, fights over the last coffee).
-- **Productivity converts to a meta-resource** — revenue, reputation, headcount budget — that the player spends to expand. The expansion gives more NPCs, more office space, more gameplay surface.
-- **Bottlenecks in the office are like bottlenecks in a factory line.** The fun is identifying them and fixing them. "Why is everyone late to meetings? Oh — the only working printer is on the other side of the building."
+This framing makes the chaos *funny and knowable* rather than tragic and pitiable. The player isn't shepherding helpless infants — they're managing recognizable young people who are doing the best they can with the cognitive tools they have, which are not many. The fantasy is closer to "Office of the Young" than to "The Sims as social engineering puzzle."
 
-This is one hypothesis, not a commitment. It maps cleanly onto the existing systems (`StressComponent`, `EnergyComponent`, `MoodSystem`, the schedule and digestion loops, room categories and furniture, NPC pathfinding) and would let multiplayer modes inherit a meaningful goal: in co-op, build the world's best office; in rival mode, out-produce the other player while sabotaging their production; in poltergeist mode, observe and minorly perturb a real, goal-driven world.
+### Believability: the emotional gap this game is trying to close
 
-**Alternative hypotheses worth considering** before this one is locked in:
+In Stardew Valley, the townsfolk are *full of life* but they don't feel *real*. They do what they're told. They follow scripts. An NPC can be marked sad in the dialogue tree and the player nods at the label without believing it. **This game wants to close that gap.** When an NPC is sad, the player should *believe* they're sad — because the player can *see* it propagating through the simulation: the slumped posture, the lower productivity, the muted dialog, the cluster of co-workers who notice and react, the acoustic signature of subdued speech, the eventual narrative beat the system surfaces about it.
 
-- *Survival-mode office:* dwindling budget, layoffs, building maintenance failures. Player keeps the office alive against entropy.
-- *Drama-driven office:* the goal is *narrative*, not productivity. Player engineers situations that produce stories worth telling. The Sims model.
-- *Audit/inspection office:* a periodic external check evaluates the office on multiple axes (productivity, employee well-being, regulatory compliance) and the player optimizes against those.
+The reference for player relationship is **The Sims, voyeurism, and god-fantasy.** The player wants to see some of their cast succeed. The player wants to help some of their cast fail. Both are legitimate. Both are fun. Pretending otherwise is dishonest about why people play these games. The design embraces it: the player has god-fantasy power, and the cast has the emotional and behavioral range that makes that fantasy feel *meaningful*.
 
-Pick one before any milestone past the simulation foundation. Without a chosen goal, every feature decision is uncalibrated. The acoustic glyph system is a great feature *if* the player goal benefits from emergent narrative; less essential *if* the goal is pure productivity-min/max. Multiplayer modes are gameplay containers — they need a goal to contain.
+To make NPCs *believable*, three things must hold:
+
+1. **Full emotional range.** The cast can feel anything they would plausibly feel — joy, dread, jealousy, infatuation, embarrassment, smugness, despair, mania. Not all of it has to ship in the first version. But the architecture must not cap the range — `MoodSystem`, `StressSystem`, `BiologicalConditionSystem`, and the personality components must be *expandable* in this direction, not closed-form.
+2. **Felt autonomy.** NPCs should *feel like they're making their own choices* — not waypointed puppets. They walk somewhere because something in their internal state pulled them there, not because the player ordered it. This is mostly already true (the schedule, drive, action-selection systems are autonomous), and it must stay true. The player nudges the *world*; the NPCs nudge themselves.
+3. **Behavioral freedom.** If any NPC in the simulation can do something, every NPC of the right type can do it. No scripted-only abilities. The library of behaviors grows over time, and every behavior is available to every NPC who plausibly fits. This is what produces the "wait, what just happened?" moments — players see emergent combinations of behaviors they didn't predict.
+
+When all three hold, the player believes the NPCs. Without that, the chaos is just numbers.
+
+### The player–cast contract: mutual dependency
+
+The player needs the cast to keep the company alive. The cast needs the player to keep the chaos from killing them. This mutual dependency is the relationship the entire game is built around. The player is not a god optimizing a spreadsheet, and not a referee watching from above — they are the only adult in a building full of brilliant, stupid, hungry young people who would burn the place down without intervention. And probably will anyway.
+
+### The macro goal: a startup of the player's own product
+
+The player chooses what their startup *makes*. The product is a player choice, not a designer choice. The game's progression follows the company's growth: more cast members, more office space, more interpersonal collisions, more chaos to manage. There is *something to expand to get* — more headcount, more floors, more revenue — so that wonder is anchored to a progression loop rather than left as freeform vibes.
+
+### The core experience: wonder
+
+Players should look around their office and not believe what they're seeing. Pokes should be rewarded with a moment of "wait, what just happened?" The acoustic glyph system, the proximity-driven emergent effects, the world-level reactions in [acoustic Phase 2](WP-acoustic-glyph-system.md#phase-2--world-level-effects-deferred) — these are not decorative polish, they are the *core gameplay experience*. Without them, the wonder collapses to spreadsheets and the game is just management. Wonder is the thing that makes the player tell their friend about a session, and a player who tells a friend is a player who keeps playing.
+
+Wonder alone, however, is not a game. It needs the macro goal above to give it structure. Wonder + progression = "I can't believe what I'm seeing, *and* there's a reason I'm building toward seeing more of it."
+
+### Both chaos and extreme organization must be valid play styles
+
+This is a hard design constraint. The game must reward players who run a clinically organized office *and* players who let the office descend into chaos and find that funny. Neither style should be the "right answer." The systems must be tuned so that:
+
+- A clean, well-organized office produces steady, modest growth and rewards players who enjoy planning.
+- A chaotic, messy, dramatic office produces wild swings — sometimes catastrophic, sometimes brilliantly creative — and rewards players who enjoy stories.
+- Both reach the macro goal. Different paths, equally legitimate.
+
+This rules out a tuning approach where "stress = bad, low stress = good." Stress is *interesting* in either direction. A high-stress office full of dysfunctional young people is a *valid* state of the simulation, not a failure mode. The challenge for the designer is making both ends of that spectrum produce satisfying gameplay.
+
+### Proximity is a first-class design primitive
+
+The mechanical commitment that ties the vision together: **spatial proximity creates emergent effects that are simultaneously rewarding and costly.** Every spatial decision the player makes has both upsides and downsides depending on what they value. Examples articulated:
+
+- **Clumped workers** are more productive together but sneeze on each other and annoy everyone within earshot.
+- **Workers around a smoking lead** become more productive (modeling habits, social cohesion) but pick up the smoking habit themselves; the player rolls dice on health vs. output.
+- **Bathroom adjacent to breakroom** means smell propagates into the food space, NPCs lose appetite, and a starvation cascade can follow if the player doesn't intervene.
+
+These all share a shape: no spatial layout is "just better." Every choice trades one good for another bad. This is the deepest mechanical commitment of the game and it's what makes the proximity systems (acoustic glyphs, eventual olfactory propagation, behavioral contagion, illness spread — see [acoustic Phase 2](WP-acoustic-glyph-system.md#phase-2--world-level-effects-deferred)) load-bearing for the player goal rather than decorative.
+
+### Implications for multiplayer modes
+
+The three modes inherit clear shapes from this vision:
+
+- **Poltergeist:** a ghost in someone else's startup full of young adults. Pokes things. Watches the chaos unfold. Already articulated in *Resolved Design Decisions* above.
+- **Co-op build:** two players co-managing the same startup. Mutual dependency on each other and on the cast.
+- **Rival startup:** two startups in the same office building, competing for the same shared resources. Each player is the only adult in their half. Sabotage is the natural move — and the cast on each side is a *vulnerability*, not just a workforce, because the rival can target your young people to hurt your output.
+
+### Deferred — the day/night cycle question
+
+Whether the game continues at night (cast goes home; player follows them; "night stuff" the user's friend suggested but didn't specify), or whether the game cleanly bookends each day at office close, is **explicitly deferred**. More ambitious than multiplayer. Revisit when the core single-player loop is bulletproof and the macro goal proves out. Captured here so the question doesn't get lost; not promoted to current scope.
 
 ---
 
