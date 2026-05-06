@@ -1,7 +1,7 @@
 ﻿# ECS Simulation Engine — Fact Sheet
 
 **SimVersion:** ECS Simulation Engine  v0.7.2
-**Generated:** 2026-05-03T20:59:46.4178671+00:00
+**Generated:** 2026-05-06T04:27:34.4209315+00:00
 **TelemetrySchema:** world-state.schema.json v0.1.0
 
 ## Registered Systems
@@ -178,7 +178,7 @@ All `struct` types from the `APIFramework.Components` namespace.
 | `NoteComponent` | `Notes: IReadOnlyList`1` |
 | `NpcArchetypeComponent` | `ArchetypeId: string` |
 | `NpcDealComponent` | `Deal: string` |
-| `NpcSlotComponent` | `X: int`, `Y: int`, `ArchetypeHint: string`, `RoomId: string` |
+| `NpcSlotComponent` | `X: int`, `Y: int`, `ArchetypeHint: string`, `RoomId: string`, `NameHint: string` |
 | `NpcSlotTag` | *(tag — no fields)* |
 | `NpcTag` | *(tag — no fields)* |
 | `NutrientProfile` | `Carbohydrates: float`, `Proteins: float`, `Fats: float`, `Fiber: float`, `Water: float`, `VitaminA: float`, `VitaminB: float`, `VitaminC: float`, `VitaminD: float`, `VitaminE: float`, `VitaminK: float`, `Sodium: float`, `Potassium: float`, `Calcium: float`, `Iron: float`, `Magnesium: float`, `Calories: float`, `IsEmpty: bool` |
